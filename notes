@@ -1,0 +1,6 @@
+java -Xmx500M -cp asdProj2.jar Main p2p_port=10101 server_port=35000 &
+java -cp target\nettyStart.jar Main
+
+java -cp target\nettyStart.jar org.example.client.EchoClient localhost 8081
+java -cp target\nettyStart.jar org.example.server.EchoServer 8081
+
