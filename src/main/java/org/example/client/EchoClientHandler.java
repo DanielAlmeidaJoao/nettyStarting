@@ -3,12 +3,13 @@ package org.example.client;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.CharsetUtil;
 
 @ChannelHandler.Sharable
-public class EchoClientHandler extends  SimpleChannelInboundHandler<ByteBuf> {
+public class EchoClientHandler extends ChannelHandlerAdapter {
 
     private ChannelHandlerContext ctx;
 
@@ -19,9 +20,16 @@ public class EchoClientHandler extends  SimpleChannelInboundHandler<ByteBuf> {
                 CharsetUtil.UTF_8));
     }
     @Override
-    protected void messageReceived(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
+    public void channelRead(ChannelHandlerContext channelHandlerContext,  Object msg) throws Exception {
+        ByteBuf byteBuf = (ByteBuf) msg;
         System.out.println(
                 "Client received: " + byteBuf.toString(CharsetUtil.UTF_8));
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        //ctx.fireChannelInactive();
+        System.out.println("CLOSING CHANNEL!");
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,

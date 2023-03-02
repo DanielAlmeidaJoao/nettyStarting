@@ -43,5 +43,6 @@ public class EchoServer {
         } finally {
             group.shutdownGracefully().sync();
         }
+        System.out.println("OLLALA");
     }
 }

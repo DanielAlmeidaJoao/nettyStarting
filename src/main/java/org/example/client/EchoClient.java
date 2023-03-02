@@ -9,6 +9,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.CharsetUtil;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 
@@ -41,32 +42,22 @@ public class EchoClient {
                     }
                     });
             channel = b.connect().sync().channel();
-            System.out.println(echoClientHandler.getCtx());
-            channelHandlerContext = echoClientHandler.getCtx();
-            System.out.println(channelHandlerContext);
+            keepRunning();
+            System.out.println("OOOOOOOO");
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } finally {
+            channel.close();
+            group.shutdownGracefully();
         }
-    }
-    public void closeConnection(){
-        System.out.println("CHANNEL CLOSED!");
-        try {
-            channel.closeFuture().sync();
-        }catch (Exception e){
+        System.out.println("IS OPEN ? "+channel.isOpen());
+        System.out.println("IS ACTIVE ? "+channel.isActive());
 
-        }finally {
-            try {
-                group.shutdownGracefully().sync();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
     public void sendMessage(String message){
-        if(channelHandlerContext==null){
-            return;
-        }
-        channelHandlerContext.writeAndFlush(Unpooled.copiedBuffer(message,
+        System.out.println("IS OPEN ? "+channel.isOpen());
+        System.out.println("IS ACTIVE ? "+channel.isActive());
+        channel.writeAndFlush(Unpooled.copiedBuffer(message,
                 CharsetUtil.UTF_8)).addListener(future -> {
             if(future.isSuccess()){
                 System.out.println("MESSAGE SENT!");
@@ -86,16 +77,18 @@ public class EchoClient {
         int port = Integer.parseInt(args[1]);
         EchoClient echoClient = new EchoClient(host, port);
         echoClient.start();
+    }
 
+    public void keepRunning() throws IOException {
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         String userInput;
         while ((userInput = stdIn.readLine()) != null) {
             if("quit".equalsIgnoreCase(userInput)){
                 System.out.println("CLOSING!");
-                echoClient.closeConnection();
+                //echoClient.closeConnection();
             }else{
                 System.out.println("Sent: " + userInput);
-                echoClient.sendMessage(userInput);
+                sendMessage(userInput);
             }
         }
     }
