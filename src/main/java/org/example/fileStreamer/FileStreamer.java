@@ -20,8 +20,10 @@ public class FileStreamer {
         try{
             streamSender.connect();
 
-            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Desktop/danielJoao_CV (1).pdf");
+            Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             FileChannel channel = FileChannel.open(filePath, StandardOpenOption.READ);
             int bufferSize = 8*1024; // 8KB buffer size
@@ -50,7 +52,7 @@ public class FileStreamer {
 
             streamSender.keepRunning();
             streamSender.printSomeConfigs();
-            channel.close();
+            streamSender.close();
             System.out.println("TOTAL SENT "+totalSent);
         }catch (Exception e){
             e.printStackTrace();

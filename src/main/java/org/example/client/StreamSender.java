@@ -56,6 +56,7 @@ public class StreamSender {
         System.out.println("WRITE_BUFFER_HIGH_WATER_MARK "+channel.config().getOptions().get(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK));
         System.out.println("Automatic flash: "+channel.config().isAutoRead());
         System.out.println("TIMES SENT "+timesSent);
+        System.out.println("CHANNEL ID: "+channel.id().asLongText());
     }
     public void close(){
         channel.close();
