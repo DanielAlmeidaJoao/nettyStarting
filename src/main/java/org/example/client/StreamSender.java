@@ -46,6 +46,10 @@ public class StreamSender {
                     }
                     });
             channel = b.connect().sync().channel();
+            channel.config().setWriteBufferLowWaterMark(64*1024);
+            channel.config().setWriteBufferHighWaterMark(2*64*1024);
+            channel.config().setAutoRead(true);
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -56,36 +60,40 @@ public class StreamSender {
         System.out.println("WRITE_BUFFER_HIGH_WATER_MARK "+channel.config().getOptions().get(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK));
         System.out.println("Automatic flash: "+channel.config().isAutoRead());
         System.out.println("TIMES SENT "+timesSent);
+        System.out.println("TIMES FLUSHED "+timesFlushed);
+
         System.out.println("CHANNEL ID: "+channel.id().asLongText());
     }
     public void close(){
         channel.close();
         group.shutdownGracefully();
     }
-    public void flushMessages(){
-        System.out.println("FLUSHED!");
-        //channel.flush();
-    }
     public void sendMessage(byte [] message, int len){
-        timesSent += message.length;
+        timesSent ++;
         channel.writeAndFlush(Unpooled.copiedBuffer(message,0,len)).addListener(future -> {
             if(future.isSuccess()){
-                System.out.println("MESSAGE SENT!");
+                //TODO metrics!
             }else {
                 System.out.println("MESSAGE NOT SENT: "+future.cause());
             }
         });
+        /*
+        if(!channel.isWritable()){
+            channel.flush();
+            timesFlushed++;
+        }*/
     }
 
     public boolean canSend(){
         return channel.isWritable();
     }
     int timesSent = 0;
+    int timesFlushed = 0;
     public void sendMessage(String message){
         channel.write(Unpooled.copiedBuffer(message,
                 CharsetUtil.UTF_8)).addListener(future -> {
             if(future.isSuccess()){
-                System.out.println("MESSAGE SENT!");
+                System.out.println("MESSAGE SENT --!");
             }else {
                 System.out.println("MESSAGE NOT SENT: "+future.cause());
             }
@@ -113,8 +121,6 @@ public class StreamSender {
             if("quit".equalsIgnoreCase(userInput)){
                 System.out.println("CLOSING!");
                 break;
-            }else if("flush".equalsIgnoreCase(userInput)){
-                flushMessages();
             }
             /**else{
                 System.out.println("Sent: " + userInput);
