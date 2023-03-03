@@ -10,22 +10,22 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import java.net.InetSocketAddress;
 
-public class EchoServer {
+public class StreamReceiver {
     private final int port;
-    public EchoServer(int port) {
+    public StreamReceiver(int port) {
         this.port = port;
     }
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println(
-                    "Usage: " + EchoServer.class.getSimpleName() +
+                    "Usage: " + StreamReceiver.class.getSimpleName() +
                             " <port>");
         }
         int port = Integer.parseInt(args[0]);
-        new EchoServer(port).start();
+        new StreamReceiver(port).start();
     }
     public void start() throws Exception {
-        final EchoServerHandler serverHandler = new EchoServerHandler();
+        final StreamReceiverHandler serverHandler = new StreamReceiverHandler();
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
@@ -43,6 +43,5 @@ public class EchoServer {
         } finally {
             group.shutdownGracefully().sync();
         }
-        System.out.println("OLLALA");
     }
 }
