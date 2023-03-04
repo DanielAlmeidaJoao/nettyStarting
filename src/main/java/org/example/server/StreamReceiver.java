@@ -26,6 +26,7 @@ public class StreamReceiver {
 
     public void startListening() throws Exception {
         EventLoopGroup group = new NioEventLoopGroup();
+
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(group)
