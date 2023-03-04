@@ -1,6 +1,7 @@
-package org.example.fileStreamer;
+package org.example.fileStreamingApp;
 
 import org.example.server.StreamReceiver;
+import org.example.server.StreamReceiverLogic;
 
 import java.io.FileOutputStream;
 import java.util.HashMap;
@@ -9,7 +10,7 @@ import java.util.Map;
 public class FileReceiver {
 
     private Map<String,FileOutputStream> files;
-    private StreamReceiver streamReceiver;
+    private StreamReceiver streamReceiverLogic;
     private int port;
 
     public FileReceiver(int port){
@@ -52,8 +53,8 @@ public class FileReceiver {
 
     public void start(){
         try {
-            streamReceiver = new StreamReceiver("localhost",port,this::initChannel,this::writeToFile,this::closeFile);
-            streamReceiver.startListening();
+            streamReceiverLogic = new StreamReceiverLogic("localhost",port,this::initChannel,this::writeToFile,this::closeFile);
+            streamReceiverLogic.startListening();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -62,7 +63,7 @@ public class FileReceiver {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println(
-                    "Usage: " + StreamReceiver.class.getSimpleName() +
+                    "Usage: " + StreamReceiverLogic.class.getSimpleName() +
                             " <port>");
         }
         int port = Integer.parseInt(args[0]);

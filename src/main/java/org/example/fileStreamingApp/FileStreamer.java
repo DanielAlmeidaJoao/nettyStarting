@@ -1,20 +1,19 @@
-package org.example.fileStreamer;
+package org.example.fileStreamingApp;
 
 import org.example.client.StreamSender;
+import org.example.client.StreamSenderImplementation;
 
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 public class FileStreamer {
 
     private StreamSender streamSender;
 
     public FileStreamer(String host, int port){
-        streamSender = new StreamSender(host,port);
+        streamSender = new StreamSenderImplementation(host,port);
     }
     public void startStreaming(){
         try{
@@ -25,24 +24,15 @@ public class FileStreamer {
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
 
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
-            FileChannel channel = FileChannel.open(filePath, StandardOpenOption.READ);
             int bufferSize = 128*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
             ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             int read=0, totalSent = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
-                //buffer.flip();
-                // process buffer
                 totalSent += read;
-                //buffer.
-                if(read!=bytes.length){
-                    System.out.println(read+ " "+bytes.length);
-                    //System.exit(1);
-                }
-                streamSender.sendMessage(bytes,read);
+                streamSender.sendBytes(bytes,read);
                 bytes = new byte[bufferSize];
-                //buffer.clear();
             }
             streamSender.printSomeConfigs();
             streamSender.close();
@@ -55,7 +45,7 @@ public class FileStreamer {
     public static void main(String [] args ){
         if (args.length != 2) {
             System.err.println(
-                    "Usage: " + StreamSender.class.getSimpleName() +
+                    "Usage: " + StreamSenderImplementation.class.getSimpleName() +
                             " <host> <port>");
             return;
         }

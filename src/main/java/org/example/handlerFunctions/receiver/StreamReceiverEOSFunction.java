@@ -1,4 +1,4 @@
-package org.example.logics;
+package org.example.handlerFunctions.receiver;
 
 //END OF STREAMING FUNCTION
 @FunctionalInterface

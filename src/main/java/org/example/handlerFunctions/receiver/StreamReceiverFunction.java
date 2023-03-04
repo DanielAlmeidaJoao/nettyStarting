@@ -1,4 +1,4 @@
-package org.example.logics;
+package org.example.handlerFunctions.receiver;
 
 @FunctionalInterface
 public interface StreamReceiverFunction {

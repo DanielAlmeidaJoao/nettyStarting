@@ -2,15 +2,11 @@ package org.example.server;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
-import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
-import org.example.logics.StreamReceiverChannelActiveFunction;
-import org.example.logics.StreamReceiverEOSFunction;
-import org.example.logics.StreamReceiverFunction;
+import org.example.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
+import org.example.handlerFunctions.receiver.StreamReceiverEOSFunction;
+import org.example.handlerFunctions.receiver.StreamReceiverFunction;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 //@ChannelHandler.Sharable
@@ -34,7 +30,7 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
     }
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        activeFunction.execute(ctx.name());
+        activeFunction.execute(ctx.channel().id().asShortText());
     }
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -46,7 +42,7 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
                 long end = System.currentTimeMillis();
                 timeElapsed += (end-start);
                 in.readBytes(bytes);
-                functionToExecute.execute(ctx.name(),bytes);
+                functionToExecute.execute(ctx.channel().id().asShortText(),bytes);
 
                 totalRead.set(totalRead.get() + bytes.length);
                 timesReceived++;
@@ -58,14 +54,11 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
         }
     }
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) {
-        System.out.println("RECEIVED LAST MESSAGE! "+totalRead.get()+"  --- "+timesReceived);
-        timesReceived = 0;
-    }
+    public void channelReadComplete(ChannelHandlerContext ctx) {}
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        EOSFunction.execute(ctx.name());
-        System.out.println("TOOK READING TIME: "+timeElapsed);
+        EOSFunction.execute(ctx.channel().id().asShortText());
+        System.out.printf("CHANNEL %S CLOSED. TOOK READING TIME: %S\n",ctx.channel().id().asShortText(),timeElapsed+"");
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
