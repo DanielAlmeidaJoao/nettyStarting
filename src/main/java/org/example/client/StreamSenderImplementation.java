@@ -36,10 +36,12 @@ public class StreamSenderImplementation implements StreamSender {
                     }
                     });
             channel = b.connect().sync().channel();
+            /**
             printSomeConfigs();
             updateConfiguration(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK,64*1024);
             updateConfiguration(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK,2*64*1024);
             updateConfiguration(ChannelOption.AUTO_READ,Boolean.TRUE);
+             **/
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

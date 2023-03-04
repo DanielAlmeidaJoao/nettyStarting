@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileStreamer {
-
     private StreamSender streamSender;
 
     public FileStreamer(String host, int port){
@@ -24,7 +23,7 @@ public class FileStreamer {
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
 
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
-            int bufferSize = 128*1024; // 8KB buffer size
+            int bufferSize = 2*128*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
             ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
