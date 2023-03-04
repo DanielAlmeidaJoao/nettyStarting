@@ -40,8 +40,9 @@ public class StreamReceiver {
                     });
             ChannelFuture f = b.bind().sync();
             serverChannel = f.channel();
+
+            // Wait for the server channel to close. Blocks.
             serverChannel.closeFuture().sync();
-            System.out.println("HELLO!");
         } finally {
             group.shutdownGracefully().sync();
         }
