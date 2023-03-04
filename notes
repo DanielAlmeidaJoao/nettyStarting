@@ -11,6 +11,9 @@ java -cp target/nettyStart.jar org.example.server.StreamReceiverLogic 8081
 
 java -cp target/nettyStart.jar org.example.fileStreamingApp.FileReceiver 8081
 
+java -cp target/nettyStart.jar org.example.p2p.PeerToPeerChannel
+
+
 
 
 the sender must be the server
