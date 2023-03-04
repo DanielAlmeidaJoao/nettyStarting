@@ -3,24 +3,37 @@ package org.example.fileStreamer;
 import org.example.server.StreamReceiver;
 
 import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FileReceiver {
 
-    private FileOutputStream fos;
+    private Map<String,FileOutputStream> files;
+    private StreamReceiver streamReceiver;
     private int port;
 
     public FileReceiver(int port){
         this.port = port;
         try {
             //String inputFileName = "/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4";
-            fos = new FileOutputStream("ola2_movie.mp4");
+            files = new HashMap<>();
         }catch (Exception e){
             e.printStackTrace();
             System.exit(0);
         }
     }
+    private void initChannel(String channelId){
+        //
+        System.out.println("CHANNEL ACTIVE!!!");
+        try {
+            files.put(channelId,new FileOutputStream(channelId+".mp4"));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
     private void writeToFile(String id, byte [] data){
         try{
+            FileOutputStream fos = files.get(id);
             fos.write(data, 0, data.length);
             fos.flush();
         }catch (Exception e){
@@ -30,7 +43,8 @@ public class FileReceiver {
     private void closeFile(String id){
         System.out.println("CONNECTION CLOSED: "+id);
         try{
-            fos.close();
+            files.get(id).close();
+            //streamReceiver.close();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -38,7 +52,8 @@ public class FileReceiver {
 
     public void start(){
         try {
-            new StreamReceiver(port,this::writeToFile,this::closeFile).startListening();
+            streamReceiver = new StreamReceiver("localhost",port,this::initChannel,this::writeToFile,this::closeFile);
+            streamReceiver.startListening();
         }catch (Exception e){
             e.printStackTrace();
         }

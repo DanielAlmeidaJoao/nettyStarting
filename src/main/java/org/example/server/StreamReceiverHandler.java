@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
+import org.example.logics.StreamReceiverChannelActiveFunction;
 import org.example.logics.StreamReceiverEOSFunction;
 import org.example.logics.StreamReceiverFunction;
 
@@ -17,11 +18,15 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
 
     private long timeElapsed;
     private AtomicLong totalRead;
+    private StreamReceiverChannelActiveFunction activeFunction;
     private StreamReceiverFunction functionToExecute;
     private StreamReceiverEOSFunction EOSFunction;
     private int timesReceived = 0;
 
-    public StreamReceiverHandler(StreamReceiverFunction functionToExecute, StreamReceiverEOSFunction EOSFunction){
+    public StreamReceiverHandler(StreamReceiverChannelActiveFunction activeFunction,
+                                 StreamReceiverFunction functionToExecute,
+                                 StreamReceiverEOSFunction EOSFunction){
+        this.activeFunction = activeFunction;
         this.functionToExecute = functionToExecute;
         this.EOSFunction = EOSFunction;
         totalRead = new AtomicLong(0);
@@ -29,7 +34,7 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
     }
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("IS ELAPSED: "+timeElapsed);
+        activeFunction.execute(ctx.name());
     }
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -59,7 +64,7 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        EOSFunction.execute(ctx.channel().id().asLongText());
+        EOSFunction.execute(ctx.name());
         System.out.println("TOOK READING TIME: "+timeElapsed);
     }
     @Override
