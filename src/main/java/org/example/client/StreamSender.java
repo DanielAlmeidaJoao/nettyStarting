@@ -64,9 +64,21 @@ public class StreamSender {
 
         System.out.println("CHANNEL ID: "+channel.id().asLongText());
     }
+
+    /**
+     * Closes the connection after sending all pending data
+     */
     public void close(){
-        channel.close();
-        group.shutdownGracefully();
+        try {
+            while (channel.unsafe().outboundBuffer().totalPendingWriteBytes()>0){
+                Thread.sleep(1000);
+            }
+            channel.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            group.shutdownGracefully();
+        }
     }
     public void sendMessage(byte [] message, int len){
         timesSent ++;
@@ -77,23 +89,15 @@ public class StreamSender {
                 System.out.println("MESSAGE NOT SENT: "+future.cause());
             }
         });
-        /*
-        if(!channel.isWritable()){
-            channel.flush();
-            timesFlushed++;
-        }*/
     }
 
-    public boolean canSend(){
-        return channel.isWritable();
-    }
     int timesSent = 0;
     int timesFlushed = 0;
     public void sendMessage(String message){
         channel.write(Unpooled.copiedBuffer(message,
                 CharsetUtil.UTF_8)).addListener(future -> {
             if(future.isSuccess()){
-                System.out.println("MESSAGE SENT --!");
+                //TODO metrics!
             }else {
                 System.out.println("MESSAGE NOT SENT: "+future.cause());
             }
@@ -113,20 +117,4 @@ public class StreamSender {
         streamSender.connect();
         streamSender.keepRunning();**/
     }
-
-    public void keepRunning() throws IOException {
-        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        String userInput;
-        while ((userInput = stdIn.readLine()) != null) {
-            if("quit".equalsIgnoreCase(userInput)){
-                System.out.println("CLOSING!");
-                break;
-            }
-            /**else{
-                System.out.println("Sent: " + userInput);
-                sendMessage(userInput);
-            }**/
-        }
-    }
-
 }

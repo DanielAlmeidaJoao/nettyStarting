@@ -12,8 +12,10 @@ import java.io.FileOutputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-@ChannelHandler.Sharable
+//@ChannelHandler.Sharable
 public class StreamReceiverHandler extends ChannelHandlerAdapter {
+
+    private long timeElapsed;
     private AtomicLong totalRead;
     private StreamReceiverFunction functionToExecute;
     private StreamReceiverEOSFunction EOSFunction;
@@ -23,13 +25,21 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
         this.functionToExecute = functionToExecute;
         this.EOSFunction = EOSFunction;
         totalRead = new AtomicLong(0);
+        timeElapsed = 0;
+    }
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("IS ELAPSED: "+timeElapsed);
     }
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf in = (ByteBuf) msg;
         try {
             while (in.isReadable()) {
+                long start = System.currentTimeMillis();
                 byte[] bytes = new byte[in.readableBytes()];
+                long end = System.currentTimeMillis();
+                timeElapsed += (end-start);
                 in.readBytes(bytes);
                 functionToExecute.execute(ctx.name(),bytes);
 
@@ -50,6 +60,7 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         EOSFunction.execute(ctx.channel().id().asLongText());
+        System.out.println("TOOK READING TIME: "+timeElapsed);
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,

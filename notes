@@ -8,3 +8,7 @@ java -cp target/nettyStart.jar org.example.client.StreamSender localhost 8081
 java -cp target/nettyStart.jar org.example.fileStreamer.FileStreamer localhost 8081
 
 java -cp target/nettyStart.jar org.example.server.StreamReceiver 8081
+
+
+the sender must be the server
+the receiver must be the client

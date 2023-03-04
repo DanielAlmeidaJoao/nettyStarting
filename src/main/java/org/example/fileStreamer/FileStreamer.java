@@ -20,37 +20,30 @@ public class FileStreamer {
         try{
             streamSender.connect();
 
-            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Desktop/danielJoao_CV (1).pdf");
-            Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+            //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
 
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             FileChannel channel = FileChannel.open(filePath, StandardOpenOption.READ);
-            int bufferSize = 8*1024; // 8KB buffer size
+            int bufferSize = 128*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
             ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             int read=0, totalSent = 0;
-            while(true){
-                while ( streamSender.canSend() && ( ( read =  fileInputStream.read(bytes) ) != -1)) {
-                    //buffer.flip();
-                    // process buffer
-                    totalSent += read;
-                    //buffer.
-                    if(read!=bytes.length){
-                        System.out.println(read+ " "+bytes.length);
-                        //System.exit(1);
-                    }
-                    streamSender.sendMessage(bytes,read);
-                    bytes = new byte[bufferSize];
-                    //buffer.clear();
+            while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
+                //buffer.flip();
+                // process buffer
+                totalSent += read;
+                //buffer.
+                if(read!=bytes.length){
+                    System.out.println(read+ " "+bytes.length);
+                    //System.exit(1);
                 }
-                if(read==-1){
-                    break;
-                }
+                streamSender.sendMessage(bytes,read);
+                bytes = new byte[bufferSize];
+                //buffer.clear();
             }
-
-            streamSender.keepRunning();
             streamSender.printSomeConfigs();
             streamSender.close();
             System.out.println("TOTAL SENT "+totalSent);
