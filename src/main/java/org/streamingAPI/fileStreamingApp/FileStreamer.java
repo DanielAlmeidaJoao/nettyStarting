@@ -1,11 +1,10 @@
-package org.example.fileStreamingApp;
+package org.streamingAPI.fileStreamingApp;
 
 import io.netty.channel.ChannelOption;
-import org.example.client.StreamSender;
-import org.example.client.StreamSenderImplementation;
+import org.streamingAPI.client.StreamSender;
+import org.streamingAPI.client.StreamSenderImplementation;
 
 import java.io.FileInputStream;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -31,9 +30,10 @@ public class FileStreamer {
             int read=0, totalSent = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
+
                 streamSender.sendBytes(bytes,read);
+
             }
-            streamSender.printSomeConfigs();
             streamSender.close();
             System.out.println("TOTAL SENT "+totalSent);
         }catch (Exception e){

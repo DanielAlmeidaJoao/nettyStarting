@@ -1,15 +1,10 @@
-package org.example.client;
+package org.streamingAPI.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 import java.net.InetSocketAddress;
@@ -61,14 +56,6 @@ public class StreamSenderImplementation implements StreamSender {
     @Override
     public <T> void updateConfiguration(ChannelOption<T> option, T value){
         channel.config().setOption(option,value);
-    }
-    @Override
-    public void printSomeConfigs(){
-        System.out.println("SO_SNDBUF: "+channel.config().getOptions().get(ChannelOption.SO_SNDBUF));
-        System.out.println("WRITE_BUFFER_LOW_WATER_MARK "+channel.config().getOptions().get(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK));
-        System.out.println("WRITE_BUFFER_HIGH_WATER_MARK "+channel.config().getOptions().get(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK));
-        System.out.println("Automatic flash: "+channel.config().isAutoRead());
-        System.out.println("CHANNEL ID: "+channel.id().asLongText());
     }
 
     /**

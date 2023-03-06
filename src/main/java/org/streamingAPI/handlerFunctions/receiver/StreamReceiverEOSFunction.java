@@ -1,4 +1,4 @@
-package org.example.handlerFunctions.receiver;
+package org.streamingAPI.handlerFunctions.receiver;
 
 //END OF STREAMING FUNCTION
 @FunctionalInterface

@@ -1,10 +1,7 @@
-package org.example.client;
+package org.streamingAPI.client;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-
-import java.nio.charset.StandardCharsets;
 
 //@ChannelHandler.Sharable
 public class StreamSenderHandler extends ChannelHandlerAdapter {

@@ -1,16 +1,13 @@
-package org.example.server;
+package org.streamingAPI.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.example.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
-import org.example.handlerFunctions.receiver.StreamReceiverEOSFunction;
-import org.example.handlerFunctions.receiver.StreamReceiverFunction;
+import org.streamingAPI.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
+import org.streamingAPI.handlerFunctions.receiver.StreamReceiverEOSFunction;
+import org.streamingAPI.handlerFunctions.receiver.StreamReceiverFunction;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;

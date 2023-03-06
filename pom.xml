@@ -13,6 +13,12 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <repositories>
+        <repository>
+            <id>novasys</id>
+            <url>https://asc.di.fct.unl.pt/~jleitao/mvn-repo/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
@@ -20,6 +26,28 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>5.0.0.Alpha2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>pt.unl.fct.di.novasys</groupId>
+            <artifactId>babel-core</artifactId>
+            <version>0.4.47</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.24</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.9.1</version>
         </dependency>
 
     </dependencies>

@@ -1,11 +1,11 @@
-package org.example.server;
+package org.streamingAPI.server;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.util.ReferenceCountUtil;
-import org.example.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
-import org.example.handlerFunctions.receiver.StreamReceiverEOSFunction;
-import org.example.handlerFunctions.receiver.StreamReceiverFunction;
+import org.streamingAPI.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
+import org.streamingAPI.handlerFunctions.receiver.StreamReceiverEOSFunction;
+import org.streamingAPI.handlerFunctions.receiver.StreamReceiverFunction;
 
 import java.util.concurrent.atomic.AtomicLong;
 

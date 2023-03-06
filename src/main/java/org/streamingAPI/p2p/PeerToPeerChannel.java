@@ -1,4 +1,4 @@
-package org.example.p2p;
+package org.streamingAPI.p2p;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -8,7 +8,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.util.CharsetUtil;
 
 import java.util.Scanner;
 

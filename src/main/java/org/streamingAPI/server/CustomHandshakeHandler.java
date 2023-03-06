@@ -1,15 +1,9 @@
-package org.example.server;
+package org.streamingAPI.server;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.ReferenceCountUtil;
-import org.example.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
-import org.example.handlerFunctions.receiver.StreamReceiverEOSFunction;
-import org.example.handlerFunctions.receiver.StreamReceiverFirstBytesHandler;
-import org.example.handlerFunctions.receiver.StreamReceiverFunction;
-
-import java.util.concurrent.atomic.AtomicLong;
+import org.streamingAPI.handlerFunctions.receiver.StreamReceiverFirstBytesHandler;
 
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelHandlerAdapter {

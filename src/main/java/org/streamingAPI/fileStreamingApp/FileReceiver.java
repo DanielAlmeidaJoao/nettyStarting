@@ -1,7 +1,7 @@
-package org.example.fileStreamingApp;
+package org.streamingAPI.fileStreamingApp;
 
-import org.example.server.StreamReceiver;
-import org.example.server.StreamReceiverImplementation;
+import org.streamingAPI.server.StreamReceiver;
+import org.streamingAPI.server.StreamReceiverImplementation;
 
 import java.io.FileOutputStream;
 import java.util.HashMap;
