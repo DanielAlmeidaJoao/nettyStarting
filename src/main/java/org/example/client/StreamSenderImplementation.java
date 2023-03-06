@@ -105,7 +105,7 @@ public class StreamSenderImplementation implements StreamSender {
     public static EventLoopGroup createNewWorkerGroup(int nThreads) {
         //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
         //else
-        return new NioEventLoopGroup(nThreads);
+        return new NioEventLoopGroup();
     }
     private Class<? extends Channel> socketChannel(){
         /**

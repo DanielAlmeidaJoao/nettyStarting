@@ -42,9 +42,8 @@ public class StreamReceiverImplementation implements StreamReceiver {
 
     @Override
     public void startListening() throws Exception {
-        EventLoopGroup parentGroup = createNewWorkerGroup(1);
-        EventLoopGroup childGroup = createNewWorkerGroup(1);
-
+        EventLoopGroup parentGroup = createNewWorkerGroup();
+        EventLoopGroup childGroup = createNewWorkerGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(parentGroup,childGroup)
@@ -90,10 +89,10 @@ public class StreamReceiverImplementation implements StreamReceiver {
         clients.remove(streamId).disconnect();
     }
 
-    public static EventLoopGroup createNewWorkerGroup(int nThreads) {
+    public static EventLoopGroup createNewWorkerGroup() {
         //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
         //else
-        return new NioEventLoopGroup(nThreads);
+        return new NioEventLoopGroup();
     }
     private Class<? extends ServerChannel> socketChannel(){
         /**if (Epoll.isAvailable()) {
