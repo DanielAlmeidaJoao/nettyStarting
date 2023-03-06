@@ -1,5 +1,6 @@
 package org.example.fileStreamingApp;
 
+import io.netty.channel.ChannelOption;
 import org.example.client.StreamSender;
 import org.example.client.StreamSenderImplementation;
 
@@ -17,7 +18,7 @@ public class FileStreamer {
     public void startStreaming(){
         try{
             streamSender.connect();
-
+            streamSender.updateConfiguration(ChannelOption.SO_RCVBUF, 64 * 1024);
             Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Desktop/danielJoao_CV (1).pdf");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
@@ -26,12 +27,11 @@ public class FileStreamer {
             int bufferSize = 2*128*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
-            ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+            //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             int read=0, totalSent = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
                 streamSender.sendBytes(bytes,read);
-                bytes = new byte[bufferSize];
             }
             streamSender.printSomeConfigs();
             streamSender.close();

@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicLong;
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelHandlerAdapter {
 
+    public static final String NAME ="CHSHAKE_HANDLER";
+
     private ByteBuf tmp;
 
     StreamReceiverFirstBytesHandler firstBytesHandler;
@@ -32,6 +34,7 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
         System.out.println("HANDSHAKE HANDLER!!!");
         ByteBuf in = (ByteBuf) msg;
         tmp.writeBytes(in);
+        ctx.channel().pipeline().remove(CustomHandshakeHandler.NAME);
     }
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
@@ -40,7 +43,7 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
         firstBytesHandler.execute(data);
         tmp.release();
         tmp=null;
-        ctx.channel().pipeline().remove(this);
+        ctx.channel().pipeline().remove(CustomHandshakeHandler.NAME);
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,

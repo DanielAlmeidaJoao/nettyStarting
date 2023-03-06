@@ -4,21 +4,12 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 
+import java.nio.charset.StandardCharsets;
+
 //@ChannelHandler.Sharable
 public class StreamSenderHandler extends ChannelHandlerAdapter {
-    private byte [] data;
 
-    public StreamSenderHandler(byte [] handshakeData){
-        this.data = handshakeData;
-    }
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        if(data==null){
-            ctx.writeAndFlush(Unpooled.copyInt(0));
-        }else {
-            ctx.writeAndFlush(Unpooled.copiedBuffer(data));
-        }
-    }
+    public StreamSenderHandler(){}
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();

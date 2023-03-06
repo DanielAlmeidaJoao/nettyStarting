@@ -24,7 +24,6 @@ public class FileReceiver {
         }
     }
     private void initChannel(String channelId){
-        //
         System.out.println("CHANNEL ACTIVE!!!");
         try {
             files.put(channelId,new FileOutputStream(channelId+".mp4"));
@@ -58,7 +57,7 @@ public class FileReceiver {
     public void start(){
         try {
             streamReceiverLogic = new StreamReceiverImplementation("localhost",port,
-                    this::initChannel,this::writeToFile,this::closeFile,this::firstBytesHandler);
+                    this::initChannel,this::writeToFile,this::closeFile);
             streamReceiverLogic.startListening();
         }catch (Exception e){
             e.printStackTrace();

@@ -3,8 +3,13 @@ package org.example.client;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 import java.net.InetSocketAddress;
@@ -22,17 +27,17 @@ public class StreamSenderImplementation implements StreamSender {
 
     @Override
     public void connect(){
-        group = new NioEventLoopGroup();
+        group = createNewWorkerGroup(1);
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
-                    .channel(NioSocketChannel.class)
+                    .channel(socketChannel())
                     .remoteAddress(new InetSocketAddress(host, port))
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                        ch.pipeline().addLast( new StreamSenderHandler(null));
+                        ch.pipeline().addLast( new StreamSenderHandler());
                     }
                     });
             channel = b.connect().sync().channel();
@@ -95,5 +100,18 @@ public class StreamSenderImplementation implements StreamSender {
     @Override
     public String streamId(){
         return channel.id().asShortText();
+    }
+
+    public static EventLoopGroup createNewWorkerGroup(int nThreads) {
+        //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
+        //else
+        return new NioEventLoopGroup(nThreads);
+    }
+    private Class<? extends Channel> socketChannel(){
+        /**
+        if (Epoll.isAvailable()) {
+            return EpollSocketChannel.class;
+        }**/
+        return NioSocketChannel.class;
     }
 }

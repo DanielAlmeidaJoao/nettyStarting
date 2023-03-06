@@ -2,12 +2,14 @@ package org.example.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.example.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
 import org.example.handlerFunctions.receiver.StreamReceiverEOSFunction;
-import org.example.handlerFunctions.receiver.StreamReceiverFirstBytesHandler;
 import org.example.handlerFunctions.receiver.StreamReceiverFunction;
 
 import java.net.InetSocketAddress;
@@ -23,45 +25,35 @@ public class StreamReceiverImplementation implements StreamReceiver {
     private StreamReceiverChannelActiveFunction activeFunction;
     private StreamReceiverFunction streamReceiverFunction;
     private StreamReceiverEOSFunction streamReceiverEOSFunction;
-    private StreamReceiverFirstBytesHandler firstBytesHandler;
-
     private Map<String,SocketChannel> clients;
 
     public StreamReceiverImplementation(String hostName, int port,
                                         StreamReceiverChannelActiveFunction chanActiveFunc,
                                         StreamReceiverFunction receiveDataHandler,
-                                        StreamReceiverEOSFunction chanInactiveHandler,
-                                        StreamReceiverFirstBytesHandler firstBytesHandler
+                                        StreamReceiverEOSFunction chanInactiveHandler
                                         ) {
         this.port = port;
         this.hostName = hostName;
         activeFunction = chanActiveFunc;
         this.streamReceiverFunction = receiveDataHandler;
         this.streamReceiverEOSFunction = chanInactiveHandler;
-        this.firstBytesHandler = firstBytesHandler;
         clients = new HashMap<>();
     }
 
-    public void testHandShakeHandler(byte [] data)
-    {
-        System.out.println("RECEIVED "+data.length);
-    }
-    public StreamReceiverFirstBytesHandler test=this::testHandShakeHandler;
     @Override
     public void startListening() throws Exception {
-        EventLoopGroup parentGroup = new NioEventLoopGroup();
-        EventLoopGroup childGroup = new NioEventLoopGroup();
+        EventLoopGroup parentGroup = createNewWorkerGroup(1);
+        EventLoopGroup childGroup = createNewWorkerGroup(1);
 
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(parentGroup,childGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .option(ChannelOption.SO_RCVBUF, 64 * 1024)
+                    .channel(socketChannel())
                     .localAddress(new InetSocketAddress(hostName,port))
                     .childHandler(new ChannelInitializer<SocketChannel>(){
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new CustomHandshakeHandler(test));
+                            //ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(test));
                             ch.pipeline().addLast(new StreamReceiverHandler(activeFunction,
                                     streamReceiverFunction,
                                     streamReceiverEOSFunction));
@@ -77,11 +69,15 @@ public class StreamReceiverImplementation implements StreamReceiver {
                 System.out.println("CONNECTION CLOSED "+future.isSuccess());
                 parentGroup.shutdownGracefully().sync();
                 childGroup.shutdownGracefully().sync();
-
             });
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public <T> void updateConfiguration(ChannelOption<T> option, T value) {
+        serverChannel.config().setOption(option,value);
     }
 
 
@@ -93,4 +89,17 @@ public class StreamReceiverImplementation implements StreamReceiver {
     public void closeStream(String streamId){
         clients.remove(streamId).disconnect();
     }
+
+    public static EventLoopGroup createNewWorkerGroup(int nThreads) {
+        //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
+        //else
+        return new NioEventLoopGroup(nThreads);
+    }
+    private Class<? extends ServerChannel> socketChannel(){
+        /**if (Epoll.isAvailable()) {
+            return EpollServerSocketChannel.class;
+        }**/
+        return NioServerSocketChannel.class;
+    }
+
 }
