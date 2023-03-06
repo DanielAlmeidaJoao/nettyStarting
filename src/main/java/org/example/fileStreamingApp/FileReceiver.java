@@ -1,7 +1,7 @@
 package org.example.fileStreamingApp;
 
 import org.example.server.StreamReceiver;
-import org.example.server.StreamReceiverLogic;
+import org.example.server.StreamReceiverImplementation;
 
 import java.io.FileOutputStream;
 import java.util.HashMap;
@@ -41,6 +41,10 @@ public class FileReceiver {
             e.printStackTrace();
         }
     }
+
+    private void firstBytesHandler(byte [] data){
+
+    }
     private void closeFile(String id){
         System.out.println("CONNECTION CLOSED: "+id);
         try{
@@ -53,7 +57,8 @@ public class FileReceiver {
 
     public void start(){
         try {
-            streamReceiverLogic = new StreamReceiverLogic("localhost",port,this::initChannel,this::writeToFile,this::closeFile);
+            streamReceiverLogic = new StreamReceiverImplementation("localhost",port,
+                    this::initChannel,this::writeToFile,this::closeFile,this::firstBytesHandler);
             streamReceiverLogic.startListening();
         }catch (Exception e){
             e.printStackTrace();
@@ -63,7 +68,7 @@ public class FileReceiver {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println(
-                    "Usage: " + StreamReceiverLogic.class.getSimpleName() +
+                    "Usage: " + StreamReceiverImplementation.class.getSimpleName() +
                             " <port>");
         }
         int port = Integer.parseInt(args[0]);

@@ -2,12 +2,12 @@ java -Xmx500M -cp asdProj2.jar Main p2p_port=10101 server_port=35000 &
 java -cp target\nettyStart.jar Main
 
 java -cp target\nettyStart.jar org.example.client.StreamSender localhost 8081
-java -cp target\nettyStart.jar org.example.server.StreamReceiverLogic 8081
+java -cp target\nettyStart.jar org.example.server.StreamReceiverImplementation 8081
 
 java -cp target/nettyStart.jar org.example.client.StreamSender localhost 8081
 java -cp target/nettyStart.jar org.example.fileStreamingApp.FileStreamer localhost 8081
 
-java -cp target/nettyStart.jar org.example.server.StreamReceiverLogic 8081
+java -cp target/nettyStart.jar org.example.server.StreamReceiverImplementation 8081
 
 java -cp target/nettyStart.jar org.example.fileStreamingApp.FileReceiver 8081
 

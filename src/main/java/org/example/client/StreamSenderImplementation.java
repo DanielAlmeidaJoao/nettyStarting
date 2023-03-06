@@ -32,7 +32,7 @@ public class StreamSenderImplementation implements StreamSender {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                        ch.pipeline().addLast( new StreamSenderHandler());
+                        ch.pipeline().addLast( new StreamSenderHandler(null));
                     }
                     });
             channel = b.connect().sync().channel();

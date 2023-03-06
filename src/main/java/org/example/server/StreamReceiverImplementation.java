@@ -7,13 +7,14 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.example.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
 import org.example.handlerFunctions.receiver.StreamReceiverEOSFunction;
+import org.example.handlerFunctions.receiver.StreamReceiverFirstBytesHandler;
 import org.example.handlerFunctions.receiver.StreamReceiverFunction;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StreamReceiverLogic implements StreamReceiver {
+public class StreamReceiverImplementation implements StreamReceiver {
     private final int port;
 
     private final String hostName;
@@ -22,21 +23,30 @@ public class StreamReceiverLogic implements StreamReceiver {
     private StreamReceiverChannelActiveFunction activeFunction;
     private StreamReceiverFunction streamReceiverFunction;
     private StreamReceiverEOSFunction streamReceiverEOSFunction;
+    private StreamReceiverFirstBytesHandler firstBytesHandler;
 
     private Map<String,SocketChannel> clients;
 
-    public StreamReceiverLogic(String hostName, int port,
-                               StreamReceiverChannelActiveFunction chanActiveFunc,
-                               StreamReceiverFunction receiveDataHandler,
-                               StreamReceiverEOSFunction chanInactiveHandler ) {
+    public StreamReceiverImplementation(String hostName, int port,
+                                        StreamReceiverChannelActiveFunction chanActiveFunc,
+                                        StreamReceiverFunction receiveDataHandler,
+                                        StreamReceiverEOSFunction chanInactiveHandler,
+                                        StreamReceiverFirstBytesHandler firstBytesHandler
+                                        ) {
         this.port = port;
         this.hostName = hostName;
         activeFunction = chanActiveFunc;
         this.streamReceiverFunction = receiveDataHandler;
         this.streamReceiverEOSFunction = chanInactiveHandler;
+        this.firstBytesHandler = firstBytesHandler;
         clients = new HashMap<>();
     }
 
+    public void testHandShakeHandler(byte [] data)
+    {
+        System.out.println("RECEIVED "+data.length);
+    }
+    public StreamReceiverFirstBytesHandler test=this::testHandShakeHandler;
     @Override
     public void startListening() throws Exception {
         EventLoopGroup parentGroup = new NioEventLoopGroup();
@@ -51,6 +61,7 @@ public class StreamReceiverLogic implements StreamReceiver {
                     .childHandler(new ChannelInitializer<SocketChannel>(){
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new CustomHandshakeHandler(test));
                             ch.pipeline().addLast(new StreamReceiverHandler(activeFunction,
                                     streamReceiverFunction,
                                     streamReceiverEOSFunction));
