@@ -1,6 +1,6 @@
 package org.streamingAPI.handlerFunctions.receiver;
 
 @FunctionalInterface
-public interface StreamReceiverChannelActiveFunction {
+public interface ChannelActiveHandler {
     public void execute(String channelId);
 }

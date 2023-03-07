@@ -2,16 +2,15 @@ package org.streamingAPI.client;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-
-import java.nio.charset.StandardCharsets;
+import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
+import org.streamingAPI.server.CustomChannelHandler;
 
 //@ChannelHandler.Sharable
-public class StreamSenderHandler extends ChannelHandlerAdapter {
-
+public class StreamSenderHandler extends CustomChannelHandler {
     byte [] controlData;
-    public StreamSenderHandler(byte [] handshakeData){
+    public StreamSenderHandler(byte [] handshakeData, HandlerFunctions handlerFunctions){
+        super(handlerFunctions);
         this.controlData = handshakeData;
     }
 
@@ -27,11 +26,5 @@ public class StreamSenderHandler extends ChannelHandlerAdapter {
         ctx.writeAndFlush(tmp);
         controlData=null;
         super.channelActive(ctx);
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
-        ctx.close();
     }
 }

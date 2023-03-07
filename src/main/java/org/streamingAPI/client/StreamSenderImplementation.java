@@ -6,6 +6,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -13,12 +14,14 @@ import java.nio.charset.StandardCharsets;
 public class StreamSenderImplementation implements StreamSender {
     private final String host;
     private final int port;
+    private final HandlerFunctions handlerFunctions;
 
     private Channel channel;
     private EventLoopGroup group;
-    public StreamSenderImplementation(String host, int port) {
+    public StreamSenderImplementation(String host, int port, HandlerFunctions handlerFunctions) {
         this.host = host;
         this.port = port;
+        this.handlerFunctions = handlerFunctions;
     }
 
     @Override
@@ -33,7 +36,7 @@ public class StreamSenderImplementation implements StreamSender {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                        ch.pipeline().addLast( new StreamSenderHandler("THE NEW GUY IN TONW ".getBytes(StandardCharsets.UTF_8)));
+                        ch.pipeline().addLast( new StreamSenderHandler("THE NEW GUY IN TONW ".getBytes(StandardCharsets.UTF_8),handlerFunctions));
                     }
                     });
             channel = b.connect().sync().channel();

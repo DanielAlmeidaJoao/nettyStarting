@@ -1,11 +1,9 @@
 package org.streamingAPI.server;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.ReferenceCountUtil;
-import org.streamingAPI.handlerFunctions.receiver.StreamReceiverFirstBytesHandler;
+import org.streamingAPI.handlerFunctions.receiver.ChannelActiveReadHandler;
 
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelHandlerAdapter {
@@ -13,8 +11,8 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
     public static final String NAME ="CHSHAKE_HANDLER";
 
     private byte [] controlData;
-    private StreamReceiverFirstBytesHandler firstBytesHandler;
-    public CustomHandshakeHandler(StreamReceiverFirstBytesHandler firstBytesHandler){
+    private ChannelActiveReadHandler firstBytesHandler;
+    public CustomHandshakeHandler(ChannelActiveReadHandler firstBytesHandler){
        this.firstBytesHandler = firstBytesHandler;
     }
 

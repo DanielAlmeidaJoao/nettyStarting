@@ -13,6 +13,10 @@ java -cp target/nettyStart.jar org.streamingAPI.fileStreamingApp.FileReceiver 80
 
 java -cp target/nettyStart.jar org.streamingAPI.p2p.PeerToPeerChannel
 
+WINDOWS:
+java -cp target/nettyStart.jar org.streamingAPI.fileStreamingApp.FileReceiver 8081
+
+java -cp target/nettyStart.jar org.streamingAPI.fileStreamingApp.FileStreamer localhost 8081
 
 
 

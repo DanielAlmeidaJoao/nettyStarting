@@ -5,10 +5,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.streamingAPI.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
-import org.streamingAPI.handlerFunctions.receiver.StreamReceiverEOSFunction;
-import org.streamingAPI.handlerFunctions.receiver.StreamReceiverFirstBytesHandler;
-import org.streamingAPI.handlerFunctions.receiver.StreamReceiverFunction;
+import org.streamingAPI.handlerFunctions.receiver.*;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -20,25 +17,15 @@ public class StreamReceiverImplementation implements StreamReceiver {
     private final String hostName;
     private Channel serverChannel;
 
-    private StreamReceiverChannelActiveFunction activeFunction;
-    private StreamReceiverFunction streamReceiverFunction;
-    private StreamReceiverEOSFunction streamReceiverEOSFunction;
-
-    private StreamReceiverFirstBytesHandler controlDataHandler;
+    private HandlerFunctions handlerFunctions;
     private Map<String,SocketChannel> clients;
 
     public StreamReceiverImplementation(String hostName, int port,
-                                        StreamReceiverChannelActiveFunction chanActiveFunc,
-                                        StreamReceiverFunction receiveDataHandler,
-                                        StreamReceiverEOSFunction chanInactiveHandler,
-                                        StreamReceiverFirstBytesHandler controlDataHandler
+                                        HandlerFunctions handlerFunctions
                                         ) {
         this.port = port;
         this.hostName = hostName;
-        activeFunction = chanActiveFunc;
-        this.streamReceiverFunction = receiveDataHandler;
-        this.streamReceiverEOSFunction = chanInactiveHandler;
-        this.controlDataHandler = controlDataHandler;
+        this.handlerFunctions = handlerFunctions;
         clients = new HashMap<>();
     }
 
@@ -54,10 +41,8 @@ public class StreamReceiverImplementation implements StreamReceiver {
                     .childHandler(new ChannelInitializer<SocketChannel>(){
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(controlDataHandler));
-                            ch.pipeline().addLast(new StreamReceiverHandler(activeFunction,
-                                    streamReceiverFunction,
-                                    streamReceiverEOSFunction));
+                            ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(handlerFunctions.getControlData()));
+                            ch.pipeline().addLast(new StreamReceiverHandler(handlerFunctions));
                             clients.put(ch.id().asShortText(),ch);
                         }
                     });

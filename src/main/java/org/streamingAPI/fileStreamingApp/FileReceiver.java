@@ -1,5 +1,6 @@
 package org.streamingAPI.fileStreamingApp;
 
+import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
 import org.streamingAPI.server.StreamReceiver;
 import org.streamingAPI.server.StreamReceiverImplementation;
 
@@ -12,8 +13,15 @@ public class FileReceiver {
     private Map<String,FileOutputStream> files;
     private StreamReceiver streamReceiverLogic;
     private int port;
+    private HandlerFunctions handlerFunctions;
 
     public FileReceiver(int port){
+        handlerFunctions = new HandlerFunctions(
+                this::initChannel,
+                this::writeToFile,
+                this::closeFile,
+                this::firstBytesHandler
+        );
         this.port = port;
         try {
             //String inputFileName = "/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4";
@@ -61,9 +69,7 @@ public class FileReceiver {
 
     public void start(){
         try {
-            streamReceiverLogic = new StreamReceiverImplementation("localhost",port,
-                    this::initChannel,this::writeToFile,
-                    this::closeFile,this::firstBytesHandler);
+            streamReceiverLogic = new StreamReceiverImplementation("localhost",port,handlerFunctions);
             streamReceiverLogic.startListening();
         }catch (Exception e){
             e.printStackTrace();

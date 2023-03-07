@@ -3,6 +3,7 @@ package org.streamingAPI.fileStreamingApp;
 import io.netty.channel.ChannelOption;
 import org.streamingAPI.client.StreamSender;
 import org.streamingAPI.client.StreamSenderImplementation;
+import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
 
 import java.io.FileInputStream;
 import java.nio.file.Path;
@@ -12,15 +13,21 @@ public class FileStreamer {
     private StreamSender streamSender;
 
     public FileStreamer(String host, int port){
-        streamSender = new StreamSenderImplementation(host,port);
+        HandlerFunctions handlerFunctions = new HandlerFunctions(
+                this::channelActive,
+                this::channelRead,
+                this::channelInactive,
+                this::channelActiveRead
+        );
+        streamSender = new StreamSenderImplementation(host,port,handlerFunctions);
     }
     public void startStreaming(){
         try{
             streamSender.connect();
             streamSender.updateConfiguration(ChannelOption.SO_RCVBUF, 64 * 1024);
-            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Desktop/danielJoao_CV (1).pdf");
-            //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+            Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
 
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             int bufferSize = 2*128*1024; // 8KB buffer size
@@ -54,5 +61,18 @@ public class FileStreamer {
         String host = args[0];
         int port = Integer.parseInt(args[1]);
         new FileStreamer(host,port).startStreaming();
+    }
+
+    public void channelActive(String channelId){
+
+    }
+    public void channelActiveRead(byte [] data){
+
+    }
+    public void channelRead(String channelId, byte [] data){
+
+    }
+    public void channelInactive(String channelId){
+
     }
 }
