@@ -8,6 +8,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 
 public class StreamSenderImplementation implements StreamSender {
     private final String host;
@@ -32,7 +33,7 @@ public class StreamSenderImplementation implements StreamSender {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                        ch.pipeline().addLast( new StreamSenderHandler());
+                        ch.pipeline().addLast( new StreamSenderHandler("THE NEW GUY IN TONW ".getBytes(StandardCharsets.UTF_8)));
                     }
                     });
             channel = b.connect().sync().channel();

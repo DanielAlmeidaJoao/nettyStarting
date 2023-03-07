@@ -32,7 +32,6 @@ public class FileStreamer {
                 totalSent += read;
 
                 streamSender.sendBytes(bytes,read);
-
             }
             streamSender.close();
             System.out.println("TOTAL SENT "+totalSent);

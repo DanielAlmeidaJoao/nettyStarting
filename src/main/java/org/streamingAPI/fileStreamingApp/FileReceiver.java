@@ -42,7 +42,12 @@ public class FileReceiver {
     }
 
     private void firstBytesHandler(byte [] data){
-
+        System.out.println("GOING TO PRINT CONTROL DATA!");
+        if(data.length == 0){
+            return;
+        }
+        String ola = new String(data);
+        System.out.println(ola);
     }
     private void closeFile(String id){
         System.out.println("CONNECTION CLOSED: "+id);
@@ -57,7 +62,8 @@ public class FileReceiver {
     public void start(){
         try {
             streamReceiverLogic = new StreamReceiverImplementation("localhost",port,
-                    this::initChannel,this::writeToFile,this::closeFile);
+                    this::initChannel,this::writeToFile,
+                    this::closeFile,this::firstBytesHandler);
             streamReceiverLogic.startListening();
         }catch (Exception e){
             e.printStackTrace();

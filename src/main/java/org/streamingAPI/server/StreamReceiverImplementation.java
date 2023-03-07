@@ -7,6 +7,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.streamingAPI.handlerFunctions.receiver.StreamReceiverChannelActiveFunction;
 import org.streamingAPI.handlerFunctions.receiver.StreamReceiverEOSFunction;
+import org.streamingAPI.handlerFunctions.receiver.StreamReceiverFirstBytesHandler;
 import org.streamingAPI.handlerFunctions.receiver.StreamReceiverFunction;
 
 import java.net.InetSocketAddress;
@@ -22,18 +23,22 @@ public class StreamReceiverImplementation implements StreamReceiver {
     private StreamReceiverChannelActiveFunction activeFunction;
     private StreamReceiverFunction streamReceiverFunction;
     private StreamReceiverEOSFunction streamReceiverEOSFunction;
+
+    private StreamReceiverFirstBytesHandler controlDataHandler;
     private Map<String,SocketChannel> clients;
 
     public StreamReceiverImplementation(String hostName, int port,
                                         StreamReceiverChannelActiveFunction chanActiveFunc,
                                         StreamReceiverFunction receiveDataHandler,
-                                        StreamReceiverEOSFunction chanInactiveHandler
+                                        StreamReceiverEOSFunction chanInactiveHandler,
+                                        StreamReceiverFirstBytesHandler controlDataHandler
                                         ) {
         this.port = port;
         this.hostName = hostName;
         activeFunction = chanActiveFunc;
         this.streamReceiverFunction = receiveDataHandler;
         this.streamReceiverEOSFunction = chanInactiveHandler;
+        this.controlDataHandler = controlDataHandler;
         clients = new HashMap<>();
     }
 
@@ -49,7 +54,7 @@ public class StreamReceiverImplementation implements StreamReceiver {
                     .childHandler(new ChannelInitializer<SocketChannel>(){
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            //ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(test));
+                            ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(controlDataHandler));
                             ch.pipeline().addLast(new StreamReceiverHandler(activeFunction,
                                     streamReceiverFunction,
                                     streamReceiverEOSFunction));

@@ -35,6 +35,7 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf in = (ByteBuf) msg;
+        //System.out.println("ALSO RECEIVED!!!");
         try {
             while (in.isReadable()) {
                 long start = System.currentTimeMillis();
@@ -58,7 +59,7 @@ public class StreamReceiverHandler extends ChannelHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         EOSFunction.execute(ctx.channel().id().asShortText());
-        System.out.printf("CHANNEL %S CLOSED. TOOK READING TIME: %S\n",ctx.channel().id().asShortText(),timeElapsed+"");
+        System.out.printf("CHANNEL %S CLOSED. TOOK READING TIME: %S. TOTAL READ %S \n",ctx.channel().id().asShortText(),timeElapsed+"",totalRead+"");
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
