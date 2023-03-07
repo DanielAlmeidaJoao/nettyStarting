@@ -1,5 +1,6 @@
 package org.streamingAPI.fileStreamingApp;
 
+import io.netty.channel.ChannelOption;
 import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
 import org.streamingAPI.server.StreamReceiver;
 import org.streamingAPI.server.StreamReceiverImplementation;
@@ -11,7 +12,7 @@ import java.util.Map;
 public class FileReceiver {
 
     private Map<String,FileOutputStream> files;
-    private StreamReceiver streamReceiverLogic;
+    private StreamReceiver streamReceiver;
     private int port;
     private HandlerFunctions handlerFunctions;
 
@@ -35,15 +36,19 @@ public class FileReceiver {
         System.out.println("CHANNEL ACTIVE!!!");
         try {
             files.put(channelId,new FileOutputStream(channelId+".mp4"));
+            streamReceiver.updateConfiguration(channelId,ChannelOption.SO_RCVBUF, 128 * 1024);
         }catch (Exception e){
             e.printStackTrace();
         }
     }
-    private void writeToFile(String id, byte [] data){
+
+    private void writeToFile(String streamId, byte [] data){
+        System.out.println("LEN "+data.length);
         try{
-            FileOutputStream fos = files.get(id);
+            FileOutputStream fos = files.get(streamId);
             fos.write(data, 0, data.length);
             fos.flush();
+            streamReceiver.sendBytes(streamId,data,data.length);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -69,8 +74,8 @@ public class FileReceiver {
 
     public void start(){
         try {
-            streamReceiverLogic = new StreamReceiverImplementation("localhost",port,handlerFunctions);
-            streamReceiverLogic.startListening();
+            streamReceiver = new StreamReceiverImplementation("localhost",port,handlerFunctions);
+            streamReceiver.startListening();
         }catch (Exception e){
             e.printStackTrace();
         }

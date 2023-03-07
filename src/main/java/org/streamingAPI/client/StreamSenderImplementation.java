@@ -51,6 +51,12 @@ public class StreamSenderImplementation implements StreamSender {
         }
     }
 
+    private void printSomeConfigs(){
+        System.out.println("CONFIGS:");
+        System.out.println(channel.config().getOptions().get(ChannelOption.SO_RCVBUF));
+        System.out.println(channel.config().getMaxMessagesPerRead());
+    }
+
     /**
      * @pre Connection must be established/active before calling this method
      * @param option Netty option
@@ -67,6 +73,7 @@ public class StreamSenderImplementation implements StreamSender {
      */
     @Override
     public void close(){
+        printSomeConfigs();
         try {
             while (channel.unsafe().outboundBuffer().totalPendingWriteBytes()>0){
                 Thread.sleep(1000);

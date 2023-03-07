@@ -6,11 +6,13 @@ import org.streamingAPI.client.StreamSenderImplementation;
 import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileStreamer {
     private StreamSender streamSender;
+    private FileOutputStream fileOutputStream;
 
     public FileStreamer(String host, int port){
         HandlerFunctions handlerFunctions = new HandlerFunctions(
@@ -20,15 +22,19 @@ public class FileStreamer {
                 this::channelActiveRead
         );
         streamSender = new StreamSenderImplementation(host,port,handlerFunctions);
+        try {
+            fileOutputStream = new FileOutputStream("copyOFmine.mp4");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
     public void startStreaming(){
         try{
             streamSender.connect();
-            streamSender.updateConfiguration(ChannelOption.SO_RCVBUF, 64 * 1024);
+            streamSender.updateConfiguration(ChannelOption.SO_RCVBUF, 128 * 1024);
             //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Desktop/danielJoao_CV (1).pdf");
             Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
-
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             int bufferSize = 2*128*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
@@ -37,7 +43,6 @@ public class FileStreamer {
             int read=0, totalSent = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-
                 streamSender.sendBytes(bytes,read);
             }
             streamSender.close();
@@ -70,9 +75,19 @@ public class FileStreamer {
 
     }
     public void channelRead(String channelId, byte [] data){
-
+        System.out.println("LENN "+data.length);
+        try {
+            fileOutputStream.write(data, 0, data.length);
+            fileOutputStream.flush();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
     public void channelInactive(String channelId){
-
+        try {
+            fileOutputStream.close();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
