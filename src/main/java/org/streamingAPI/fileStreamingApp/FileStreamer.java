@@ -1,6 +1,5 @@
 package org.streamingAPI.fileStreamingApp;
 
-import io.netty.channel.ChannelOption;
 import org.streamingAPI.client.StreamSender;
 import org.streamingAPI.client.StreamSenderImplementation;
 import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
@@ -31,10 +30,9 @@ public class FileStreamer {
     public void startStreaming(){
         try{
             streamSender.connect();
-            streamSender.updateConfiguration(ChannelOption.SO_RCVBUF, 128 * 1024);
             //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            //Path filePath = Paths.get("/home/tsunami/Desktop/danielJoao_CV (1).pdf");
-            Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             int bufferSize = 2*128*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
@@ -47,6 +45,7 @@ public class FileStreamer {
             }
             streamSender.close();
             System.out.println("TOTAL SENT "+totalSent);
+            Thread.sleep(5*1000);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -75,7 +74,6 @@ public class FileStreamer {
 
     }
     public void channelRead(String channelId, byte [] data){
-        System.out.println("LENN "+data.length);
         try {
             fileOutputStream.write(data, 0, data.length);
             fileOutputStream.flush();

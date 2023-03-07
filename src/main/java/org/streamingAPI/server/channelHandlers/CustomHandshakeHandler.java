@@ -1,4 +1,4 @@
-package org.streamingAPI.server;
+package org.streamingAPI.server.channelHandlers;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerAdapter;

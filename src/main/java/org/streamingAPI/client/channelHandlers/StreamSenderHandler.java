@@ -1,14 +1,10 @@
-package org.streamingAPI.client;
+package org.streamingAPI.client.channelHandlers;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
-import org.streamingAPI.server.CustomChannelHandler;
-
-import java.io.FileInputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import org.streamingAPI.server.channelHandlers.CustomChannelHandler;
 
 //@ChannelHandler.Sharable
 public class StreamSenderHandler extends CustomChannelHandler {

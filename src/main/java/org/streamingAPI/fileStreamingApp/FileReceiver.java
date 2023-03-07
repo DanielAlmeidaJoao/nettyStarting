@@ -33,17 +33,14 @@ public class FileReceiver {
         }
     }
     private void initChannel(String channelId){
-        System.out.println("CHANNEL ACTIVE!!!");
         try {
             files.put(channelId,new FileOutputStream(channelId+".mp4"));
-            streamReceiver.updateConfiguration(channelId,ChannelOption.SO_RCVBUF, 128 * 1024);
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
     private void writeToFile(String streamId, byte [] data){
-        System.out.println("LEN "+data.length);
         try{
             FileOutputStream fos = files.get(streamId);
             fos.write(data, 0, data.length);

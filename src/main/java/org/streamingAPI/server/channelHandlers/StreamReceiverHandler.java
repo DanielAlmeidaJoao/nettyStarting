@@ -1,4 +1,4 @@
-package org.streamingAPI.server;
+package org.streamingAPI.server.channelHandlers;
 
 import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
 
