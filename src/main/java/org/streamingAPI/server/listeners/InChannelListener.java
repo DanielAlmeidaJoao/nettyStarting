@@ -14,24 +14,24 @@ public class InChannelListener {
         this.handlerFunctions = handlerFunctions;
     }
 
-    public void setActiveFunction (String channelId){
+    public void onChannelActive(String channelId){
         loop.execute(() -> {
             handlerFunctions.getActiveFunction().execute(channelId);
         });
     }
-    public void setControlData(String channelId,byte [] data){
+    public void onControlDataRead(String channelId, byte [] data){
         loop.execute(() -> {
             handlerFunctions.getControlDataHandler().execute(channelId,data);
         });
     }
 
-    public void setChannelReadHandler(String channelId, byte [] data){
+    public void onChannelRead(String channelId, byte [] data){
         loop.execute(() -> {
             handlerFunctions.getChannelReadHandler().execute(channelId,data);
         });
     }
 
-    public void setChannelInactiveHandler(String channelId){
+    public void onChannelInactive(String channelId){
         loop.execute(() -> {
             handlerFunctions.getChannelInactiveHandler().execute(channelId);
         });

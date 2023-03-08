@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
-import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
 import org.streamingAPI.server.listeners.InChannelListener;
 
 //@ChannelHandler.Sharable
@@ -17,8 +16,6 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
     private int timesCompleted = 0;
 
 
-    private ByteBuf tmp;
-
     public CustomChannelHandler(InChannelListener inChannelListener){
         this.inChannelListener  = inChannelListener;
         totalRead = 0;
@@ -26,7 +23,7 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
     }
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        inChannelListener.setActiveFunction(ctx.channel().id().asShortText());
+        inChannelListener.onChannelActive(ctx.channel().id().asShortText());
     }
     private void deliverData(ByteBuf in, String streamId){
         //System.out.println("ALSO RECEIVED!!!");
@@ -37,20 +34,19 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
             in.readBytes(bytes);
             long end = System.currentTimeMillis();
             timeElapsed += (end-start);
-            inChannelListener.setChannelReadHandler(streamId,bytes);
+            inChannelListener.onChannelRead(streamId,bytes);
             totalRead += bytes.length;
             timesReceived++;
             //}
         }catch (Exception e ){
             e.printStackTrace();
         }finally {
-            ReferenceCountUtil.release(tmp);
+            ReferenceCountUtil.release(in);
         }
     }
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf in = (ByteBuf) msg;
-        tmp = in;
         deliverData(in,ctx.channel().id().asShortText());
     }
     @Override
@@ -59,7 +55,7 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        inChannelListener.setChannelInactiveHandler(ctx.channel().id().asShortText());
+        inChannelListener.onChannelInactive(ctx.channel().id().asShortText());
         System.out.printf("CHANNEL %S CLOSED. TOOK READING TIME: %S. TOTAL READ %S \n",ctx.channel().id().asShortText(),timeElapsed+"",totalRead+"");
         System.out.println("TIMES READ: "+timesReceived+" TIMES COMPLETED: "+timesCompleted);
     }
