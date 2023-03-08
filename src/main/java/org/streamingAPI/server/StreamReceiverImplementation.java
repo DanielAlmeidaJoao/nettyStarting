@@ -7,7 +7,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
-import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.Promise;
+import io.netty.util.concurrent.PromiseNotifier;
+import lombok.Getter;
 import org.streamingAPI.handlerFunctions.receiver.*;
 import org.streamingAPI.server.channelHandlers.CustomHandshakeHandler;
 import org.streamingAPI.server.channelHandlers.StreamReceiverHandler;
@@ -16,7 +18,6 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.concurrent.Executor;
 
 public class StreamReceiverImplementation implements StreamReceiver {
 
@@ -32,11 +33,12 @@ public class StreamReceiverImplementation implements StreamReceiver {
     private final String hostName;
     private Channel serverChannel;
 
+    @Getter
     private org.streamingAPI.server.listeners.InChannelListener inListener;
     private Map<String,SocketChannel> clients;
 
     public StreamReceiverImplementation(String hostName, int port,
-                                        ChannelHandlers handlerFunctions
+                                        ChannelFuncHandlers handlerFunctions
                                         ) {
         this.port = port;
         this.hostName = hostName;
@@ -54,59 +56,67 @@ public class StreamReceiverImplementation implements StreamReceiver {
      * @throws Exception
      */
     @Override
-    public void startListening(boolean sync) throws Exception {
+    public void startListening(boolean sync) throws Exception{
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
-        try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(parentGroup,childGroup)
-                    .channel(socketChannel())
-                    .localAddress(new InetSocketAddress(hostName,port))
-                    .childHandler(new ChannelInitializer<SocketChannel>(){
-                        @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(inListener));
-                            ch.pipeline().addLast(new StreamReceiverHandler(inListener));
-                            clients.put(ch.id().asShortText(),ch);
-                        }
-                    });
-            ChannelFuture f = b.bind().sync();
-            serverChannel = f.channel();
+        ServerBootstrap b = new ServerBootstrap();
+        b.group(parentGroup,childGroup)
+                .channel(socketChannel())
+                .localAddress(new InetSocketAddress(hostName,port))
+                .childHandler(new ChannelInitializer<SocketChannel>(){
+                    @Override
+                    public void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(inListener));
+                        ch.pipeline().addLast(new StreamReceiverHandler(inListener));
+                        clients.put(ch.id().asShortText(),ch);
+                    }
+                });
+        ChannelFuture f = b.bind().sync();
+        serverChannel = f.channel();
 
-            if(sync){
-                f = serverChannel.closeFuture().sync();
-            }else{
-                f = serverChannel.closeFuture();
-            }
-            System.out.println("GOING TO SLEEP!1");
-            // Wait for the server channel to close. Blocks.
-            f.addListener(future -> {
-                //TO DO
-                System.out.println("CONNECTION CLOSED "+future.isSuccess());
-                parentGroup.shutdownGracefully().sync();
-                childGroup.shutdownGracefully().sync();
-            });
-            System.out.println("GOING TO SLEEP!");
-            Thread.sleep(100*1000);
-        }catch (Exception e){
-            e.printStackTrace();
+        if(sync){
+            f = serverChannel.closeFuture().sync();
+        }else{
+            f = serverChannel.closeFuture();
         }
+        // Wait for the server channel to close. Blocks.
+        f.addListener(future -> {
+            //TO DO
+            System.out.println("CONNECTION CLOSED "+future.isSuccess());
+            parentGroup.shutdownGracefully().sync();
+            childGroup.shutdownGracefully().sync();
+        });
     }
     private void noSuchStreamException(String streamId){
         if(!clients.containsKey(streamId)){
             throw new NoSuchElementException("NO SUCH STREAM ID: "+streamId);
         }
     }
-    public void sendBytes(String streamId ,byte[] message, int len){
+    public void send(String streamId , byte[] message, int len){
+        sendBytesWithListener(streamId,message,len,null);
+    }
+    public DefaultEventExecutor getDefaultEventExecutor(){
+        return inListener.getLoop();
+    }
+    /**
+     * DefaultEventExecutor loop = ...
+     * Promise<Void> promise = loop.newPromise();
+    *         promise.addListener(future -> {
+    *             if (future.isSuccess() && triggerSent) listener.messageSent(msg, peer);
+    *             else if (!future.isSuccess()) listener.messageFailed(msg, peer, future.cause());
+    *         });
+     * @param streamId
+     * @param message
+     * @param len
+     * @param promise
+     */
+    public void sendBytesWithListener(String streamId, byte[] message, int len, Promise<Void> promise){
         SocketChannel stream = clients.get(streamId);
         noSuchStreamException(streamId);
-        stream.writeAndFlush(Unpooled.copiedBuffer(message,0,len)).addListener(future -> {
-            if(future.isSuccess()){
-                //TODO metrics!
-            }else {
-                System.out.println("MESSAGE NOT SENT: "+future.cause());
-            }
-        });
+        ChannelFuture f = stream.writeAndFlush(Unpooled.copiedBuffer(message,0,len));
+        if(promise!=null){
+            f.addListener(new PromiseNotifier<>(promise));
+        }
     }
     @Override
     public <T> void updateConfiguration(ChannelOption<T> option, T value) {

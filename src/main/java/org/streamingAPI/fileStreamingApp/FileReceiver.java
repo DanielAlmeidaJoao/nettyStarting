@@ -1,6 +1,6 @@
 package org.streamingAPI.fileStreamingApp;
 
-import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
+import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamReceiver;
 import org.streamingAPI.server.StreamReceiverImplementation;
 
@@ -13,10 +13,10 @@ public class FileReceiver {
     private Map<String,FileOutputStream> files;
     private StreamReceiver streamReceiver;
     private int port;
-    private ChannelHandlers handlerFunctions;
+    private ChannelFuncHandlers handlerFunctions;
 
     public FileReceiver(int port){
-        handlerFunctions = new ChannelHandlers(
+        handlerFunctions = new ChannelFuncHandlers(
                 this::initChannel,
                 this::firstBytesHandler,
                 this::writeToFile,
@@ -44,7 +44,7 @@ public class FileReceiver {
             FileOutputStream fos = files.get(streamId);
             fos.write(data, 0, data.length);
             fos.flush();
-            streamReceiver.sendBytes(streamId,data,data.length);
+            streamReceiver.send(streamId,data,data.length);
         }catch (Exception e){
             e.printStackTrace();
         }

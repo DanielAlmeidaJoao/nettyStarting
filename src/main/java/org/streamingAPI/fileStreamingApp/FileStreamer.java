@@ -2,7 +2,7 @@ package org.streamingAPI.fileStreamingApp;
 
 import org.streamingAPI.client.StreamSender;
 import org.streamingAPI.client.StreamSenderImplementation;
-import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
+import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,7 +14,7 @@ public class FileStreamer {
     private FileOutputStream fileOutputStream;
 
     public FileStreamer(String host, int port){
-        ChannelHandlers handlerFunctions = new ChannelHandlers(
+        ChannelFuncHandlers handlerFunctions = new ChannelFuncHandlers(
                 this::channelActive,
                 this::channelActiveRead,
                 this::channelRead,
@@ -41,7 +41,7 @@ public class FileStreamer {
             int read=0, totalSent = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-                streamSender.sendBytes(bytes,read);
+                streamSender.send(bytes,read);
             }
             Thread.sleep(10*1000);
             streamSender.close();

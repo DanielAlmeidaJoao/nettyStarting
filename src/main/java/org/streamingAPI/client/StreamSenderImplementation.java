@@ -6,8 +6,10 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.Promise;
+import io.netty.util.concurrent.PromiseNotifier;
 import org.streamingAPI.client.channelHandlers.StreamSenderHandler;
-import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
+import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.listeners.InChannelListener;
 
 import java.net.InetSocketAddress;
@@ -22,7 +24,7 @@ public class StreamSenderImplementation implements StreamSender {
 
     private Channel channel;
     private EventLoopGroup group;
-    public StreamSenderImplementation(String host, int port, ChannelHandlers handlerFunctions) {
+    public StreamSenderImplementation(String host, int port, ChannelFuncHandlers handlerFunctions) {
         this.host = host;
         this.port = port;
         this.inChannelListener = new org.streamingAPI.server.listeners.InChannelListener(newDefaultEventExecutor(),handlerFunctions);
@@ -90,14 +92,14 @@ public class StreamSenderImplementation implements StreamSender {
         }
     }
     @Override
-    public void sendBytes(byte[] message, int len){
-        channel.writeAndFlush(Unpooled.copiedBuffer(message,0,len)).addListener(future -> {
-            if(future.isSuccess()){
-                //TODO metrics!
-            }else {
-                System.out.println("MESSAGE NOT SENT: "+future.cause());
-            }
-        });
+    public void send(byte[] message, int len){
+        sendWithListener(message,len, null);
+    }
+    public void sendWithListener(byte[] message, int len, Promise<Void> promise){
+        ChannelFuture f = channel.writeAndFlush(Unpooled.copiedBuffer(message,0,len));
+        if (promise!=null){
+            f.addListener(new PromiseNotifier<>(promise));
+        }
     }
     @Override
     public String streamId(){

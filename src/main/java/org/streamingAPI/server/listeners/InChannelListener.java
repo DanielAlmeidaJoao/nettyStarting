@@ -2,14 +2,17 @@ package org.streamingAPI.server.listeners;
 
 
 import io.netty.util.concurrent.DefaultEventExecutor;
-import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
+import lombok.Getter;
+import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 
 public class InChannelListener {
+
+    @Getter
     private final DefaultEventExecutor loop;
-    private final ChannelHandlers handlerFunctions;
+    private final ChannelFuncHandlers handlerFunctions;
 
 
-    public InChannelListener(DefaultEventExecutor loop, ChannelHandlers handlerFunctions) {
+    public InChannelListener(DefaultEventExecutor loop, ChannelFuncHandlers handlerFunctions) {
         this.loop = loop;
         this.handlerFunctions = handlerFunctions;
     }

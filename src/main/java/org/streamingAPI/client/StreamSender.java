@@ -1,6 +1,7 @@
 package org.streamingAPI.client;
 
 import io.netty.channel.ChannelOption;
+import io.netty.util.concurrent.Promise;
 
 public interface StreamSender {
     void connect();
@@ -9,7 +10,9 @@ public interface StreamSender {
 
     void close();
 
-    void sendBytes(byte[] message, int len);
+    void send(byte[] message, int len);
+
+    void sendWithListener(byte[] message, int len, Promise<Void> promise);
 
     String streamId();
 }

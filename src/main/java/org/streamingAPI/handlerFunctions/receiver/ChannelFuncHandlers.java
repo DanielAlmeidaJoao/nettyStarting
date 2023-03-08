@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class ChannelHandlers {
+public class ChannelFuncHandlers {
     private ChannelActiveHandler activeFunction;
     private ChannelActiveReadHandler controlDataHandler;
     private ChannelReadHandler channelReadHandler;

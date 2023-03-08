@@ -3,7 +3,6 @@ package org.streamingAPI.client.channelHandlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
 import org.streamingAPI.server.channelHandlers.CustomChannelHandler;
 import org.streamingAPI.server.listeners.InChannelListener;
 
