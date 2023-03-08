@@ -1,6 +1,7 @@
 package org.streamingAPI.client;
 
 import io.netty.channel.ChannelOption;
+import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 
 public interface StreamSender {
@@ -15,4 +16,9 @@ public interface StreamSender {
     void sendWithListener(byte[] message, int len, Promise<Void> promise);
 
     String streamId();
+
+    void setHost(String hostname, int port);
+
+    DefaultEventExecutor getDefaultEventExecutor();
+
 }

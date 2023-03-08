@@ -27,7 +27,7 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
     private static final Logger logger = LogManager.getLogger(StreamReceiverChannel.class);
 
     private Host self;
-    public final static String NAME = "TCPChannel";
+    public final static String NAME = "STREAM_RECEIVER";
 
     public final static String ADDRESS_KEY = "address";
     public final static String PORT_KEY = "port";
@@ -63,7 +63,7 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
         currentLength = -1;
     }
 
-    private byte [] prepend(byte [] data, short source, short dest){
+    public static byte [] prepend(byte [] data, short source, short dest){
         //8 -> length (4 bytes) + source (2 bytes) + dest (2 bytes)
         ByteBuf byteBuf = Unpooled.buffer(8+data.length);
         byteBuf.writeInt(data.length+4);
@@ -85,7 +85,6 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
         byte [] bytes = prepend(message.getData(), babelMessage.getSourceProto(), babelMessage.getDestProto());
         streamReceiver.send(message.getStreamId(),bytes,bytes.length);
     }
-
 
     @Override
     public void closeConnection(Host peer, int connection) {

@@ -6,8 +6,10 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
+import lombok.Setter;
 import org.streamingAPI.client.channelHandlers.StreamSenderHandler;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.listeners.InChannelListener;
@@ -18,8 +20,10 @@ import java.nio.charset.StandardCharsets;
 import static org.streamingAPI.server.StreamReceiverImplementation.newDefaultEventExecutor;
 
 public class StreamSenderImplementation implements StreamSender {
-    private final String host;
-    private final int port;
+    @Setter
+    private String host;
+    @Setter
+    private int port;
     private final InChannelListener inChannelListener;
 
     private Channel channel;
@@ -106,6 +110,12 @@ public class StreamSenderImplementation implements StreamSender {
         return channel.id().asShortText();
     }
 
+    @Override
+    public void setHost(String hostname, int port) {
+        setHost(hostname);
+        setPort(port);
+    }
+
     public static EventLoopGroup createNewWorkerGroup(int nThreads) {
         //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
         //else
@@ -117,5 +127,9 @@ public class StreamSenderImplementation implements StreamSender {
             return EpollSocketChannel.class;
         }**/
         return NioSocketChannel.class;
+    }
+
+    public DefaultEventExecutor getDefaultEventExecutor(){
+        return inChannelListener.getLoop();
     }
 }
