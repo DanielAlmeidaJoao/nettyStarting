@@ -48,8 +48,13 @@ public class StreamReceiverImplementation implements StreamReceiver {
         return new DefaultEventExecutor();
     }
 
+    /**
+     *
+     * @param sync whether to block the main thread or not
+     * @throws Exception
+     */
     @Override
-    public void startListening() throws Exception {
+    public void startListening(boolean sync) throws Exception {
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
         try {
@@ -68,13 +73,21 @@ public class StreamReceiverImplementation implements StreamReceiver {
             ChannelFuture f = b.bind().sync();
             serverChannel = f.channel();
 
+            if(sync){
+                f = serverChannel.closeFuture().sync();
+            }else{
+                f = serverChannel.closeFuture();
+            }
+            System.out.println("GOING TO SLEEP!1");
             // Wait for the server channel to close. Blocks.
-            serverChannel.closeFuture().sync().addListener(future -> {
+            f.addListener(future -> {
                 //TO DO
                 System.out.println("CONNECTION CLOSED "+future.isSuccess());
                 parentGroup.shutdownGracefully().sync();
                 childGroup.shutdownGracefully().sync();
             });
+            System.out.println("GOING TO SLEEP!");
+            Thread.sleep(100*1000);
         }catch (Exception e){
             e.printStackTrace();
         }

@@ -51,7 +51,6 @@ public class FileReceiver {
     }
 
     private void firstBytesHandler(String channelId,byte [] data){
-        System.out.println("GOING TO PRINT CONTROL DATA!");
         if(data.length == 0){
             return;
         }
@@ -71,7 +70,7 @@ public class FileReceiver {
     public void start(){
         try {
             streamReceiver = new StreamReceiverImplementation("localhost",port,handlerFunctions);
-            streamReceiver.startListening();
+            streamReceiver.startListening(false);
         }catch (Exception e){
             e.printStackTrace();
         }

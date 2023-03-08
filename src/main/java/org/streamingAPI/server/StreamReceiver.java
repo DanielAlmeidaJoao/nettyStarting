@@ -3,7 +3,7 @@ package org.streamingAPI.server;
 import io.netty.channel.ChannelOption;
 
 public interface StreamReceiver {
-    void startListening() throws Exception;
+    void startListening(boolean sync) throws Exception;
 
     void sendBytes(String streamId ,byte[] message, int len);
 
