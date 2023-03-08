@@ -1,8 +1,10 @@
 package babel.appExamples.channels.messages;
 
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
+import pt.unl.fct.di.novasys.network.ISerializer;
 
 @Getter
 public class StreamMessage extends ProtoMessage {
@@ -16,4 +18,15 @@ public class StreamMessage extends ProtoMessage {
         this.dataLength = dataLength;
         this.streamId=streamId;
     }
+
+    public static ISerializer<StreamMessage> serializer = new ISerializer<StreamMessage>() {
+        @Override
+        public void serialize(StreamMessage requestMessage, ByteBuf out) {
+
+        }
+        @Override
+        public StreamMessage deserialize(ByteBuf in) {
+            return new StreamMessage(null,0,null);
+        }
+    };
 }
