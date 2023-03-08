@@ -6,6 +6,8 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.DefaultEventExecutor;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.streamingAPI.handlerFunctions.receiver.*;
 import org.streamingAPI.server.channelHandlers.CustomHandshakeHandler;
 import org.streamingAPI.server.channelHandlers.StreamReceiverHandler;
@@ -14,23 +16,36 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.Executor;
 
 public class StreamReceiverImplementation implements StreamReceiver {
+
+    public static String NAME = "STREAM_RECEIVER";
+
+    //One of the main advantages of using a single thread to
+    // execute tasks is that it eliminates the need for
+    // synchronization primitives such as locks and semaphores.
+
+
     private final int port;
 
     private final String hostName;
     private Channel serverChannel;
 
-    private HandlerFunctions handlerFunctions;
+    private org.streamingAPI.server.listeners.InChannelListener inListener;
     private Map<String,SocketChannel> clients;
 
     public StreamReceiverImplementation(String hostName, int port,
-                                        HandlerFunctions handlerFunctions
+                                        ChannelHandlers handlerFunctions
                                         ) {
         this.port = port;
         this.hostName = hostName;
-        this.handlerFunctions = handlerFunctions;
+        this.inListener = new org.streamingAPI.server.listeners.InChannelListener(newDefaultEventExecutor(),handlerFunctions);
         clients = new HashMap<>();
+    }
+
+    public static DefaultEventExecutor newDefaultEventExecutor(){
+        return new DefaultEventExecutor();
     }
 
     @Override
@@ -45,8 +60,8 @@ public class StreamReceiverImplementation implements StreamReceiver {
                     .childHandler(new ChannelInitializer<SocketChannel>(){
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(handlerFunctions.getControlData()));
-                            ch.pipeline().addLast(new StreamReceiverHandler(handlerFunctions));
+                            ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(inListener));
+                            ch.pipeline().addLast(new StreamReceiverHandler(inListener));
                             clients.put(ch.id().asShortText(),ch);
                         }
                     });

@@ -2,7 +2,7 @@ package org.streamingAPI.fileStreamingApp;
 
 import org.streamingAPI.client.StreamSender;
 import org.streamingAPI.client.StreamSenderImplementation;
-import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
+import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,11 +14,11 @@ public class FileStreamer {
     private FileOutputStream fileOutputStream;
 
     public FileStreamer(String host, int port){
-        HandlerFunctions handlerFunctions = new HandlerFunctions(
+        ChannelHandlers handlerFunctions = new ChannelHandlers(
                 this::channelActive,
+                this::channelActiveRead,
                 this::channelRead,
-                this::channelInactive,
-                this::channelActiveRead
+                this::channelInactive
         );
         streamSender = new StreamSenderImplementation(host,port,handlerFunctions);
         try {
@@ -30,8 +30,8 @@ public class FileStreamer {
     public void startStreaming(){
         try{
             streamSender.connect();
-            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             int bufferSize = 2*128*1024; // 8KB buffer size
@@ -43,9 +43,9 @@ public class FileStreamer {
                 totalSent += read;
                 streamSender.sendBytes(bytes,read);
             }
+            Thread.sleep(10*1000);
             streamSender.close();
             System.out.println("TOTAL SENT "+totalSent);
-            Thread.sleep(5*1000);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -70,7 +70,7 @@ public class FileStreamer {
     public void channelActive(String channelId){
 
     }
-    public void channelActiveRead(byte [] data){
+    public void channelActiveRead(String channelId,byte [] data){
 
     }
     public void channelRead(String channelId, byte [] data){

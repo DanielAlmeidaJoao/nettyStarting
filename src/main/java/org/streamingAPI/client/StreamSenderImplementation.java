@@ -7,22 +7,26 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.streamingAPI.client.channelHandlers.StreamSenderHandler;
-import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
+import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
+import org.streamingAPI.server.listeners.InChannelListener;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
+import static org.streamingAPI.server.StreamReceiverImplementation.newDefaultEventExecutor;
+
 public class StreamSenderImplementation implements StreamSender {
     private final String host;
     private final int port;
-    private final HandlerFunctions handlerFunctions;
+    private final InChannelListener inChannelListener;
 
     private Channel channel;
     private EventLoopGroup group;
-    public StreamSenderImplementation(String host, int port, HandlerFunctions handlerFunctions) {
+    public StreamSenderImplementation(String host, int port, ChannelHandlers handlerFunctions) {
         this.host = host;
         this.port = port;
-        this.handlerFunctions = handlerFunctions;
+        this.inChannelListener = new org.streamingAPI.server.listeners.InChannelListener(newDefaultEventExecutor(),handlerFunctions);
+
     }
 
     @Override
@@ -37,7 +41,7 @@ public class StreamSenderImplementation implements StreamSender {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                        ch.pipeline().addLast( new StreamSenderHandler("THE NEW GUY IN TONW ".getBytes(StandardCharsets.UTF_8),handlerFunctions));
+                        ch.pipeline().addLast( new StreamSenderHandler("THE NEW GUY IN TONW ".getBytes(StandardCharsets.UTF_8),inChannelListener));
                     }
                     });
             channel = b.connect().sync().channel();

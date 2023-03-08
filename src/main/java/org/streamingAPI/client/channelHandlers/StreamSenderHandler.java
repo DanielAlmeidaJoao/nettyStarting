@@ -3,14 +3,15 @@ package org.streamingAPI.client.channelHandlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
+import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
 import org.streamingAPI.server.channelHandlers.CustomChannelHandler;
+import org.streamingAPI.server.listeners.InChannelListener;
 
 //@ChannelHandler.Sharable
 public class StreamSenderHandler extends CustomChannelHandler {
     byte [] controlData;
-    public StreamSenderHandler(byte [] handshakeData, HandlerFunctions handlerFunctions){
-        super(handlerFunctions);
+    public StreamSenderHandler(byte [] handshakeData, InChannelListener inChannelListener){
+        super(inChannelListener);
         this.controlData = handshakeData;
     }
 

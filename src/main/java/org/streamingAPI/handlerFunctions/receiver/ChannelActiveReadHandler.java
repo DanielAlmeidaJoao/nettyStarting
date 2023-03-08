@@ -2,5 +2,5 @@ package org.streamingAPI.handlerFunctions.receiver;
 
 @FunctionalInterface
 public interface ChannelActiveReadHandler {
-    public void execute(byte [] data);
+    public void execute(String channelId,byte [] data);
 }

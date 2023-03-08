@@ -1,7 +1,6 @@
 package org.streamingAPI.fileStreamingApp;
 
-import io.netty.channel.ChannelOption;
-import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
+import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
 import org.streamingAPI.server.StreamReceiver;
 import org.streamingAPI.server.StreamReceiverImplementation;
 
@@ -14,14 +13,14 @@ public class FileReceiver {
     private Map<String,FileOutputStream> files;
     private StreamReceiver streamReceiver;
     private int port;
-    private HandlerFunctions handlerFunctions;
+    private ChannelHandlers handlerFunctions;
 
     public FileReceiver(int port){
-        handlerFunctions = new HandlerFunctions(
+        handlerFunctions = new ChannelHandlers(
                 this::initChannel,
+                this::firstBytesHandler,
                 this::writeToFile,
-                this::closeFile,
-                this::firstBytesHandler
+                this::closeFile
         );
         this.port = port;
         try {
@@ -51,7 +50,7 @@ public class FileReceiver {
         }
     }
 
-    private void firstBytesHandler(byte [] data){
+    private void firstBytesHandler(String channelId,byte [] data){
         System.out.println("GOING TO PRINT CONTROL DATA!");
         if(data.length == 0){
             return;

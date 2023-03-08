@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import org.streamingAPI.handlerFunctions.receiver.ChannelActiveReadHandler;
+import org.streamingAPI.server.listeners.InChannelListener;
 
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelHandlerAdapter {
@@ -11,11 +12,11 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
     public static final String NAME ="CHSHAKE_HANDLER";
     private static final int UNCHANGED_VALUE = -2;
 
+    private InChannelListener inChannelListener;
     private byte [] controlData;
     private int len;
-    private ChannelActiveReadHandler firstBytesHandler;
-    public CustomHandshakeHandler(ChannelActiveReadHandler firstBytesHandler){
-       this.firstBytesHandler = firstBytesHandler;
+    public CustomHandshakeHandler(InChannelListener inChannelListener){
+       this.inChannelListener = inChannelListener;
        this.len = UNCHANGED_VALUE;
     }
 
@@ -42,7 +43,7 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
             }
             controlData = new byte[len];
             in.readBytes(controlData,0,len);
-            firstBytesHandler.execute(controlData);
+            inChannelListener.setControlData(ctx.channel().id().asShortText(),controlData);
         }
         ctx.fireChannelRead(msg);
         ctx.channel().pipeline().remove(CustomHandshakeHandler.NAME);

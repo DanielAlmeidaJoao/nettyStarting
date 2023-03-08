@@ -4,41 +4,40 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
-import org.streamingAPI.handlerFunctions.receiver.HandlerFunctions;
-
-import java.util.concurrent.atomic.AtomicLong;
+import org.streamingAPI.handlerFunctions.receiver.ChannelHandlers;
+import org.streamingAPI.server.listeners.InChannelListener;
 
 //@ChannelHandler.Sharable
 public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
 
     private long timeElapsed;
     private int totalRead;
-    private HandlerFunctions handlerFunctions;
+    private InChannelListener inChannelListener;
     private int timesReceived = 0;
     private int timesCompleted = 0;
 
 
     private ByteBuf tmp;
 
-    public CustomChannelHandler(HandlerFunctions handlerFunctions){
-        this.handlerFunctions  = handlerFunctions;
+    public CustomChannelHandler(InChannelListener inChannelListener){
+        this.inChannelListener  = inChannelListener;
         totalRead = 0;
         timeElapsed = 0;
     }
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        handlerFunctions.getActiveFunction().execute(ctx.channel().id().asShortText());
+        inChannelListener.setActiveFunction(ctx.channel().id().asShortText());
     }
     private void deliverData(ByteBuf in, String streamId){
         //System.out.println("ALSO RECEIVED!!!");
         try {
             //while (in.isReadable()) {
-            long start = System.currentTimeMillis();
             byte[] bytes = new byte[in.readableBytes()];
+            long start = System.currentTimeMillis();
+            in.readBytes(bytes);
             long end = System.currentTimeMillis();
             timeElapsed += (end-start);
-            in.readBytes(bytes);
-            handlerFunctions.getFunctionToExecute().execute(streamId,bytes);
+            inChannelListener.setChannelReadHandler(streamId,bytes);
             totalRead += bytes.length;
             timesReceived++;
             //}
@@ -60,7 +59,7 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        handlerFunctions.getEOSFunction().execute(ctx.channel().id().asShortText());
+        inChannelListener.setChannelInactiveHandler(ctx.channel().id().asShortText());
         System.out.printf("CHANNEL %S CLOSED. TOOK READING TIME: %S. TOTAL READ %S \n",ctx.channel().id().asShortText(),timeElapsed+"",totalRead+"");
         System.out.println("TIMES READ: "+timesReceived+" TIMES COMPLETED: "+timesCompleted);
     }
