@@ -5,7 +5,7 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 
 public interface StreamReceiver  {
-    void startListening(boolean sync) throws Exception;
+    void startListening(boolean sync, boolean readDelimited) throws Exception;
 
     void send(String streamId , byte[] message, int len);
 

@@ -48,7 +48,7 @@ public class StreamSenderImplementation implements StreamSender {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                        ch.pipeline().addLast( new StreamSenderHandler("THE NEW GUY IN TONW ".getBytes(StandardCharsets.UTF_8),inChannelListener));
+                        ch.pipeline().addLast( new StreamSenderHandler("THE NEW GUY IN TONW ".getBytes(StandardCharsets.UTF_8),inChannelListener,false));
                     }
                     });
             channel = b.connect().sync().channel();

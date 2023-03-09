@@ -20,6 +20,7 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Properties;
 
@@ -52,9 +53,9 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
         self = new Host(addr,port);
         this.listener = list;
         streamReceiver = new StreamReceiverImplementation(addr.getHostName(),port,
-        new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,null,this::channelClosed,this::channelReadByteBuf));
+        new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,this::channelReadByteBuf,this::channelClosed));
         try{
-            streamReceiver.startListening(false);
+            streamReceiver.startListening(false,true);
         }catch (Exception e){
             throw new IOException(e);
         }
@@ -88,7 +89,7 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
 
     }
     int total =0;
-    private void channelReadByteBuf(String streamId, StreamMessage byteBuf){
+    private void channelReadByteBuf(String streamId, byte [] bytes){
         //System.out.println("CALLED!!");
         /**
         int source = byteBuf.readInt();
@@ -98,11 +99,15 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
         StreamMessage streamMessage = new StreamMessage(appData,appData.length,streamId);
         //listener.deliverMessage((T) babelMessage,self);
          **/
-        BabelMessage babelMessage = new BabelMessage(byteBuf, (short) 206, (short) 206);
+        //BabelMessage babelMessage = new BabelMessage(byteBuf, (short) 206, (short) 206);
+        ByteBuf buf = Unpooled.copiedBuffer(bytes);
+        total+=buf.readableBytes()-4;
 
-        total+=byteBuf.getDataLength();
-        System.out.println("TOTAL "+total);
-        //byteBuf.release();
+        short src = buf.readShort();
+        short dest=buf.readShort();
+
+        System.out.println("TOTAL "+total+" "+bytes.length+" src: "+src+" dest "+dest);
+        buf.release();
     }
     private void channelClosed(String channelId){
         Throwable cause = new Throwable("CLOSED ???");

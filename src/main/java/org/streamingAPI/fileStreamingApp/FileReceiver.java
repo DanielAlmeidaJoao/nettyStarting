@@ -20,8 +20,7 @@ public class FileReceiver {
                 this::initChannel,
                 this::firstBytesHandler,
                 this::writeToFile,
-                this::closeFile,
-                null
+                this::closeFile
         );
         this.port = port;
         try {
@@ -71,7 +70,7 @@ public class FileReceiver {
     public void start(){
         try {
             streamReceiver = new StreamReceiverImplementation("localhost",port,handlerFunctions);
-            streamReceiver.startListening(false);
+            streamReceiver.startListening(false,true);
         }catch (Exception e){
             e.printStackTrace();
         }

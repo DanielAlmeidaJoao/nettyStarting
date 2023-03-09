@@ -2,6 +2,7 @@ package babel.appExamples.channels;
 
 import babel.appExamples.channels.messages.StreamMessage;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.util.concurrent.Promise;
 import org.streamingAPI.client.StreamSender;
 import org.streamingAPI.client.StreamSenderImplementation;
@@ -39,7 +40,7 @@ public class StreamSenderChannel<T> implements IChannel<T> {
         this.listener = list;
         streamSender = new StreamSenderImplementation(addr.getHostName(),port,
                 new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,
-                        this::channelRead,this::channelClosed,null));
+                        this::channelRead,this::channelClosed));
         streamSender.connect();
     }
 
@@ -54,9 +55,15 @@ public class StreamSenderChannel<T> implements IChannel<T> {
             else if (!future.isSuccess()) listener.messageFailed(msg, peer, future.cause());
         });
 
-        streamSender.send(message.getData(), message.getDataLength());
-    }
+        ByteBuf buf = Unpooled.buffer(message.getDataLength()+8);
+        buf.writeInt(message.getDataLength()+4);
+        buf.writeShort(babelMessage.getSourceProto());
+        buf.writeShort(babelMessage.getDestProto());
+        buf.writeBytes(message.getData(),0, message.getDataLength());
 
+        //streamSender.send(buf.array(),buf.readableBytes());
+        streamSender.sendWithByteBuf(buf,null);
+    }
     @Override
     public void closeConnection(Host peer, int connection) {
 

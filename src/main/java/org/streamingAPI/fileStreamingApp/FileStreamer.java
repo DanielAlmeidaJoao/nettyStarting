@@ -18,8 +18,7 @@ public class FileStreamer {
                 this::channelActive,
                 this::channelActiveRead,
                 this::channelRead,
-                this::channelInactive,
-                null
+                this::channelInactive
         );
         streamSender = new StreamSenderImplementation(host,port,handlerFunctions);
         try {

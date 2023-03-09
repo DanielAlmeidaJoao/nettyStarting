@@ -12,8 +12,9 @@ import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.streamingAPI.handlerFunctions.receiver.*;
 import org.streamingAPI.server.channelHandlers.CustomHandshakeHandler;
-import org.streamingAPI.server.channelHandlers.MessageDecoder;
+import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
 import org.streamingAPI.server.channelHandlers.StreamReceiverHandler;
+import org.streamingAPI.server.channelHandlers.encodings.StreamMessageDecoder;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -30,7 +31,6 @@ public class StreamReceiverImplementation implements StreamReceiver {
 
 
     private final int port;
-
     private final String hostName;
     private Channel serverChannel;
 
@@ -39,8 +39,7 @@ public class StreamReceiverImplementation implements StreamReceiver {
     private Map<String,SocketChannel> clients;
 
     public StreamReceiverImplementation(String hostName, int port,
-                                        ChannelFuncHandlers handlerFunctions
-                                        ) {
+                                        ChannelFuncHandlers handlerFunctions) {
         this.port = port;
         this.hostName = hostName;
         this.inListener = new org.streamingAPI.server.listeners.InChannelListener(newDefaultEventExecutor(),handlerFunctions);
@@ -50,14 +49,13 @@ public class StreamReceiverImplementation implements StreamReceiver {
     public static DefaultEventExecutor newDefaultEventExecutor(){
         return new DefaultEventExecutor();
     }
-
     /**
      *
      * @param sync whether to block the main thread or not
      * @throws Exception
      */
     @Override
-    public void startListening(boolean sync) throws Exception{
+    public void startListening(boolean sync, boolean readDelimited) throws Exception{
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
         ServerBootstrap b = new ServerBootstrap();
@@ -68,14 +66,17 @@ public class StreamReceiverImplementation implements StreamReceiver {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(inListener));
-                        ch.pipeline().addLast(new MessageDecoder());
-                        ch.pipeline().addLast(new StreamReceiverHandler(inListener));
+                        if(readDelimited){
+                            ch.pipeline().addLast(new DelimitedMessageDecoder());
+                        }else{
+                            ch.pipeline().addLast(new StreamMessageDecoder());
+                        }
+                        ch.pipeline().addLast(new StreamReceiverHandler(inListener,readDelimited));
                         clients.put(ch.id().asShortText(),ch);
                     }
                 });
         ChannelFuture f = b.bind().sync();
         serverChannel = f.channel();
-
         if(sync){
             f = serverChannel.closeFuture().sync();
         }else{

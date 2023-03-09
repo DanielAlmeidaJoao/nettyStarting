@@ -9,8 +9,8 @@ import org.streamingAPI.server.listeners.InChannelListener;
 //@ChannelHandler.Sharable
 public class StreamSenderHandler extends CustomChannelHandler {
     byte [] controlData;
-    public StreamSenderHandler(byte [] handshakeData, InChannelListener inChannelListener){
-        super(inChannelListener);
+    public StreamSenderHandler(byte [] handshakeData, InChannelListener inChannelListener,boolean readDelimited){
+        super(inChannelListener,readDelimited);
         this.controlData = handshakeData;
     }
 

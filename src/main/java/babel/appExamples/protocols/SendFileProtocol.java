@@ -45,13 +45,13 @@ public class SendFileProtocol extends GenericProtocol {
 
     public void sendFile(){
         try{
-            Thread.sleep(5*1000);
+            Thread.sleep(1000);
             System.out.println("STARTING SENDING FILE!");
             //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
-            int bufferSize = 32*1024; // 8KB buffer size
+            int bufferSize = 128*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
             //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);

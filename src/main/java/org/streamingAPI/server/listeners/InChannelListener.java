@@ -36,12 +36,6 @@ public class InChannelListener {
         });
     }
 
-    public void onChannelReadWithByteBuf(String channelId, StreamMessage byteBuf){
-        loop.execute(() -> {
-            handlerFunctions.getChannelReadByteBufHandler().execute(channelId,byteBuf);
-        });
-    }
-
     public void onChannelInactive(String channelId){
         loop.execute(() -> {
             handlerFunctions.getChannelInactiveHandler().execute(channelId);
