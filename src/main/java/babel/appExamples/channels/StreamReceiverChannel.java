@@ -35,9 +35,6 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
 
     public final static String DEFAULT_PORT = "8574";
 
-    private int currentLength;
-
-
     private Map<Host,String> streams;
     private final StreamReceiver streamReceiver;
     private final ChannelListener<T> listener;
@@ -59,7 +56,6 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
         }catch (Exception e){
             throw new IOException(e);
         }
-        currentLength = -1;
     }
 
     public static ByteBuf prepend(byte [] data, short source, short dest){
@@ -90,26 +86,21 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
     }
     int total =0;
     private void channelReadByteBuf(String streamId, byte [] bytes){
-        //System.out.println("CALLED!!");
-        /**
-        int source = byteBuf.readInt();
-        int dest = byteBuf.readInt();
-        byte [] appData = new byte[byteBuf.readableBytes()];
-        byteBuf.readBytes(appData);
-        StreamMessage streamMessage = new StreamMessage(appData,appData.length,streamId);
-        //listener.deliverMessage((T) babelMessage,self);
-         **/
-        //BabelMessage babelMessage = new BabelMessage(byteBuf, (short) 206, (short) 206);
         ByteBuf buf = Unpooled.copiedBuffer(bytes);
-        total+=buf.readableBytes()-4;
-
+        int dataLen=buf.readableBytes()-4;
         short src = buf.readShort();
         short dest=buf.readShort();
-
-        System.out.println("TOTAL "+total+" "+bytes.length+" src: "+src+" dest "+dest);
+        byte [] appData = new byte[dataLen];
+        buf.readBytes(appData,0,dataLen);
+        total +=dataLen;
+        StreamMessage streamMessage = new StreamMessage(appData,dataLen,streamId);
+        BabelMessage babelMessage = new BabelMessage(streamMessage,src,dest);
+        listener.deliverMessage((T) babelMessage,self);
+        //System.out.println("TOTAL "+total+" "+bytes.length+" src: "+src+" dest "+dest);
         buf.release();
     }
     private void channelClosed(String channelId){
+        System.out.println("CHANNEL INCATIVE!!! "+total);
         Throwable cause = new Throwable("CLOSED ???");
         listener.deliverEvent(new InConnectionDown(self, cause));
     }

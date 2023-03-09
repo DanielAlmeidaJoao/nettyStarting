@@ -1,6 +1,7 @@
 package babel.appExamples.channels;
 
 import babel.appExamples.channels.messages.StreamMessage;
+import babel.appExamples.protocols.ReceiveFileProtocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.concurrent.Promise;
@@ -58,7 +59,7 @@ public class StreamSenderChannel<T> implements IChannel<T> {
         ByteBuf buf = Unpooled.buffer(message.getDataLength()+8);
         buf.writeInt(message.getDataLength()+4);
         buf.writeShort(babelMessage.getSourceProto());
-        buf.writeShort(babelMessage.getDestProto());
+        buf.writeShort(ReceiveFileProtocol.ID);
         buf.writeBytes(message.getData(),0, message.getDataLength());
 
         //streamSender.send(buf.array(),buf.readableBytes());

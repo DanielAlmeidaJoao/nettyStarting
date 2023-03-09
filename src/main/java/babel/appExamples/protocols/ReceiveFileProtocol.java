@@ -51,13 +51,15 @@ public class ReceiveFileProtocol extends GenericProtocol {
 
     private void uponInConnectionDown(InConnectionDown event, int channelId) {
         try {
+            System.out.println("CONNECTION CLOSED! "+totoal);
             fos.close();
         }catch (Exception e){e.printStackTrace();};
     }
-
+    int totoal = 0;
     private void uponReceiveMessage(StreamMessage msg, Host from, short sourceProto, int channelId){
         try{
-            fos.write(msg.getData(), 0,msg.getData().length);
+            totoal +=msg.getDataLength();
+            fos.write(msg.getData(), 0,msg.getDataLength());
             fos.flush();
         }catch (Exception e){
             e.printStackTrace();
