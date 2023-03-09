@@ -18,7 +18,8 @@ public class FileStreamer {
                 this::channelActive,
                 this::channelActiveRead,
                 this::channelRead,
-                this::channelInactive
+                this::channelInactive,
+                null
         );
         streamSender = new StreamSenderImplementation(host,port,handlerFunctions);
         try {
@@ -30,9 +31,9 @@ public class FileStreamer {
     public void startStreaming(){
         try{
             streamSender.connect();
-            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+            //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             int bufferSize = 2*128*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
@@ -43,7 +44,7 @@ public class FileStreamer {
                 totalSent += read;
                 streamSender.send(bytes,read);
             }
-            Thread.sleep(10*1000);
+            Thread.sleep(2*1000);
             streamSender.close();
             System.out.println("TOTAL SENT "+totalSent);
         }catch (Exception e){

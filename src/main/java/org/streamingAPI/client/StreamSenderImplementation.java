@@ -1,6 +1,7 @@
 package org.streamingAPI.client;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -100,7 +101,10 @@ public class StreamSenderImplementation implements StreamSender {
         sendWithListener(message,len, null);
     }
     public void sendWithListener(byte[] message, int len, Promise<Void> promise){
-        ChannelFuture f = channel.writeAndFlush(Unpooled.copiedBuffer(message,0,len));
+        sendWithByteBuf(Unpooled.copiedBuffer(message,0,len), promise);
+    }
+    public void sendWithByteBuf(ByteBuf byteBuf, Promise<Void> promise){
+        ChannelFuture f = channel.writeAndFlush(byteBuf);
         if (promise!=null){
             f.addListener(new PromiseNotifier<>(promise));
         }

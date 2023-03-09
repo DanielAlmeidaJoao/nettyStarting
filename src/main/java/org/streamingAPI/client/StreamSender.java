@@ -1,5 +1,6 @@
 package org.streamingAPI.client;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelOption;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
@@ -14,6 +15,8 @@ public interface StreamSender {
     void send(byte[] message, int len);
 
     void sendWithListener(byte[] message, int len, Promise<Void> promise);
+
+    void sendWithByteBuf(ByteBuf byteBuf, Promise<Void> promise);
 
     String streamId();
 

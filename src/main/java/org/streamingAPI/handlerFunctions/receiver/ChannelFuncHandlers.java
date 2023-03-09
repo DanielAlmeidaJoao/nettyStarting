@@ -10,5 +10,6 @@ public class ChannelFuncHandlers {
     private ChannelActiveReadHandler controlDataHandler;
     private ChannelReadHandler channelReadHandler;
     private ChannelInactiveHandler channelInactiveHandler;
+    private ChannelReadByteBufHandler channelReadByteBufHandler;
 
 }

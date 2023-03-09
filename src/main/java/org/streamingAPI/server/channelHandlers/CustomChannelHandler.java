@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
+import lombok.Getter;
 import org.streamingAPI.server.listeners.InChannelListener;
 
 //@ChannelHandler.Sharable
@@ -11,6 +12,7 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
 
     private long timeElapsed;
     private int totalRead;
+    @Getter
     private InChannelListener inChannelListener;
     private int timesReceived = 0;
     private int timesCompleted = 0;

@@ -20,7 +20,8 @@ public class FileReceiver {
                 this::initChannel,
                 this::firstBytesHandler,
                 this::writeToFile,
-                this::closeFile
+                this::closeFile,
+                null
         );
         this.port = port;
         try {

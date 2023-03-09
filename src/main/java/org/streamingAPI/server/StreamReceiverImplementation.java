@@ -12,6 +12,7 @@ import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.streamingAPI.handlerFunctions.receiver.*;
 import org.streamingAPI.server.channelHandlers.CustomHandshakeHandler;
+import org.streamingAPI.server.channelHandlers.MessageDecoder;
 import org.streamingAPI.server.channelHandlers.StreamReceiverHandler;
 
 import java.net.InetSocketAddress;
@@ -67,6 +68,7 @@ public class StreamReceiverImplementation implements StreamReceiver {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(inListener));
+                        ch.pipeline().addLast(new MessageDecoder());
                         ch.pipeline().addLast(new StreamReceiverHandler(inListener));
                         clients.put(ch.id().asShortText(),ch);
                     }

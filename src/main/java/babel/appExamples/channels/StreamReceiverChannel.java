@@ -3,23 +3,23 @@ package babel.appExamples.channels;
 import babel.appExamples.channels.messages.StreamMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamReceiver;
 import org.streamingAPI.server.StreamReceiverImplementation;
+import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
+import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionDown;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Properties;
 
@@ -34,7 +34,6 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
 
     public final static String DEFAULT_PORT = "8574";
 
-    private ByteBuf tmp;
     private int currentLength;
 
 
@@ -53,43 +52,29 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
         self = new Host(addr,port);
         this.listener = list;
         streamReceiver = new StreamReceiverImplementation(addr.getHostName(),port,
-        new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,this::channelRead,this::channelClosed));
+        new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,null,this::channelClosed,this::channelReadByteBuf));
         try{
             streamReceiver.startListening(false);
         }catch (Exception e){
             throw new IOException(e);
         }
-        tmp = Unpooled.buffer();
         currentLength = -1;
     }
 
-    public static byte [] prepend(byte [] data, short source, short dest){
+    public static ByteBuf prepend(byte [] data, short source, short dest){
         //8 -> length (4 bytes) + source (2 bytes) + dest (2 bytes)
-        ByteBuf byteBuf = Unpooled.buffer(8+data.length);
-        byteBuf.writeInt(data.length+4);
-        byteBuf.writeShort(source);
-        byteBuf.writeShort(dest);
+        ByteBuf byteBuf = Unpooled.buffer();
+        //byteBuf.writeInt(data.length);
+        //byteBuf.writeInt(source);
+        //byteBuf.writeInt(dest);
         byteBuf.writeBytes(data);
-        return byteBuf.array();
+        return byteBuf;
     }
     @Override
-    public void sendMessage(T msg, Host peer, int connection) {
-        boolean triggerSent = false;
-        BabelMessage babelMessage = (BabelMessage) msg;
-        StreamMessage message = (StreamMessage) babelMessage.getMessage();
-        Promise<Void> promise = streamReceiver.getDefaultEventExecutor().newPromise();
-        promise.addListener(future -> {
-            if (future.isSuccess() && triggerSent) listener.messageSent(msg, peer);
-            else if (!future.isSuccess()) listener.messageFailed(msg, peer, future.cause());
-        });
-        byte [] bytes = prepend(message.getData(), babelMessage.getSourceProto(), babelMessage.getDestProto());
-        streamReceiver.send(message.getStreamId(),bytes,bytes.length);
-    }
+    public void sendMessage(T msg, Host peer, int connection) {}
 
     @Override
-    public void closeConnection(Host peer, int connection) {
-
-    }
+    public void closeConnection(Host peer, int connection) {}
 
     @Override
     public void openConnection(Host peer) {
@@ -102,30 +87,25 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
     private void channelReadConfigData(String channelId, byte [] data){
 
     }
-    private void channelRead(String channelId,byte [] data){
-        if(data!=null){
-            tmp.writeBytes(data);
-        }
-        if(currentLength==-1){
-            if(data.length>=4){
-                currentLength = tmp.readInt();
-            }
-        }
-        if(tmp.readableBytes()>=currentLength){
-            short source = tmp.readShort();
-            short dest = tmp.readShort();
-            byte [] appData = new byte[currentLength-4];
-            tmp.readBytes(appData);
+    int total =0;
+    private void channelReadByteBuf(String streamId, StreamMessage byteBuf){
+        //System.out.println("CALLED!!");
+        /**
+        int source = byteBuf.readInt();
+        int dest = byteBuf.readInt();
+        byte [] appData = new byte[byteBuf.readableBytes()];
+        byteBuf.readBytes(appData);
+        StreamMessage streamMessage = new StreamMessage(appData,appData.length,streamId);
+        //listener.deliverMessage((T) babelMessage,self);
+         **/
+        BabelMessage babelMessage = new BabelMessage(byteBuf, (short) 206, (short) 206);
 
-            StreamMessage streamMessage = new StreamMessage(appData,appData.length,channelId);
-            BabelMessage babelMessage = new BabelMessage(streamMessage,source,dest);
-            listener.deliverMessage((T) babelMessage,self);
-
-            currentLength=-1;
-            channelRead(channelId,null);
-        }
+        total+=byteBuf.getDataLength();
+        System.out.println("TOTAL "+total);
+        //byteBuf.release();
     }
     private void channelClosed(String channelId){
-        tmp.release();
+        Throwable cause = new Throwable("CLOSED ???");
+        listener.deliverEvent(new InConnectionDown(self, cause));
     }
 }

@@ -1,6 +1,7 @@
 package babel.appExamples.channels;
 
 import babel.appExamples.channels.messages.StreamMessage;
+import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.Promise;
 import org.streamingAPI.client.StreamSender;
 import org.streamingAPI.client.StreamSenderImplementation;
@@ -37,7 +38,9 @@ public class StreamSenderChannel<T> implements IChannel<T> {
         self = new Host(addr,port);
         this.listener = list;
         streamSender = new StreamSenderImplementation(addr.getHostName(),port,
-                new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,this::channelRead,this::channelClosed));
+                new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,
+                        this::channelRead,this::channelClosed,null));
+        streamSender.connect();
     }
 
     @Override
@@ -50,8 +53,8 @@ public class StreamSenderChannel<T> implements IChannel<T> {
             if (future.isSuccess() && triggerSent) listener.messageSent(msg, peer);
             else if (!future.isSuccess()) listener.messageFailed(msg, peer, future.cause());
         });
-        byte [] bytes = prepend(message.getData(), babelMessage.getSourceProto(), babelMessage.getDestProto());
-        streamSender.send(bytes,bytes.length);
+
+        streamSender.send(message.getData(), message.getDataLength());
     }
 
     @Override

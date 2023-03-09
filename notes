@@ -22,3 +22,10 @@ java -cp target/nettyStart.jar org.streamingAPI.fileStreamingApp.FileStreamer lo
 
 the sender must be the server
 the receiver must be the client
+
+Starting Babel
+java -Xmx500M -cp target/nettyStart.jar Main sender=o
+
+java -cp target/nettyStart.jar Main
+
+java -cp target/nettyStart.jar Main sender=o

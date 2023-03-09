@@ -1,6 +1,8 @@
 package org.streamingAPI.server.listeners;
 
 
+import babel.appExamples.channels.messages.StreamMessage;
+import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import lombok.Getter;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
@@ -31,6 +33,12 @@ public class InChannelListener {
     public void onChannelRead(String channelId, byte [] data){
         loop.execute(() -> {
             handlerFunctions.getChannelReadHandler().execute(channelId,data);
+        });
+    }
+
+    public void onChannelReadWithByteBuf(String channelId, StreamMessage byteBuf){
+        loop.execute(() -> {
+            handlerFunctions.getChannelReadByteBufHandler().execute(channelId,byteBuf);
         });
     }
 
