@@ -5,29 +5,37 @@ import babel.appExamples.protocols.ReceiveFileProtocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.concurrent.Promise;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.streamingAPI.client.StreamSender;
 import org.streamingAPI.client.StreamSenderImplementation;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
+import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import static babel.appExamples.channels.StreamReceiverChannel.*;
 
 public class StreamSenderChannel<T> implements IChannel<T> {
 
+    private static final Logger logger = LogManager.getLogger(StreamSenderChannel.class);
+
     private Host self;
     public final static String NAME = "STREAM_SENDER";
 
     private final StreamSender streamSender;
     private final ChannelListener<T> listener;
+    private Map<Host,String> streams;
 
     public StreamSenderChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties)throws IOException {
         InetAddress addr;
@@ -43,6 +51,7 @@ public class StreamSenderChannel<T> implements IChannel<T> {
                 new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,
                         this::channelRead,this::channelClosed));
         streamSender.connect();
+        streams = new HashMap<>();
     }
 
     @Override
@@ -63,11 +72,11 @@ public class StreamSenderChannel<T> implements IChannel<T> {
         buf.writeBytes(message.getData(),0, message.getDataLength());
 
         //streamSender.send(buf.array(),buf.readableBytes());
-        streamSender.sendWithByteBuf(buf,null);
+        streamSender.sendDelimited(buf,null);
     }
     @Override
     public void closeConnection(Host peer, int connection) {
-
+        streamSender.close();
     }
 
     @Override

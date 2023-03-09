@@ -101,9 +101,9 @@ public class StreamSenderImplementation implements StreamSender {
         sendWithListener(message,len, null);
     }
     public void sendWithListener(byte[] message, int len, Promise<Void> promise){
-        sendWithByteBuf(Unpooled.copiedBuffer(message,0,len), promise);
+        sendDelimited(Unpooled.copiedBuffer(message,0,len), promise);
     }
-    public void sendWithByteBuf(ByteBuf byteBuf, Promise<Void> promise){
+    public void sendDelimited(ByteBuf byteBuf, Promise<Void> promise){
         ChannelFuture f = channel.writeAndFlush(byteBuf);
         if (promise!=null){
             f.addListener(new PromiseNotifier<>(promise));

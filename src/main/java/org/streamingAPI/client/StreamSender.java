@@ -16,7 +16,15 @@ public interface StreamSender {
 
     void sendWithListener(byte[] message, int len, Promise<Void> promise);
 
-    void sendWithByteBuf(ByteBuf byteBuf, Promise<Void> promise);
+    /**
+     * ByteBuf buf = ...
+     * buf.writeInt(dataLength);
+     * but.writeBytes(data)
+     * sendDelimited(buf,promise)
+     * @param byteBuf
+     * @param promise
+     */
+    void sendDelimited(ByteBuf byteBuf, Promise<Void> promise);
 
     String streamId();
 
