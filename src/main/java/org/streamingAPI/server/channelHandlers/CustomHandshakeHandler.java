@@ -44,6 +44,7 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
             HandShakeMessage handShakeMessage = StreamOutConnection.g.fromJson(gg, HandShakeMessage.class);
             //inNettyChannelListener.onControlDataRead(ctx.channel().id().asShortText(),controlData);
             inNettyChannelListener.onChannelActive(ctx.channel(),handShakeMessage);
+            System.out.println("HAHAHHHA CHANNEL ACTIVE CALLED");
         }
         ctx.fireChannelRead(msg);
         ctx.channel().pipeline().remove(CustomHandshakeHandler.NAME);

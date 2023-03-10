@@ -83,7 +83,7 @@ public abstract class StreamingChannel {
     public abstract void channelReadConfigData(String s, byte[] bytes);
 
     public void channelActive(Channel channel, HandShakeMessage handShakeMessage){
-        logger.info("{} CHANNEL ACTIVATED.");
+        logger.info("{} CHANNEL ACTIVATED.",self);
         InetAddress hostName;
         int port;
         try {
@@ -97,14 +97,14 @@ public abstract class StreamingChannel {
             }
             InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
             connections.put(listeningAddress,channel);
-            onChannelActive(channel,handShakeMessage);
-            logger.info("LISTENNING ADDRESS {}.",listeningAddress);
+            onChannelActive(channel,handShakeMessage,listeningAddress);
+            logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();
         }
     }
-    public abstract void onChannelActive(Channel channel, HandShakeMessage handShakeMessage);
+    public abstract void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer);
 
 
 

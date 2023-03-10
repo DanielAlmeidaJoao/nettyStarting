@@ -12,6 +12,7 @@ import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
 import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionDown;
+import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionUp;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 
@@ -83,8 +84,8 @@ public class BabelStreamingChannel<T> extends StreamingChannel implements IChann
     }
 
     @Override
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage) {
-
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer) {
+        listener.deliverEvent(new InConnectionUp(toBabelHost(peer)));
     }
     private InetSocketAddress toInetSocketAddress(Host host){
         return new InetSocketAddress(host.getAddress().getHostAddress(),host.getPort());

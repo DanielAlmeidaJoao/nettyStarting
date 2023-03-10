@@ -8,6 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
+import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionDown;
+import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionUp;
 import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.FileInputStream;
@@ -41,10 +43,17 @@ public class SendFileProtocol extends GenericProtocol {
     public void init(Properties props) throws HandlerRegistrationException, IOException {
         //registerMessageSerializer(channelId,StreamMessage.ID, StreamMessage.serializer);
         //registerMessageHandler(channelId,JoinRequestMessage.MSG_ID,this::uponJoinRequestMessage,this::uponMsgFail);
-        sendFile();
+        registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
+
+        Host peer = new Host(InetAddress.getByName("localhost"),Integer.parseInt(props.getProperty("p2p_port")));
+        sendFile(peer);
+    }
+    private void uponInConnectionUp(InConnectionDown event, int channelId) {
+        logger.info("CONNECTION TO {} IS UP.",event.getNode());
     }
 
-    public void sendFile(){
+    public void sendFile(Host peer){
+        openConnection(peer);
         try{
             Thread.sleep(1000);
             System.out.println("STARTING SENDING FILE!");
