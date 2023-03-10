@@ -1,5 +1,6 @@
 package org.streamingAPI.client;
 
+import com.google.gson.Gson;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -13,32 +14,38 @@ import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Setter;
 import org.streamingAPI.client.channelHandlers.StreamSenderHandler;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
-import org.streamingAPI.server.listeners.InChannelListener;
+import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import org.streamingAPI.server.listeners.InNettyChannelListener;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
-import static org.streamingAPI.server.StreamReceiverImplementation.newDefaultEventExecutor;
+import static org.streamingAPI.server.StreamInConnection.newDefaultEventExecutor;
 
-public class StreamSenderImplementation implements StreamSender {
+public class StreamOutConnection {
+
+    public static Gson g = new Gson();
+
+    private HandShakeMessage handShakeMessage;
+    private byte [] handshake;
     @Setter
     private String host;
     @Setter
     private int port;
-    private final InChannelListener inChannelListener;
+    private final InNettyChannelListener inNettyChannelListener;
 
     private Channel channel;
     private EventLoopGroup group;
-    public StreamSenderImplementation(String host, int port, ChannelFuncHandlers handlerFunctions) {
-        this.host = host;
-        this.port = port;
-        this.inChannelListener = new org.streamingAPI.server.listeners.InChannelListener(newDefaultEventExecutor(),handlerFunctions);
 
+    public StreamOutConnection(ChannelFuncHandlers handlerFunctions) {
+        this(new InNettyChannelListener(newDefaultEventExecutor(),handlerFunctions));
+    }
+    public StreamOutConnection(InNettyChannelListener listener) {
+        this.inNettyChannelListener = listener;
+        group = createNewWorkerGroup(1);
     }
 
-    @Override
-    public void connect(){
-        group = createNewWorkerGroup(1);
+    public void connect(String host, int port){
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
@@ -48,7 +55,7 @@ public class StreamSenderImplementation implements StreamSender {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                        ch.pipeline().addLast( new StreamSenderHandler("THE NEW GUY IN TONW ".getBytes(StandardCharsets.UTF_8),inChannelListener,false));
+                        ch.pipeline().addLast( new StreamSenderHandler(handshake,inNettyChannelListener,false));
                     }
                     });
             channel = b.connect().sync().channel();
@@ -75,7 +82,6 @@ public class StreamSenderImplementation implements StreamSender {
      * @param value the new value
      * @param <T> primitive type of the value
      */
-    @Override
     public <T> void updateConfiguration(ChannelOption<T> option, T value){
         channel.config().setOption(option,value);
     }
@@ -83,7 +89,6 @@ public class StreamSenderImplementation implements StreamSender {
     /**
      * Closes the connection after sending all pending data
      */
-    @Override
     public void close(){
         try {
             while (channel.unsafe().outboundBuffer().totalPendingWriteBytes()>0){
@@ -96,7 +101,6 @@ public class StreamSenderImplementation implements StreamSender {
             group.shutdownGracefully();
         }
     }
-    @Override
     public void send(byte[] message, int len){
         sendWithListener(message,len, null);
     }
@@ -109,15 +113,15 @@ public class StreamSenderImplementation implements StreamSender {
             f.addListener(new PromiseNotifier<>(promise));
         }
     }
-    @Override
     public String streamId(){
         return channel.id().asShortText();
     }
 
-    @Override
     public void setHost(String hostname, int port) {
         setHost(hostname);
         setPort(port);
+        handShakeMessage = new HandShakeMessage(hostname,port);
+        handshake = g.toJson(handShakeMessage).getBytes();
     }
 
     public static EventLoopGroup createNewWorkerGroup(int nThreads) {
@@ -134,6 +138,6 @@ public class StreamSenderImplementation implements StreamSender {
     }
 
     public DefaultEventExecutor getDefaultEventExecutor(){
-        return inChannelListener.getLoop();
+        return inNettyChannelListener.getLoop();
     }
 }

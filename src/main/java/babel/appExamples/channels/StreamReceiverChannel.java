@@ -3,11 +3,13 @@ package babel.appExamples.channels;
 import babel.appExamples.channels.messages.StreamMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.streamingAPI.channel.StreamingHost;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
-import org.streamingAPI.server.StreamReceiver;
-import org.streamingAPI.server.StreamReceiverImplementation;
+import org.streamingAPI.server.StreamInConnection;
+import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
@@ -33,7 +35,7 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
     public final static String DEFAULT_PORT = "8574";
 
     private Map<Host,String> streams;
-    private final StreamReceiver streamReceiver;
+    private final StreamInConnection streamReceiver;
     private final ChannelListener<T> listener;
 
     public StreamReceiverChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties)  throws IOException {
@@ -46,7 +48,7 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new Host(addr,port);
         this.listener = list;
-        streamReceiver = new StreamReceiverImplementation(addr.getHostName(),port,
+        streamReceiver = new StreamInConnection(addr.getHostName(),port,
         new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,this::channelRead,this::channelClosed));
         try{
             streamReceiver.startListening(false,true);
@@ -66,7 +68,7 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
 
     }
 
-    private void channelActive(String channelId){
+    private void channelActive(Channel channel, HandShakeMessage handShakeMessage){
 
     }
     private void channelReadConfigData(String channelId, byte [] data){

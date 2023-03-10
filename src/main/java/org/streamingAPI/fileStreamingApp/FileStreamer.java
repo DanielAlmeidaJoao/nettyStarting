@@ -1,8 +1,10 @@
 package org.streamingAPI.fileStreamingApp;
 
-import org.streamingAPI.client.StreamSender;
-import org.streamingAPI.client.StreamSenderImplementation;
+import io.netty.channel.Channel;
+import org.streamingAPI.channel.StreamingHost;
+import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
+import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -10,17 +12,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileStreamer {
-    private StreamSender streamSender;
+    private final String host;
+    private final int port;
+    private StreamOutConnection streamSender;
     private FileOutputStream fileOutputStream;
 
     public FileStreamer(String host, int port){
+        this.host = host;
+        this.port = port;
         ChannelFuncHandlers handlerFunctions = new ChannelFuncHandlers(
                 this::channelActive,
                 this::channelActiveRead,
                 this::channelRead,
                 this::channelInactive
         );
-        streamSender = new StreamSenderImplementation(host,port,handlerFunctions);
+        streamSender = new StreamOutConnection(handlerFunctions);
         try {
             fileOutputStream = new FileOutputStream("copyOFmine.mp4");
         }catch (Exception e){
@@ -29,7 +35,7 @@ public class FileStreamer {
     }
     public void startStreaming(){
         try{
-            streamSender.connect();
+            streamSender.connect(host,port);
             Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
@@ -58,7 +64,7 @@ public class FileStreamer {
     public static void main(String [] args ){
         if (args.length != 2) {
             System.err.println(
-                    "Usage: " + StreamSenderImplementation.class.getSimpleName() +
+                    "Usage: " + StreamOutConnection.class.getSimpleName() +
                             " <host> <port>");
             return;
         }
@@ -67,7 +73,7 @@ public class FileStreamer {
         new FileStreamer(host,port).startStreaming();
     }
 
-    public void channelActive(String channelId){
+    public void channelActive(Channel channelId, HandShakeMessage host){
 
     }
     public void channelActiveRead(String channelId,byte [] data){

@@ -1,16 +1,12 @@
 package org.streamingAPI.server.channelHandlers;
 
-import babel.appExamples.channels.messages.StreamMessage;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.ReferenceCountUtil;
-import org.streamingAPI.server.listeners.InChannelListener;
+import org.streamingAPI.server.listeners.InNettyChannelListener;
 
 //@ChannelHandler.Sharable
 public class StreamReceiverHandler extends CustomChannelHandler {
-    public StreamReceiverHandler(InChannelListener inChannelListener, boolean deliverDelimited ){
-        super(inChannelListener,deliverDelimited);
+    public StreamReceiverHandler(InNettyChannelListener inNettyChannelListener){
+        super(inNettyChannelListener);
     }
     /**
      * Used when the sender specified the length of the data in the first bytes of the array
@@ -19,6 +15,6 @@ public class StreamReceiverHandler extends CustomChannelHandler {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        getInChannelListener().onChannelRead(ctx.channel().id().asShortText(), (byte []) msg);
+        getInNettyChannelListener().onChannelRead(ctx.channel().id().asShortText(), (byte []) msg);
     }
 }

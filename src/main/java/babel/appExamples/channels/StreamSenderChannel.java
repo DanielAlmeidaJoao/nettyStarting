@@ -4,16 +4,17 @@ import babel.appExamples.channels.messages.StreamMessage;
 import babel.appExamples.protocols.ReceiveFileProtocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.util.concurrent.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.client.StreamSender;
-import org.streamingAPI.client.StreamSenderImplementation;
+import org.streamingAPI.channel.StreamingHost;
+import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
+import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
-import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 
@@ -33,7 +34,7 @@ public class StreamSenderChannel<T> implements IChannel<T> {
     private Host self;
     public final static String NAME = "STREAM_SENDER";
 
-    private final StreamSender streamSender;
+    private final StreamOutConnection streamSender;
     private final ChannelListener<T> listener;
     private Map<Host,String> streams;
 
@@ -47,10 +48,9 @@ public class StreamSenderChannel<T> implements IChannel<T> {
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new Host(addr,port);
         this.listener = list;
-        streamSender = new StreamSenderImplementation(addr.getHostName(),port,
-                new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,
+        streamSender = new StreamOutConnection(new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,
                         this::channelRead,this::channelClosed));
-        streamSender.connect();
+        streamSender.connect(addr.getHostName(),port);
         streams = new HashMap<>();
     }
 
@@ -82,9 +82,9 @@ public class StreamSenderChannel<T> implements IChannel<T> {
     @Override
     public void openConnection(Host peer) {
         streamSender.setHost(self.getAddress().getHostName(),self.getPort());
-        streamSender.connect();
+        streamSender.connect(peer.getAddress().getHostName(),peer.getPort());
     }
-    private void channelActive(String channelId){
+    private void channelActive(Channel channel, HandShakeMessage handShakeMessage){
 
     }
     private void channelReadConfigData(String channelId, byte [] data){

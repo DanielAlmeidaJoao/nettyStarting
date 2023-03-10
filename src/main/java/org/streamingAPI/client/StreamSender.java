@@ -6,7 +6,7 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 
 public interface StreamSender {
-    void connect();
+    void connect(String host, int port);
 
     <T> void updateConfiguration(ChannelOption<T> option, T value);
 

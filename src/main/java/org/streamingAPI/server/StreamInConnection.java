@@ -15,13 +15,14 @@ import org.streamingAPI.server.channelHandlers.CustomHandshakeHandler;
 import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
 import org.streamingAPI.server.channelHandlers.StreamReceiverHandler;
 import org.streamingAPI.server.channelHandlers.encodings.StreamMessageDecoder;
+import org.streamingAPI.server.listeners.InNettyChannelListener;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class StreamReceiverImplementation implements StreamReceiver {
+public class StreamInConnection {
 
     public static String NAME = "STREAM_RECEIVER";
 
@@ -35,14 +36,17 @@ public class StreamReceiverImplementation implements StreamReceiver {
     private Channel serverChannel;
 
     @Getter
-    private org.streamingAPI.server.listeners.InChannelListener inListener;
+    private InNettyChannelListener inListener;
     private Map<String,SocketChannel> clients;
 
-    public StreamReceiverImplementation(String hostName, int port,
-                                        ChannelFuncHandlers handlerFunctions) {
+    public StreamInConnection(String hostName, int port,
+                              ChannelFuncHandlers handlerFunctions) {
+        this(hostName,port,new InNettyChannelListener(newDefaultEventExecutor(),handlerFunctions));
+    }
+    public StreamInConnection(String hostName, int port, InNettyChannelListener listener) {
         this.port = port;
         this.hostName = hostName;
-        this.inListener = new org.streamingAPI.server.listeners.InChannelListener(newDefaultEventExecutor(),handlerFunctions);
+        this.inListener = listener;
         clients = new HashMap<>();
     }
 
@@ -54,7 +58,6 @@ public class StreamReceiverImplementation implements StreamReceiver {
      * @param sync whether to block the main thread or not
      * @throws Exception
      */
-    @Override
     public void startListening(boolean sync, boolean readDelimited) throws Exception{
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
@@ -71,7 +74,7 @@ public class StreamReceiverImplementation implements StreamReceiver {
                         }else{
                             ch.pipeline().addLast(new StreamMessageDecoder());
                         }
-                        ch.pipeline().addLast(new StreamReceiverHandler(inListener,readDelimited));
+                        ch.pipeline().addLast(new StreamReceiverHandler(inListener));
                         clients.put(ch.id().asShortText(),ch);
                     }
                 });
@@ -121,19 +124,16 @@ public class StreamReceiverImplementation implements StreamReceiver {
             f.addListener(new PromiseNotifier<>(promise));
         }
     }
-    @Override
     public <T> void updateConfiguration(ChannelOption<T> option, T value) {
         serverChannel.config().setOption(option,value);
     }
 
-    @Override
     public <T> void updateConfiguration(String streamId,ChannelOption<T> option, T value) {
         noSuchStreamException(streamId);
         clients.get(streamId).config().setOption(option,value);
     }
 
 
-    @Override
     public void close(){
         serverChannel.disconnect();
     }
@@ -143,7 +143,6 @@ public class StreamReceiverImplementation implements StreamReceiver {
         System.out.println(channel.config().getOptions().get(ChannelOption.SO_RCVBUF));
         System.out.println(channel.config().getMaxMessagesPerRead());
     }
-    @Override
     public void closeStream(String streamId){
         noSuchStreamException(streamId);
         printSomeConfigs(streamId);

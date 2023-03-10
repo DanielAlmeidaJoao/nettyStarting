@@ -3,7 +3,13 @@ package org.streamingAPI.server.channelHandlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-import org.streamingAPI.server.listeners.InChannelListener;
+import org.streamingAPI.channel.StreamingHost;
+import org.streamingAPI.client.StreamOutConnection;
+import org.streamingAPI.server.StreamInConnection;
+import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import org.streamingAPI.server.listeners.InNettyChannelListener;
+
+import java.net.InetAddress;
 
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelHandlerAdapter {
@@ -11,11 +17,11 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
     public static final String NAME ="CHSHAKE_HANDLER";
     private static final int UNCHANGED_VALUE = -2;
 
-    private InChannelListener inChannelListener;
+    private InNettyChannelListener inNettyChannelListener;
     private byte [] controlData;
     private int len;
-    public CustomHandshakeHandler(InChannelListener inChannelListener){
-       this.inChannelListener = inChannelListener;
+    public CustomHandshakeHandler(InNettyChannelListener inNettyChannelListener){
+       this.inNettyChannelListener = inNettyChannelListener;
        this.len = UNCHANGED_VALUE;
     }
 
@@ -34,7 +40,10 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
             }
             controlData = new byte[len];
             in.readBytes(controlData,0,len);
-            inChannelListener.onControlDataRead(ctx.channel().id().asShortText(),controlData);
+            String gg = new String(controlData);
+            HandShakeMessage handShakeMessage = StreamOutConnection.g.fromJson(gg, HandShakeMessage.class);
+            //inNettyChannelListener.onControlDataRead(ctx.channel().id().asShortText(),controlData);
+            inNettyChannelListener.onChannelActive(ctx.channel(),handShakeMessage);
         }
         ctx.fireChannelRead(msg);
         ctx.channel().pipeline().remove(CustomHandshakeHandler.NAME);

@@ -1,32 +1,35 @@
 package org.streamingAPI.server.channelHandlers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
 import lombok.Getter;
-import org.streamingAPI.server.listeners.InChannelListener;
+import org.streamingAPI.server.listeners.InNettyChannelListener;
+
+import java.net.InetSocketAddress;
 
 //@ChannelHandler.Sharable
 public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
     private int totalRead;
     @Getter
-    private InChannelListener inChannelListener;
-    private boolean deliverDelimited;
+    private InNettyChannelListener inNettyChannelListener;
 
-    public CustomChannelHandler(InChannelListener inChannelListener,boolean readDelimited){
-        this.inChannelListener  = inChannelListener;
-        this.deliverDelimited=readDelimited;
+    public CustomChannelHandler(InNettyChannelListener inNettyChannelListener){
+        this.inNettyChannelListener = inNettyChannelListener;
     }
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        inChannelListener.onChannelActive(ctx.channel().id().asShortText());
+        /** NULL because we do not care about this field on the server handler channelActive **/
+        Channel channel = ctx.channel(); // get the channel from somewhere
+        inNettyChannelListener.onChannelActive(ctx.channel(),null);
     }
     private void deliverRead(ByteBuf in, String streamId){
         try {
             byte[] bytes = new byte[in.readableBytes()];
             in.readBytes(bytes);
-            inChannelListener.onChannelRead(streamId,bytes);
+            inNettyChannelListener.onChannelRead(streamId,bytes);
             totalRead += bytes.length;
         }catch (Exception e ){
             e.printStackTrace();
@@ -43,7 +46,7 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
     public void channelReadComplete(ChannelHandlerContext ctx) {}
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        inChannelListener.onChannelInactive(ctx.channel().id().asShortText());
+        inNettyChannelListener.onChannelInactive(ctx.channel().id().asShortText());
         System.out.printf("CHANNEL %S CLOSED. TOTAL READ %S \n",ctx.channel().id().asShortText()+"",totalRead+"");
     }
     @Override

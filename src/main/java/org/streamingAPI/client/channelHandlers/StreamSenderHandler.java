@@ -4,13 +4,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import org.streamingAPI.server.channelHandlers.CustomChannelHandler;
-import org.streamingAPI.server.listeners.InChannelListener;
+import org.streamingAPI.server.listeners.InNettyChannelListener;
 
 //@ChannelHandler.Sharable
 public class StreamSenderHandler extends CustomChannelHandler {
     byte [] controlData;
-    public StreamSenderHandler(byte [] handshakeData, InChannelListener inChannelListener,boolean readDelimited){
-        super(inChannelListener,readDelimited);
+    public StreamSenderHandler(byte [] handshakeData, InNettyChannelListener inNettyChannelListener, boolean readDelimited){
+        super(inNettyChannelListener);
         this.controlData = handshakeData;
     }
 

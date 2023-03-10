@@ -1,8 +1,10 @@
 package org.streamingAPI.fileStreamingApp;
 
+import io.netty.channel.Channel;
+import org.streamingAPI.channel.StreamingHost;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
-import org.streamingAPI.server.StreamReceiver;
-import org.streamingAPI.server.StreamReceiverImplementation;
+import org.streamingAPI.server.StreamInConnection;
+import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 
 import java.io.FileOutputStream;
 import java.util.HashMap;
@@ -11,7 +13,7 @@ import java.util.Map;
 public class FileReceiver {
 
     private Map<String,FileOutputStream> files;
-    private StreamReceiver streamReceiver;
+    private StreamInConnection streamReceiver;
     private int port;
     private ChannelFuncHandlers handlerFunctions;
 
@@ -31,8 +33,9 @@ public class FileReceiver {
             System.exit(0);
         }
     }
-    private void initChannel(String channelId){
+    private void initChannel(Channel channel, HandShakeMessage host){
         try {
+            String channelId = channel.id().asShortText();
             files.put(channelId,new FileOutputStream(channelId+".mp4"));
         }catch (Exception e){
             e.printStackTrace();
@@ -69,7 +72,7 @@ public class FileReceiver {
 
     public void start(){
         try {
-            streamReceiver = new StreamReceiverImplementation("localhost",port,handlerFunctions);
+            streamReceiver = new StreamInConnection("localhost",port,handlerFunctions);
             streamReceiver.startListening(false,true);
         }catch (Exception e){
             e.printStackTrace();
@@ -79,7 +82,7 @@ public class FileReceiver {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println(
-                    "Usage: " + StreamReceiverImplementation.class.getSimpleName() +
+                    "Usage: " + StreamInConnection.class.getSimpleName() +
                             " <port>");
         }
         int port = Integer.parseInt(args[0]);
