@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -31,7 +32,9 @@ public abstract class StreamingChannel {
     public final static String PORT_KEY = "port";
 
     public final static String DEFAULT_PORT = "8574";
-    private Map<StreamingHost, Channel> connections;
+    private Map<InetSocketAddress, Channel> connections;
+    private Map<String,InetSocketAddress> channelIds;
+
     private StreamInConnection server;
     private StreamOutConnection client;
     public StreamingChannel( Properties properties)throws Exception{
@@ -45,6 +48,8 @@ public abstract class StreamingChannel {
         self = new InetSocketAddress(addr,port);
         ChannelFuncHandlers handlers = new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,this::channelRead,this::channelClosed);
         InNettyChannelListener listener = new InNettyChannelListener(StreamInConnection.newDefaultEventExecutor(),handlers);
+        connections = new HashMap<>();
+        channelIds = new HashMap<>();
         server = new StreamInConnection(addr.getHostName(),port,listener);
         client = new StreamOutConnection(listener);
 
@@ -56,13 +61,19 @@ public abstract class StreamingChannel {
 
     }
 
-    public abstract void channelClosed(String channelId);
+    public  void channelClosed(String channelId){
+        InetSocketAddress peer = channelIds.get(channelId);
+        connections.remove(peer);
+    }
+
+    public abstract void onChannelClosed(InetSocketAddress peer);
 
     public abstract void channelRead(String channelId, byte[] bytes);
 
     public abstract void channelReadConfigData(String s, byte[] bytes);
 
     public void channelActive(Channel channel, HandShakeMessage handShakeMessage){
+        logger.info("{} CHANNEL ACTIVATED.");
         InetAddress hostName;
         int port;
         try {
@@ -74,8 +85,10 @@ public abstract class StreamingChannel {
                 hostName = InetAddress.getByName(handShakeMessage.getHost());
                 port = handShakeMessage.getPort();
             }
-            connections.put(new StreamingHost(hostName,port),channel);
+            InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
+            connections.put(listeningAddress,channel);
             onChannelActive(channel,handShakeMessage);
+            logger.info("LISTENNING ADDRESS {}.",listeningAddress);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();
@@ -85,9 +98,14 @@ public abstract class StreamingChannel {
 
 
 
-    protected void onOpenConnection(InetSocketAddress peer) {
+    protected void openConnection(InetSocketAddress peer) {
         client.connect(peer.getAddress().getHostName(),peer.getPort());
     }
+    protected void closeConnection(InetSocketAddress peer) {
+        logger.info("CLOSING CONNECTION TO {}", peer);
+        connections.get(peer).close();
+    }
+
 
     protected void send(byte [] message, InetSocketAddress peer) {
         connections.get(peer).writeAndFlush(message);
@@ -116,9 +134,6 @@ public abstract class StreamingChannel {
 
     protected void onOutboundConnectionUp() {}
 
-    protected void onCloseConnection(Host peer, int connection) {
-        logger.debug("CloseConnection " + peer);
-    }
 
     protected void onOutboundConnectionDown() {
     }
