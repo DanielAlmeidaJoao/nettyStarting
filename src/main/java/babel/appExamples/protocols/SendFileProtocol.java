@@ -1,5 +1,6 @@
 package babel.appExamples.protocols;
 
+import babel.appExamples.channels.BabelStreamingChannel;
 import babel.appExamples.channels.StreamReceiverChannel;
 import babel.appExamples.channels.StreamSenderChannel;
 import babel.appExamples.channels.messages.StreamMessage;
@@ -34,7 +35,7 @@ public class SendFileProtocol extends GenericProtocol {
         this.receiver = new Host(InetAddress.getByName(address), Integer.parseInt(port));
 
         Properties channelProps = new Properties();
-        channelId = createChannel(StreamSenderChannel.NAME, props);
+        channelId = createChannel(BabelStreamingChannel.NAME, props);
     }
     @Override
     public void init(Properties props) throws HandlerRegistrationException, IOException {
@@ -60,6 +61,7 @@ public class SendFileProtocol extends GenericProtocol {
                 totalSent += read;
                 StreamMessage streamMessage = new StreamMessage(bytes,read,"OLA");
                 sendMessage(streamMessage,receiver);
+                break;
             }
             System.out.println("TOTAL SENT "+totalSent);
             Thread.sleep(5*1000);

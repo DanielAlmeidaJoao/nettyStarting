@@ -1,5 +1,6 @@
 package babel.appExamples.protocols;
 
+import babel.appExamples.channels.BabelStreamingChannel;
 import babel.appExamples.channels.StreamReceiverChannel;
 import babel.appExamples.channels.messages.StreamMessage;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +35,7 @@ public class ReceiveFileProtocol extends GenericProtocol {
         logger.info("Listening on {}:{}", address, port);
         this.self = new Host(InetAddress.getByName(address), Integer.parseInt(port));
 
-        channelId = createChannel(StreamReceiverChannel.NAME, props);
+        channelId = createChannel(BabelStreamingChannel.NAME, props);
         try {
             fos = new FileOutputStream("DANIEL.mp4");
         }catch (Exception e){

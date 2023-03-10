@@ -26,6 +26,6 @@ the receiver must be the client
 Starting Babel
 java -Xmx500M -cp target/nettyStart.jar Main sender=o
 
-java -cp target/nettyStart.jar Main
+java -cp target/nettyStart.jar Main address=localhost port=10101
 
-java -cp target/nettyStart.jar Main sender=o
+java -cp target/nettyStart.jar Main address=localhost port=10103 sender=o

@@ -4,8 +4,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
+import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.client.StreamOutConnection;
@@ -25,6 +27,9 @@ import java.util.Properties;
 
 public abstract class StreamingChannel {
     private static final Logger logger = LogManager.getLogger(StreamingChannel.class);
+
+    @Getter
+    private DefaultEventExecutor executor;
     private InetSocketAddress self;
     public final static String NAME = "STREAMING_CHANNEL";
 
@@ -37,7 +42,7 @@ public abstract class StreamingChannel {
 
     private StreamInConnection server;
     private StreamOutConnection client;
-    public StreamingChannel( Properties properties)throws Exception{
+    public StreamingChannel( Properties properties)throws IOException{
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
@@ -52,6 +57,7 @@ public abstract class StreamingChannel {
         channelIds = new HashMap<>();
         server = new StreamInConnection(addr.getHostName(),port,listener);
         client = new StreamOutConnection(listener);
+        executor = listener.getLoop();
 
         try{
             server.startListening(false,true);
@@ -64,11 +70,15 @@ public abstract class StreamingChannel {
     public  void channelClosed(String channelId){
         InetSocketAddress peer = channelIds.get(channelId);
         connections.remove(peer);
+        onChannelClosed(channelIds.get(channelId));
     }
 
     public abstract void onChannelClosed(InetSocketAddress peer);
 
-    public abstract void channelRead(String channelId, byte[] bytes);
+    public void channelRead(String channelId, byte[] bytes){
+        onChannelRead(channelId,bytes,channelIds.get(channelId));
+    }
+    public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
     public abstract void channelReadConfigData(String s, byte[] bytes);
 
@@ -159,4 +169,5 @@ public abstract class StreamingChannel {
     public void onServerSocketClose(boolean success, Throwable cause) {
         logger.debug("Server socket closed. " + (success ? "" : "Cause: " + cause));
     }
+
 }
