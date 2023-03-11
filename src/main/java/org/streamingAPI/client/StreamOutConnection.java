@@ -14,6 +14,8 @@ import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Setter;
 import org.streamingAPI.client.channelHandlers.StreamSenderHandler;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
+import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
+import org.streamingAPI.server.channelHandlers.encodings.StreamMessageDecoder;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.server.listeners.InNettyChannelListener;
 
@@ -45,28 +47,37 @@ public class StreamOutConnection {
         handshake = g.toJson(handShakeMessage).getBytes();
     }
 
-    public void connect(String host, int port){
+    public void connect(InetSocketAddress peer, boolean readDelimited){
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
                     .channel(socketChannel())
-                    .remoteAddress(new InetSocketAddress(host, port))
+                    .remoteAddress(peer)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
+                            if(readDelimited){
+                                ch.pipeline().addLast(new DelimitedMessageDecoder());
+                            }else{
+                                ch.pipeline().addLast(new StreamMessageDecoder());
+                            }
                         ch.pipeline().addLast( new StreamSenderHandler(handshake,inNettyChannelListener,false));
                     }
                     });
-            channel = b.connect().sync().channel();
+            channel = b.connect().sync().addListener(future -> {
+                if(!future.isSuccess()){
+                    inNettyChannelListener.onOpenConnectionFailedHandler(peer,future.cause());
+                }
+            }).channel();
 
             //printSomeConfigs();
             /***
             updateConfiguration(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK,64*1024);
             updateConfiguration(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK,2*64*1024);
             updateConfiguration(ChannelOption.AUTO_READ,Boolean.TRUE);**/
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            inNettyChannelListener.onOpenConnectionFailedHandler(peer,e.getCause());
         }
     }
 

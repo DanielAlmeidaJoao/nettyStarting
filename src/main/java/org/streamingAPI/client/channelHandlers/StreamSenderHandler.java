@@ -33,4 +33,12 @@ public class StreamSenderHandler extends CustomChannelHandler {
         Channel channel = ctx.channel(); // get the channel from somewhere
         getInNettyChannelListener().onChannelActive(ctx.channel(),null);
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx,
+                                Throwable cause) {
+        System.out.println("TRIGGER AN ERROR!!!");
+        cause.printStackTrace();
+        ctx.close();
+    }
 }

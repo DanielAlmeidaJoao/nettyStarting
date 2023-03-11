@@ -15,6 +15,7 @@ import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.server.listeners.InNettyChannelListener;
+import pt.unl.fct.di.novasys.network.Connection;
 import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
@@ -51,7 +52,11 @@ public abstract class StreamingChannel {
 
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        ChannelFuncHandlers handlers = new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,this::channelRead,this::channelClosed);
+        ChannelFuncHandlers handlers = new ChannelFuncHandlers(this::channelActive,
+                this::channelReadConfigData,
+                this::channelRead,
+                this::channelClosed,
+                this::onOpenConnectionFailed);
         InNettyChannelListener listener = new InNettyChannelListener(StreamInConnection.newDefaultEventExecutor(),handlers);
         connections = new HashMap<>();
         channelIds = new HashMap<>();
@@ -110,7 +115,12 @@ public abstract class StreamingChannel {
 
 
     protected void openConnection(InetSocketAddress peer) {
-        client.connect(peer.getAddress().getHostName(),peer.getPort());
+        if(connections.containsKey(peer)){
+            logger.info("{} ALREADY CONNECTED TO {}",self,peer);
+        }else {
+            logger.info("{} CONNECTING TO {}",self,peer);
+            client.connect(peer,true);
+        }
     }
     protected void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING CONNECTION TO {}", peer);
@@ -143,14 +153,15 @@ public abstract class StreamingChannel {
         }
     }
 
+    public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+
     protected void onOutboundConnectionUp() {}
 
 
     protected void onOutboundConnectionDown() {
     }
 
-    protected void onOutboundConnectionFailed() {
-    }
+
 
     protected void onInboundConnectionUp() {
 

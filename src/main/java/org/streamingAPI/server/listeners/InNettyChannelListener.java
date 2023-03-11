@@ -8,6 +8,8 @@ import org.streamingAPI.channel.StreamingHost;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 
+import java.net.InetSocketAddress;
+
 public class InNettyChannelListener {
 
     @Getter
@@ -40,6 +42,12 @@ public class InNettyChannelListener {
     public void onChannelInactive(String channelId){
         loop.execute(() -> {
             handlerFunctions.getChannelInactiveHandler().execute(channelId);
+        });
+    }
+
+    public void onOpenConnectionFailedHandler(InetSocketAddress peer, Throwable cause){
+        loop.execute(() -> {
+            handlerFunctions.getConnectionFailedHandler().execute(peer,cause);
         });
     }
 }

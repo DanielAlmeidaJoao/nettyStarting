@@ -2,6 +2,7 @@ package babel.appExamples.protocols;
 
 import babel.appExamples.channels.BabelStreamingChannel;
 import babel.appExamples.channels.StreamReceiverChannel;
+import babel.appExamples.channels.messages.EndOfStreaming;
 import babel.appExamples.channels.messages.StreamMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,7 @@ public class ReceiveFileProtocol extends GenericProtocol {
     private static final Logger logger = LogManager.getLogger(ReceiveFileProtocol.class);
     public static final short ID = 204;
     private Host self;
+    private Host forwarder;
     FileOutputStream fos;
     private int channelId;
     public ReceiveFileProtocol(Properties props) throws IOException {
@@ -34,6 +36,7 @@ public class ReceiveFileProtocol extends GenericProtocol {
         String port = props.getProperty("p2p_port");
         logger.info("Listening on {}:{}", address, port);
         this.self = new Host(InetAddress.getByName(address), Integer.parseInt(port));
+        forwarder = new Host(InetAddress.getByName("localhost"),Integer.parseInt(props.getProperty("p2p_port_f")));
 
         channelId = createChannel(BabelStreamingChannel.NAME, props);
         try {
@@ -46,8 +49,10 @@ public class ReceiveFileProtocol extends GenericProtocol {
     public void init(Properties props) throws HandlerRegistrationException, IOException {
         registerMessageSerializer(channelId, StreamMessage.ID,StreamMessage.serializer);
         registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
-        registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, this::uponInConnectionDown);
+        registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
 
+        registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, this::uponInConnectionDown);
+        openConnection(forwarder);
     }
 
     private void uponInConnectionDown(InConnectionDown event, int channelId) {
@@ -62,8 +67,19 @@ public class ReceiveFileProtocol extends GenericProtocol {
             totoal +=msg.getDataLength();
             fos.write(msg.getData(), 0,msg.getDataLength());
             fos.flush();
+            sendMessage(msg,forwarder);
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+    private void uponEndOfStreamingMessage(EndOfStreaming msg, Host from, short sourceProto, int channelId){
+        logger.info("{} RECEIVED EOS FROM {}.",self,from);
+        try {
+            System.out.println("CONNECTION CLOSED! "+totoal);
+            logger.info("{} Stream Ended! from {}",self,from);
+            fos.close();
+            StreamMessage streamMessage = new StreamMessage(new byte[0],0,"OLA");
+            sendMessage(streamMessage,forwarder);
+        }catch (Exception e){e.printStackTrace();};
     }
 }
