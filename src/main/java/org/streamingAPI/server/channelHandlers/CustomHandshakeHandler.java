@@ -27,6 +27,7 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        System.out.println("HANDSHAKE CALLED!!!");
         ByteBuf in = (ByteBuf) msg;
         if(in.readableBytes()<4){
             return;

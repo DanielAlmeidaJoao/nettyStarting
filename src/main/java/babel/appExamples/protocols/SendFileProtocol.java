@@ -48,7 +48,7 @@ public class SendFileProtocol extends GenericProtocol {
         Host peer = new Host(InetAddress.getByName("localhost"),Integer.parseInt(props.getProperty("p2p_port")));
         sendFile(peer);
     }
-    private void uponInConnectionUp(InConnectionDown event, int channelId) {
+    private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
     }
 
@@ -70,7 +70,6 @@ public class SendFileProtocol extends GenericProtocol {
                 totalSent += read;
                 StreamMessage streamMessage = new StreamMessage(bytes,read,"OLA");
                 sendMessage(streamMessage,receiver);
-                break;
             }
             System.out.println("TOTAL SENT "+totalSent);
             Thread.sleep(5*1000);

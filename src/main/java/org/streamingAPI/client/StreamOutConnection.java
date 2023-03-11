@@ -26,23 +26,23 @@ public class StreamOutConnection {
 
     public static Gson g = new Gson();
 
+    private final InetSocketAddress listenningAddress;
     private HandShakeMessage handShakeMessage;
     private byte [] handshake;
-    @Setter
-    private String host;
-    @Setter
-    private int port;
     private final InNettyChannelListener inNettyChannelListener;
 
     private Channel channel;
     private EventLoopGroup group;
 
-    public StreamOutConnection(ChannelFuncHandlers handlerFunctions) {
-        this(new InNettyChannelListener(newDefaultEventExecutor(),handlerFunctions));
+    public StreamOutConnection(ChannelFuncHandlers handlerFunctions, InetSocketAddress host) {
+        this(new InNettyChannelListener(newDefaultEventExecutor(),handlerFunctions),host);
     }
-    public StreamOutConnection(InNettyChannelListener listener) {
+    public StreamOutConnection(InNettyChannelListener listener,InetSocketAddress host) {
         this.inNettyChannelListener = listener;
         group = createNewWorkerGroup(1);
+        this.listenningAddress=host;
+        handShakeMessage = new HandShakeMessage(host.getHostName(),host.getPort());
+        handshake = g.toJson(handShakeMessage).getBytes();
     }
 
     public void connect(String host, int port){
@@ -115,13 +115,6 @@ public class StreamOutConnection {
     }
     public String streamId(){
         return channel.id().asShortText();
-    }
-
-    public void setHost(String hostname, int port) {
-        setHost(hostname);
-        setPort(port);
-        handShakeMessage = new HandShakeMessage(hostname,port);
-        handshake = g.toJson(handShakeMessage).getBytes();
     }
 
     public static EventLoopGroup createNewWorkerGroup(int nThreads) {

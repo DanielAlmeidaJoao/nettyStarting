@@ -56,7 +56,7 @@ public abstract class StreamingChannel {
         connections = new HashMap<>();
         channelIds = new HashMap<>();
         server = new StreamInConnection(addr.getHostName(),port,listener);
-        client = new StreamOutConnection(listener);
+        client = new StreamOutConnection(listener,self);
         executor = listener.getLoop();
 
         try{
@@ -97,6 +97,7 @@ public abstract class StreamingChannel {
             }
             InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
             connections.put(listeningAddress,channel);
+            channelIds.put(channel.id().asShortText(),listeningAddress);
             onChannelActive(channel,handShakeMessage,listeningAddress);
             logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){

@@ -49,7 +49,7 @@ public class StreamSenderChannel<T> implements IChannel<T> {
         self = new Host(addr,port);
         this.listener = list;
         streamSender = new StreamOutConnection(new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,
-                        this::channelRead,this::channelClosed));
+                        this::channelRead,this::channelClosed),null);
         streamSender.connect(addr.getHostName(),port);
         streams = new HashMap<>();
     }
@@ -81,7 +81,7 @@ public class StreamSenderChannel<T> implements IChannel<T> {
 
     @Override
     public void openConnection(Host peer) {
-        streamSender.setHost(self.getAddress().getHostName(),self.getPort());
+        //streamSender.setHost(self.getAddress().getHostName(),self.getPort());
         streamSender.connect(peer.getAddress().getHostName(),peer.getPort());
     }
     private void channelActive(Channel channel, HandShakeMessage handShakeMessage){

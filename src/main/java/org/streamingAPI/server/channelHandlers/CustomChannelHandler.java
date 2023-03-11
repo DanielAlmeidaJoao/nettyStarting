@@ -21,10 +21,12 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
     }
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        /** NULL because we do not care about this field on the server handler channelActive **/
+        /** NULL because we do not care about this field on the server handler channelActive
         Channel channel = ctx.channel(); // get the channel from somewhere
         inNettyChannelListener.onChannelActive(ctx.channel(),null);
+            **/
     }
+
     private void deliverRead(ByteBuf in, String streamId){
         try {
             byte[] bytes = new byte[in.readableBytes()];
@@ -55,4 +57,5 @@ public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
         cause.printStackTrace();
         ctx.close();
     }
+
 }
