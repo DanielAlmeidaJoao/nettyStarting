@@ -27,7 +27,6 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        System.out.println("HANDSHAKE CALLED!!!");
         ByteBuf in = (ByteBuf) msg;
         if(in.readableBytes()<4){
             return;
@@ -43,9 +42,7 @@ public class CustomHandshakeHandler extends ChannelHandlerAdapter {
             in.readBytes(controlData,0,len);
             String gg = new String(controlData);
             HandShakeMessage handShakeMessage = StreamOutConnection.g.fromJson(gg, HandShakeMessage.class);
-            //inNettyChannelListener.onControlDataRead(ctx.channel().id().asShortText(),controlData);
             inNettyChannelListener.onChannelActive(ctx.channel(),handShakeMessage);
-            System.out.println("HAHAHHHA CHANNEL ACTIVE CALLED");
         }
         ctx.fireChannelRead(msg);
         ctx.channel().pipeline().remove(CustomHandshakeHandler.NAME);
