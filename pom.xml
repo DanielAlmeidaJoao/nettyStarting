@@ -29,6 +29,13 @@
         </dependency>
 
         <dependency>
+            <groupId>io.netty.incubator</groupId>
+            <artifactId>netty-incubator-codec-native-quic</artifactId>
+            <version>0.0.21.Final</version>
+            <classifier>linux-x86_64</classifier>
+        </dependency>
+
+        <dependency>
             <groupId>pt.unl.fct.di.novasys</groupId>
             <artifactId>babel-core</artifactId>
             <version>0.4.47</version>
