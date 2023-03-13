@@ -1,5 +1,7 @@
+import babel.appExamples.channels.BabelStreamingChannel;
 import babel.appExamples.channels.StreamReceiverChannel;
 import babel.appExamples.channels.StreamSenderChannel;
+import babel.appExamples.channels.initializers.BabelStreamInitializer;
 import babel.appExamples.channels.initializers.StreamReceiverInitializer;
 import babel.appExamples.channels.initializers.StreamSenderInitializers;
 import babel.appExamples.protocols.ReceiveFileProtocol;
@@ -10,6 +12,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class Main {
+    static {
+        System.setProperty("log4j.configurationFile", "log4j2.xml");
+    }
     private static final String DEFAULT_CONF = "config.properties";
     public static void main(String[] args) throws Exception {
         System.out.println("Hello world 2!");
@@ -17,8 +22,7 @@ public class Main {
 
         //Get the (singleton) babel instance
         Babel babel = Babel.getInstance();
-        babel.registerChannelInitializer(StreamSenderChannel.NAME,new StreamSenderInitializers());
-        babel.registerChannelInitializer(StreamReceiverChannel.NAME,new StreamReceiverInitializer());
+        babel.registerChannelInitializer(BabelStreamingChannel.NAME,new BabelStreamInitializer());
 
 
         //Loads properties from the configuration file, and merges them with

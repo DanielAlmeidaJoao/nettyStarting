@@ -4,8 +4,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
+import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.client.StreamOutConnection;
@@ -13,6 +15,7 @@ import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.server.listeners.InNettyChannelListener;
+import pt.unl.fct.di.novasys.network.Connection;
 import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
@@ -25,6 +28,9 @@ import java.util.Properties;
 
 public abstract class StreamingChannel {
     private static final Logger logger = LogManager.getLogger(StreamingChannel.class);
+
+    @Getter
+    private DefaultEventExecutor executor;
     private InetSocketAddress self;
     public final static String NAME = "STREAMING_CHANNEL";
 
@@ -37,7 +43,7 @@ public abstract class StreamingChannel {
 
     private StreamInConnection server;
     private StreamOutConnection client;
-    public StreamingChannel( Properties properties)throws Exception{
+    public StreamingChannel( Properties properties)throws IOException{
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
@@ -46,12 +52,17 @@ public abstract class StreamingChannel {
 
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        ChannelFuncHandlers handlers = new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,this::channelRead,this::channelClosed);
+        ChannelFuncHandlers handlers = new ChannelFuncHandlers(this::channelActive,
+                this::channelReadConfigData,
+                this::channelRead,
+                this::channelClosed,
+                this::onOpenConnectionFailed);
         InNettyChannelListener listener = new InNettyChannelListener(StreamInConnection.newDefaultEventExecutor(),handlers);
         connections = new HashMap<>();
         channelIds = new HashMap<>();
         server = new StreamInConnection(addr.getHostName(),port,listener);
-        client = new StreamOutConnection(listener);
+        client = new StreamOutConnection(listener,self);
+        executor = listener.getLoop();
 
         try{
             server.startListening(false,true);
@@ -64,16 +75,20 @@ public abstract class StreamingChannel {
     public  void channelClosed(String channelId){
         InetSocketAddress peer = channelIds.get(channelId);
         connections.remove(peer);
+        onChannelClosed(channelIds.get(channelId));
     }
 
     public abstract void onChannelClosed(InetSocketAddress peer);
 
-    public abstract void channelRead(String channelId, byte[] bytes);
+    public void channelRead(String channelId, byte[] bytes){
+        onChannelRead(channelId,bytes,channelIds.get(channelId));
+    }
+    public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
     public abstract void channelReadConfigData(String s, byte[] bytes);
 
     public void channelActive(Channel channel, HandShakeMessage handShakeMessage){
-        logger.info("{} CHANNEL ACTIVATED.");
+        logger.info("{} CHANNEL ACTIVATED.",self);
         InetAddress hostName;
         int port;
         try {
@@ -87,19 +102,25 @@ public abstract class StreamingChannel {
             }
             InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
             connections.put(listeningAddress,channel);
-            onChannelActive(channel,handShakeMessage);
-            logger.info("LISTENNING ADDRESS {}.",listeningAddress);
+            channelIds.put(channel.id().asShortText(),listeningAddress);
+            onChannelActive(channel,handShakeMessage,listeningAddress);
+            logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();
         }
     }
-    public abstract void onChannelActive(Channel channel, HandShakeMessage handShakeMessage);
+    public abstract void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer);
 
 
 
     protected void openConnection(InetSocketAddress peer) {
-        client.connect(peer.getAddress().getHostName(),peer.getPort());
+        if(connections.containsKey(peer)){
+            logger.info("{} ALREADY CONNECTED TO {}",self,peer);
+        }else {
+            logger.info("{} CONNECTING TO {}",self,peer);
+            client.connect(peer,true);
+        }
     }
     protected void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING CONNECTION TO {}", peer);
@@ -132,14 +153,15 @@ public abstract class StreamingChannel {
         }
     }
 
+    public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+
     protected void onOutboundConnectionUp() {}
 
 
     protected void onOutboundConnectionDown() {
     }
 
-    protected void onOutboundConnectionFailed() {
-    }
+
 
     protected void onInboundConnectionUp() {
 
@@ -159,4 +181,5 @@ public abstract class StreamingChannel {
     public void onServerSocketClose(boolean success, Throwable cause) {
         logger.debug("Server socket closed. " + (success ? "" : "Cause: " + cause));
     }
+
 }

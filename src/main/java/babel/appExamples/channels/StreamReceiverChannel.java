@@ -48,8 +48,12 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new Host(addr,port);
         this.listener = list;
-        streamReceiver = new StreamInConnection(addr.getHostName(),port,
-        new ChannelFuncHandlers(this::channelActive,this::channelReadConfigData,this::channelRead,this::channelClosed));
+        streamReceiver = null; /** new StreamInConnection(addr.getHostName(),port,
+        new ChannelFuncHandlers(this::channelActive,
+                this::channelReadConfigData,
+                this::channelRead,
+                this::channelClosed
+        ));**/
         try{
             streamReceiver.startListening(false,true);
         }catch (Exception e){

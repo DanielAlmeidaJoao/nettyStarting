@@ -24,9 +24,9 @@ public class FileStreamer {
                 this::channelActive,
                 this::channelActiveRead,
                 this::channelRead,
-                this::channelInactive
+                this::channelInactive, null
         );
-        streamSender = new StreamOutConnection(handlerFunctions);
+        streamSender = new StreamOutConnection(handlerFunctions,null);
         try {
             fileOutputStream = new FileOutputStream("copyOFmine.mp4");
         }catch (Exception e){
@@ -35,7 +35,7 @@ public class FileStreamer {
     }
     public void startStreaming(){
         try{
-            streamSender.connect(host,port);
+            // TODO: UNCOMMENTstreamSender.connect(host,port);
             Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
