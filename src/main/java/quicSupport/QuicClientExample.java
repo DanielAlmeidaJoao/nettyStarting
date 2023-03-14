@@ -33,7 +33,11 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
 import io.netty.util.CharsetUtil;
 import io.netty.util.NetUtil;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.commons.lang3.tuple.Pair;
+import quicSupport.handlers.client.QuicChannelConHandler;
+import quicSupport.handlers.client.QuicStreamReadHandler;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
@@ -42,75 +46,56 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
 public final class QuicClientExample {
+    private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
 
     private QuicClientExample() { }
 
-    public static void main(String[] args) throws Exception {
+    public static ChannelHandler getCodec()throws Exception{
+        /***
         String keystoreFilename = "keystore2.jks";
         String keystorePassword = "simple";
         String alias = "clientcert";
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
-
+         **/
 
         QuicSslContext context = QuicSslContextBuilder.forClient().
                 //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
-                trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .applicationProtocols("tcp")
                 .build();
+        ChannelHandler codec = new QuicClientCodecBuilder()
+                .sslContext(context)
+                .maxIdleTimeout(5000, TimeUnit.MILLISECONDS)
+                .initialMaxData(10000000)
+                // As we don't want to support remote initiated streams just setup the limit for local initiated
+                // streams in this example.
+                .initialMaxStreamDataBidirectionalLocal(1000000)
+                .build();
+
+        return codec;
+    }
+
+    public static void main(String[] args) throws Exception {
         NioEventLoopGroup group = new NioEventLoopGroup(1);
         try {
-            ChannelHandler codec = new QuicClientCodecBuilder()
-                    .sslContext(context)
-                    .maxIdleTimeout(5000, TimeUnit.MILLISECONDS)
-                    .initialMaxData(10000000)
-                    // As we don't want to support remote initiated streams just setup the limit for local initiated
-                    // streams in this example.
-                    .initialMaxStreamDataBidirectionalLocal(1000000)
-                    .build();
-
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
-                    .handler(codec)
-                    .bind(new InetSocketAddress(NetUtil.LOCALHOST4, 8080)).sync().channel();
-
-            System.out.println("OLA 1");
+                    .handler(QuicClientExample.getCodec())
+                    .bind(0).sync().channel();
 
             QuicChannel quicChannel = QuicChannel.newBootstrap(channel)
-                    .streamHandler(new ChannelInboundHandlerAdapter() {
-                        @Override
-                        public void channelActive(ChannelHandlerContext ctx) {
-                            // As we did not allow any remote initiated streams we will never see this method called.
-                            // That said just let us keep it here to demonstrate that this handle would be called
-                            // for each remote initiated stream.
-                            ctx.close();
-                        }
-                    })
+                    .streamHandler(new QuicChannelConHandler())
                     .remoteAddress(new InetSocketAddress(NetUtil.LOCALHOST4, 8081))
                     .connect()
                     .get();
-            System.out.println("OLA 2");
 
-            QuicStreamChannel streamChannel = quicChannel.createStream(QuicStreamType.BIDIRECTIONAL,
-                    new ChannelInboundHandlerAdapter() {
-                        @Override
-                        public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                            ByteBuf byteBuf = (ByteBuf) msg;
-                            System.err.println(byteBuf.toString(CharsetUtil.US_ASCII));
-                            byteBuf.release();
-                        }
-
-                        @Override
-                        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-                            if (evt == ChannelInputShutdownReadComplete.INSTANCE) {
-                                // Close the connection once the remote peer did send the FIN for this stream.
-                                ((QuicChannel) ctx.channel().parent()).close(true, 0,
-                                        ctx.alloc().directBuffer(16)
-                                                .writeBytes(new byte[]{'k', 't', 'h', 'x', 'b', 'y', 'e'}));
-                            }
-                        }
-                    }).sync().getNow();
+            QuicStreamChannel streamChannel = quicChannel
+                    .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler())
+                    .sync()
+                    .getNow();
             // Write the data and send the FIN. After this its not possible anymore to write any more data.
-            streamChannel.writeAndFlush(Unpooled.copiedBuffer("GET /\r\n", CharsetUtil.US_ASCII))
+            streamChannel.writeAndFlush(Unpooled.copiedBuffer("blablaaba sasa \r\n", CharsetUtil.US_ASCII))
                     .addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
 
             // Wait for the stream channel and quic channel to be closed (this will happen after we received the FIN).

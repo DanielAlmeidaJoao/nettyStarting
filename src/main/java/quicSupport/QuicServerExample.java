@@ -16,27 +16,20 @@
 package quicSupport;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.incubator.codec.quic.*;
-import io.netty.util.CharsetUtil;
 import io.netty.util.NetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.commons.lang3.tuple.Pair;
+import quicSupport.handlers.server.ServerChannelInitializer;
+import quicSupport.handlers.server.ServerInboundConnectionHandler;
 
-import java.io.File;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -61,16 +54,18 @@ public final class QuicServerExample {
     public static QuicSslContext getSignedSslContext() throws Exception {
         //SelfSignedCertificate cert = new SelfSignedCertificate();
         //SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
-        String keystoreFilename = "windows_keystore.jks";
+        String keystoreFilename = "keystore.jks";
         String keystorePassword = "simple";
-        //String alias = "quicTestCert";
-        String alias = "wservercert";
+        String alias = "quicTestCert";
+        //String alias = "wservercert";
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
         //File privateKey = PrivateKeyWriter.writeToFile(pair.getRight(),"key.pem");
         //File cert = CertificateWriter.writeToFile((X509Certificate) pair.getLeft(),"mycert.pem");
 
         return QuicSslContextBuilder.forServer(
-                pair.getRight(), null, (X509Certificate) pair.getLeft()).build();
+                pair.getRight(), null, (X509Certificate) pair.getLeft())
+                .applicationProtocols("tcp")
+                .build();
     }
     public static void main(String[] args) throws Exception {
 
@@ -91,50 +86,8 @@ public final class QuicServerExample {
                 // one.
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
-                .handler(new ChannelInboundHandlerAdapter() {
-                    @Override
-                    public void channelActive(ChannelHandlerContext ctx) {
-                        QuicChannel channel = (QuicChannel) ctx.channel();
-                        System.out.println("ACTIVE "+ctx.channel().remoteAddress());
-                        // Create streams etc..
-                    }
-
-                    public void channelInactive(ChannelHandlerContext ctx) {
-                        ((QuicChannel) ctx.channel()).collectStats().addListener(f -> {
-                            if (f.isSuccess()) {
-                                LOGGER.info("Connection closed: {}", f.getNow());
-                            }
-                        });
-                    }
-
-                    @Override
-                    public boolean isSharable() {
-                        return true;
-                    }
-                })
-                .streamHandler(new ChannelInitializer<QuicStreamChannel>() {
-                    @Override
-                    protected void initChannel(QuicStreamChannel ch)  {
-                        // Add a LineBasedFrameDecoder here as we just want to do some simple HTTP 0.9 handling.
-                        ch.pipeline().addLast(new LineBasedFrameDecoder(1024))
-                                .addLast(new ChannelInboundHandlerAdapter() {
-                            @Override
-                            public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                                ByteBuf byteBuf = (ByteBuf) msg;
-                                try {
-                                    if (byteBuf.toString(CharsetUtil.US_ASCII).trim().equals("GET /")) {
-                                        ByteBuf buffer = ctx.alloc().directBuffer();
-                                        buffer.writeBytes("Hello World!\r\n".getBytes(StandardCharsets.UTF_8));
-                                        // Write the buffer and shutdown the output by writing a FIN.
-                                        ctx.writeAndFlush(buffer).addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
-                                    }
-                                } finally {
-                                    byteBuf.release();
-                                }
-                            }
-                        });
-                    }
-                }).build();
+                .handler(new ServerInboundConnectionHandler())
+                .streamHandler(new ServerChannelInitializer()).build();
         try {
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
@@ -144,11 +97,6 @@ public final class QuicServerExample {
             System.out.println("SERVER STARTED 2");
             channel.closeFuture().sync();
             System.out.println("SERVER STARTED ");
-            try {
-                Thread.sleep(500*1000);
-            }catch (Exception e){
-
-            }
         } finally {
             group.shutdownGracefully();
         }
