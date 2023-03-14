@@ -28,7 +28,7 @@ public class ServerReaderInboundHandler extends ChannelInboundHandlerAdapter {
             ByteBuf buffer = ctx.alloc().directBuffer();
             buffer.writeBytes(got.getBytes(StandardCharsets.UTF_8));
             // Write the buffer and shutdown the output by writing a FIN.
-            ctx.writeAndFlush(buffer).addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
+            ctx.writeAndFlush(buffer); //.addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
         } finally {
             byteBuf.release();
         }

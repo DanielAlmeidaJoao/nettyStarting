@@ -17,10 +17,7 @@ package quicSupport;/*
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.ChannelInputShutdownReadComplete;
 import io.netty.channel.socket.nio.NioDatagramChannel;
@@ -50,7 +47,7 @@ public final class QuicClientExample {
 
     private QuicClientExample() { }
 
-    public static ChannelHandler getCodec()throws Exception{
+    public ChannelHandler getCodec()throws Exception{
         String keystoreFilename = "keystore2.jks";
         String keystorePassword = "simple";
         String alias = "clientcert";
@@ -66,26 +63,26 @@ public final class QuicClientExample {
                 .sslContext(context)
                 .maxIdleTimeout(5000, TimeUnit.MILLISECONDS)
                 .initialMaxData(10000000)
+                //.initialMaxStreamsBidirectional(100)
                 // As we don't want to support remote initiated streams just setup the limit for local initiated
                 // streams in this example.
                 .initialMaxStreamDataBidirectionalLocal(1000000)
                 .build();
-
         return codec;
     }
 
-    public static void main(String[] args) throws Exception {
+    private void connect(String host, int port) {
         NioEventLoopGroup group = new NioEventLoopGroup(1);
         try {
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
-                    .handler(QuicClientExample.getCodec())
+                    .handler(getCodec())
                     .bind(0).sync().channel();
 
             QuicChannel quicChannel = QuicChannel.newBootstrap(channel)
                     .streamHandler(new QuicChannelConHandler())
-                    .remoteAddress(new InetSocketAddress(NetUtil.LOCALHOST4, 8081))
+                    .remoteAddress(new InetSocketAddress(host, port))
                     .connect()
                     .get();
 
@@ -93,17 +90,23 @@ public final class QuicClientExample {
                     .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler())
                     .sync()
                     .getNow();
+            streamChannel.writeAndFlush(Unpooled.copiedBuffer("blablaaba sasa ", CharsetUtil.US_ASCII));
+            //.addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
 
-            streamChannel.writeAndFlush(Unpooled.copiedBuffer("blablaaba sasa", CharsetUtil.US_ASCII))
-                    .addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
 
             // Wait for the stream channel and quic channel to be closed (this will happen after we received the FIN).
             // After this is done we will close the underlying datagram channel.
             streamChannel.closeFuture().sync();
             quicChannel.closeFuture().sync();
             channel.close().sync();
+        }catch (Exception e){
+            e.printStackTrace();
         } finally {
             group.shutdownGracefully();
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        new QuicClientExample().connect("localhost",8081);
     }
 }
