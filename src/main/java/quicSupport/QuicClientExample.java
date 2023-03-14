@@ -57,7 +57,7 @@ public final class QuicClientExample {
                 //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
                 trustManager(InsecureTrustManagerFactory.INSTANCE)
                 //trustManager((X509Certificate) pair.getLeft())
-                .applicationProtocols("tcp")
+                .applicationProtocols("QUIC")
                 .build();
         ChannelHandler codec = new QuicClientCodecBuilder()
                 .sslContext(context)

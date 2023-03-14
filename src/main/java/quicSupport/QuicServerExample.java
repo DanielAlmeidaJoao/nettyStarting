@@ -68,7 +68,7 @@ public final class QuicServerExample {
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
         return QuicSslContextBuilder.forServer(
                 pair.getRight(), null, (X509Certificate) pair.getLeft())
-                .applicationProtocols("tcp")
+                .applicationProtocols("QUIC")
                 .build();
     }
 
