@@ -15,8 +15,6 @@ public class LoadCertificate {
 
     public static Pair<Certificate,PrivateKey> getCertificate(String keystoreFilename, String keystorePassword, String alias) throws Exception{
         //keytool -genkeypair -alias mycert -keyalg RSA -keysize 2048 -validity 365 -keystore keystore.jks
-
-
         try{
             FileInputStream fis = new FileInputStream(keystoreFilename);
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());

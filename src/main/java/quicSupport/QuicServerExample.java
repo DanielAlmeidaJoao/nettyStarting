@@ -39,33 +39,43 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
 public final class QuicServerExample {
-    static {
-        System.setProperty("javax.net.debug","ssl");
-        System.setProperty("javax.net.ssl.keyStoreType","PKCS12");
-        System.out.println("PROPERTIES SET!!!");
-    }
     private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
 
     private QuicServerExample() { }
 
-    public static void main(String[] args) throws Exception {
+    public static QuicSslContext getSelfSignedSslContext() throws CertificateException {
+        SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
+        QuicSslContext sslCtx = QuicSslContextBuilder.forServer(
+                        selfSignedCertificate.privateKey(), null, selfSignedCertificate.certificate())
+                //.applicationProtocols("http/0.9")
+//                .earlyData(true)
+                .build();
 
-
+        return sslCtx;
+    }
+    public static QuicSslContext getSignedSslContext() throws Exception {
         //SelfSignedCertificate cert = new SelfSignedCertificate();
         //SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
-        String keystoreFilename = "keystore.jks";
+        String keystoreFilename = "windows_keystore.jks";
         String keystorePassword = "simple";
-        String alias = "quicTestCert";
+        //String alias = "quicTestCert";
+        String alias = "wservercert";
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
         //File privateKey = PrivateKeyWriter.writeToFile(pair.getRight(),"key.pem");
         //File cert = CertificateWriter.writeToFile((X509Certificate) pair.getLeft(),"mycert.pem");
 
-        QuicSslContext context = QuicSslContextBuilder.forServer(
-                        pair.getRight(), null, (X509Certificate) pair.getLeft()).build();
+        return QuicSslContextBuilder.forServer(
+                pair.getRight(), null, (X509Certificate) pair.getLeft()).build();
+    }
+    public static void main(String[] args) throws Exception {
+
+
+        QuicSslContext context = QuicServerExample.getSignedSslContext();
         //QuicSslContextBuilder.forServer(pair.getRight(), "simple", (X509Certificate) pair.getLeft()).applicationProtocols("quic-echo");
         NioEventLoopGroup group = new NioEventLoopGroup(1);
         ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
@@ -129,8 +139,8 @@ public final class QuicServerExample {
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
-                    .handler(codec).localAddress(new InetSocketAddress(NetUtil.LOCALHOST4,8081))
-                    .bind().sync().channel();
+                    .handler(codec)
+                    .bind(new InetSocketAddress(NetUtil.LOCALHOST4,8081)).sync().channel();
             System.out.println("SERVER STARTED 2");
             channel.closeFuture().sync();
             System.out.println("SERVER STARTED ");
