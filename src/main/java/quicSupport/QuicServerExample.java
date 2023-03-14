@@ -23,9 +23,9 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.incubator.codec.quic.*;
 import io.netty.util.NetUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.handlers.server.ServerInboundConnectionHandler;
 
@@ -37,11 +37,20 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
 public final class QuicServerExample {
-    private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
+    private boolean started;
+    private final String host;
+    private final int port;
 
-    private QuicServerExample() { }
+    private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
-    public static QuicSslContext getSelfSignedSslContext() throws CertificateException {
+
+    public QuicServerExample(String host, int port) {
+        this.host = host;
+        this.port = port;
+        started = false;
+    }
+
+    public QuicSslContext getSelfSignedSslContext() throws CertificateException {
         SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
         QuicSslContext sslCtx = QuicSslContextBuilder.forServer(
                         selfSignedCertificate.privateKey(), null, selfSignedCertificate.certificate())
@@ -51,28 +60,19 @@ public final class QuicServerExample {
 
         return sslCtx;
     }
-    public static QuicSslContext getSignedSslContext() throws Exception {
-        //SelfSignedCertificate cert = new SelfSignedCertificate();
-        //SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
+    public QuicSslContext getSignedSslContext() throws Exception {
         String keystoreFilename = "keystore.jks";
         String keystorePassword = "simple";
         String alias = "quicTestCert";
         //String alias = "wservercert";
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
-        //File privateKey = PrivateKeyWriter.writeToFile(pair.getRight(),"key.pem");
-        //File cert = CertificateWriter.writeToFile((X509Certificate) pair.getLeft(),"mycert.pem");
-
         return QuicSslContextBuilder.forServer(
                 pair.getRight(), null, (X509Certificate) pair.getLeft())
                 .applicationProtocols("tcp")
                 .build();
     }
-    public static void main(String[] args) throws Exception {
 
-
-        QuicSslContext context = QuicServerExample.getSignedSslContext();
-        //QuicSslContextBuilder.forServer(pair.getRight(), "simple", (X509Certificate) pair.getLeft()).applicationProtocols("quic-echo");
-        NioEventLoopGroup group = new NioEventLoopGroup(1);
+    public ChannelHandler getChannelHandler(QuicSslContext context) {
         ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
                 .maxIdleTimeout(5000, TimeUnit.MILLISECONDS)
                 // Configure some limits for the maximal number of streams (and the data) that we want to handle.
@@ -88,17 +88,33 @@ public final class QuicServerExample {
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new ServerInboundConnectionHandler())
                 .streamHandler(new ServerChannelInitializer()).build();
+        return codec;
+    }
+
+    public void start() throws Exception {
+        if(started){
+            throw new Exception(String.format("SERVER STARTED AT host:{} port:{} ",host,port));
+        }
+        QuicSslContext context = getSignedSslContext();
+        NioEventLoopGroup group = new NioEventLoopGroup(1);
+        ChannelHandler codec = getChannelHandler(context);
         try {
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
                     .handler(codec)
-                    .bind(new InetSocketAddress(NetUtil.LOCALHOST4,8081)).sync().channel();
-            System.out.println("SERVER STARTED 2");
+                    .bind(new InetSocketAddress(host,port)).sync().channel();
+            started=true;
+            logger.info("SERVER STARTED AT host:{} port:{} ",host,port);
             channel.closeFuture().sync();
             System.out.println("SERVER STARTED ");
         } finally {
             group.shutdownGracefully();
         }
     }
+    public static void main(String[] args) throws Exception {
+        new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081).start();
+    }
+
+
 }

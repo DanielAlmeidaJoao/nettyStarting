@@ -51,16 +51,15 @@ public final class QuicClientExample {
     private QuicClientExample() { }
 
     public static ChannelHandler getCodec()throws Exception{
-        /***
         String keystoreFilename = "keystore2.jks";
         String keystorePassword = "simple";
         String alias = "clientcert";
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
-         **/
 
         QuicSslContext context = QuicSslContextBuilder.forClient().
                 //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
-                        trustManager(InsecureTrustManagerFactory.INSTANCE)
+                trustManager(InsecureTrustManagerFactory.INSTANCE)
+                //trustManager((X509Certificate) pair.getLeft())
                 .applicationProtocols("tcp")
                 .build();
         ChannelHandler codec = new QuicClientCodecBuilder()
@@ -94,8 +93,7 @@ public final class QuicClientExample {
                     .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler())
                     .sync()
                     .getNow();
-            // Write the data and send the FIN. After this its not possible anymore to write any more data.
-            //\r\n
+
             streamChannel.writeAndFlush(Unpooled.copiedBuffer("blablaaba sasa", CharsetUtil.US_ASCII))
                     .addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
 

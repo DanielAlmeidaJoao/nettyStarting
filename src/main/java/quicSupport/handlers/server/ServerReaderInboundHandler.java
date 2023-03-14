@@ -1,6 +1,7 @@
 package quicSupport.handlers.server;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicChannel;
@@ -17,6 +18,9 @@ public class ServerReaderInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
+
+        Channel channel = ctx.channel();
+        System.out.println("RECEIVED FOR STREAM: "+channel.id().asShortText());
         ByteBuf byteBuf = (ByteBuf) msg;
         try {
             String got = byteBuf.toString(CharsetUtil.US_ASCII);
@@ -28,5 +32,9 @@ public class ServerReaderInboundHandler extends ChannelInboundHandlerAdapter {
         } finally {
             byteBuf.release();
         }
+    }
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
     }
 }

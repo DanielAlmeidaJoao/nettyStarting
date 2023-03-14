@@ -1,0 +1,8 @@
+ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
+                .maxIdleTimeout(5000, TimeUnit.MILLISECONDS)
+                // Configure some limits for the maximal number of streams (and the data) that we want to handle.
+                .initialMaxData(10000000)
+                .initialMaxStreamDataBidirectionalLocal(1000000)
+                .initialMaxStreamDataBidirectionalRemote(1000000)
+                .initialMaxStreamsBidirectional(100)
+                .initialMaxStreamsUnidirectional(100)

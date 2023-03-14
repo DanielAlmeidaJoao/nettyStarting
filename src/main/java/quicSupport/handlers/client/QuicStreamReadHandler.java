@@ -25,4 +25,8 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
                             .writeBytes(new byte[]{'k', 't', 'h', 'x', 'b', 'y', 'e'}));
         }
     }
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+    }
 }
