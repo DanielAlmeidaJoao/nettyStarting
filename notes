@@ -36,3 +36,7 @@ java -cp target/nettyStart.jar Main address=localhost port=10109 sender=o forwar
 QUIC
 java -cp target/nettyStart.jar quicSupport.QuicServerExample
  java -cp target/nettyStart.jar quicSupport.QuicClientExample
+
+Udp
+java -cp target/nettyStart.jar udpSupport.client.UdpClient
+java -cp target/nettyStart.jar udpSupport.server.UdpServer

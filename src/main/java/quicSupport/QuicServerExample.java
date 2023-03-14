@@ -132,7 +132,7 @@ public final class QuicServerExample {
                     .handler(codec).localAddress(new InetSocketAddress(NetUtil.LOCALHOST4,8081))
                     .bind().sync().channel();
             System.out.println("SERVER STARTED 2");
-            channel.closeFuture(); //.sync();
+            channel.closeFuture().sync();
             System.out.println("SERVER STARTED ");
             try {
                 Thread.sleep(500*1000);
