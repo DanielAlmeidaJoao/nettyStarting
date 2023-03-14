@@ -95,7 +95,8 @@ public final class QuicClientExample {
                     .sync()
                     .getNow();
             // Write the data and send the FIN. After this its not possible anymore to write any more data.
-            streamChannel.writeAndFlush(Unpooled.copiedBuffer("blablaaba sasa \r\n", CharsetUtil.US_ASCII))
+            //\r\n
+            streamChannel.writeAndFlush(Unpooled.copiedBuffer("blablaaba sasa", CharsetUtil.US_ASCII))
                     .addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
 
             // Wait for the stream channel and quic channel to be closed (this will happen after we received the FIN).

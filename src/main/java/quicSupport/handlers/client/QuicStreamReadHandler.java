@@ -10,6 +10,7 @@ import io.netty.util.CharsetUtil;
 public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        System.out.println("READING");
         ByteBuf byteBuf = (ByteBuf) msg;
         System.out.println(byteBuf.toString(CharsetUtil.US_ASCII));
         byteBuf.release();
