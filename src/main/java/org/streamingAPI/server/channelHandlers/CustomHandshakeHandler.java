@@ -3,6 +3,7 @@ package org.streamingAPI.server.channelHandlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.streamingAPI.channel.StreamingHost;
 import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.server.StreamInConnection;
@@ -12,7 +13,7 @@ import org.streamingAPI.server.listeners.InNettyChannelListener;
 import java.net.InetAddress;
 
 //@ChannelHandler.Sharable
-public class CustomHandshakeHandler extends ChannelHandlerAdapter {
+public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
 
     public static final String NAME ="CHSHAKE_HANDLER";
     private static final int UNCHANGED_VALUE = -2;

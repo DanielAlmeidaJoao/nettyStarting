@@ -24,6 +24,7 @@ the sender must be the server
 the receiver must be the client
 
 Starting Babel
+
 java -Xmx500M -cp target/nettyStart.jar Main sender=o
 
 java -cp target/nettyStart.jar Main address=localhost port=10101
@@ -32,3 +33,6 @@ java -cp target/nettyStart.jar Main address=localhost port=10103 sender=o
 
 java -cp target/nettyStart.jar Main address=localhost port=10109 sender=o forwarder=f
 
+QUIC
+java -cp target/nettyStart.jar quicSupport.QuicServerExample
+ java -cp target/nettyStart.jar quicSupport.QuicClientExample

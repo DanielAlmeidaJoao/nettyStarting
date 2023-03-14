@@ -1,4 +1,4 @@
-/*
+package quicSupport;/*
  * Copyright 2020 The Netty Project
  *
  * The Netty Project licenses this file to you under the Apache License,
@@ -13,8 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package quicSupport;
-//ola
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -34,8 +33,12 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
 import io.netty.util.CharsetUtil;
 import io.netty.util.NetUtil;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.net.InetSocketAddress;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
 public final class QuicClientExample {
@@ -43,8 +46,16 @@ public final class QuicClientExample {
     private QuicClientExample() { }
 
     public static void main(String[] args) throws Exception {
-        QuicSslContext context = QuicSslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).
-                applicationProtocols("http/0.9").build();
+        String keystoreFilename = "keystore2.jks";
+        String keystorePassword = "simple";
+        String alias = "clientcert";
+        Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
+
+
+        QuicSslContext context = QuicSslContextBuilder.forClient().
+                //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
+                trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
         NioEventLoopGroup group = new NioEventLoopGroup(1);
         try {
             ChannelHandler codec = new QuicClientCodecBuilder()
@@ -60,7 +71,9 @@ public final class QuicClientExample {
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
                     .handler(codec)
-                    .bind(0).sync().channel();
+                    .bind(new InetSocketAddress(NetUtil.LOCALHOST4, 8080)).sync().channel();
+
+            System.out.println("OLA 1");
 
             QuicChannel quicChannel = QuicChannel.newBootstrap(channel)
                     .streamHandler(new ChannelInboundHandlerAdapter() {
@@ -72,9 +85,10 @@ public final class QuicClientExample {
                             ctx.close();
                         }
                     })
-                    .remoteAddress(new InetSocketAddress(NetUtil.LOCALHOST4, 9999))
+                    .remoteAddress(new InetSocketAddress(NetUtil.LOCALHOST4, 8081))
                     .connect()
                     .get();
+            System.out.println("OLA 2");
 
             QuicStreamChannel streamChannel = quicChannel.createStream(QuicStreamType.BIDIRECTIONAL,
                     new ChannelInboundHandlerAdapter() {

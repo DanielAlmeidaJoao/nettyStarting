@@ -25,31 +25,48 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
-import io.netty.incubator.codec.quic.InsecureQuicTokenHandler;
-import io.netty.incubator.codec.quic.QuicChannel;
-import io.netty.incubator.codec.quic.QuicServerCodecBuilder;
-import io.netty.incubator.codec.quic.QuicSslContext;
-import io.netty.incubator.codec.quic.QuicSslContextBuilder;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
+import io.netty.incubator.codec.quic.*;
 import io.netty.util.CharsetUtil;
+import io.netty.util.NetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.File;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
 public final class QuicServerExample {
-
+    static {
+        System.setProperty("javax.net.debug","ssl");
+        System.setProperty("javax.net.ssl.keyStoreType","PKCS12");
+        System.out.println("PROPERTIES SET!!!");
+    }
     private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
 
     private QuicServerExample() { }
 
     public static void main(String[] args) throws Exception {
-        SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
+
+
+        //SelfSignedCertificate cert = new SelfSignedCertificate();
+        //SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
+        String keystoreFilename = "keystore.jks";
+        String keystorePassword = "simple";
+        String alias = "quicTestCert";
+        Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
+        //File privateKey = PrivateKeyWriter.writeToFile(pair.getRight(),"key.pem");
+        //File cert = CertificateWriter.writeToFile((X509Certificate) pair.getLeft(),"mycert.pem");
+
         QuicSslContext context = QuicSslContextBuilder.forServer(
-                selfSignedCertificate.privateKey(), null, selfSignedCertificate.certificate())
-                .applicationProtocols("http/0.9").build();
+                        pair.getRight(), null, (X509Certificate) pair.getLeft()).build();
+        //QuicSslContextBuilder.forServer(pair.getRight(), "simple", (X509Certificate) pair.getLeft()).applicationProtocols("quic-echo");
         NioEventLoopGroup group = new NioEventLoopGroup(1);
         ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
                 .maxIdleTimeout(5000, TimeUnit.MILLISECONDS)
@@ -68,6 +85,7 @@ public final class QuicServerExample {
                     @Override
                     public void channelActive(ChannelHandlerContext ctx) {
                         QuicChannel channel = (QuicChannel) ctx.channel();
+                        System.out.println("ACTIVE "+ctx.channel().remoteAddress());
                         // Create streams etc..
                     }
 
@@ -96,7 +114,7 @@ public final class QuicServerExample {
                                 try {
                                     if (byteBuf.toString(CharsetUtil.US_ASCII).trim().equals("GET /")) {
                                         ByteBuf buffer = ctx.alloc().directBuffer();
-                                        buffer.writeCharSequence("Hello World!\r\n", CharsetUtil.US_ASCII);
+                                        buffer.writeBytes("Hello World!\r\n".getBytes(StandardCharsets.UTF_8));
                                         // Write the buffer and shutdown the output by writing a FIN.
                                         ctx.writeAndFlush(buffer).addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
                                     }
@@ -111,9 +129,16 @@ public final class QuicServerExample {
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
-                    .handler(codec)
-                    .bind(new InetSocketAddress(9999)).sync().channel();
-            channel.closeFuture().sync();
+                    .handler(codec).localAddress(new InetSocketAddress(NetUtil.LOCALHOST4,8081))
+                    .bind().sync().channel();
+            System.out.println("SERVER STARTED 2");
+            channel.closeFuture(); //.sync();
+            System.out.println("SERVER STARTED ");
+            try {
+                Thread.sleep(500*1000);
+            }catch (Exception e){
+
+            }
         } finally {
             group.shutdownGracefully();
         }

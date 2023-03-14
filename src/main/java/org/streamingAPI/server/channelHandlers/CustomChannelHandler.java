@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 import lombok.Getter;
 import org.streamingAPI.server.listeners.InNettyChannelListener;
@@ -11,7 +12,7 @@ import org.streamingAPI.server.listeners.InNettyChannelListener;
 import java.net.InetSocketAddress;
 
 //@ChannelHandler.Sharable
-public abstract class CustomChannelHandler extends ChannelHandlerAdapter {
+public abstract class CustomChannelHandler extends ChannelInboundHandlerAdapter {
     private int totalRead;
     @Getter
     private InNettyChannelListener inNettyChannelListener;
