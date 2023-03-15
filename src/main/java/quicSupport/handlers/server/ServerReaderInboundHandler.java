@@ -4,12 +4,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.incubator.codec.quic.QuicChannel;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import quicSupport.QuicServerExample;
+import quicSupport.client_server.QuicServerExample;
 
 import java.nio.charset.StandardCharsets;
 

@@ -1,4 +1,4 @@
-package quicSupport;/*
+package quicSupport.client_server;/*
  * Copyright 2020 The Netty Project
  *
  * The Netty Project licenses this file to you under the Apache License,
@@ -19,7 +19,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.ChannelInputShutdownReadComplete;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.incubator.codec.quic.QuicChannel;
@@ -28,24 +27,38 @@ import io.netty.incubator.codec.quic.QuicSslContext;
 import io.netty.incubator.codec.quic.QuicSslContextBuilder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
-import io.netty.util.CharsetUtil;
-import io.netty.util.NetUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
 import quicSupport.handlers.client.QuicStreamReadHandler;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 public final class QuicClientExample {
-    private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
+    //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
+    private static final Logger logger = LogManager.getLogger(QuicClientExample.class);
+    private QuicChannel quicChannel;
+    private NioEventLoopGroup group;
+    private InetSocketAddress remote;
 
-    private QuicClientExample() { }
+    private Map<String,QuicStreamChannel> streams;
+
+
+    private QuicClientExample(String host,int port,NioEventLoopGroup group) throws Exception {
+        //new NioEventLoopGroup(1);
+        this.group = group;
+        remote = new InetSocketAddress(host, port);
+        connect();
+        streams = new HashMap<>();
+    }
 
     public ChannelHandler getCodec()throws Exception{
         String keystoreFilename = "keystore2.jks";
@@ -70,43 +83,49 @@ public final class QuicClientExample {
                 .build();
         return codec;
     }
-
-    private void connect(String host, int port) {
-        NioEventLoopGroup group = new NioEventLoopGroup(1);
-        try {
-            Bootstrap bs = new Bootstrap();
-            Channel channel = bs.group(group)
-                    .channel(NioDatagramChannel.class)
-                    .handler(getCodec())
-                    .bind(0).sync().channel();
-
-            QuicChannel quicChannel = QuicChannel.newBootstrap(channel)
-                    .streamHandler(new QuicChannelConHandler())
-                    .remoteAddress(new InetSocketAddress(host, port))
-                    .connect()
-                    .get();
-
-            QuicStreamChannel streamChannel = quicChannel
-                    .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler())
-                    .sync()
-                    .getNow();
-            streamChannel.writeAndFlush(Unpooled.copiedBuffer("blablaaba sasa ", CharsetUtil.US_ASCII));
-            //.addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
-
-
-            // Wait for the stream channel and quic channel to be closed (this will happen after we received the FIN).
-            // After this is done we will close the underlying datagram channel.
-            streamChannel.closeFuture().sync();
-            quicChannel.closeFuture().sync();
-            channel.close().sync();
-        }catch (Exception e){
-            e.printStackTrace();
-        } finally {
-            group.shutdownGracefully();
-        }
+    private void closeConnection(){
+        quicChannel.close();
     }
-
+    private void connect() throws Exception{
+        Bootstrap bs = new Bootstrap();
+        Channel channel = bs.group(group)
+                .channel(NioDatagramChannel.class)
+                .handler(getCodec())
+                .bind(0).sync().channel();
+        quicChannel = QuicChannel.newBootstrap(channel)
+                .streamHandler(new QuicChannelConHandler())
+                .remoteAddress(remote)
+                .connect()
+                .get();
+        logger.info("CLIENT CONNECTED TO {}",remote);
+        quicChannel.closeFuture().addListener(future -> {
+            channel.close().sync();
+        });
+    }
+    public String createStream() throws Exception{
+        QuicStreamChannel streamChannel = quicChannel
+                .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler())
+                .sync()
+                .getNow();
+        String id = streamChannel.id().asShortText();
+        streams.put(id,streamChannel);
+        return id;
+    }
+    private QuicStreamChannel getOrThrow(String id){
+        QuicStreamChannel stream = streams.get(id);
+        if(stream==null){
+            throw new NoSuchElementException(String.format("STREAM <%S> NOT FOUND!",id));
+        }
+        return stream;
+    }
+    public void send(String streamId, byte [] data){
+        getOrThrow(streamId).writeAndFlush(Unpooled.copiedBuffer(data));
+    }
+    public void send(String streamId, ByteBuf buf){
+        getOrThrow(streamId).writeAndFlush(buf);
+    }
     public static void main(String[] args) throws Exception {
-        new QuicClientExample().connect("localhost",8081);
+        //new NioEventLoopGroup(1);
+        new QuicClientExample("localhost",8081,new NioEventLoopGroup(1));
     }
 }

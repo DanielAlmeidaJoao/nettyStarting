@@ -4,7 +4,6 @@ package org.streamingAPI.server.listeners;
 import io.netty.channel.Channel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import lombok.Getter;
-import org.streamingAPI.channel.StreamingHost;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 

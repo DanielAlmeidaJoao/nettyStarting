@@ -13,26 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package quicSupport;
+package quicSupport.client_server;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.incubator.codec.quic.*;
 import io.netty.util.NetUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.handlers.server.ServerInboundConnectionHandler;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
@@ -50,16 +49,6 @@ public final class QuicServerExample {
         started = false;
     }
 
-    public QuicSslContext getSelfSignedSslContext() throws CertificateException {
-        SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
-        QuicSslContext sslCtx = QuicSslContextBuilder.forServer(
-                        selfSignedCertificate.privateKey(), null, selfSignedCertificate.certificate())
-                //.applicationProtocols("http/0.9")
-//                .earlyData(true)
-                .build();
-
-        return sslCtx;
-    }
     public QuicSslContext getSignedSslContext() throws Exception {
         String keystoreFilename = "keystore.jks";
         String keystorePassword = "simple";
@@ -107,7 +96,6 @@ public final class QuicServerExample {
             started=true;
             logger.info("SERVER STARTED AT host:{} port:{} ",host,port);
             channel.closeFuture().sync();
-            System.out.println("SERVER STARTED ");
         } finally {
             group.shutdownGracefully();
         }

@@ -1,4 +1,4 @@
-package org.streamingAPI.channel;
+package quicSupport;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -10,13 +10,12 @@ import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.streamingAPI.channel.StreamingChannel;
 import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.server.listeners.InNettyChannelListener;
-import pt.unl.fct.di.novasys.network.Connection;
-import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -26,23 +25,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public abstract class StreamingChannel {
-    private static final Logger logger = LogManager.getLogger(StreamingChannel.class);
+public abstract class CustomQuicChannel {
+    private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
     @Getter
     private DefaultEventExecutor executor;
     private InetSocketAddress self;
-    public final static String NAME = "STREAMING_CHANNEL";
+    public final static String NAME = "QUIC_CHANNEL";
 
     public final static String ADDRESS_KEY = "address";
     public final static String PORT_KEY = "port";
 
-    public final static String DEFAULT_PORT = "8574";
+    public final static String DEFAULT_PORT = "8575";
     private Map<InetSocketAddress, Channel> connections;
     private Map<String,InetSocketAddress> channelIds;
 
     private StreamInConnection server;
     private StreamOutConnection client;
-    public StreamingChannel( Properties properties)throws IOException{
+    public CustomQuicChannel( Properties properties)throws IOException {
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
@@ -134,7 +133,7 @@ public abstract class StreamingChannel {
     public void send(byte[] message, int len,InetSocketAddress host){
         sendWithListener(message,len, null,host);
     }
-    public void sendWithListener(byte[] message, int len, Promise<Void> promise,InetSocketAddress peer){
+    public void sendWithListener(byte[] message, int len, Promise<Void> promise, InetSocketAddress peer){
         sendDelimited(Unpooled.copiedBuffer(message,0,len), promise,peer);
     }
     /**
@@ -145,7 +144,7 @@ public abstract class StreamingChannel {
      * @param byteBuf
      * @param promise
      */
-    public void sendDelimited(ByteBuf byteBuf, Promise<Void> promise,InetSocketAddress peer){
+    public void sendDelimited(ByteBuf byteBuf, Promise<Void> promise, InetSocketAddress peer){
         ChannelFuture f =  connections.get(peer).writeAndFlush(byteBuf);
         if (promise!=null){
             f.addListener(new PromiseNotifier<>(promise));

@@ -1,4 +1,4 @@
-package quicSupport;
+package quicSupport.utils;
 
 import java.io.File;
 import java.io.FileOutputStream;
