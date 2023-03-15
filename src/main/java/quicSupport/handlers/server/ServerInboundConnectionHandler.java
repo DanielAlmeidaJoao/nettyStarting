@@ -5,10 +5,18 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import quicSupport.client_server.QuicServerExample;
 
 public class ServerInboundConnectionHandler extends ChannelInboundHandlerAdapter {
+
+    private InNettyChannelListener listener;
     private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
+
+    public ServerInboundConnectionHandler(InNettyChannelListener listener) {
+        this.listener = listener;
+    }
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         QuicChannel channel = (QuicChannel) ctx.channel();

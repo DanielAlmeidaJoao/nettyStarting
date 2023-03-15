@@ -15,7 +15,7 @@ import org.streamingAPI.server.channelHandlers.CustomHandshakeHandler;
 import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
 import org.streamingAPI.server.channelHandlers.StreamReceiverHandler;
 import org.streamingAPI.server.channelHandlers.encodings.StreamMessageDecoder;
-import org.streamingAPI.server.listeners.InNettyChannelListener;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;

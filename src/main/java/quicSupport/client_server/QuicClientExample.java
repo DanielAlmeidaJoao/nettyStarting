@@ -27,10 +27,10 @@ import io.netty.incubator.codec.quic.QuicSslContext;
 import io.netty.incubator.codec.quic.QuicSslContextBuilder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
-import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
 import quicSupport.handlers.client.QuicStreamReadHandler;
@@ -53,12 +53,14 @@ public final class QuicClientExample {
 
     private Map<Long,QuicStreamChannel> streams;
 
+    private InNettyChannelListener listener;
 
-    public QuicClientExample(String host,int port,NioEventLoopGroup group) throws Exception {
+    public QuicClientExample(String host,int port,NioEventLoopGroup group,InNettyChannelListener listener) throws Exception {
         //new NioEventLoopGroup(1);
         this.group = group;
         remote = new InetSocketAddress(host, port);
         streams = new HashMap<>();
+        this.listener=listener;
         connect();
     }
 
@@ -95,7 +97,7 @@ public final class QuicClientExample {
                 .handler(getCodec())
                 .bind(0).sync().channel();
         quicChannel = QuicChannel.newBootstrap(channel)
-                .streamHandler(new QuicChannelConHandler())
+                .streamHandler(new QuicChannelConHandler(listener))
                 .remoteAddress(remote)
                 .connect()
                 .get();
@@ -106,7 +108,7 @@ public final class QuicClientExample {
     }
     public long createStream() throws Exception{
         QuicStreamChannel streamChannel = quicChannel
-                .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler())
+                .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler(listener))
                 .sync()
                 .getNow();
         long id = streamChannel.streamId();
@@ -128,6 +130,7 @@ public final class QuicClientExample {
     }
     public static void main(String[] args) throws Exception {
         //new NioEventLoopGroup(1);
+        /**
         QuicClientExample client = new QuicClientExample("localhost",8081,new NioEventLoopGroup(1));
         long streamId = client.createStream();
         int cc = 0;
@@ -135,6 +138,6 @@ public final class QuicClientExample {
             cc++;
             Thread.sleep(10000);
             client.send(streamId,("BOOM DIAM "+cc).getBytes());
-        }
+        }**/
     }
 }

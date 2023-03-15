@@ -14,9 +14,7 @@ import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import org.streamingAPI.server.listeners.InNettyChannelListener;
-import pt.unl.fct.di.novasys.network.Connection;
-import pt.unl.fct.di.novasys.network.data.Host;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 import java.io.IOException;
 import java.net.Inet4Address;

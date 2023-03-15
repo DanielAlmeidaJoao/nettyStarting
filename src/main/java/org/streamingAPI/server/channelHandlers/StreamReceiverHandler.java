@@ -1,7 +1,7 @@
 package org.streamingAPI.server.channelHandlers;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.streamingAPI.server.listeners.InNettyChannelListener;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 //@ChannelHandler.Sharable
 public class StreamReceiverHandler extends CustomChannelHandler {

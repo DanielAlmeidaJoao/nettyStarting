@@ -10,12 +10,11 @@ import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.channel.StreamingChannel;
 import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import org.streamingAPI.server.listeners.InNettyChannelListener;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 import java.io.IOException;
 import java.net.Inet4Address;

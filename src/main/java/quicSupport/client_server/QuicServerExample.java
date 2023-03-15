@@ -21,10 +21,10 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
-import io.netty.util.NetUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.handlers.server.ServerInboundConnectionHandler;
@@ -42,13 +42,16 @@ public final class QuicServerExample {
     private final String host;
     private final int port;
 
+    private InNettyChannelListener listener;
+
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
-    public QuicServerExample(String host, int port) {
+    public QuicServerExample(String host, int port,InNettyChannelListener listener) {
         this.host = host;
         this.port = port;
         started = false;
+        this.listener=listener;
     }
 
     public QuicSslContext getSignedSslContext() throws Exception {
@@ -77,8 +80,8 @@ public final class QuicServerExample {
                 // one.
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
-                .handler(new ServerInboundConnectionHandler())
-                .streamHandler(new ServerChannelInitializer()).build();
+                .handler(new ServerInboundConnectionHandler(listener))
+                .streamHandler(new ServerChannelInitializer(listener)).build();
         return codec;
     }
 
@@ -105,7 +108,7 @@ public final class QuicServerExample {
         }
     }
     public static void main(String[] args) throws Exception {
-        new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081).start();
+        //new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081).start();
     }
 
 

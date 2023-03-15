@@ -1,4 +1,4 @@
-package org.streamingAPI.server.listeners;
+package org.streamingAPI.handlerFunctions;
 
 
 import io.netty.channel.Channel;
@@ -10,7 +10,6 @@ import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import java.net.InetSocketAddress;
 
 public class InNettyChannelListener {
-
     @Getter
     private final DefaultEventExecutor loop;
     private final ChannelFuncHandlers handlerFunctions;
@@ -26,6 +25,7 @@ public class InNettyChannelListener {
             handlerFunctions.getActiveFunction().execute(channelId,handShakeMessage);
         });
     }
+
     public void onControlDataRead(String channelId, byte [] data){
         loop.execute(() -> {
             handlerFunctions.getControlDataHandler().execute(channelId,data);

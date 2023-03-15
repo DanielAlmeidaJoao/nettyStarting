@@ -11,16 +11,14 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
-import lombok.Setter;
 import org.streamingAPI.client.channelHandlers.StreamSenderHandler;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
 import org.streamingAPI.server.channelHandlers.encodings.StreamMessageDecoder;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import org.streamingAPI.server.listeners.InNettyChannelListener;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 
 import static org.streamingAPI.server.StreamInConnection.newDefaultEventExecutor;
 

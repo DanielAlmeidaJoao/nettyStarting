@@ -5,7 +5,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.streamingAPI.server.channelHandlers.CustomChannelHandler;
-import org.streamingAPI.server.listeners.InNettyChannelListener;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 //@ChannelHandler.Sharable
 public class StreamSenderHandler extends CustomChannelHandler {

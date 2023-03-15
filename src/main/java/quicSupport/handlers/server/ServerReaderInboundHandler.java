@@ -7,12 +7,19 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import quicSupport.client_server.QuicServerExample;
 
 import java.nio.charset.StandardCharsets;
 
 public class ServerReaderInboundHandler extends ChannelInboundHandlerAdapter {
     private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
+
+    private InNettyChannelListener listener;
+
+    public ServerReaderInboundHandler(InNettyChannelListener listener) {
+        this.listener = listener;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
