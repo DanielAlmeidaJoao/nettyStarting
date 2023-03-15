@@ -27,6 +27,7 @@ import io.netty.incubator.codec.quic.QuicSslContext;
 import io.netty.incubator.codec.quic.QuicSslContextBuilder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
+import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,19 +46,20 @@ import java.util.concurrent.TimeUnit;
 public final class QuicClientExample {
     //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
     private static final Logger logger = LogManager.getLogger(QuicClientExample.class);
+    public static final int DEFAULT_IDLE_TIMEOUT = 60 * 60 * 1000;
     private QuicChannel quicChannel;
     private NioEventLoopGroup group;
     private InetSocketAddress remote;
 
-    private Map<String,QuicStreamChannel> streams;
+    private Map<Long,QuicStreamChannel> streams;
 
 
-    private QuicClientExample(String host,int port,NioEventLoopGroup group) throws Exception {
+    public QuicClientExample(String host,int port,NioEventLoopGroup group) throws Exception {
         //new NioEventLoopGroup(1);
         this.group = group;
         remote = new InetSocketAddress(host, port);
-        connect();
         streams = new HashMap<>();
+        connect();
     }
 
     public ChannelHandler getCodec()throws Exception{
@@ -74,7 +76,7 @@ public final class QuicClientExample {
                 .build();
         ChannelHandler codec = new QuicClientCodecBuilder()
                 .sslContext(context)
-                .maxIdleTimeout(5000, TimeUnit.MILLISECONDS)
+                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.MILLISECONDS)
                 .initialMaxData(10000000)
                 //.initialMaxStreamsBidirectional(100)
                 // As we don't want to support remote initiated streams just setup the limit for local initiated
@@ -102,30 +104,37 @@ public final class QuicClientExample {
             channel.close().sync();
         });
     }
-    public String createStream() throws Exception{
+    public long createStream() throws Exception{
         QuicStreamChannel streamChannel = quicChannel
                 .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler())
                 .sync()
                 .getNow();
-        String id = streamChannel.id().asShortText();
+        long id = streamChannel.streamId();
         streams.put(id,streamChannel);
         return id;
     }
-    private QuicStreamChannel getOrThrow(String id){
+    private QuicStreamChannel getOrThrow(long id){
         QuicStreamChannel stream = streams.get(id);
         if(stream==null){
             throw new NoSuchElementException(String.format("STREAM <%S> NOT FOUND!",id));
         }
         return stream;
     }
-    public void send(String streamId, byte [] data){
+    public void send(long streamId, byte [] data){
         getOrThrow(streamId).writeAndFlush(Unpooled.copiedBuffer(data));
     }
-    public void send(String streamId, ByteBuf buf){
+    public void send(long streamId, ByteBuf buf){
         getOrThrow(streamId).writeAndFlush(buf);
     }
     public static void main(String[] args) throws Exception {
         //new NioEventLoopGroup(1);
-        new QuicClientExample("localhost",8081,new NioEventLoopGroup(1));
+        QuicClientExample client = new QuicClientExample("localhost",8081,new NioEventLoopGroup(1));
+        long streamId = client.createStream();
+        int cc = 0;
+        while (true){
+            cc++;
+            Thread.sleep(10000);
+            client.send(streamId,("BOOM DIAM "+cc).getBytes());
+        }
     }
 }

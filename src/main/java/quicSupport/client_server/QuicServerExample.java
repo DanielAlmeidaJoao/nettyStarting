@@ -35,6 +35,8 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
+import static quicSupport.client_server.QuicClientExample.DEFAULT_IDLE_TIMEOUT;
+
 public final class QuicServerExample {
     private boolean started;
     private final String host;
@@ -63,7 +65,7 @@ public final class QuicServerExample {
 
     public ChannelHandler getChannelHandler(QuicSslContext context) {
         ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
-                .maxIdleTimeout(5000, TimeUnit.MILLISECONDS)
+                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.MILLISECONDS)
                 // Configure some limits for the maximal number of streams (and the data) that we want to handle.
                 .initialMaxData(10000000)
                 .initialMaxStreamDataBidirectionalLocal(1000000)
@@ -95,7 +97,9 @@ public final class QuicServerExample {
                     .bind(new InetSocketAddress(host,port)).sync().channel();
             started=true;
             logger.info("SERVER STARTED AT host:{} port:{} ",host,port);
+            System.out.println("SERVER STARTED!!!");
             channel.closeFuture().sync();
+            System.out.println("SERVER EXITED!");
         } finally {
             group.shutdownGracefully();
         }

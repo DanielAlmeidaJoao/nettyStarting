@@ -25,6 +25,10 @@ public class ServerInboundConnectionHandler extends ChannelInboundHandlerAdapter
     }
 
     @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+    }
+    @Override
     public boolean isSharable() {
         return true;
     }

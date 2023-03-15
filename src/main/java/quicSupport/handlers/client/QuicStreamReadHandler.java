@@ -8,6 +8,19 @@ import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.util.CharsetUtil;
 
 public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("CHANNEL ACTIVE");
+        super.channelActive(ctx);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("CHANNEL INACTIVE!!!");
+        super.channelInactive(ctx);
+    }
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         System.out.println("READING");
