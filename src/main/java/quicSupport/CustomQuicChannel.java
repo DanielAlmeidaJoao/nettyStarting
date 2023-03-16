@@ -4,17 +4,19 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import quicSupport.client_server.QuicClientExample;
+import quicSupport.client_server.QuicServerExample;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -35,11 +37,10 @@ public abstract class CustomQuicChannel {
     public final static String PORT_KEY = "port";
 
     public final static String DEFAULT_PORT = "8575";
-    private Map<InetSocketAddress, Channel> connections;
-    private Map<String,InetSocketAddress> channelIds;
 
-    private StreamInConnection server;
-    private StreamOutConnection client;
+    private Map<InetSocketAddress, QuicChannel> connections;
+    private QuicServerExample server;
+    private QuicClientExample client;
     public CustomQuicChannel( Properties properties)throws IOException {
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
@@ -55,14 +56,16 @@ public abstract class CustomQuicChannel {
                 this::channelClosed,
                 this::onOpenConnectionFailed);
         InNettyChannelListener listener = new InNettyChannelListener(StreamInConnection.newDefaultEventExecutor(),handlers);
+
         connections = new HashMap<>();
-        channelIds = new HashMap<>();
-        server = new StreamInConnection(addr.getHostName(),port,listener);
-        client = new StreamOutConnection(listener,self);
+
+        server = new QuicServerExample(addr.getHostName(),port,listener);
+        client = new QuicClientExample(self,listener);
         executor = listener.getLoop();
 
         try{
-            server.startListening(false,true);
+            //server.startListening(false,true);
+            server.start();
         }catch (Exception e){
             throw new IOException(e);
         }
@@ -70,15 +73,13 @@ public abstract class CustomQuicChannel {
     }
 
     public  void channelClosed(String channelId){
-        InetSocketAddress peer = channelIds.get(channelId);
-        connections.remove(peer);
-        onChannelClosed(channelIds.get(channelId));
+        //onChannelClosed(channelIds.get(channelId));
     }
 
     public abstract void onChannelClosed(InetSocketAddress peer);
 
     public void channelRead(String channelId, byte[] bytes){
-        onChannelRead(channelId,bytes,channelIds.get(channelId));
+        //onChannelRead(channelId,bytes,channelIds.get(channelId));
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
@@ -98,8 +99,7 @@ public abstract class CustomQuicChannel {
                 port = handShakeMessage.getPort();
             }
             InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
-            connections.put(listeningAddress,channel);
-            channelIds.put(channel.id().asShortText(),listeningAddress);
+            connections.put(listeningAddress, (QuicChannel) channel);
             onChannelActive(channel,handShakeMessage,listeningAddress);
             logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){
@@ -111,12 +111,16 @@ public abstract class CustomQuicChannel {
 
 
 
-    protected void openConnection(InetSocketAddress peer) {
+    public void openConnection(InetSocketAddress peer) {
         if(connections.containsKey(peer)){
             logger.info("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
             logger.info("{} CONNECTING TO {}",self,peer);
-            client.connect(peer,true);
+            try {
+                client.connect(peer);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
     protected void closeConnection(InetSocketAddress peer) {

@@ -48,20 +48,18 @@ public final class QuicClientExample {
     private static final Logger logger = LogManager.getLogger(QuicClientExample.class);
     public static final int DEFAULT_IDLE_TIMEOUT = 60 * 60 * 1000;
     private QuicChannel quicChannel;
+    private final InetSocketAddress self;
     private NioEventLoopGroup group;
-    private InetSocketAddress remote;
-
     private Map<Long,QuicStreamChannel> streams;
 
     private InNettyChannelListener listener;
 
-    public QuicClientExample(String host,int port,NioEventLoopGroup group,InNettyChannelListener listener) throws Exception {
-        //new NioEventLoopGroup(1);
-        this.group = group;
-        remote = new InetSocketAddress(host, port);
+    public QuicClientExample(InetSocketAddress self,InNettyChannelListener listener){
+        this.self = self;
+        //
+        this.group = new NioEventLoopGroup(1);;
         streams = new HashMap<>();
         this.listener=listener;
-        connect();
     }
 
     public ChannelHandler getCodec()throws Exception{
@@ -90,7 +88,7 @@ public final class QuicClientExample {
     private void closeConnection(){
         quicChannel.close();
     }
-    private void connect() throws Exception{
+    public void connect(InetSocketAddress remote) throws Exception{
         Bootstrap bs = new Bootstrap();
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
@@ -99,9 +97,18 @@ public final class QuicClientExample {
         quicChannel = QuicChannel.newBootstrap(channel)
                 .streamHandler(new QuicChannelConHandler(listener))
                 .remoteAddress(remote)
-                .connect()
+                .connect().addListener(future -> {
+                    if(!future.isSuccess()){
+                             listener.onOpenConnectionFailedHandler(remote,future.cause());
+                    }
+                })
                 .get();
         logger.info("CLIENT CONNECTED TO {}",remote);
+        long id = createStream();
+        send(id,"POOM PAH POOM PAH".getBytes());
+
+        id = createStream();
+        send(id,"BOOOM BUAAUUA".getBytes());
         quicChannel.closeFuture().addListener(future -> {
             channel.close().sync();
         });
@@ -131,13 +138,14 @@ public final class QuicClientExample {
     public static void main(String[] args) throws Exception {
         //new NioEventLoopGroup(1);
         /**
-        QuicClientExample client = new QuicClientExample("localhost",8081,new NioEventLoopGroup(1));
+        QuicClientExample client = new QuicClientExample("localhost",8081,new NioEventLoopGroup(1),null);
         long streamId = client.createStream();
         int cc = 0;
         while (true){
             cc++;
             Thread.sleep(10000);
             client.send(streamId,("BOOM DIAM "+cc).getBytes());
-        }**/
+        }
+         **/
     }
 }

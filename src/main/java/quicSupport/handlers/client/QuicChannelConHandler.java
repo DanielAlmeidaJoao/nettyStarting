@@ -4,6 +4,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
+import java.net.InetSocketAddress;
+
 public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
     private InNettyChannelListener listener;
 
@@ -21,6 +23,7 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        listener.onOpenConnectionFailedHandler((InetSocketAddress) ctx.channel().remoteAddress(),cause);
         cause.printStackTrace();
     }
 }

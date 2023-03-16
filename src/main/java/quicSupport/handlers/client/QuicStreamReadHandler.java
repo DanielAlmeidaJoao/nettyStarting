@@ -21,13 +21,12 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("CHANNEL ACTIVE");
         Channel channel = ctx.channel();
-        listener.onChannelActive(channel,null);
+        //listener.onChannelActive(channel,null);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("CHANNEL INACTIVE!!!");
-        listener.onChannelInactive(ctx.channel().id().asShortText());
     }
 
     @Override

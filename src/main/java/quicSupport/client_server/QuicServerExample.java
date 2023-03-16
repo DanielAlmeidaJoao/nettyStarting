@@ -21,6 +21,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
+import io.netty.util.NetUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -97,18 +98,19 @@ public final class QuicServerExample {
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
                     .handler(codec)
-                    .bind(new InetSocketAddress(host,port)).sync().channel();
+                    .bind(new InetSocketAddress(host,port)).sync()
+                    .channel();
             started=true;
             logger.info("SERVER STARTED AT host:{} port:{} ",host,port);
             System.out.println("SERVER STARTED!!!");
-            channel.closeFuture().sync();
+            channel.closeFuture(); //.sync();
             System.out.println("SERVER EXITED!");
-        } finally {
-            group.shutdownGracefully();
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
     public static void main(String[] args) throws Exception {
-        //new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081).start();
+        new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081,null).start();
     }
 
 
