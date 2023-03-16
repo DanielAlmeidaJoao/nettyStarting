@@ -37,7 +37,6 @@ public class ServerInboundConnectionHandler extends ChannelInboundHandlerAdapter
         listener.onChannelActive(channel,handShakeMessage); **/
         // Create streams etc..
     }
-
     public void channelInactive(ChannelHandlerContext ctx) {
         ((QuicChannel) ctx.channel()).collectStats().addListener(f -> {
             if (f.isSuccess()) {

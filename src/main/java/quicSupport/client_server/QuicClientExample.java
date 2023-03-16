@@ -31,9 +31,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
 import quicSupport.handlers.client.QuicStreamReadHandler;
+import quicSupport.utils.Logic;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
@@ -104,11 +106,22 @@ public final class QuicClientExample {
                 })
                 .get();
         logger.info("CLIENT CONNECTED TO {}",remote);
+
         long id = createStream();
-        send(id,"POOM PAH POOM PAH".getBytes());
+
+        HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
+        send(id, Logic.gson.toJson(handShakeMessage).getBytes());
+
+        Thread.sleep(10*1000);
+        send(id,"POOM PAH POOM PAH 2".getBytes());
+        Thread.sleep(10*1000);
 
         id = createStream();
-        send(id,"BOOOM BUAAUUA".getBytes());
+        send(id,"PIMG POMG".getBytes());
+        Thread.sleep(10*1000);
+        send(id,"PIMG POMG 2".getBytes());
+
+
         quicChannel.closeFuture().addListener(future -> {
             channel.close().sync();
         });

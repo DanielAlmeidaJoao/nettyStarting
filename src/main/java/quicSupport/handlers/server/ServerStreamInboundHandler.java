@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -20,15 +21,17 @@ public class ServerStreamInboundHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
+        System.out.println("VV STREAM CHANNEL ACTIVE "+ch.id().asShortText());
+        System.out.println(ch.id().asLongText());
+        System.out.println(ch.remoteAddress());
+        super.channelActive(ctx);
+    }
 
-        Channel channel = ctx.channel();
-        System.out.println("---");
-        System.out.println(ctx.name());
-        System.out.println("RECEIVED FOR STREAM: "+channel.id().asShortText());
-        System.out.println(channel.remoteAddress());
-        System.out.println("P "+channel.parent().id().asLongText());
-        System.out.println("---");
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        System.out.println("STREAM READER");
         ByteBuf byteBuf = (ByteBuf) msg;
         try {
             String got = byteBuf.toString(CharsetUtil.US_ASCII);

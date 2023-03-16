@@ -2,25 +2,29 @@ package quicSupport.handlers.server;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChannel> {
     private InNettyChannelListener listener;
+    private final AtomicBoolean calledOnce;
 
-    public ServerChannelInitializer(InNettyChannelListener listener) {
+    public ServerChannelInitializer(InNettyChannelListener listener, AtomicBoolean calledOnce) {
         this.listener = listener;
+        this.calledOnce = calledOnce;
     }
 
     @Override
     protected void initChannel(QuicStreamChannel ch)  {
-        System.out.println("STREAM CHANNEL ACTIVE "+ch.id().asShortText());
-        System.out.println(ch.id().asLongText());
-        System.out.println(ch.remoteAddress());
-        // Add a LineBasedFrameDecoder here as we just want to do some simple HTTP 0.9 handling.
-        ch.pipeline()//.addLast(new LineBasedFrameDecoder(1024))
-                .addLast(new ServerStreamInboundHandler(listener));
-
+        ChannelPipeline cp = ch.pipeline();
+        if(!calledOnce.get()){
+            cp.addLast(new HandShakeHandler(listener));
+            calledOnce.set(true);
+        }
+        cp.addLast(new ServerStreamInboundHandler(listener));
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

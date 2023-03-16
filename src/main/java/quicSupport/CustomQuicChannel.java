@@ -17,6 +17,7 @@ import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
+import quicSupport.utils.Logic;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -95,8 +96,8 @@ public abstract class CustomQuicChannel {
                 hostName = address.getAddress();
                 port = address.getPort();
             }else {//in connection
-                hostName = InetAddress.getByName(handShakeMessage.getHost());
-                port = handShakeMessage.getPort();
+                hostName = InetAddress.getByName( handShakeMessage.getHostName());
+                port =handShakeMessage.getPort();
             }
             InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
             connections.put(listeningAddress, (QuicChannel) channel);

@@ -26,6 +26,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import quicSupport.handlers.server.HandShakeHandler;
+import quicSupport.handlers.server.ServerStreamInboundHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.handlers.server.ServerInboundConnectionHandler;
@@ -35,6 +37,7 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static quicSupport.client_server.QuicClientExample.DEFAULT_IDLE_TIMEOUT;
 
@@ -44,6 +47,7 @@ public final class QuicServerExample {
     private final int port;
 
     private InNettyChannelListener listener;
+    private AtomicBoolean calledOnce;
 
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
@@ -53,6 +57,7 @@ public final class QuicServerExample {
         this.port = port;
         started = false;
         this.listener=listener;
+        calledOnce = new AtomicBoolean(false);
     }
 
     public QuicSslContext getSignedSslContext() throws Exception {
@@ -82,7 +87,8 @@ public final class QuicServerExample {
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new ServerInboundConnectionHandler(listener))
-                .streamHandler(new ServerChannelInitializer(listener)).build();
+                .streamHandler(new ServerChannelInitializer(listener,calledOnce))
+                .build();
         return codec;
     }
 

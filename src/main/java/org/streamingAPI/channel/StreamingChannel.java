@@ -15,6 +15,7 @@ import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import quicSupport.utils.Logic;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -94,7 +95,7 @@ public abstract class StreamingChannel {
                 hostName = address.getAddress();
                 port = address.getPort();
             }else {//in connection
-                hostName = InetAddress.getByName(handShakeMessage.getHost());
+                hostName = InetAddress.getByName(handShakeMessage.getHostName());
                 port = handShakeMessage.getPort();
             }
             InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
