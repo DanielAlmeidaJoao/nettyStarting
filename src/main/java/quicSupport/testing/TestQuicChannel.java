@@ -1,6 +1,7 @@
 package quicSupport.testing;
 
 import io.netty.channel.Channel;
+import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.logging.log4j.LogManager;
@@ -21,6 +22,21 @@ public class TestQuicChannel extends CustomQuicChannel {
 
     public TestQuicChannel(Properties properties) throws IOException {
         super(properties);
+    }
+
+    @Override
+    public void onStreamErrorHandler(InetSocketAddress peer, QuicStreamChannel channel) {
+
+    }
+
+    @Override
+    public void onStreamClosedHandler(InetSocketAddress peer, QuicStreamChannel channel) {
+
+    }
+
+    @Override
+    public void onStreamCreatedHandler(InetSocketAddress peer, QuicStreamChannel channel) {
+
     }
 
     @Override

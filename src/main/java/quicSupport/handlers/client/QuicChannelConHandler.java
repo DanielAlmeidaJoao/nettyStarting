@@ -53,6 +53,12 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
                 });
         logger.info("{} SENT CUSTOM HANDSHAKE DATA TO {}",self,remote);
     }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        listener.onChannelInactive(ctx.channel().id().asShortText());
+    }
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         listener.onOpenConnectionFailedHandler((InetSocketAddress) ctx.channel().remoteAddress(),cause);

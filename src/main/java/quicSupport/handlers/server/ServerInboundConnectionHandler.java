@@ -32,11 +32,13 @@ public class ServerInboundConnectionHandler extends ChannelInboundHandlerAdapter
         // Create streams etc..
     }
     public void channelInactive(ChannelHandlerContext ctx) {
+        /**
         ((QuicChannel) ctx.channel()).collectStats().addListener(f -> {
             if (f.isSuccess()) {
                 LOGGER.info("Connection closed: {}", f.getNow());
             }
-        });
+        });**/
+        listener.onChannelInactive(ctx.channel().id().asShortText());
     }
 
     @Override

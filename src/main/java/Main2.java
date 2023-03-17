@@ -26,24 +26,54 @@ public class Main2 {
         String port = args[0];
         properties.setProperty("port",port);
         TestQuicChannel testQuicChannel = new TestQuicChannel(properties);
+        /**
         if("8081".equals(port)){
             InetSocketAddress remote = new InetSocketAddress("localhost",8082);
             testQuicChannel.openConnection(remote);
         }
-        System.out.println("CONNECTED");
+        System.out.println("CONNECTED"); **/
         Scanner scanner = new Scanner(System.in);
 
 
         String input = "";
 
         while (!"quit".equalsIgnoreCase(input)){
-            System.out.println("Enter data:");
             input = scanner.nextLine();
-            System.out.println("Enter streamId:");
-            String streamId = scanner.nextLine().trim();
-            System.out.println("ENTERED: "+input);
-            System.out.println("STREAM_ID: "+streamId);
-            testQuicChannel.send(streamId,input.getBytes(),input.length());
+            if(input.equalsIgnoreCase("S")){//send message
+                System.out.println("Enter data:");
+                input = scanner.nextLine();
+                System.out.println("Enter streamId:");
+                String streamId = scanner.nextLine().trim();
+                System.out.println("ENTERED: "+input);
+                System.out.println("STREAM_ID: "+streamId);
+                testQuicChannel.send(streamId,input.getBytes(),input.length());
+            }else if(input.equalsIgnoreCase("C")){//create stream
+                System.out.println("HOST NAME:");
+                String host = scanner.nextLine();
+                System.out.println("PORT");
+                int p = scanner.nextInt();
+                InetSocketAddress address = new InetSocketAddress(host,p);
+                testQuicChannel.createStream(address);
+            }else if(input.equalsIgnoreCase("CS")){//close stream
+                System.out.println("STREAM ID:");
+                String streamId = scanner.nextLine();
+                testQuicChannel.closeStream(streamId);
+            }else if(input.equalsIgnoreCase("O")){//OPEN CONNECTION
+                System.out.println("HOST NAME:");
+                String host = scanner.nextLine();
+                System.out.println("PORT");
+                int p = scanner.nextInt();
+                InetSocketAddress address = new InetSocketAddress(host,p);
+                testQuicChannel.openConnection(address);
+            }else if(input.equalsIgnoreCase("CC")){//CLOSE CONNECTIONS
+                System.out.println("HOST NAME:");
+                String host = scanner.nextLine();
+                System.out.println("PORT");
+                int p = scanner.nextInt();
+                InetSocketAddress address = new InetSocketAddress(host,p);
+                testQuicChannel.closeConnection(address);
+            }
+
         }
         System.out.println("STILL HERE!!!");
         scanner.close();
