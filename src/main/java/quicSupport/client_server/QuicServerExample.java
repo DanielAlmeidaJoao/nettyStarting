@@ -26,8 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
-import quicSupport.handlers.server.HandShakeHandler;
-import quicSupport.handlers.server.ServerStreamInboundHandler;
+import quicSupport.handlers.funcHandlers.StreamListenerExecutor;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.handlers.server.ServerInboundConnectionHandler;
@@ -45,6 +44,7 @@ public final class QuicServerExample {
     private boolean started;
     private final String host;
     private final int port;
+    private final StreamListenerExecutor streamListenerExecutor;
 
     private InNettyChannelListener listener;
     private AtomicBoolean calledOnce;
@@ -52,9 +52,10 @@ public final class QuicServerExample {
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
-    public QuicServerExample(String host, int port,InNettyChannelListener listener) {
+    public QuicServerExample(String host, int port, InNettyChannelListener listener, StreamListenerExecutor streamListenerExecutor) {
         this.host = host;
         this.port = port;
+        this.streamListenerExecutor = streamListenerExecutor;
         started = false;
         this.listener=listener;
         calledOnce = new AtomicBoolean(false);
@@ -87,7 +88,7 @@ public final class QuicServerExample {
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new ServerInboundConnectionHandler(listener))
-                .streamHandler(new ServerChannelInitializer(listener,calledOnce))
+                .streamHandler(new ServerChannelInitializer(listener,calledOnce,streamListenerExecutor))
                 .build();
         return codec;
     }
@@ -107,16 +108,14 @@ public final class QuicServerExample {
                     .bind(new InetSocketAddress(host,port)).sync()
                     .channel();
             started=true;
-            logger.info("SERVER STARTED AT host:{} port:{} ",host,port);
-            System.out.println("SERVER STARTED!!!");
             channel.closeFuture(); //.sync();
-            System.out.println("SERVER EXITED!");
+            logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",host,port);
         }catch (Exception e){
             e.printStackTrace();
         }
     }
     public static void main(String[] args) throws Exception {
-        new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081,null).start();
+        //new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081,null, streamListenerExecutor).start();
     }
 
 

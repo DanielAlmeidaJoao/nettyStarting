@@ -25,12 +25,6 @@ public class ServerInboundConnectionHandler extends ChannelInboundHandlerAdapter
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        System.out.println("++++");
-        System.out.println(ctx.name());
-        QuicChannel channel = (QuicChannel) ctx.channel();
-        System.out.println(ctx.channel().remoteAddress());
-        System.out.println(channel.id().asLongText());
-        System.out.println("++++");
         /** InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
         System.out.println("ACTIVE "+address);
         HandShakeMessage handShakeMessage = new HandShakeMessage(address.getHostName(),address.getPort());

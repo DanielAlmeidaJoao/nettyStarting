@@ -4,34 +4,33 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.socket.ChannelInputShutdownReadComplete;
-import io.netty.incubator.codec.quic.QuicChannel;
-import io.netty.util.CharsetUtil;
+import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import quicSupport.client_server.QuicClientExample;
+import quicSupport.handlers.funcHandlers.StreamListenerExecutor;
 
 public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
 
     private InNettyChannelListener listener;
+    private final StreamListenerExecutor streamListenerExecutor;
 
-    public QuicStreamReadHandler(InNettyChannelListener listener) {
+    public QuicStreamReadHandler(InNettyChannelListener listener, StreamListenerExecutor streamListenerExecutor) {
         this.listener = listener;
+        this.streamListenerExecutor = streamListenerExecutor;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("CHANNEL ACTIVE");
-        Channel channel = ctx.channel();
-        //listener.onChannelActive(channel,null);
+        streamListenerExecutor.onStreamCreated((QuicStreamChannel) ctx.channel());
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("CHANNEL INACTIVE!!!");
+    public void channelInactive(ChannelHandlerContext ctx) {
+        streamListenerExecutor.onStreamClosed((QuicStreamChannel) ctx.channel());
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        System.out.println("READING");
         ByteBuf byteBuf = (ByteBuf) msg;
         byte [] data = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(data);
@@ -39,6 +38,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         listener.onChannelRead(ctx.channel().id().asShortText(),data);
     }
 
+    /**
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
         if (evt == ChannelInputShutdownReadComplete.INSTANCE) {
@@ -47,9 +47,10 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
                     ctx.alloc().directBuffer(16)
                             .writeBytes(new byte[]{'k', 't', 'h', 'x', 'b', 'y', 'e'}));
         }
-    }
+    }**/
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
+        streamListenerExecutor.onStreamError((QuicStreamChannel) ctx.channel(),cause);
     }
 }

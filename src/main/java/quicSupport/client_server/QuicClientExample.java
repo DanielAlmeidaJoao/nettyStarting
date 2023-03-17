@@ -31,11 +31,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import quicSupport.handlers.funcHandlers.StreamListenerExecutor;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
 import quicSupport.handlers.client.QuicStreamReadHandler;
-import quicSupport.utils.Logic;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
@@ -53,17 +52,17 @@ public final class QuicClientExample {
     private final InetSocketAddress self;
     private NioEventLoopGroup group;
     private Map<Long,QuicStreamChannel> streams;
-
     private InNettyChannelListener listener;
+    private StreamListenerExecutor streamListenerExecutor;
 
-    public QuicClientExample(InetSocketAddress self,InNettyChannelListener listener){
+    public QuicClientExample(InetSocketAddress self, InNettyChannelListener listener, StreamListenerExecutor streamListenerExecutor){
         this.self = self;
+        this.streamListenerExecutor = streamListenerExecutor;
         //
-        this.group = new NioEventLoopGroup(1);;
+        this.group = new NioEventLoopGroup(1);
         streams = new HashMap<>();
         this.listener=listener;
     }
-
     public ChannelHandler getCodec()throws Exception{
         String keystoreFilename = "keystore2.jks";
         String keystorePassword = "simple";
@@ -97,7 +96,7 @@ public final class QuicClientExample {
                 .handler(getCodec())
                 .bind(0).sync().channel();
         quicChannel = QuicChannel.newBootstrap(channel)
-                .streamHandler(new QuicChannelConHandler(listener))
+                .handler(new QuicChannelConHandler(listener,self,remote,streamListenerExecutor))
                 .remoteAddress(remote)
                 .connect().addListener(future -> {
                     if(!future.isSuccess()){
@@ -107,33 +106,16 @@ public final class QuicClientExample {
                 .get();
         logger.info("CLIENT CONNECTED TO {}",remote);
 
-        long id = createStream();
-
-        HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
-        send(id, Logic.gson.toJson(handShakeMessage).getBytes());
-
-        Thread.sleep(10*1000);
-        send(id,"POOM PAH POOM PAH 2".getBytes());
-        Thread.sleep(10*1000);
-
-        id = createStream();
-        send(id,"PIMG POMG".getBytes());
-        Thread.sleep(10*1000);
-        send(id,"PIMG POMG 2".getBytes());
-
-
         quicChannel.closeFuture().addListener(future -> {
             channel.close().sync();
         });
     }
-    public long createStream() throws Exception{
-        QuicStreamChannel streamChannel = quicChannel
-                .createStream(QuicStreamType.BIDIRECTIONAL,new QuicStreamReadHandler(listener))
+    public static QuicStreamChannel createStream(QuicChannel quicChan,QuicStreamReadHandler readHandler) throws Exception{
+        QuicStreamChannel streamChannel = quicChan
+                .createStream(QuicStreamType.BIDIRECTIONAL,readHandler)
                 .sync()
                 .getNow();
-        long id = streamChannel.streamId();
-        streams.put(id,streamChannel);
-        return id;
+        return streamChannel;
     }
     private QuicStreamChannel getOrThrow(long id){
         QuicStreamChannel stream = streams.get(id);
@@ -147,18 +129,5 @@ public final class QuicClientExample {
     }
     public void send(long streamId, ByteBuf buf){
         getOrThrow(streamId).writeAndFlush(buf);
-    }
-    public static void main(String[] args) throws Exception {
-        //new NioEventLoopGroup(1);
-        /**
-        QuicClientExample client = new QuicClientExample("localhost",8081,new NioEventLoopGroup(1),null);
-        long streamId = client.createStream();
-        int cc = 0;
-        while (true){
-            cc++;
-            Thread.sleep(10000);
-            client.send(streamId,("BOOM DIAM "+cc).getBytes());
-        }
-         **/
     }
 }

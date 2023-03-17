@@ -9,6 +9,7 @@ import quicSupport.testing.TestQuicChannel;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
+import java.util.Scanner;
 
 public class Main2 {
 
@@ -29,6 +30,22 @@ public class Main2 {
             InetSocketAddress remote = new InetSocketAddress("localhost",8082);
             testQuicChannel.openConnection(remote);
         }
-        Thread.sleep(2000*1000);
+        System.out.println("CONNECTED");
+        Scanner scanner = new Scanner(System.in);
+
+
+        String input = "";
+
+        while (!"quit".equalsIgnoreCase(input)){
+            System.out.println("Enter data:");
+            input = scanner.nextLine();
+            System.out.println("Enter streamId:");
+            String streamId = scanner.nextLine().trim();
+            System.out.println("ENTERED: "+input);
+            System.out.println("STREAM_ID: "+streamId);
+            testQuicChannel.send(streamId,input.getBytes(),input.length());
+        }
+        System.out.println("STILL HERE!!!");
+        scanner.close();
     }
 }
