@@ -38,14 +38,22 @@
 
 
         <!-- https://mvnrepository.com/artifact/io.netty.incubator/netty-incubator-codec-classes-quic -->
+        <!--
         <dependency>
             <groupId>io.netty.incubator</groupId>
             <artifactId>netty-incubator-codec-native-quic</artifactId>
             <version>0.0.21.Final</version>
             <classifier>linux-x86_64</classifier>
-            <!-- <classifier>windows-x86_64</classifier> -->
         </dependency>
+        -->
 
+        <!-- https://mvnrepository.com/artifact/io.netty.incubator/netty-incubator-codec-native-quic -->
+        <dependency>
+            <groupId>io.netty.incubator</groupId>
+            <artifactId>netty-incubator-codec-native-quic</artifactId>
+            <version>0.0.38.Final</version>
+            <classifier>linux-x86_64</classifier>
+        </dependency>
         <dependency>
             <groupId>pt.unl.fct.di.novasys</groupId>
             <artifactId>babel-core</artifactId>

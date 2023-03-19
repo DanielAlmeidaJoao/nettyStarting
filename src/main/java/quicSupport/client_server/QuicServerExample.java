@@ -18,6 +18,7 @@ package quicSupport.client_server;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
@@ -71,7 +72,7 @@ public final class QuicServerExample {
 
     public ChannelHandler getChannelHandler(QuicSslContext context) {
         ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
-                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.MILLISECONDS)
+                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
                 // Configure some limits for the maximal number of streams (and the data) that we want to handle.
                 .initialMaxData(10000000)
                 .initialMaxStreamDataBidirectionalLocal(1000000)

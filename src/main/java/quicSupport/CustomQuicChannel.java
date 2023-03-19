@@ -18,6 +18,7 @@ import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
+import quicSupport.exceptions.UnknownElement;
 import quicSupport.handlers.client.QuicStreamReadHandler;
 import quicSupport.handlers.funcHandlers.QuicFuncHandlers;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
@@ -79,9 +80,7 @@ public abstract class CustomQuicChannel {
         server = new QuicServerExample(addr.getHostName(),port,streamEventExecutor);
         client = new QuicClientExample(self,streamEventExecutor);
         executor = streamEventExecutor.getLoop();
-
         try{
-            //server.startListening(false,true);
             server.start();
         }catch (Exception e){
             throw new IOException(e);
@@ -189,54 +188,54 @@ public abstract class CustomQuicChannel {
         if(streamConnection==null){
             logger.info("{} IS NOT CONNECTED TO {}",self,peer);
         }else{
-            //streamConnection.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
             streamConnection.shutdown();
             streamConnection.disconnect();
-            //streamConnection.parent().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(QuicStreamChannel.SHUTDOWN_OUTPUT);
-            //streamConnection.disconnect();
-            //streamConnection.close();
         }
     }
-    public QuicConnectionStats getStats(InetSocketAddress peer) throws ExecutionException, InterruptedException {
+    public QuicConnectionStats getStats(InetSocketAddress peer) throws ExecutionException, InterruptedException, UnknownElement {
         QuicStreamChannel connection = getOrThrow(peer);
         return connection.parent().collectStats().get();
     }
-    public QuicStreamChannel getOrThrow(InetSocketAddress peer){
+    public QuicStreamChannel getOrThrow(InetSocketAddress peer) throws UnknownElement {
         QuicStreamChannel quicChannel = connections.get(peer);
-        /***
         if(quicChannel==null){
-            throw new NoSuchElementException("NO SUCH CONNECTION: "+peer);
-        }**/
+            throw new UnknownElement("NO SUCH CONNECTION TO: "+peer);
+        }
         return quicChannel;
     }
-    public QuicStreamChannel getOrThrow2(String id){
+    public QuicStreamChannel getOrThrow2(String id) throws UnknownElement {
         QuicStreamChannel streamChannel = streams.get(id);
-        /**
         if(streamChannel==null){
-            throw new NoSuchElementException("NO SUCH ELEMENT FOUND: "+id);
-        }***/
+            throw new UnknownElement("UNKNOWN STREAM ID: "+id);
+        }
         return streamChannel;
     }
     public void createStream(InetSocketAddress peer) throws Exception {
          QuicChannel quicChannel = getOrThrow(peer).parent();
          QuicClientExample.createStream(quicChannel,new QuicStreamReadHandler(streamEventExecutor));
     }
-    public void closeStream(String streamId) throws NoSuchElementException{
+    public void closeStream(String streamId) throws UnknownElement {
         QuicStreamChannel quicStreamChannel = getOrThrow2(streamId);
         quicStreamChannel.shutdown();
         quicStreamChannel.disconnect();
     }
-    public void send(String streamId, byte [] message, int len){
+    public void send(String streamId, byte [] message, int len) throws UnknownElement {
         send(streamId,message,len, null);
     }
-    public void send(String streamId,byte[] message, int len, Promise<Void> promise){
+    public void send(String streamId,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
         QuicStreamChannel quicStreamChannel = getOrThrow2(streamId);
+        send(quicStreamChannel,message,len,promise);
+    }
+    public void send(InetSocketAddress peer,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
+        QuicStreamChannel quicStreamChannel = getOrThrow(peer);
+        send(quicStreamChannel,message,len,promise);
+    }
+    private void send(QuicStreamChannel quicStreamChannel,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
         ChannelFuture f = quicStreamChannel.writeAndFlush(Unpooled.copiedBuffer(message,0,len));
         if(promise!=null){
             f.addListener(new PromiseNotifier<>(promise));
         }
     }
-
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
 
     /*********************************** User Actions **************************************/

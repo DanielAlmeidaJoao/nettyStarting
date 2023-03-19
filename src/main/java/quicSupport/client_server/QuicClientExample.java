@@ -21,12 +21,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.incubator.codec.quic.QuicChannel;
-import io.netty.incubator.codec.quic.QuicClientCodecBuilder;
-import io.netty.incubator.codec.quic.QuicSslContext;
-import io.netty.incubator.codec.quic.QuicSslContextBuilder;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
-import io.netty.incubator.codec.quic.QuicStreamType;
+import io.netty.incubator.codec.quic.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,6 +34,7 @@ import quicSupport.handlers.client.QuicStreamReadHandler;
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -47,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 public final class QuicClientExample {
     //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
     private static final Logger logger = LogManager.getLogger(QuicClientExample.class);
-    public static final int DEFAULT_IDLE_TIMEOUT = 60 * 60 * 1000;
+    public static final int DEFAULT_IDLE_TIMEOUT = 60*30;
     private QuicChannel quicChannel;
     private final InetSocketAddress self;
     private NioEventLoopGroup group;
@@ -77,7 +73,7 @@ public final class QuicClientExample {
                 .build();
         ChannelHandler codec = new QuicClientCodecBuilder()
                 .sslContext(context)
-                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.MILLISECONDS)
+                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
                 .initialMaxData(10000000)
                 //.initialMaxStreamsBidirectional(100)
                 // As we don't want to support remote initiated streams just setup the limit for local initiated
