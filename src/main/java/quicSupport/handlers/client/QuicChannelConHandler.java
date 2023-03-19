@@ -10,23 +10,21 @@ import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.client_server.QuicClientExample;
-import quicSupport.handlers.funcHandlers.StreamListenerExecutor;
+import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.Logic;
 
 import java.net.InetSocketAddress;
 
 public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(QuicChannelConHandler.class);
-    private InNettyChannelListener listener;
     private final InetSocketAddress self;
     private final InetSocketAddress remote;
-    private final StreamListenerExecutor streamListenerExecutor;
+    private final QuicListenerExecutor quicListenerExecutor;
 
-    public QuicChannelConHandler(InNettyChannelListener listener, InetSocketAddress self, InetSocketAddress remote, StreamListenerExecutor streamListenerExecutor) {
-        this.listener = listener;
+    public QuicChannelConHandler(InNettyChannelListener listener, InetSocketAddress self, InetSocketAddress remote, QuicListenerExecutor streamListenerExecutor) {
         this.self = self;
         this.remote = remote;
-        this.streamListenerExecutor = streamListenerExecutor;
+        this.quicListenerExecutor = streamListenerExecutor;
 
     }
 
@@ -39,29 +37,23 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
         // for each remote initiated stream.
         HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
         byte [] hs = Logic.gson.toJson(handShakeMessage).getBytes();
-        QuicStreamChannel streamChannel = QuicClientExample.createStream((QuicChannel) ctx.channel(),new QuicStreamReadHandler(listener,streamListenerExecutor));
+        QuicStreamChannel streamChannel = QuicClientExample.createStream((QuicChannel) ctx.channel(),new QuicStreamReadHandler( quicListenerExecutor));
         streamChannel.writeAndFlush(Unpooled.copiedBuffer(hs))
                 .addListener(future -> {
                     if(future.isSuccess()){
                         HandShakeMessage hsm = new HandShakeMessage(remote.getHostName(),remote.getPort());
-                        listener.onChannelActive(out,hsm);
+                        quicListenerExecutor.onChannelActive(streamChannel,hsm);
                     }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
-                        listener.onOpenConnectionFailedHandler(remote,future.cause());
+                        quicListenerExecutor.onConnectionError(remote,future.cause());
                         out.close();
                     }
                 });
         logger.info("{} SENT CUSTOM HANDSHAKE DATA TO {}",self,remote);
     }
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        listener.onChannelInactive(ctx.channel().id().asShortText());
-    }
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        listener.onOpenConnectionFailedHandler((InetSocketAddress) ctx.channel().remoteAddress(),cause);
+        quicListenerExecutor.onConnectionError((InetSocketAddress) ctx.channel().remoteAddress(),cause);
         cause.printStackTrace();
     }
 }

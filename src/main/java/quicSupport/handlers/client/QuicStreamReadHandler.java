@@ -1,21 +1,18 @@
 package quicSupport.handlers.client;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.socket.ChannelInputShutdownReadComplete;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
-import quicSupport.client_server.QuicClientExample;
-import quicSupport.handlers.funcHandlers.StreamListenerExecutor;
+import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 
 public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
 
-    private InNettyChannelListener listener;
-    private final StreamListenerExecutor streamListenerExecutor;
+    private final QuicListenerExecutor streamListenerExecutor;
 
-    public QuicStreamReadHandler(InNettyChannelListener listener, StreamListenerExecutor streamListenerExecutor) {
-        this.listener = listener;
+    public QuicStreamReadHandler(QuicListenerExecutor streamListenerExecutor) {
         this.streamListenerExecutor = streamListenerExecutor;
     }
 
@@ -26,6 +23,11 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
+        System.out.println("client stream inactive lllcallled");
+        /**
+        String parentId = ctx.channel().parent().id().asShortText();
+        String streamId = ctx.channel().id().asShortText();
+        streamListenerExecutor.onChannelInactive(parentId,streamId);**/
         streamListenerExecutor.onStreamClosed((QuicStreamChannel) ctx.channel());
     }
 
@@ -35,19 +37,9 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         byte [] data = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(data);
         byteBuf.release();
-        listener.onChannelRead(ctx.channel().id().asShortText(),data);
+        streamListenerExecutor.onChannelRead(ctx.channel().id().asShortText(),data);
     }
 
-    /**
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        if (evt == ChannelInputShutdownReadComplete.INSTANCE) {
-            // Close the connection once the remote peer did send the FIN for this stream.
-            ((QuicChannel) ctx.channel().parent()).close(true, 0,
-                    ctx.alloc().directBuffer(16)
-                            .writeBytes(new byte[]{'k', 't', 'h', 'x', 'b', 'y', 'e'}));
-        }
-    }**/
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();

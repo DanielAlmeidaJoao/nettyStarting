@@ -73,7 +73,6 @@ public class Main2 {
                 InetSocketAddress address = new InetSocketAddress(host,p);
                 testQuicChannel.closeConnection(address);
             }
-
         }
         System.out.println("STILL HERE!!!");
         scanner.close();

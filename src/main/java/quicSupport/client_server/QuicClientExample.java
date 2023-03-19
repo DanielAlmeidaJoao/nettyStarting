@@ -31,7 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
-import quicSupport.handlers.funcHandlers.StreamListenerExecutor;
+import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
 import quicSupport.handlers.client.QuicStreamReadHandler;
@@ -53,9 +53,9 @@ public final class QuicClientExample {
     private NioEventLoopGroup group;
     private Map<Long,QuicStreamChannel> streams;
     private InNettyChannelListener listener;
-    private StreamListenerExecutor streamListenerExecutor;
+    private QuicListenerExecutor streamListenerExecutor;
 
-    public QuicClientExample(InetSocketAddress self, InNettyChannelListener listener, StreamListenerExecutor streamListenerExecutor){
+    public QuicClientExample(InetSocketAddress self, QuicListenerExecutor streamListenerExecutor){
         this.self = self;
         this.streamListenerExecutor = streamListenerExecutor;
         //

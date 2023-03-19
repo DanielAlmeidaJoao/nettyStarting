@@ -21,12 +21,11 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
-import io.netty.util.NetUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
-import quicSupport.handlers.funcHandlers.StreamListenerExecutor;
+import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.handlers.server.ServerInboundConnectionHandler;
@@ -44,20 +43,17 @@ public final class QuicServerExample {
     private boolean started;
     private final String host;
     private final int port;
-    private final StreamListenerExecutor streamListenerExecutor;
-
-    private InNettyChannelListener listener;
+    private final QuicListenerExecutor streamListenerExecutor;
     private AtomicBoolean calledOnce;
 
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
-    public QuicServerExample(String host, int port, InNettyChannelListener listener, StreamListenerExecutor streamListenerExecutor) {
+    public QuicServerExample(String host, int port,QuicListenerExecutor streamListenerExecutor) {
         this.host = host;
         this.port = port;
         this.streamListenerExecutor = streamListenerExecutor;
         started = false;
-        this.listener=listener;
         calledOnce = new AtomicBoolean(false);
     }
 
@@ -87,8 +83,8 @@ public final class QuicServerExample {
                 // one.
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
-                .handler(new ServerInboundConnectionHandler(listener))
-                .streamHandler(new ServerChannelInitializer(listener,calledOnce,streamListenerExecutor))
+                .handler(new ServerInboundConnectionHandler(streamListenerExecutor))
+                .streamHandler(new ServerChannelInitializer(calledOnce,streamListenerExecutor))
                 .build();
         return codec;
     }

@@ -2,6 +2,7 @@ package org.streamingAPI.handlerFunctions;
 
 
 import io.netty.channel.Channel;
+import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import lombok.Getter;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
@@ -20,9 +21,9 @@ public class InNettyChannelListener {
         this.handlerFunctions = handlerFunctions;
     }
 
-    public void onChannelActive(Channel channelId, HandShakeMessage handShakeMessage){
+    public void onChannelActive(Channel defaultStream, HandShakeMessage handShakeMessage){
         loop.execute(() -> {
-            handlerFunctions.getActiveFunction().execute(channelId,handShakeMessage);
+            handlerFunctions.getActiveFunction().execute(defaultStream,handShakeMessage);
         });
     }
 

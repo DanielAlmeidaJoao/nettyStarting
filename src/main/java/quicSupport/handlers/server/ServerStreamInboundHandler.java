@@ -1,23 +1,23 @@
 package quicSupport.handlers.server;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.socket.ChannelInputShutdownReadComplete;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import quicSupport.client_server.QuicServerExample;
-import quicSupport.handlers.funcHandlers.StreamListenerExecutor;
+import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 
 public class ServerStreamInboundHandler extends ChannelInboundHandlerAdapter {
     private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
 
-    private InNettyChannelListener listener;
-    private final StreamListenerExecutor streamListenerExecutor;
+    private final QuicListenerExecutor streamListenerExecutor;
 
-    public ServerStreamInboundHandler(InNettyChannelListener listener, StreamListenerExecutor streamListenerExecutor) {
-        this.listener = listener;
+    public ServerStreamInboundHandler(QuicListenerExecutor streamListenerExecutor) {
         this.streamListenerExecutor = streamListenerExecutor;
     }
 
@@ -29,8 +29,13 @@ public class ServerStreamInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
+        System.out.println("CHANNEL INACTIVE CALLED!!!");
+        /**
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        streamListenerExecutor.onStreamClosed(ch);
+        String parentId = ctx.channel().parent().id().asShortText();
+        String streamId = ctx.channel().id().asShortText();
+        streamListenerExecutor.onChannelInactive(parentId,streamId);**/
+        streamListenerExecutor.onStreamClosed((QuicStreamChannel) ctx.channel());
     }
 
 
@@ -41,7 +46,7 @@ public class ServerStreamInboundHandler extends ChannelInboundHandlerAdapter {
         try {
             byte [] data = new byte[byteBuf.readableBytes()];
             byteBuf.readBytes(data);
-            listener.onChannelRead(ch.id().asShortText(),data);
+            streamListenerExecutor.onChannelRead(ch.id().asShortText(),data);
         } finally {
             byteBuf.release();
         }
