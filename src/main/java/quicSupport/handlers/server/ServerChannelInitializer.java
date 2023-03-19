@@ -10,21 +10,16 @@ import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChannel> {
-    private final AtomicBoolean calledOnce;
     private final QuicListenerExecutor streamListenerExecutor;
 
-    public ServerChannelInitializer(AtomicBoolean calledOnce, QuicListenerExecutor streamListenerExecutor) {
-        this.calledOnce = calledOnce;
+    public ServerChannelInitializer(QuicListenerExecutor streamListenerExecutor) {
         this.streamListenerExecutor = streamListenerExecutor;
     }
 
     @Override
     protected void initChannel(QuicStreamChannel ch)  {
         ChannelPipeline cp = ch.pipeline();
-        if(!calledOnce.get()){
-            cp.addLast(new HandShakeHandler(streamListenerExecutor));
-            calledOnce.set(true);
-        }
+        cp.addLast(new HandShakeHandler(streamListenerExecutor));
         cp.addLast(new ServerStreamInboundHandler(streamListenerExecutor));
     }
     @Override

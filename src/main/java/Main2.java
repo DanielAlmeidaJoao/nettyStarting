@@ -32,6 +32,7 @@ public class Main2 {
             testQuicChannel.openConnection(remote);
         }
         System.out.println("CONNECTED"); **/
+        testQuicChannel.end();
         Scanner scanner = new Scanner(System.in);
 
 

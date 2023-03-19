@@ -45,8 +45,6 @@ public final class QuicServerExample {
     private final String host;
     private final int port;
     private final QuicListenerExecutor streamListenerExecutor;
-    private AtomicBoolean calledOnce;
-
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
@@ -55,7 +53,6 @@ public final class QuicServerExample {
         this.port = port;
         this.streamListenerExecutor = streamListenerExecutor;
         started = false;
-        calledOnce = new AtomicBoolean(false);
     }
 
     public QuicSslContext getSignedSslContext() throws Exception {
@@ -85,7 +82,7 @@ public final class QuicServerExample {
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new ServerInboundConnectionHandler(streamListenerExecutor))
-                .streamHandler(new ServerChannelInitializer(calledOnce,streamListenerExecutor))
+                .streamHandler(new ServerChannelInitializer(streamListenerExecutor))
                 .build();
         return codec;
     }
@@ -105,7 +102,9 @@ public final class QuicServerExample {
                     .bind(new InetSocketAddress(host,port)).sync()
                     .channel();
             started=true;
-            channel.closeFuture(); //.sync();
+            channel.closeFuture().addListener(future -> {
+                group.shutdownGracefully();
+            }); //.sync();
             logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",host,port);
         }catch (Exception e){
             e.printStackTrace();
@@ -114,6 +113,7 @@ public final class QuicServerExample {
     public static void main(String[] args) throws Exception {
         //new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081,null, streamListenerExecutor).start();
     }
+
 
 
 }

@@ -48,16 +48,14 @@ public final class QuicClientExample {
     private final InetSocketAddress self;
     private NioEventLoopGroup group;
     private Map<Long,QuicStreamChannel> streams;
-    private InNettyChannelListener listener;
     private QuicListenerExecutor streamListenerExecutor;
 
-    public QuicClientExample(InetSocketAddress self, QuicListenerExecutor streamListenerExecutor){
+    public QuicClientExample(InetSocketAddress self, QuicListenerExecutor streamListenerExecutor, NioEventLoopGroup g){
         this.self = self;
         this.streamListenerExecutor = streamListenerExecutor;
         //
-        this.group = new NioEventLoopGroup(1);
+        this.group = g;
         streams = new HashMap<>();
-        this.listener=listener;
     }
     public ChannelHandler getCodec()throws Exception{
         String keystoreFilename = "keystore2.jks";
@@ -92,11 +90,11 @@ public final class QuicClientExample {
                 .handler(getCodec())
                 .bind(0).sync().channel();
         quicChannel = QuicChannel.newBootstrap(channel)
-                .handler(new QuicChannelConHandler(listener,self,remote,streamListenerExecutor))
+                .handler(new QuicChannelConHandler(self,remote,streamListenerExecutor))
                 .remoteAddress(remote)
                 .connect().addListener(future -> {
                     if(!future.isSuccess()){
-                             listener.onOpenConnectionFailedHandler(remote,future.cause());
+                             streamListenerExecutor.onConnectionError(remote,future.cause());
                     }
                 })
                 .get();
@@ -104,6 +102,7 @@ public final class QuicClientExample {
 
         quicChannel.closeFuture().addListener(future -> {
             channel.close().sync();
+            group.shutdownGracefully();
         });
     }
     public static QuicStreamChannel createStream(QuicChannel quicChan,QuicStreamReadHandler readHandler) throws Exception{

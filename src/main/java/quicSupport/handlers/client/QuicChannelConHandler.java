@@ -21,7 +21,7 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
     private final InetSocketAddress remote;
     private final QuicListenerExecutor quicListenerExecutor;
 
-    public QuicChannelConHandler(InNettyChannelListener listener, InetSocketAddress self, InetSocketAddress remote, QuicListenerExecutor streamListenerExecutor) {
+    public QuicChannelConHandler(InetSocketAddress self, InetSocketAddress remote, QuicListenerExecutor streamListenerExecutor) {
         this.self = self;
         this.remote = remote;
         this.quicListenerExecutor = streamListenerExecutor;

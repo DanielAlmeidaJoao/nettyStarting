@@ -3,10 +3,14 @@ package quicSupport;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicConnectionStats;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
@@ -31,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 public abstract class CustomQuicChannel {
@@ -73,12 +78,12 @@ public abstract class CustomQuicChannel {
                 this::streamErrorHandler);
         streamEventExecutor = new QuicListenerExecutor(StreamInConnection.newDefaultEventExecutor(), streamFuncHandlers);
 
-        connections = new HashMap<>();
-        streams = new HashMap<>();
-        channelIds = new HashMap<>();
+        connections = new ConcurrentHashMap<>();
+        streams = new ConcurrentHashMap<>();
+        channelIds = new ConcurrentHashMap<>();
 
         server = new QuicServerExample(addr.getHostName(),port,streamEventExecutor);
-        client = new QuicClientExample(self,streamEventExecutor);
+        client = new QuicClientExample(self,streamEventExecutor,new NioEventLoopGroup(1));
         executor = streamEventExecutor.getLoop();
         try{
             server.start();
@@ -188,8 +193,7 @@ public abstract class CustomQuicChannel {
         if(streamConnection==null){
             logger.info("{} IS NOT CONNECTED TO {}",self,peer);
         }else{
-            streamConnection.shutdown();
-            streamConnection.disconnect();
+            streamConnection.parent().close();
         }
     }
     public QuicConnectionStats getStats(InetSocketAddress peer) throws ExecutionException, InterruptedException, UnknownElement {
@@ -232,6 +236,20 @@ public abstract class CustomQuicChannel {
     }
     private void send(QuicStreamChannel quicStreamChannel,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
         ChannelFuture f = quicStreamChannel.writeAndFlush(Unpooled.copiedBuffer(message,0,len));
+        f.addListener(future -> {
+            if(future.isSuccess()){
+
+            }else {
+
+            }
+        });
+        System.out.println(quicStreamChannel.isActive());
+        System.out.println(quicStreamChannel.isOpen());
+        System.out.println(quicStreamChannel.isShutdown());
+
+        System.out.println(quicStreamChannel.parent().isActive());
+        System.out.println(quicStreamChannel.parent().isOpen());
+
         if(promise!=null){
             f.addListener(new PromiseNotifier<>(promise));
         }
@@ -249,7 +267,20 @@ public abstract class CustomQuicChannel {
     protected void onOutboundConnectionDown() {
     }
 
-
+    public void end(){
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("SHUTTING DOWN");
+            ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+            connections.forEach((inetSocketAddress, channel) -> {
+                channelGroup.add(channel);
+            });
+            try {
+                channelGroup.close().sync();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }));
+    }
 
     protected void onInboundConnectionUp() {
 
