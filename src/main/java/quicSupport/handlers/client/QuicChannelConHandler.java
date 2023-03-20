@@ -1,5 +1,6 @@
 package quicSupport.handlers.client;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -7,13 +8,15 @@ import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.server.ServerStreamInboundHandler;
 import quicSupport.utils.Logic;
 
 import java.net.InetSocketAddress;
+
+import static quicSupport.handlers.server.ServerStreamInboundHandler.writeBytes;
 
 public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(QuicChannelConHandler.class);
@@ -38,7 +41,7 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
         HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
         byte [] hs = Logic.gson.toJson(handShakeMessage).getBytes();
         QuicStreamChannel streamChannel = QuicClientExample.createStream((QuicChannel) ctx.channel(),new QuicStreamReadHandler(quicListenerExecutor),false);
-        streamChannel.writeAndFlush(Unpooled.copiedBuffer(hs))
+        streamChannel.writeAndFlush(writeBytes(hs.length,hs, ServerStreamInboundHandler.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
                         HandShakeMessage hsm = new HandShakeMessage(remote.getHostName(),remote.getPort());

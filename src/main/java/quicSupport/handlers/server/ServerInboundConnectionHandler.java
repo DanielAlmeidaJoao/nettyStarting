@@ -47,8 +47,8 @@ public class ServerInboundConnectionHandler extends ChannelInboundHandlerAdapter
         System.out.println("SOMETHING HAPPEPNED "+evt);
     }
 
-/*    @Override
+    @Override
     public boolean isSharable() {
         return true;
-    }*/
+    }
 }

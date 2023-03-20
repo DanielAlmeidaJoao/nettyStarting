@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
+import quicSupport.handlers.QuicDelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.utils.LoadCertificate;
@@ -113,7 +114,7 @@ public final class QuicClientExample {
                 .createStream(QuicStreamType.BIDIRECTIONAL,new ChannelInitializer<QuicStreamChannel>() {
                     @Override
                     protected void initChannel(QuicStreamChannel channel) throws Exception {
-                        channel.pipeline().addLast(new DelimitedMessageDecoder());
+                        channel.pipeline().addLast(new QuicDelimitedMessageDecoder());
                         channel.pipeline().addLast(readHandler);
                     }
                 })

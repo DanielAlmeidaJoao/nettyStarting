@@ -1,7 +1,5 @@
 package quicSupport;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.group.ChannelGroup;
@@ -17,27 +15,25 @@ import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
-import quicSupport.exceptions.UnknownElement;
 import quicSupport.handlers.client.QuicStreamReadHandler;
 import quicSupport.handlers.funcHandlers.QuicFuncHandlers;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.server.ServerStreamInboundHandler;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+
+import static quicSupport.handlers.server.ServerStreamInboundHandler.writeBytes;
 
 public abstract class CustomQuicChannel {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
@@ -164,7 +160,7 @@ public abstract class CustomQuicChannel {
         if(isTheFirstStream(channelId,streamId)){
             InetSocketAddress peer = channelIds.remove(channelId);
             Channel stream = connections.remove(peer);
-            //stream.parent().disconnect();
+            stream.parent().disconnect();
             logger.info("{} CLOSED CONNECTION TO {}",self,peer);
             onChannelClosed(peer);
         }
@@ -241,10 +237,7 @@ public abstract class CustomQuicChannel {
         send(quicStreamChannel,message,len,promise);
     }
     private void send(QuicStreamChannel quicStreamChannel,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
-        ByteBuf buf = Unpooled.buffer(len+4);
-        buf.writeInt(len);
-        buf.writeBytes(message);
-        ChannelFuture f = quicStreamChannel.writeAndFlush(buf);
+        ChannelFuture f = quicStreamChannel.writeAndFlush(writeBytes(len,message, ServerStreamInboundHandler.APP_DATA));
         if(promise!=null){
             f.addListener(new PromiseNotifier<>(promise));
         }
