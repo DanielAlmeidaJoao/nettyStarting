@@ -99,19 +99,16 @@ public final class QuicClientExample {
                 .streamHandler(new ServerChannelInitializer(streamListenerExecutor))
                 .remoteAddress(remote)
                 .connect().addListener(future -> {
-                    if(!future.isSuccess()){
-                             streamListenerExecutor.onConnectionError(remote,future.cause());
+                    if(future.isSuccess()){
+                        logger.info("CLIENT CONNECTED TO {}",remote);
+                    }else{
+                        logger.info("CLIENT NOT CONNECTED TO {}",remote);
+                        streamListenerExecutor.onConnectionError(remote,future.cause());
                     }
                 })
                 .get();
-        logger.info("CLIENT CONNECTED TO {}",remote);
-
-        quicChannel.closeFuture().addListener(future -> {
-            channel.close().sync();
-            group.shutdownGracefully();
-        });
     }
-    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicStreamReadHandler readHandler) throws Exception{
+    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicStreamReadHandler readHandler,boolean notifyPeer) throws Exception{
         QuicStreamChannel streamChannel = quicChan
                 .createStream(QuicStreamType.BIDIRECTIONAL,new ChannelInitializer<QuicStreamChannel>() {
                     @Override
@@ -122,6 +119,9 @@ public final class QuicClientExample {
                 })
                 .sync()
                 .getNow();
+        if(notifyPeer){
+            streamChannel.writeAndFlush(Unpooled.EMPTY_BUFFER);
+        }
         return streamChannel;
     }
     private QuicStreamChannel getOrThrow(long id){

@@ -153,6 +153,9 @@ public abstract class CustomQuicChannel {
 
     private boolean isTheFirstStream(String parentId, String streamId){
         InetSocketAddress peer = channelIds.get(parentId);
+        if(peer==null){
+            return false;
+        }
         QuicStreamChannel streamChannel = connections.get(peer);
         return streamChannel !=null && streamId.equals(streamChannel.id().asShortText());
     }
@@ -161,7 +164,7 @@ public abstract class CustomQuicChannel {
         if(isTheFirstStream(channelId,streamId)){
             InetSocketAddress peer = channelIds.remove(channelId);
             Channel stream = connections.remove(peer);
-            stream.parent().disconnect();
+            //stream.parent().disconnect();
             logger.info("{} CLOSED CONNECTION TO {}",self,peer);
             onChannelClosed(peer);
         }
@@ -194,7 +197,9 @@ public abstract class CustomQuicChannel {
         if(streamConnection==null){
             logger.info("{} IS NOT CONNECTED TO {}",self,peer);
         }else{
-            streamConnection.parent().close();
+            //streamConnection.parent().close();
+            streamConnection.shutdown();
+            streamConnection.disconnect();
         }
     }
     public QuicConnectionStats getStats(InetSocketAddress peer) throws ExecutionException, InterruptedException, UnknownElement {
@@ -217,7 +222,7 @@ public abstract class CustomQuicChannel {
     }
     public void createStream(InetSocketAddress peer) throws Exception {
          QuicChannel quicChannel = getOrThrow(peer).parent();
-         QuicClientExample.createStream(quicChannel,new QuicStreamReadHandler(streamEventExecutor));
+         QuicClientExample.createStream(quicChannel,new QuicStreamReadHandler(streamEventExecutor),true);
     }
     public void closeStream(String streamId) throws UnknownElement {
         QuicStreamChannel quicStreamChannel = getOrThrow2(streamId);

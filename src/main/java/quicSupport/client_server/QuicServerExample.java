@@ -102,10 +102,11 @@ public final class QuicServerExample {
                     .bind(new InetSocketAddress(host,port)).sync()
                     .channel();
             started=true;
-            channel.closeFuture().addListener(future -> {
+
+            channel.closeFuture(); /**.addListener(future -> {
                 group.shutdownGracefully();
-                logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
-            }); //.sync();
+                logger.info("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
+            });**/ //.sync();
             logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",host,port);
         }catch (Exception e){
             e.printStackTrace();
