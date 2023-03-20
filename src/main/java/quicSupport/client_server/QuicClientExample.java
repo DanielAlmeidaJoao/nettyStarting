@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
 import quicSupport.handlers.client.QuicStreamReadHandler;
@@ -95,7 +96,7 @@ public final class QuicClientExample {
                 .bind(0).sync().channel();
         quicChannel = QuicChannel.newBootstrap(channel)
                 .handler(new QuicChannelConHandler(self,remote,streamListenerExecutor))
-
+                .streamHandler(new ServerChannelInitializer(streamListenerExecutor))
                 .remoteAddress(remote)
                 .connect().addListener(future -> {
                     if(!future.isSuccess()){
