@@ -5,6 +5,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,6 +21,7 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
     protected void initChannel(QuicStreamChannel ch)  {
         ChannelPipeline cp = ch.pipeline();
         cp.addLast(new HandShakeHandler(streamListenerExecutor));
+        cp.addLast(new DelimitedMessageDecoder());
         cp.addLast(new ServerStreamInboundHandler(streamListenerExecutor));
     }
     @Override

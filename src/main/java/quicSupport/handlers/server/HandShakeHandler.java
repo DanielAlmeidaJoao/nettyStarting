@@ -11,7 +11,7 @@ import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.Logic;
 
-@ChannelHandler.Sharable
+//@ChannelHandler.Sharable
 public class HandShakeHandler  extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(HandShakeHandler.class);
     public static final String NAME = "HandShakeHandler";
@@ -26,7 +26,7 @@ public class HandShakeHandler  extends ChannelInboundHandlerAdapter {
         byte [] bytes = new byte[buf.readableBytes()];
         buf.readBytes(bytes);
         HandShakeMessage shakeMessage = Logic.gson.fromJson(new String(bytes),HandShakeMessage.class);
-        listener.onChannelActive((QuicStreamChannel) ctx.channel(),shakeMessage);
+        listener.onChannelActive((QuicStreamChannel) ctx.channel(),shakeMessage,true);
         ctx.pipeline().remove(this);
     }
 }

@@ -33,11 +33,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        ByteBuf byteBuf = (ByteBuf) msg;
-        byte [] data = new byte[byteBuf.readableBytes()];
-        byteBuf.readBytes(data);
-        byteBuf.release();
-        streamListenerExecutor.onChannelRead(ctx.channel().id().asShortText(),data);
+        streamListenerExecutor.onChannelRead(ctx.channel().id().asShortText(),(byte []) msg);
     }
 
     @Override

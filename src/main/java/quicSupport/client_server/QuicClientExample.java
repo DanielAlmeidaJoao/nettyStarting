@@ -26,6 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
@@ -77,6 +78,9 @@ public final class QuicClientExample {
                 // As we don't want to support remote initiated streams just setup the limit for local initiated
                 // streams in this example.
                 .initialMaxStreamDataBidirectionalLocal(1000000)
+                .initialMaxStreamDataBidirectionalRemote(1000000)
+                .initialMaxStreamsBidirectional(100)
+                .initialMaxStreamsUnidirectional(100)
                 .build();
         return codec;
     }
@@ -91,6 +95,7 @@ public final class QuicClientExample {
                 .bind(0).sync().channel();
         quicChannel = QuicChannel.newBootstrap(channel)
                 .handler(new QuicChannelConHandler(self,remote,streamListenerExecutor))
+
                 .remoteAddress(remote)
                 .connect().addListener(future -> {
                     if(!future.isSuccess()){
@@ -105,9 +110,15 @@ public final class QuicClientExample {
             group.shutdownGracefully();
         });
     }
-    public static QuicStreamChannel createStream(QuicChannel quicChan,QuicStreamReadHandler readHandler) throws Exception{
+    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicStreamReadHandler readHandler) throws Exception{
         QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL,readHandler)
+                .createStream(QuicStreamType.BIDIRECTIONAL,new ChannelInitializer<QuicStreamChannel>() {
+                    @Override
+                    protected void initChannel(QuicStreamChannel channel) throws Exception {
+                        channel.pipeline().addLast(new DelimitedMessageDecoder());
+                        channel.pipeline().addLast(readHandler);
+                    }
+                })
                 .sync()
                 .getNow();
         return streamChannel;

@@ -1,5 +1,6 @@
 package quicSupport;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -129,18 +130,18 @@ public abstract class CustomQuicChannel {
     /*********************************** Stream Handlers **********************************/
 
     /*********************************** Channel Handlers **********************************/
-    public void channelActive(QuicStreamChannel channel, HandShakeMessage handShakeMessage){
-        logger.info("{} CHANNEL ACTIVATED.",self);
+    public void channelActive(QuicStreamChannel channel, HandShakeMessage handShakeMessage, boolean incoming){
         InetAddress hostName;
         int port;
         try {
             hostName = InetAddress.getByName( handShakeMessage.getHostName());
-            port =handShakeMessage.getPort();
+            port = handShakeMessage.getPort();
             InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
+            logger.info("{} CHANNEL TO {} ACTIVATED. INCOMING ? {}",self,listeningAddress,incoming);
             connections.put(listeningAddress,channel);
             channelIds.put(channel.parent().id().asShortText(),listeningAddress);
             onChannelActive(channel,handShakeMessage,listeningAddress);
-            logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
+            //logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();
@@ -235,21 +236,10 @@ public abstract class CustomQuicChannel {
         send(quicStreamChannel,message,len,promise);
     }
     private void send(QuicStreamChannel quicStreamChannel,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
-        ChannelFuture f = quicStreamChannel.writeAndFlush(Unpooled.copiedBuffer(message,0,len));
-        f.addListener(future -> {
-            if(future.isSuccess()){
-
-            }else {
-
-            }
-        });
-        System.out.println(quicStreamChannel.isActive());
-        System.out.println(quicStreamChannel.isOpen());
-        System.out.println(quicStreamChannel.isShutdown());
-
-        System.out.println(quicStreamChannel.parent().isActive());
-        System.out.println(quicStreamChannel.parent().isOpen());
-
+        ByteBuf buf = Unpooled.buffer(len+4);
+        buf.writeInt(len);
+        buf.writeBytes(message);
+        ChannelFuture f = quicStreamChannel.writeAndFlush(buf);
         if(promise!=null){
             f.addListener(new PromiseNotifier<>(promise));
         }

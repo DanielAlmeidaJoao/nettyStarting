@@ -1,5 +1,6 @@
 import babel.appExamples.channels.BabelStreamingChannel;
 import babel.appExamples.channels.initializers.BabelStreamInitializer;
+import babel.appExamples.channels.messages.StreamMessage;
 import babel.appExamples.protocols.ReceiveFileProtocol;
 import babel.appExamples.protocols.SendFileProtocol;
 import org.apache.logging.log4j.LogManager;
@@ -7,7 +8,10 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 import quicSupport.testing.TestQuicChannel;
 
+import java.io.FileInputStream;
 import java.net.InetSocketAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -73,6 +77,24 @@ public class Main2 {
                 int p = scanner.nextInt();
                 InetSocketAddress address = new InetSocketAddress(host,p);
                 testQuicChannel.closeConnection(address);
+            } else if ("SS".equalsIgnoreCase(input)) {
+                System.out.println("STREAM ID:");
+                String streamId = scanner.nextLine();
+                System.out.println("HOW MUCH:");
+                int toSend = scanner.nextInt();
+                Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+                //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+                FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
+                int bufferSize = toSend; // 8KB buffer size
+                byte [] bytes = new byte[bufferSize];
+
+                //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+                int read=0, totalSent = 0;
+                if ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
+                    totalSent += read;
+                    testQuicChannel.send(streamId,bytes,read);
+                    System.out.println("SENT "+totalSent);
+                }
             }
         }
         System.out.println("STILL HERE!!!");

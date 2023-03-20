@@ -6,5 +6,5 @@ import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 
 @FunctionalInterface
 public interface ConnectionActive {
-    void execute(QuicStreamChannel defaultStream, HandShakeMessage serverAddress);
+    void execute(QuicStreamChannel defaultStream, HandShakeMessage serverAddress, boolean incomming);
 }

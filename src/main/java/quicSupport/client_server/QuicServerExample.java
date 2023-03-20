@@ -104,6 +104,7 @@ public final class QuicServerExample {
             started=true;
             channel.closeFuture().addListener(future -> {
                 group.shutdownGracefully();
+                logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
             }); //.sync();
             logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",host,port);
         }catch (Exception e){

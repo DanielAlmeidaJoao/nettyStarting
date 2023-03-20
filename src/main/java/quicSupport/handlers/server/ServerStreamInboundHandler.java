@@ -42,14 +42,7 @@ public class ServerStreamInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        ByteBuf byteBuf = (ByteBuf) msg;
-        try {
-            byte [] data = new byte[byteBuf.readableBytes()];
-            byteBuf.readBytes(data);
-            streamListenerExecutor.onChannelRead(ch.id().asShortText(),data);
-        } finally {
-            byteBuf.release();
-        }
+        streamListenerExecutor.onChannelRead(ch.id().asShortText(),(byte []) msg);
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

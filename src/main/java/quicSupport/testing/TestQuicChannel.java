@@ -46,8 +46,8 @@ public class TestQuicChannel extends CustomQuicChannel {
 
     @Override
     public void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from) {
-        System.out.println("RECEIVED:");
-        System.out.println(new String(bytes));
+        System.out.println("RECEIVED: "+bytes.length);
+        //System.out.println(new String(bytes));
     }
 
     @Override

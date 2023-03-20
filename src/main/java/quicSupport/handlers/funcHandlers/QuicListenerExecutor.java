@@ -16,9 +16,9 @@ public class QuicListenerExecutor {
     private final DefaultEventExecutor loop;
     private final QuicFuncHandlers handlerFunctions;
 
-    public void onChannelActive(QuicStreamChannel defaultStream, HandShakeMessage handShakeMessage){
+    public void onChannelActive(QuicStreamChannel defaultStream, HandShakeMessage handShakeMessage, boolean incoming){
         loop.execute(() -> {
-            handlerFunctions.getConnectionActive().execute(defaultStream,handShakeMessage);
+            handlerFunctions.getConnectionActive().execute(defaultStream,handShakeMessage,incoming);
         });
     }
 
