@@ -23,7 +23,6 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
         this.self = self;
         this.remote = remote;
         this.quicListenerExecutor = streamListenerExecutor;
-
     }
 
     @Override
@@ -49,7 +48,7 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("CHANNEL INACTIVE CLIENT");
+        logger.info("CLIENT CHANNEL INACTIVE");
     }
 
     @Override

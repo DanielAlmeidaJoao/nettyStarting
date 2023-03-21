@@ -12,7 +12,8 @@ import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.server.QuicStreamReadHandler;
 
 public class Logics {
-
+    public final static byte HANDSHAKE_MESSAGE = 'A';
+    public final static byte APP_DATA = 'B';
     public static final String HOST_NAME = "HOST";
     public static final String PORT = "PORT";
     public static final Gson gson = new Gson();

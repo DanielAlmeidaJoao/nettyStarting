@@ -11,8 +11,7 @@ import quicSupport.utils.Logics;
 import java.util.List;
 
 public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
-    public final static byte HANDSHAKE_MESSAGE = 'A';
-    public final static byte APP_DATA = 'B';
+
     private QuicListenerExecutor streamListenerExecutor;
     public QuicDelimitedMessageDecoder(QuicListenerExecutor streamListenerExecutor){
         this.streamListenerExecutor=streamListenerExecutor;
@@ -33,7 +32,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         byte msgType = msg.readByte();
         byte [] data = new byte[length];
         msg.readBytes(data);
-        if(QuicDelimitedMessageDecoder.APP_DATA==msgType){
+        if(Logics.APP_DATA==msgType){
             QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
             streamListenerExecutor.onChannelRead(ch.id().asShortText(),data);
         }else{
