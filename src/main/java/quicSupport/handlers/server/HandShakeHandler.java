@@ -1,7 +1,6 @@
 package quicSupport.handlers.server;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -9,7 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
-import quicSupport.utils.Logic;
+import quicSupport.utils.Logics;
 
 //@ChannelHandler.Sharable
 public class HandShakeHandler  extends ChannelInboundHandlerAdapter {
@@ -25,7 +24,7 @@ public class HandShakeHandler  extends ChannelInboundHandlerAdapter {
         ByteBuf buf = (ByteBuf) msg;
         byte [] bytes = new byte[buf.readableBytes()];
         buf.readBytes(bytes);
-        HandShakeMessage shakeMessage = Logic.gson.fromJson(new String(bytes),HandShakeMessage.class);
+        HandShakeMessage shakeMessage = Logics.gson.fromJson(new String(bytes),HandShakeMessage.class);
         listener.onChannelActive((QuicStreamChannel) ctx.channel(),shakeMessage,true);
         ctx.pipeline().remove(this);
     }

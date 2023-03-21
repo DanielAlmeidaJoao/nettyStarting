@@ -1,21 +1,17 @@
-package quicSupport.handlers.client;
+package quicSupport.handlers.server;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.socket.ChannelInputShutdownReadComplete;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
-import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import quicSupport.handlers.QuicDelimitedMessageDecoder;
-import quicSupport.handlers.StreamMessageEncapsulator;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
-import quicSupport.utils.Logic;
-
 
 public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
-
+    private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
+    public final static byte HANDSHAKE_MESSAGE = 'A';
+    public final static byte APP_DATA = 'B';
     private final QuicListenerExecutor streamListenerExecutor;
 
     public QuicStreamReadHandler(QuicListenerExecutor streamListenerExecutor) {
@@ -24,18 +20,19 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        streamListenerExecutor.onStreamCreated((QuicStreamChannel) ctx.channel());
+        QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
+        streamListenerExecutor.onStreamCreated(ch);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        System.out.println("client stream inactive lllcallled");
+        System.out.println("CHANNEL INACTIVE CALLED!!!");
         streamListenerExecutor.onStreamClosed((QuicStreamChannel) ctx.channel());
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        //streamListenerExecutor.onChannelRead(ctx.channel().id().asShortText(),(byte []) msg);
+        /**
         StreamMessageEncapsulator data = (StreamMessageEncapsulator) msg;
         if(QuicDelimitedMessageDecoder.APP_DATA==data.getMsgType()){
             QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
@@ -43,12 +40,12 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         }else{
             HandShakeMessage shakeMessage = Logic.gson.fromJson(new String(data.getData()),HandShakeMessage.class);
             streamListenerExecutor.onChannelActive((QuicStreamChannel) ctx.channel(),shakeMessage,true);
-        }
+        }**/
     }
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         cause.printStackTrace();
-        streamListenerExecutor.onStreamError((QuicStreamChannel) ctx.channel(),cause);
+        streamListenerExecutor.onStreamError(ch,cause);
     }
 }

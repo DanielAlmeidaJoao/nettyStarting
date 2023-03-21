@@ -19,10 +19,10 @@ import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
-import quicSupport.handlers.client.QuicStreamReadHandler;
 import quicSupport.handlers.funcHandlers.QuicFuncHandlers;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
-import quicSupport.handlers.server.ServerStreamInboundHandler;
+import quicSupport.handlers.server.QuicStreamReadHandler;
+import quicSupport.utils.Logics;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -32,8 +32,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-
-import static quicSupport.handlers.server.ServerStreamInboundHandler.writeBytes;
 
 public abstract class CustomQuicChannel {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
@@ -218,7 +216,7 @@ public abstract class CustomQuicChannel {
     }
     public void createStream(InetSocketAddress peer) throws Exception {
          QuicChannel quicChannel = getOrThrow(peer).parent();
-         QuicClientExample.createStream(quicChannel,new QuicStreamReadHandler(streamEventExecutor),true);
+         Logics.createStream(quicChannel,streamEventExecutor);
     }
     public void closeStream(String streamId) throws UnknownElement {
         QuicStreamChannel quicStreamChannel = getOrThrow2(streamId);
@@ -237,7 +235,7 @@ public abstract class CustomQuicChannel {
         send(quicStreamChannel,message,len,promise);
     }
     private void send(QuicStreamChannel quicStreamChannel,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
-        ChannelFuture f = quicStreamChannel.writeAndFlush(writeBytes(len,message, ServerStreamInboundHandler.APP_DATA));
+        ChannelFuture f = quicStreamChannel.writeAndFlush(Logics.writeBytes(len,message, QuicStreamReadHandler.APP_DATA));
         if(promise!=null){
             f.addListener(new PromiseNotifier<>(promise));
         }

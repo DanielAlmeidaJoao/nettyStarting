@@ -25,19 +25,16 @@ import io.netty.incubator.codec.quic.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
-import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
 import quicSupport.handlers.QuicDelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.server.QuicStreamReadHandler;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
-import quicSupport.handlers.client.QuicStreamReadHandler;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -76,9 +73,6 @@ public final class QuicClientExample {
                 .sslContext(context)
                 .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
                 .initialMaxData(10000000)
-                //.initialMaxStreamsBidirectional(100)
-                // As we don't want to support remote initiated streams just setup the limit for local initiated
-                // streams in this example.
                 .initialMaxStreamDataBidirectionalLocal(1000000)
                 .initialMaxStreamDataBidirectionalRemote(1000000)
                 .initialMaxStreamsBidirectional(100)
@@ -109,22 +103,7 @@ public final class QuicClientExample {
                 })
                 .get();
     }
-    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicStreamReadHandler readHandler,boolean notifyPeer) throws Exception{
-        QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL,new ChannelInitializer<QuicStreamChannel>() {
-                    @Override
-                    protected void initChannel(QuicStreamChannel channel) throws Exception {
-                        channel.pipeline().addLast(new QuicDelimitedMessageDecoder());
-                        channel.pipeline().addLast(readHandler);
-                    }
-                })
-                .sync()
-                .getNow();
-        if(notifyPeer){
-            streamChannel.writeAndFlush(Unpooled.EMPTY_BUFFER);
-        }
-        return streamChannel;
-    }
+
     private QuicStreamChannel getOrThrow(long id){
         QuicStreamChannel stream = streams.get(id);
         if(stream==null){
