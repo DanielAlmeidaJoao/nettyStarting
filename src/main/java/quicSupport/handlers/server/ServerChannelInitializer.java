@@ -6,13 +6,15 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import quicSupport.handlers.QuicDelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.utils.entities.QuicChannelMetrics;
+import quicSupport.utils.entities.QuicConnectionMetrics;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChannel> {
     private final QuicListenerExecutor streamListenerExecutor;
 
-    public ServerChannelInitializer(QuicListenerExecutor streamListenerExecutor) {
+    public ServerChannelInitializer(QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics connectionMetrics) {
         this.streamListenerExecutor = streamListenerExecutor;
         System.out.println("CHANNEL CREATED INITIALISED!!!");
     }

@@ -10,6 +10,7 @@ import io.netty.incubator.codec.quic.QuicStreamType;
 import quicSupport.handlers.QuicDelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.server.QuicStreamReadHandler;
+import quicSupport.handlers.server.ServerChannelInitializer;
 
 public class Logics {
     public final static byte HANDSHAKE_MESSAGE = 'A';
@@ -20,13 +21,7 @@ public class Logics {
 
     public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor) throws Exception{
         QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL,new ChannelInitializer<QuicStreamChannel>() {
-                    @Override
-                    protected void initChannel(QuicStreamChannel channel) throws Exception {
-                        channel.pipeline().addLast(new QuicDelimitedMessageDecoder(quicListenerExecutor));
-                        channel.pipeline().addLast(new QuicStreamReadHandler(quicListenerExecutor));
-                    }
-                })
+                .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor))
                 .sync()
                 .getNow();
         return streamChannel;

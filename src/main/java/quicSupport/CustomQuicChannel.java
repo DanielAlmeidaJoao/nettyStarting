@@ -23,6 +23,7 @@ import quicSupport.handlers.funcHandlers.QuicFuncHandlers;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.server.QuicStreamReadHandler;
 import quicSupport.utils.Logics;
+import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -39,6 +40,7 @@ public abstract class CustomQuicChannel {
     @Getter
     private DefaultEventExecutor executor;
     private InetSocketAddress self;
+    private static boolean metricsOn;
     public final static String NAME = "QUIC_CHANNEL";
 
     public final static String ADDRESS_KEY = "address";
@@ -53,6 +55,7 @@ public abstract class CustomQuicChannel {
     private QuicServerExample server;
     private QuicClientExample client;
 
+    private QuicChannelMetrics metrics;
     public CustomQuicChannel(Properties properties)throws IOException {
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
@@ -63,12 +66,15 @@ public abstract class CustomQuicChannel {
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
 
+        if(metricsOn){
+            metrics=new QuicChannelMetrics(self);
+        }
         QuicFuncHandlers streamFuncHandlers = new QuicFuncHandlers(
                 this::channelActive,
                 this::channelClosed,
                 this::onOpenConnectionFailed,
                 this::streamCreatedHandler,
-                this::channelRead,
+                this::streamReader,
                 this::streamClosedHandler,
                 this::streamErrorHandler);
         streamEventExecutor = new QuicListenerExecutor(StreamInConnection.newDefaultEventExecutor(), streamFuncHandlers);
@@ -80,6 +86,7 @@ public abstract class CustomQuicChannel {
         server = new QuicServerExample(addr.getHostName(),port,streamEventExecutor);
         client = new QuicClientExample(self,streamEventExecutor,new NioEventLoopGroup(1));
         executor = streamEventExecutor.getLoop();
+        metricsOn=false;
         try{
             server.start();
         }catch (Exception e){
@@ -115,7 +122,7 @@ public abstract class CustomQuicChannel {
     }
     public abstract void onStreamCreatedHandler(InetSocketAddress peer,QuicStreamChannel channel);
 
-    public void channelRead(String channelId, byte[] bytes){
+    public void streamReader(String channelId, byte[] bytes){
         logger.info("SELF:{} - STREAM_ID:{}. RECEIVED DATA.",self,channelId);
         onChannelRead(channelId,bytes,channelIds.get(channelId));
     }
