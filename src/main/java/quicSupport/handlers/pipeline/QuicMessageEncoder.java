@@ -16,19 +16,21 @@ public class QuicMessageEncoder extends MessageToByteEncoder {
     }
     @Override
     protected void encode(ChannelHandlerContext ctx, Object o, ByteBuf byteBuf) throws Exception {
+        ByteBuf data = (ByteBuf) o;
+        byteBuf.writeBytes(data);
         byteBuf.markReaderIndex();
-        byteBuf.readInt();
+        int bytes = byteBuf.readInt();
         byte msgType = byteBuf.readByte();
         QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
 
         switch (msgType){
             case Logics.APP_DATA:
                 q.setSentAppMessages(q.getSentAppMessages()+1);
-                q.setSentAppBytes(q.getSentAppBytes()+1);
+                q.setSentAppBytes(q.getSentAppBytes()+bytes);
                 break;
             case Logics.HANDSHAKE_MESSAGE:
                 q.setSentControlMessages(q.getSentControlMessages()+1);
-                q.setSentControlBytes(q.getSentControlBytes()+1);
+                q.setSentControlBytes(q.getSentControlBytes()+bytes);
                 break;
             default:
                 throw new AssertionError("Unknown msg code in encoder: " + msgType);

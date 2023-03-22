@@ -21,6 +21,7 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
+        LOGGER.info("SERVER CHANNEL ACTIVE!!!");
         if(metrics!=null){
             metrics.initConnectionMetrics(ctx.channel().remoteAddress());
         }

@@ -71,10 +71,15 @@ public final class QuicClientExample {
                 //trustManager((X509Certificate) pair.getLeft())
                 .applicationProtocols("QUIC")
                 .build();
+        /**
         QuicClientCodecBuilder clientCodecBuilder =  new QuicClientCodecBuilder()
                 .sslContext(context);
-        Logics.addConfigs(clientCodecBuilder,DEFAULT_IDLE_TIMEOUT)
-        ChannelHandler codec =
+        clientCodecBuilder = (QuicClientCodecBuilder) Logics.addConfigs(clientCodecBuilder,DEFAULT_IDLE_TIMEOUT,
+                10000000,1000000,1000000,100,
+                100);
+        ChannelHandler codec = clientCodecBuilder.build();**/
+        ChannelHandler codec = new QuicClientCodecBuilder()
+                .sslContext(context)
                 .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
                 .initialMaxData(10000000)
                 .initialMaxStreamDataBidirectionalLocal(1000000)

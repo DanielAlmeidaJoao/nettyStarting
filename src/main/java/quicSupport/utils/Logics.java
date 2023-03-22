@@ -28,7 +28,7 @@ public class Logics {
                 .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor,metrics))
                 .addListener(future -> {
                     if(metrics!=null && future.isSuccess()){
-                        QuicConnectionMetrics q = metrics.getConnectionMetrics(quicChan.parent().remoteAddress());
+                        QuicConnectionMetrics q = metrics.getConnectionMetrics(quicChan.remoteAddress());
                         q.setCreatedStreamCount(q.getCreatedStreamCount()+1);
                     }
                 })
@@ -49,11 +49,11 @@ public class Logics {
                                        long initialMaxStreamsBidirectional,
                                        long initialMaxStreamsUnidirectional){
         return codecBuilder
-                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
+                .maxIdleTimeout(maxIdleTimeoutInSeconds, TimeUnit.SECONDS)
                 .initialMaxData(initialMaxData)
                 .initialMaxStreamDataBidirectionalLocal(initialMaxStreamDataBidirectionalLocal)
                 .initialMaxStreamDataBidirectionalRemote(initialMaxStreamDataBidirectionalRemote)
                 .initialMaxStreamsBidirectional(initialMaxStreamsBidirectional)
-                .initialMaxStreamsUnidirectional(initialMaxStreamsBidirectional);
+                .initialMaxStreamsUnidirectional(initialMaxStreamsUnidirectional);
     }
 }

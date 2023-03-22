@@ -3,10 +3,12 @@ package quicSupport.handlers.pipeline;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicChannel;
+import io.netty.incubator.codec.quic.QuicConnectionAddress;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import quicSupport.CustomQuicChannel;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.Logics;
 import quicSupport.utils.entities.ControlDataEntity;
@@ -31,10 +33,14 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         QuicChannel out = (QuicChannel) ctx.channel();
+        logger.info("CLIENT CHANNEL ACTIVE!!!");
+        if(metrics!=null){
+            metrics.initConnectionMetrics(out.remoteAddress());
+        }
         logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
         byte [] hs = Logics.gson.toJson(handShakeMessage).getBytes();
-        QuicStreamChannel streamChannel = Logics.createStream((QuicChannel) ctx.channel(),quicListenerExecutor,metrics);
+        QuicStreamChannel streamChannel = Logics.createStream(out,quicListenerExecutor,metrics);
         streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, QuicStreamReadHandler.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
@@ -42,6 +48,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
                     }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
                         quicListenerExecutor.onConnectionError(remote,future.cause());
+                        future.cause().printStackTrace();
                         out.close();
                     }
                 });

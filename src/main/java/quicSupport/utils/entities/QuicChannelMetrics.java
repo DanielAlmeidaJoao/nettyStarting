@@ -25,8 +25,8 @@ public class QuicChannelMetrics {
     }
 
 
-    public void addConnectionMetrics(QuicConnectionMetrics connectionMetrics) throws Exception {
-        if(currentConnections.put(connectionMetrics.getDest(),connectionMetrics)!=null){
+    public void addConnectionMetrics(SocketAddress connectionId, QuicConnectionMetrics connectionMetrics) throws Exception {
+        if(currentConnections.put(connectionId,connectionMetrics)!=null){
             throw new Exception("TRYING TO REGISTER CONNECTION_METRICS TWICE");
         }
     }
