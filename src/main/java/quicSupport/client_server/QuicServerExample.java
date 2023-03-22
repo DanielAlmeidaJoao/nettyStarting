@@ -25,8 +25,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.utils.LoadCertificate;
-import quicSupport.handlers.server.ServerChannelInitializer;
+import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
@@ -81,7 +82,7 @@ public final class QuicServerExample {
                 // one.
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
-                //.handler(new ServerInboundConnectionHandler(streamListenerExecutor))
+                .handler(new QuicServerChannelConHandler(streamListenerExecutor,metrics))
                 .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
                 .build();
         return codec;

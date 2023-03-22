@@ -26,9 +26,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
-import quicSupport.handlers.server.ServerChannelInitializer;
+import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.LoadCertificate;
-import quicSupport.handlers.client.QuicChannelConHandler;
+import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
+import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
@@ -70,8 +71,10 @@ public final class QuicClientExample {
                 //trustManager((X509Certificate) pair.getLeft())
                 .applicationProtocols("QUIC")
                 .build();
-        ChannelHandler codec = new QuicClientCodecBuilder()
-                .sslContext(context)
+        QuicClientCodecBuilder clientCodecBuilder =  new QuicClientCodecBuilder()
+                .sslContext(context);
+        Logics.addConfigs(clientCodecBuilder,DEFAULT_IDLE_TIMEOUT)
+        ChannelHandler codec =
                 .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
                 .initialMaxData(10000000)
                 .initialMaxStreamDataBidirectionalLocal(1000000)
@@ -91,7 +94,7 @@ public final class QuicClientExample {
                 .handler(getCodec())
                 .bind(0).sync().channel();
         quicChannel = QuicChannel.newBootstrap(channel)
-                .handler(new QuicChannelConHandler(self,remote,streamListenerExecutor,metrics))
+                .handler(new QuicClientChannelConHandler(self,remote,streamListenerExecutor,metrics))
                 .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
                 .remoteAddress(remote)
                 .connect().addListener(future -> {

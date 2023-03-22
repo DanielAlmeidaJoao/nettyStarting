@@ -17,9 +17,9 @@ public class QuicListenerExecutor {
     private final DefaultEventExecutor loop;
     private final QuicFuncHandlers handlerFunctions;
 
-    public void onChannelActive(QuicStreamChannel defaultStream, ControlDataEntity controlData, int sentOrReceivedBytes, boolean incoming){
+    public void onChannelActive(QuicStreamChannel defaultStream, byte [] controlData, InetSocketAddress remotePeer){
         loop.execute(() -> {
-            handlerFunctions.getConnectionActive().execute(defaultStream,controlData,sentOrReceivedBytes,incoming);
+            handlerFunctions.getConnectionActive().execute(defaultStream,controlData,remotePeer);
         });
     }
 

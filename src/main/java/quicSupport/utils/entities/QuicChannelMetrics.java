@@ -1,22 +1,27 @@
 package quicSupport.utils.entities;
 
 import io.netty.incubator.codec.quic.QuicConnectionStats;
-import lombok.AllArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.*;
 
 //EVERY STREAM HAS THIS OBJECT????
 public class QuicChannelMetrics {
+    private static final Logger logger = LogManager.getLogger(QuicChannelMetrics.class);
+
     private final InetSocketAddress self;
-    private Map<InetSocketAddress,QuicConnectionMetrics> currentConnections;
-    private Map<InetSocketAddress,QuicConnectionMetrics> oldConnections;
+    private Map<SocketAddress,QuicConnectionMetrics> currentConnections;
+    private List<QuicConnectionMetrics> oldConnections;
     //private Map<InetSocketAddress, QuicConnectionMetrics> metricsMap;
 
     public QuicChannelMetrics(InetSocketAddress host){
         self=host;
         currentConnections=new HashMap<>();
-        oldConnections=new HashMap<>();
+        oldConnections=new LinkedList<>();
+        logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }
 
 
@@ -25,29 +30,25 @@ public class QuicChannelMetrics {
             throw new Exception("TRYING TO REGISTER CONNECTION_METRICS TWICE");
         }
     }
-    public void createConnectionMetrics(InetSocketAddress dest, QuicConnectionStats stats, long nBytes ,boolean incoming){
-        long sentControlMsgs = 0;
-        long receivedControlMsgs = 0;
-        long sentControlBytes = 0;
-        long receivedControlBytes = 0;
-        int createdStream = 0;
-        if(incoming){
-            receivedControlMsgs = 1;
-            receivedControlBytes = nBytes;
-        }else {
-            sentControlMsgs=1;
-            sentControlBytes=nBytes;
-            createdStream=1;
-        }
-        currentConnections.put(dest,new QuicConnectionMetrics(
-                dest,0,0,receivedControlBytes,sentControlBytes,
+    public void initConnectionMetrics(SocketAddress connectionId){
+        currentConnections.put(connectionId,new QuicConnectionMetrics(
+                null,0,0,0,0,
                 0,0,
-                receivedControlMsgs,sentControlMsgs,1,createdStream,incoming /** ,stats **/
+                0,0,0,0,false,null
         ));
-        System.out.println("ADDED "+dest);
+    }
+    public void updateConnectionMetrics(SocketAddress connectionId, InetSocketAddress dest, QuicConnectionStats stats, boolean incoming){
+        QuicConnectionMetrics m = currentConnections.get(connectionId);
+        m.setIncoming(incoming);
+        m.setDest(dest);
+        m.setStats(stats);
+        logger.info("{} TO {} METRICS ENABLED.",self,dest);
+    }
+    public void onConnectionClosed(SocketAddress connectionId){
+        oldConnections.add(currentConnections.remove(connectionId));
     }
 
-    public QuicConnectionMetrics getConnectionMetrics(InetSocketAddress peer){
+    public QuicConnectionMetrics getConnectionMetrics(SocketAddress peer){
         return currentConnections.get(peer);
     }
 
