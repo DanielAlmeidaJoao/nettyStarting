@@ -6,6 +6,7 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import quicSupport.utils.entities.ControlDataEntity;
 
 import java.net.InetSocketAddress;
 
@@ -16,9 +17,9 @@ public class QuicListenerExecutor {
     private final DefaultEventExecutor loop;
     private final QuicFuncHandlers handlerFunctions;
 
-    public void onChannelActive(QuicStreamChannel defaultStream, HandShakeMessage handShakeMessage, boolean incoming){
+    public void onChannelActive(QuicStreamChannel defaultStream, ControlDataEntity controlData, int sentOrReceivedBytes, boolean incoming){
         loop.execute(() -> {
-            handlerFunctions.getConnectionActive().execute(defaultStream,handShakeMessage,incoming);
+            handlerFunctions.getConnectionActive().execute(defaultStream,controlData,sentOrReceivedBytes,incoming);
         });
     }
 

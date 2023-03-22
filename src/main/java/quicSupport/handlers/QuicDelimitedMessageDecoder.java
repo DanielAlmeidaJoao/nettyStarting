@@ -7,6 +7,8 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.Logics;
+import quicSupport.utils.entities.ControlDataEntity;
+import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.util.List;
 
@@ -36,9 +38,8 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
             streamListenerExecutor.onChannelRead(ch.id().asShortText(),data);
         }else{
-            //ONLY THE SERVER RECEIVES HANDSHAKE
-            HandShakeMessage shakeMessage = Logics.gson.fromJson(new String(data),HandShakeMessage.class);
-            streamListenerExecutor.onChannelActive((QuicStreamChannel) ctx.channel(),shakeMessage,true);
+            ControlDataEntity controlData = new ControlDataEntity(null,data);
+            streamListenerExecutor.onChannelActive((QuicStreamChannel) ctx.channel(),controlData,length+5,true);
         }
     }
 }

@@ -10,6 +10,8 @@ import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.server.QuicStreamReadHandler;
 import quicSupport.utils.Logics;
+import quicSupport.utils.entities.ControlDataEntity;
+import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
 
@@ -18,13 +20,13 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
     private final InetSocketAddress self;
     private final InetSocketAddress remote;
     private final QuicListenerExecutor quicListenerExecutor;
-    private final boolean metricsOn;
+    private final QuicChannelMetrics metrics;
 
-    public QuicChannelConHandler(InetSocketAddress self, InetSocketAddress remote, QuicListenerExecutor streamListenerExecutor, boolean metricsEnabled) {
+    public QuicChannelConHandler(InetSocketAddress self, InetSocketAddress remote, QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics  metrics) {
         this.self = self;
         this.remote = remote;
         this.quicListenerExecutor = streamListenerExecutor;
-        metricsOn=metricsEnabled;
+        this.metrics = metrics;
     }
 
     @Override
@@ -33,12 +35,12 @@ public class QuicChannelConHandler extends ChannelInboundHandlerAdapter {
         logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
         byte [] hs = Logics.gson.toJson(handShakeMessage).getBytes();
-        QuicStreamChannel streamChannel = Logics.createStream((QuicChannel) ctx.channel(),quicListenerExecutor);
+        QuicStreamChannel streamChannel = Logics.createStream((QuicChannel) ctx.channel(),quicListenerExecutor,metrics);
         streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, QuicStreamReadHandler.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
-                        HandShakeMessage hsm = new HandShakeMessage(remote.getHostName(),remote.getPort());
-                        quicListenerExecutor.onChannelActive(streamChannel,hsm,false);
+                        ControlDataEntity controlData = new ControlDataEntity(remote,null);
+                        quicListenerExecutor.onChannelActive(streamChannel,controlData,hs.length+5,false);
                     }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
                         quicListenerExecutor.onConnectionError(remote,future.cause());

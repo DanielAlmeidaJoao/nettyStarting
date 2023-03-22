@@ -25,12 +25,11 @@ import io.netty.incubator.codec.quic.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.handlers.QuicDelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
-import quicSupport.handlers.server.QuicStreamReadHandler;
 import quicSupport.handlers.server.ServerChannelInitializer;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.client.QuicChannelConHandler;
+import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
@@ -49,12 +48,14 @@ public final class QuicClientExample {
     private NioEventLoopGroup group;
     private Map<Long,QuicStreamChannel> streams;
     private QuicListenerExecutor streamListenerExecutor;
+    private QuicChannelMetrics metrics;
 
-    public QuicClientExample(InetSocketAddress self, QuicListenerExecutor streamListenerExecutor, NioEventLoopGroup g){
+    public QuicClientExample(InetSocketAddress self, QuicListenerExecutor streamListenerExecutor, NioEventLoopGroup g, QuicChannelMetrics metrics){
         this.self = self;
         this.streamListenerExecutor = streamListenerExecutor;
         //
         this.group = g;
+        this.metrics = metrics;
         streams = new HashMap<>();
     }
     public ChannelHandler getCodec()throws Exception{
@@ -90,8 +91,8 @@ public final class QuicClientExample {
                 .handler(getCodec())
                 .bind(0).sync().channel();
         quicChannel = QuicChannel.newBootstrap(channel)
-                .handler(new QuicChannelConHandler(self,remote,streamListenerExecutor))
-                .streamHandler(new ServerChannelInitializer(streamListenerExecutor))
+                .handler(new QuicChannelConHandler(self,remote,streamListenerExecutor,metrics))
+                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
                 .remoteAddress(remote)
                 .connect().addListener(future -> {
                     if(future.isSuccess()){

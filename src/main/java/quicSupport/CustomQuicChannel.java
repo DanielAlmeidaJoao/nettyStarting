@@ -23,6 +23,7 @@ import quicSupport.handlers.funcHandlers.QuicFuncHandlers;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.server.QuicStreamReadHandler;
 import quicSupport.utils.Logics;
+import quicSupport.utils.entities.ControlDataEntity;
 import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.io.IOException;
@@ -54,7 +55,6 @@ public abstract class CustomQuicChannel {
     private Map<String,QuicStreamChannel> streams;
     private QuicServerExample server;
     private QuicClientExample client;
-
     private QuicChannelMetrics metrics;
     public CustomQuicChannel(Properties properties)throws IOException {
         InetAddress addr;
@@ -65,7 +65,7 @@ public abstract class CustomQuicChannel {
 
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-
+        metricsOn = (boolean) properties.getOrDefault("metrics",true);
         if(metricsOn){
             metrics=new QuicChannelMetrics(self);
         }
@@ -83,10 +83,9 @@ public abstract class CustomQuicChannel {
         streams = new ConcurrentHashMap<>();
         channelIds = new ConcurrentHashMap<>();
 
-        server = new QuicServerExample(addr.getHostName(),port,streamEventExecutor);
-        client = new QuicClientExample(self,streamEventExecutor,new NioEventLoopGroup(1));
+        server = new QuicServerExample(addr.getHostName(),port,streamEventExecutor,metrics);
+        client = new QuicClientExample(self,streamEventExecutor,new NioEventLoopGroup(1), metrics);
         executor = streamEventExecutor.getLoop();
-        metricsOn=false;
         try{
             server.start();
         }catch (Exception e){
@@ -131,17 +130,27 @@ public abstract class CustomQuicChannel {
     /*********************************** Stream Handlers **********************************/
 
     /*********************************** Channel Handlers **********************************/
-    public void channelActive(QuicStreamChannel channel, HandShakeMessage handShakeMessage, boolean incoming){
+    public void channelActive(QuicStreamChannel channel, ControlDataEntity controlData, long sentOrReceiveBytes, boolean incoming){
         InetAddress hostName;
         int port;
         try {
-            hostName = InetAddress.getByName( handShakeMessage.getHostName());
-            port = handShakeMessage.getPort();
-            InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
+            InetSocketAddress listeningAddress;
+            if(incoming){
+                HandShakeMessage handShakeMessage = Logics.gson.fromJson(new String(controlData.getData()),HandShakeMessage.class);
+                hostName = InetAddress.getByName( handShakeMessage.getHostName());
+                port = handShakeMessage.getPort();
+                listeningAddress = new InetSocketAddress(hostName,port);
+            }else{
+                listeningAddress = controlData.getRemotePeer();
+            }
+
             logger.info("{} CHANNEL TO {} ACTIVATED. INCOMING ? {}",self,listeningAddress,incoming);
             connections.put(listeningAddress,channel);
             channelIds.put(channel.parent().id().asShortText(),listeningAddress);
-            onChannelActive(channel,handShakeMessage,listeningAddress);
+            onChannelActive(channel,null,listeningAddress);
+            if(metricsOn){
+                metrics.createConnectionMetrics(listeningAddress,channel.parent().collectStats().get(),sentOrReceiveBytes,incoming);
+            }
             //logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){
             e.printStackTrace();
@@ -204,8 +213,11 @@ public abstract class CustomQuicChannel {
         }
     }
     public QuicConnectionStats getStats(InetSocketAddress peer) throws ExecutionException, InterruptedException, UnknownElement {
-        QuicStreamChannel connection = getOrThrow(peer);
-        return connection.parent().collectStats().get();
+        //QuicStreamChannel connection = getOrThrow(peer);
+        //connection.parent().collectStats().get();
+        String gg = Logics.gson.toJson(metrics.getConnectionMetrics(peer));
+        System.out.println(gg);
+        return null;
     }
     public QuicStreamChannel getOrThrow(InetSocketAddress peer) throws UnknownElement {
         QuicStreamChannel quicChannel = connections.get(peer);
@@ -223,7 +235,7 @@ public abstract class CustomQuicChannel {
     }
     public void createStream(InetSocketAddress peer) throws Exception {
          QuicChannel quicChannel = getOrThrow(peer).parent();
-         Logics.createStream(quicChannel,streamEventExecutor);
+         Logics.createStream(quicChannel,streamEventExecutor,metrics);
     }
     public void closeStream(String streamId) throws UnknownElement {
         QuicStreamChannel quicStreamChannel = getOrThrow2(streamId);

@@ -14,7 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChannel> {
     private final QuicListenerExecutor streamListenerExecutor;
 
-    public ServerChannelInitializer(QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics connectionMetrics) {
+    public ServerChannelInitializer(QuicListenerExecutor streamListenerExecutor,
+                                    QuicChannelMetrics quicChannelMetrics) {
         this.streamListenerExecutor = streamListenerExecutor;
         System.out.println("CHANNEL CREATED INITIALISED!!!");
     }

@@ -25,7 +25,8 @@ public class HandShakeHandler  extends ChannelInboundHandlerAdapter {
         byte [] bytes = new byte[buf.readableBytes()];
         buf.readBytes(bytes);
         HandShakeMessage shakeMessage = Logics.gson.fromJson(new String(bytes),HandShakeMessage.class);
-        listener.onChannelActive((QuicStreamChannel) ctx.channel(),shakeMessage,true);
+        //listener.onChannelActive((QuicStreamChannel) ctx.channel(),shakeMessage,true);
         ctx.pipeline().remove(this);
+        throw new Exception("NOT BEING USED!!!!");
     }
 }

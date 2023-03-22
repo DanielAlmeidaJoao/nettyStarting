@@ -95,6 +95,13 @@ public class Main2 {
                     testQuicChannel.send(streamId,bytes,read);
                     System.out.println("SENT "+totalSent);
                 }
+            }else if("T".equalsIgnoreCase(input)){
+                System.out.println("HOST NAME:");
+                String host = scanner.nextLine();
+                System.out.println("PORT");
+                int p = scanner.nextInt();
+                InetSocketAddress address = new InetSocketAddress(host,p);
+                System.out.println(testQuicChannel.getStats(address));
             }
         }
         System.out.println("STILL HERE!!!");

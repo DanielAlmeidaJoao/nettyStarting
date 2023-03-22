@@ -4,34 +4,51 @@ import io.netty.incubator.codec.quic.QuicConnectionStats;
 import lombok.AllArgsConstructor;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 //EVERY STREAM HAS THIS OBJECT????
 public class QuicChannelMetrics {
     private final InetSocketAddress self;
-    private List<QuicConnectionMetrics> currentConnections;
-    private List<QuicConnectionMetrics> oldConnections;
+    private Map<InetSocketAddress,QuicConnectionMetrics> currentConnections;
+    private Map<InetSocketAddress,QuicConnectionMetrics> oldConnections;
+    //private Map<InetSocketAddress, QuicConnectionMetrics> metricsMap;
 
     public QuicChannelMetrics(InetSocketAddress host){
         self=host;
-        currentConnections=new LinkedList<>();
-        oldConnections=new LinkedList<>();
+        currentConnections=new HashMap<>();
+        oldConnections=new HashMap<>();
     }
-    private Map<InetSocketAddress, QuicConnectionMetrics> metricsMap;
+
 
     public void addConnectionMetrics(QuicConnectionMetrics connectionMetrics) throws Exception {
-        if(metricsMap.put(connectionMetrics.getDest(),connectionMetrics)!=null){
+        if(currentConnections.put(connectionMetrics.getDest(),connectionMetrics)!=null){
             throw new Exception("TRYING TO REGISTER CONNECTION_METRICS TWICE");
         }
     }
-    private void createConnectionMetrics(InetSocketAddress dest, QuicConnectionStats stats,int handshakeBytes, boolean incoming){
-        metricsMap.put(dest,new QuicConnectionMetrics(
-                dest,0,0,0,0
-                ,0,0,incoming,stats
+    public void createConnectionMetrics(InetSocketAddress dest, QuicConnectionStats stats, long nBytes ,boolean incoming){
+        long sentControlMsgs = 0;
+        long receivedControlMsgs = 0;
+        long sentControlBytes = 0;
+        long receivedControlBytes = 0;
+        int createdStream = 0;
+        if(incoming){
+            receivedControlMsgs = 1;
+            receivedControlBytes = nBytes;
+        }else {
+            sentControlMsgs=1;
+            sentControlBytes=nBytes;
+            createdStream=1;
+        }
+        currentConnections.put(dest,new QuicConnectionMetrics(
+                dest,0,0,receivedControlBytes,sentControlBytes,
+                0,0,
+                receivedControlMsgs,sentControlMsgs,1,createdStream,incoming /** ,stats **/
         ));
+        System.out.println("ADDED "+dest);
+    }
+
+    public QuicConnectionMetrics getConnectionMetrics(InetSocketAddress peer){
+        return currentConnections.get(peer);
     }
 
 

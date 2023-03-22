@@ -18,7 +18,6 @@ package quicSupport.client_server;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
@@ -28,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.server.ServerChannelInitializer;
+import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
@@ -42,13 +42,17 @@ public final class QuicServerExample {
     private final String host;
     private final int port;
     private final QuicListenerExecutor streamListenerExecutor;
+
+    private QuicChannelMetrics metrics;
+
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
-    public QuicServerExample(String host, int port,QuicListenerExecutor streamListenerExecutor) {
+    public QuicServerExample(String host, int port, QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics metrics) {
         this.host = host;
         this.port = port;
         this.streamListenerExecutor = streamListenerExecutor;
+        this.metrics = metrics;
         started = false;
     }
 
@@ -78,7 +82,7 @@ public final class QuicServerExample {
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 //.handler(new ServerInboundConnectionHandler(streamListenerExecutor))
-                .streamHandler(new ServerChannelInitializer(streamListenerExecutor))
+                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
                 .build();
         return codec;
     }

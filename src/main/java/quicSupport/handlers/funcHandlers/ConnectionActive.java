@@ -1,10 +1,9 @@
 package quicSupport.handlers.funcHandlers;
 
-import io.netty.channel.Channel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import quicSupport.utils.entities.ControlDataEntity;
 
 @FunctionalInterface
 public interface ConnectionActive {
-    void execute(QuicStreamChannel defaultStream, HandShakeMessage serverAddress, boolean incomming);
+    void execute(QuicStreamChannel defaultStream, ControlDataEntity controlEntity, long sentOrReceiveBytes, boolean incomming);
 }

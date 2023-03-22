@@ -21,6 +21,9 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
+        System.out.println(ch.parent().id().asShortText());
+        System.out.println(ch.parent().remoteAddress().toString());
+        System.out.println(ch.parent().id().asLongText());
         streamListenerExecutor.onStreamCreated(ch);
     }
 

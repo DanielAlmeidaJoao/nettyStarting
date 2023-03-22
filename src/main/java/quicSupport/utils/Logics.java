@@ -11,6 +11,7 @@ import quicSupport.handlers.QuicDelimitedMessageDecoder;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.server.QuicStreamReadHandler;
 import quicSupport.handlers.server.ServerChannelInitializer;
+import quicSupport.utils.entities.QuicChannelMetrics;
 
 public class Logics {
     public final static byte HANDSHAKE_MESSAGE = 'A';
@@ -19,9 +20,9 @@ public class Logics {
     public static final String PORT = "PORT";
     public static final Gson gson = new Gson();
 
-    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor) throws Exception{
+    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor, QuicChannelMetrics metrics) throws Exception{
         QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor))
+                .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor,metrics))
                 .sync()
                 .getNow();
         return streamChannel;
