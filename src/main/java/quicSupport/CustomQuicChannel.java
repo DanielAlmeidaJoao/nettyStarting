@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -221,6 +222,9 @@ public abstract class CustomQuicChannel {
         String gg = Logics.gson.toJson(metrics.getConnectionMetrics(connection.parent().remoteAddress()));
         System.out.println(gg);
         return null;
+    }
+    public List<QuicConnectionMetrics> oldMetrics(){
+        return metrics.oldConnections;
     }
     public QuicStreamChannel getOrThrow(InetSocketAddress peer) throws UnknownElement {
         QuicStreamChannel quicChannel = connections.get(peer);

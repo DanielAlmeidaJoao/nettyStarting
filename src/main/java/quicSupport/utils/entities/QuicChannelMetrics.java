@@ -14,7 +14,7 @@ public class QuicChannelMetrics {
 
     private final InetSocketAddress self;
     private Map<SocketAddress,QuicConnectionMetrics> currentConnections;
-    private List<QuicConnectionMetrics> oldConnections;
+    public List<QuicConnectionMetrics> oldConnections;
     //private Map<InetSocketAddress, QuicConnectionMetrics> metricsMap;
 
     public QuicChannelMetrics(InetSocketAddress host){

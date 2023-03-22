@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import static quicSupport.client_server.QuicClientExample.DEFAULT_IDLE_TIMEOUT;
 
 public class Logics {
+    public static final int WRT_OFFSET=5; //4 BYTES(DATA LEN)+ 1 BYTE (MESSAGE CODE)
     public final static byte HANDSHAKE_MESSAGE = 'A';
     public final static byte APP_DATA = 'B';
     public static final String HOST_NAME = "HOST";
@@ -37,7 +38,7 @@ public class Logics {
         return streamChannel;
     }
     public static ByteBuf writeBytes(int len, byte [] data, byte msgType){
-        ByteBuf buf = Unpooled.buffer(len+5);
+        ByteBuf buf = Unpooled.buffer(len+WRT_OFFSET);
         buf.writeInt(len);
         buf.writeByte(msgType);
         buf.writeBytes(data,0,len);

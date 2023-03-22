@@ -102,6 +102,8 @@ public class Main2 {
                 int p = scanner.nextInt();
                 InetSocketAddress address = new InetSocketAddress(host,p);
                 System.out.println(testQuicChannel.getStats(address));
+            }else if("old".equalsIgnoreCase(input)){
+                System.out.println(testQuicChannel.oldMetrics());
             }
         }
         System.out.println("STILL HERE!!!");

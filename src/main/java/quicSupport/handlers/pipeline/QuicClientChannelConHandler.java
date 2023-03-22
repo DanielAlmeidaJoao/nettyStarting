@@ -57,7 +57,9 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        logger.info("CLIENT CHANNEL INACTIVE");
+        if(metrics!=null){
+            metrics.onConnectionClosed(ctx.channel().remoteAddress());
+        }
     }
 
     @Override

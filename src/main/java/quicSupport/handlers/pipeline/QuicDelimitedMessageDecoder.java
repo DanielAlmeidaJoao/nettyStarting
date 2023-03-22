@@ -45,14 +45,14 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
-                q.setReceivedAppBytes(q.getReceivedAppBytes()+length+5);
+                q.setReceivedAppBytes(q.getReceivedAppBytes()+length+Logics.WRT_OFFSET);
             }
         }else{
             streamListenerExecutor.onChannelActive((QuicStreamChannel) ctx.channel(),data,null);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
-                q.setReceivedControlBytes(q.getReceivedControlBytes()+length+5);
+                q.setReceivedControlBytes(q.getReceivedControlBytes()+length+Logics.WRT_OFFSET);
             }
         }
     }

@@ -28,6 +28,7 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("CHANNEL DONE!!!");
         if(metrics!=null){
             metrics.onConnectionClosed(ctx.channel().remoteAddress());
         }

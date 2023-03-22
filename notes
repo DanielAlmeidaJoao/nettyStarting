@@ -43,3 +43,6 @@ Udp
 java -cp target/nettyStart.jar udpSupport.client.UdpClient
 java -cp target/nettyStart.jar udpSupport.server.UdpServer
 
+DOUBTS:
+QUIC CONNECTION DISCONNECT THE OTHER PEER DOES NOT KNOW
+SEND MESSAGE TO DISONNECTED PEER DOES NO FAIL (DOES NOT TRIGGER ERROR)

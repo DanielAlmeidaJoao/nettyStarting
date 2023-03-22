@@ -26,11 +26,11 @@ public class QuicMessageEncoder extends MessageToByteEncoder {
         switch (msgType){
             case Logics.APP_DATA:
                 q.setSentAppMessages(q.getSentAppMessages()+1);
-                q.setSentAppBytes(q.getSentAppBytes()+bytes);
+                q.setSentAppBytes(q.getSentAppBytes()+bytes+Logics.WRT_OFFSET);
                 break;
             case Logics.HANDSHAKE_MESSAGE:
                 q.setSentControlMessages(q.getSentControlMessages()+1);
-                q.setSentControlBytes(q.getSentControlBytes()+bytes);
+                q.setSentControlBytes(q.getSentControlBytes()+bytes+Logics.WRT_OFFSET);
                 break;
             default:
                 throw new AssertionError("Unknown msg code in encoder: " + msgType);
