@@ -3,6 +3,7 @@ package quicSupport.handlers.pipeline;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
+import io.netty.incubator.codec.quic.QuicStreamChannelConfig;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.client_server.QuicServerExample;
@@ -25,9 +26,8 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        System.out.println(ch.parent().id().asShortText());
-        System.out.println(ch.parent().remoteAddress().toString());
-        System.out.println(ch.parent().id().asLongText());
+        QuicStreamChannelConfig config = ch.config();
+        config.setAllowHalfClosure(false);
         if(metrics!=null){
             QuicConnectionMetrics m = metrics.getConnectionMetrics(ch.parent().remoteAddress());
             m.setCreatedStreamCount(m.getCreatedStreamCount()+1);

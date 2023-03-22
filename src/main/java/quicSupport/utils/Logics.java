@@ -3,10 +3,7 @@ package quicSupport.utils;
 import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.incubator.codec.quic.QuicChannel;
-import io.netty.incubator.codec.quic.QuicCodecBuilder;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
-import io.netty.incubator.codec.quic.QuicStreamType;
+import io.netty.incubator.codec.quic.*;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.QuicChannelMetrics;
@@ -35,6 +32,8 @@ public class Logics {
                 })
                 .sync()
                 .getNow();
+        QuicStreamChannelConfig config = streamChannel.config();
+        config.setAllowHalfClosure(false);
         return streamChannel;
     }
     public static ByteBuf writeBytes(int len, byte [] data, byte msgType){
