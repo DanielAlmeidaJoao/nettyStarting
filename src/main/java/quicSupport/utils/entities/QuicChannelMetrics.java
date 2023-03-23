@@ -7,20 +7,23 @@ import org.apache.logging.log4j.Logger;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 
 //EVERY STREAM HAS THIS OBJECT????
 public class QuicChannelMetrics {
     private static final Logger logger = LogManager.getLogger(QuicChannelMetrics.class);
 
     private final InetSocketAddress self;
-    private Map<SocketAddress,QuicConnectionMetrics> currentConnections;
-    public List<QuicConnectionMetrics> oldConnections;
+    private ConcurrentMap<SocketAddress,QuicConnectionMetrics> currentConnections;
+    public ConcurrentLinkedQueue<QuicConnectionMetrics> oldConnections;
     //private Map<InetSocketAddress, QuicConnectionMetrics> metricsMap;
 
     public QuicChannelMetrics(InetSocketAddress host){
         self=host;
-        currentConnections=new HashMap<>();
-        oldConnections=new LinkedList<>();
+        currentConnections=new ConcurrentHashMap<>();
+        oldConnections=new ConcurrentLinkedQueue<>();
         logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }
 

@@ -38,6 +38,7 @@ import java.security.cert.Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public final class QuicClientExample {
@@ -59,11 +60,11 @@ public final class QuicClientExample {
         this.metrics = metrics;
         streams = new HashMap<>();
     }
-    public ChannelHandler getCodec()throws Exception{
+    public ChannelHandler getCodec(Properties properties)throws Exception{
         String keystoreFilename = "keystore2.jks";
         String keystorePassword = "simple";
         String alias = "clientcert";
-        Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
+        //Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
 
         QuicSslContext context = QuicSslContextBuilder.forClient().
                 //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
@@ -71,13 +72,17 @@ public final class QuicClientExample {
                 //trustManager((X509Certificate) pair.getLeft())
                 .applicationProtocols("QUIC")
                 .build();
-        /**
+
         QuicClientCodecBuilder clientCodecBuilder =  new QuicClientCodecBuilder()
                 .sslContext(context);
-        clientCodecBuilder = (QuicClientCodecBuilder) Logics.addConfigs(clientCodecBuilder,DEFAULT_IDLE_TIMEOUT,
-                10000000,1000000,1000000,100,
-                100);
-        ChannelHandler codec = clientCodecBuilder.build();**/
+        clientCodecBuilder = (QuicClientCodecBuilder) Logics.addConfigs(clientCodecBuilder,properties);
+        /**
+         *  Logics.addConfigs(clientCodecBuilder,DEFAULT_IDLE_TIMEOUT,
+         *                 10000000,1000000,1000000,100,
+         *                 100);
+         */
+        ChannelHandler codec = clientCodecBuilder.build();
+        /**
         ChannelHandler codec = new QuicClientCodecBuilder()
                 .sslContext(context)
                 .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
@@ -87,16 +92,17 @@ public final class QuicClientExample {
                 .initialMaxStreamsBidirectional(100)
                 .initialMaxStreamsUnidirectional(100)
                 .build();
+         **/
         return codec;
     }
     private void closeConnection(){
         quicChannel.close();
     }
-    public void connect(InetSocketAddress remote) throws Exception{
+    public void connect(InetSocketAddress remote, Properties properties) throws Exception{
         Bootstrap bs = new Bootstrap();
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
-                .handler(getCodec())
+                .handler(getCodec(properties))
                 .bind(0).sync().channel();
         quicChannel = QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,streamListenerExecutor,metrics))

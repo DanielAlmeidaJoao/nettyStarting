@@ -25,36 +25,40 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.funcHandlers.SocketBindHandler;
 import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
+import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static quicSupport.client_server.QuicClientExample.DEFAULT_IDLE_TIMEOUT;
 
 public final class QuicServerExample {
     private boolean started;
-    private final String host;
-    private final int port;
+
+    private final InetSocketAddress self;
     private final QuicListenerExecutor streamListenerExecutor;
+    private final Properties properties;
 
     private QuicChannelMetrics metrics;
 
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
-    public QuicServerExample(String host, int port, QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics metrics) {
-        this.host = host;
-        this.port = port;
+    public QuicServerExample(String host, int port, QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics metrics, Properties properties) {
+        self = new InetSocketAddress(host,port);
         this.streamListenerExecutor = streamListenerExecutor;
         this.metrics = metrics;
         started = false;
+        this.properties=properties;
     }
 
     public QuicSslContext getSignedSslContext() throws Exception {
@@ -69,15 +73,21 @@ public final class QuicServerExample {
                 .build();
     }
 
-    public ChannelHandler getChannelHandler(QuicSslContext context) {
-        ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
-                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
-                // Configure some limits for the maximal number of streams (and the data) that we want to handle.
-                .initialMaxData(10000000)
-                .initialMaxStreamDataBidirectionalLocal(1000000)
-                .initialMaxStreamDataBidirectionalRemote(1000000)
-                .initialMaxStreamsBidirectional(100)
-                .initialMaxStreamsUnidirectional(100)
+    public ChannelHandler getChannelHandler(QuicSslContext context, Properties properties) {
+        /**
+         new QuicServerCodecBuilder().sslContext(context)
+         .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
+         // Configure some limits for the maximal number of streams (and the data) that we want to handle.
+         .initialMaxData(10000000)
+         .initialMaxStreamDataBidirectionalLocal(1000000)
+         .initialMaxStreamDataBidirectionalRemote(1000000)
+         .initialMaxStreamsBidirectional(100)
+         .initialMaxStreamsUnidirectional(100)
+         **/
+        QuicServerCodecBuilder serverCodecBuilder =  new QuicServerCodecBuilder()
+                .sslContext(context);
+        serverCodecBuilder = (QuicServerCodecBuilder) Logics.addConfigs(serverCodecBuilder,properties);
+        ChannelHandler codec = serverCodecBuilder
                 // Setup a token handler. In a production system you would want to implement and provide your custom
                 // one.
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
@@ -88,19 +98,28 @@ public final class QuicServerExample {
         return codec;
     }
 
-    public void start() throws Exception {
+    public void start(SocketBindHandler handler) throws Exception {
         if(started){
-            throw new Exception(String.format("SERVER STARTED AT host:{} port:{} ",host,port));
+            logger.info("SERVER STARTED AT host:{} port:{} ",self.getHostName(),self.getPort());
+            streamListenerExecutor.getLoop().execute(() -> {
+                handler.execute(true,null);
+            });
+            return;
         }
         QuicSslContext context = getSignedSslContext();
         NioEventLoopGroup group = new NioEventLoopGroup(1);
-        ChannelHandler codec = getChannelHandler(context);
+        ChannelHandler codec = getChannelHandler(context,properties);
         try {
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
                     .handler(codec)
-                    .bind(new InetSocketAddress(host,port)).sync()
+                    .bind(self).sync()
+                    .addListener(future -> {
+                        streamListenerExecutor.getLoop().execute(() -> {
+                            handler.execute(future.isSuccess(),future.cause());
+                        });
+                    })
                     .channel();
             started=true;
 
@@ -108,7 +127,7 @@ public final class QuicServerExample {
                 group.shutdownGracefully();
                 logger.info("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
             });
-            logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",host,port);
+            logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",self.getHostName(),self.getPort());
         }catch (Exception e){
             e.printStackTrace();
         }

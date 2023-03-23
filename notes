@@ -35,7 +35,7 @@ java -cp target/nettyStart.jar Main address=localhost port=10109 sender=o forwar
 
 QUIC
 java -cp target/nettyStart.jar quicSupport.client_server.QuicServerExample
- java -cp target/nettyStart.jar quicSupport.client_server.QuicClientExample
+java -cp target/nettyStart.jar quicSupport.client_server.QuicClientExample
 
 java -cp target/nettyStart.jar quicSupport.testing.TestQuicChannel
 
@@ -46,3 +46,6 @@ java -cp target/nettyStart.jar udpSupport.server.UdpServer
 DOUBTS:
 QUIC CONNECTION DISCONNECT THE OTHER PEER DOES NOT KNOW
 SEND MESSAGE TO DISONNECTED PEER DOES NO FAIL (DOES NOT TRIGGER ERROR)
+
+PROCURAR OUTRAS IMPLEMENTACOES DO QUIC EM JAVA.
+DO ANOTHER CHANNEL WHICH WILL USE ACKs, and HEARTBEATS (PERIOD: MAX_IDLE/2).

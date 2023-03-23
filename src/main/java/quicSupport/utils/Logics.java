@@ -9,6 +9,7 @@ import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.QuicChannelMetrics;
 import quicSupport.utils.entities.QuicConnectionMetrics;
 
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static quicSupport.client_server.QuicClientExample.DEFAULT_IDLE_TIMEOUT;
@@ -20,6 +21,13 @@ public class Logics {
     public static final String HOST_NAME = "HOST";
     public static final String PORT = "PORT";
     public static final Gson gson = new Gson();
+
+    private static final long maxIdleTimeoutInSeconds=DEFAULT_IDLE_TIMEOUT;
+    private static final long initialMaxData=10000000;
+    private static final long initialMaxStreamDataBidirectionalLocal=1000000;
+    private static final long initialMaxStreamDataBidirectionalRemote=1000000;
+    private static final long initialMaxStreamsBidirectional=10;
+    private static final long initialMaxStreamsUnidirectional=10;
 
     public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor, QuicChannelMetrics metrics) throws Exception{
         QuicStreamChannel streamChannel = quicChan
@@ -43,17 +51,13 @@ public class Logics {
         buf.writeBytes(data,0,len);
         return buf;
     }
-    public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, long maxIdleTimeoutInSeconds,
-                                       long initialMaxData, long initialMaxStreamDataBidirectionalLocal,
-                                       long initialMaxStreamDataBidirectionalRemote,
-                                       long initialMaxStreamsBidirectional,
-                                       long initialMaxStreamsUnidirectional){
+    public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
         return codecBuilder
-                .maxIdleTimeout(maxIdleTimeoutInSeconds, TimeUnit.SECONDS)
-                .initialMaxData(initialMaxData)
-                .initialMaxStreamDataBidirectionalLocal(initialMaxStreamDataBidirectionalLocal)
-                .initialMaxStreamDataBidirectionalRemote(initialMaxStreamDataBidirectionalRemote)
-                .initialMaxStreamsBidirectional(initialMaxStreamsBidirectional)
-                .initialMaxStreamsUnidirectional(initialMaxStreamsUnidirectional);
+                .maxIdleTimeout((Long) properties.getOrDefault("maxIdleTimeoutInSeconds",maxIdleTimeoutInSeconds), TimeUnit.SECONDS)
+                .initialMaxData((Long) properties.getOrDefault("initialMaxData",initialMaxData))
+                .initialMaxStreamDataBidirectionalLocal((Long) properties.getOrDefault("initialMaxStreamDataBidirectionalLocal",initialMaxStreamDataBidirectionalLocal))
+                .initialMaxStreamDataBidirectionalRemote((Long) properties.getOrDefault("initialMaxStreamDataBidirectionalRemote",initialMaxStreamDataBidirectionalRemote))
+                .initialMaxStreamsBidirectional((Long) properties.getOrDefault("initialMaxStreamsBidirectional",initialMaxStreamsBidirectional))
+                .initialMaxStreamsUnidirectional((Long) properties.getOrDefault("initialMaxStreamsUnidirectional",initialMaxStreamsUnidirectional));
     }
 }
