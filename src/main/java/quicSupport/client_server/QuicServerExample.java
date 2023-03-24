@@ -80,7 +80,7 @@ public final class QuicServerExample {
                 .tokenHandler(new CustomTokenHandler())
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new QuicServerChannelConHandler(streamListenerExecutor,metrics))
-                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
+                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics,Logics.INCOMING_CONNECTION,true))
                 .build();
         return codec;
     }

@@ -3,15 +3,12 @@ package quicSupport.handlers.pipeline;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicChannel;
-import io.netty.incubator.codec.quic.QuicConnectionAddress;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import quicSupport.CustomQuicChannel;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.Logics;
-import quicSupport.utils.entities.ControlDataEntity;
 import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
@@ -41,8 +38,8 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
         byte [] hs = Logics.gson.toJson(handShakeMessage).getBytes();
-        QuicStreamChannel streamChannel = Logics.createStream(out,quicListenerExecutor,metrics);
-        streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, QuicStreamReadHandler.HANDSHAKE_MESSAGE))
+        QuicStreamChannel streamChannel = Logics.createStream(out,quicListenerExecutor,metrics,false,true);
+        streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, DefautQuicStreamReadHandler.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
                         quicListenerExecutor.onChannelActive(streamChannel,null,remote);
@@ -61,6 +58,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         if(metrics!=null){
             metrics.onConnectionClosed(ctx.channel().remoteAddress());
         }
+        quicListenerExecutor.onChannelInactive(ctx.channel().id().asShortText());
     }
 
     @Override

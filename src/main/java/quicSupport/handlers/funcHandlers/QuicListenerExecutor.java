@@ -23,9 +23,9 @@ public class QuicListenerExecutor {
         });
     }
 
-    public void onChannelInactive(String channelId, String streamId){
+    public void onChannelInactive(String channelId){
         loop.execute(() -> {
-            handlerFunctions.getConnectionInactive().execute(channelId,streamId);
+            handlerFunctions.getConnectionInactive().execute(channelId);
         });
     }
 

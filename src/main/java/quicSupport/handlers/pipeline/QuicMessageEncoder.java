@@ -16,6 +16,9 @@ public class QuicMessageEncoder extends MessageToByteEncoder {
     }
     @Override
     protected void encode(ChannelHandlerContext ctx, Object o, ByteBuf byteBuf) throws Exception {
+        if(metrics==null){
+            return;
+        }
         ByteBuf data = (ByteBuf) o;
         byteBuf.writeBytes(data);
         byteBuf.markReaderIndex();
@@ -28,6 +31,9 @@ public class QuicMessageEncoder extends MessageToByteEncoder {
                 q.setSentAppMessages(q.getSentAppMessages()+1);
                 q.setSentAppBytes(q.getSentAppBytes()+bytes+Logics.WRT_OFFSET);
                 break;
+            case Logics.KEEP_ALIVE:
+                q.setSentKeepAliveMessages(q.getSentKeepAliveMessages()+1);
+            break;
             case Logics.HANDSHAKE_MESSAGE:
                 q.setSentControlMessages(q.getSentControlMessages()+1);
                 q.setSentControlBytes(q.getSentControlBytes()+bytes+Logics.WRT_OFFSET);

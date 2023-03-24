@@ -17,11 +17,17 @@ public class Logics {
     public static final int WRT_OFFSET=5; //4 BYTES(DATA LEN)+ 1 BYTE (MESSAGE CODE)
     public final static byte HANDSHAKE_MESSAGE = 'A';
     public final static byte APP_DATA = 'B';
+    public final static byte KEEP_ALIVE = 'C';
     public static final String HOST_NAME = "HOST";
     public static final String PORT = "PORT";
+
+    public static boolean INCOMING_CONNECTION = true;
+    public static boolean OUTGOING_CONNECTION = false;
+
+
     public static final Gson gson = new Gson();
 
-    private static final long maxIdleTimeoutInSeconds=30;
+    public static final long maxIdleTimeoutInSeconds=30;
     private static final long initialMaxData=10000000;
     private static final long initialMaxStreamDataBidirectionalLocal=1000000;
     private static final long initialMaxStreamDataBidirectionalRemote=1000000;
@@ -30,9 +36,9 @@ public class Logics {
 
     private static final long maxAckDelay = 100;
 
-    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor, QuicChannelMetrics metrics) throws Exception{
+    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor, QuicChannelMetrics metrics, boolean incoming, boolean defaultReader) throws Exception{
         QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor,metrics))
+                .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor,metrics,incoming,defaultReader))
                 .addListener(future -> {
                     if(metrics!=null && future.isSuccess()){
                         QuicConnectionMetrics q = metrics.getConnectionMetrics(quicChan.remoteAddress());

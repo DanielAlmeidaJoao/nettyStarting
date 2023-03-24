@@ -24,10 +24,8 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.incubator.codec.quic.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.handlers.funcHandlers.ClientConnectHandler;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
-import quicSupport.utils.CustomPair;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicChannelMetrics;
@@ -81,7 +79,7 @@ public final class QuicClientExample {
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,streamListenerExecutor,metrics))
-                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
+                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics,Logics.OUTGOING_CONNECTION,true))
                 .remoteAddress(remote).connect().addListener(future -> {
             if(!future.isSuccess()){
                 streamListenerExecutor.onConnectionError(remote,future.cause());

@@ -37,7 +37,7 @@ public class QuicChannelMetrics {
         currentConnections.put(connectionId,new QuicConnectionMetrics(
                 null,0,0,0,0,
                 0,0,
-                0,0,0,0,false,null
+                0,0,0,0,0,0,false,null
         ));
     }
     public void updateConnectionMetrics(SocketAddress connectionId, InetSocketAddress dest, QuicConnectionStats stats, boolean incoming){
@@ -50,10 +50,7 @@ public class QuicChannelMetrics {
     public void onConnectionClosed(SocketAddress connectionId){
         oldConnections.add(currentConnections.remove(connectionId));
     }
-
     public QuicConnectionMetrics getConnectionMetrics(SocketAddress peer){
         return currentConnections.get(peer);
     }
-
-
 }
