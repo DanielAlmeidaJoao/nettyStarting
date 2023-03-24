@@ -104,6 +104,8 @@ public class Main2 {
                 System.out.println(testQuicChannel.getStats(address));
             }else if("old".equalsIgnoreCase(input)){
                 System.out.println(testQuicChannel.oldMetrics());
+            }else if("bb".equalsIgnoreCase(input)){
+                testQuicChannel.setBb();
             }
         }
         System.out.println("STILL HERE!!!");

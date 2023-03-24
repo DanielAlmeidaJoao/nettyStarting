@@ -1,13 +1,13 @@
 package quicSupport;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.incubator.codec.quic.QuicChannel;
-import io.netty.incubator.codec.quic.QuicConnectionStats;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
+import io.netty.incubator.codec.quic.*;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.concurrent.Promise;
@@ -21,7 +21,9 @@ import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.funcHandlers.QuicFuncHandlers;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.handlers.pipeline.QuicStreamReadHandler;
+import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicChannelMetrics;
 import quicSupport.utils.entities.QuicConnectionMetrics;
@@ -85,7 +87,7 @@ public abstract class CustomQuicChannel {
         streams = new ConcurrentHashMap<>();
         channelIds = new ConcurrentHashMap<>();
 
-        QuicServerExample server = new QuicServerExample(addr.getHostName(), port, streamEventExecutor, metrics);
+        QuicServerExample server = new QuicServerExample(addr.getHostName(), port, streamEventExecutor,metrics,properties);
         client = new QuicClientExample(self,streamEventExecutor,new NioEventLoopGroup(1), metrics);
         executor = streamEventExecutor.getLoop();
         try{
@@ -107,7 +109,7 @@ public abstract class CustomQuicChannel {
     private void streamClosedHandler(QuicStreamChannel channel) {
         String streamId = channel.id().asShortText();
         logger.info("{}. STREAM {} CLOSED",self,streamId);
-        streams.remove(streamId);
+        //streams.remove(streamId);
         InetSocketAddress peer = channelIds.get(channel.parent().id().asShortText());
         channelClosed(channel.parent().id().asShortText(),streamId);
         onStreamClosedHandler(peer,channel);
@@ -174,13 +176,14 @@ public abstract class CustomQuicChannel {
         return streamChannel !=null && streamId.equals(streamChannel.id().asShortText());
     }
     public  void channelClosed(String channelId, String streamId){
+        /**
         if(isTheFirstStream(channelId,streamId)){
             InetSocketAddress peer = channelIds.remove(channelId);
             Channel stream = connections.remove(peer);
             stream.parent().disconnect();
             logger.info("{} CLOSED CONNECTION TO {}",self,peer);
             onChannelClosed(peer);
-        }
+        }**/
     }
     public abstract void onChannelClosed(InetSocketAddress peer);
 
@@ -189,17 +192,18 @@ public abstract class CustomQuicChannel {
     /*********************************** User Actions **************************************/
 
 
+    public Channel bootstrap;
     public void openConnection(InetSocketAddress peer) {
-        if(connections.containsKey(peer)){
+        //if(connections.containsKey(peer)){
             logger.info("{} ALREADY CONNECTED TO {}",self,peer);
-        }else {
+        //}else {
             logger.info("{} CONNECTING TO {}",self,peer);
             try {
-                client.connect(peer,properties);
+                bootstrap = client.connect(peer,properties);
             }catch (Exception e){
                 e.printStackTrace();
             }
-        }
+        //}
     }
     public void closeConnection(InetSocketAddress peer){
         QuicStreamChannel streamConnection = connections.get(peer);
@@ -252,6 +256,28 @@ public abstract class CustomQuicChannel {
         send(quicStreamChannel,message,len,promise);
     }
     private void send(QuicStreamChannel quicStreamChannel,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
+        try{
+            if(quicStreamChannel.parent().isTimedOut()){
+                logger.info("CONNECTION TIMED OUT!!!");
+                InetSocketAddress host = channelIds.get(quicStreamChannel.parent().id().asShortText());
+
+                QuicChannelBootstrap quicChannelBootstrap = QuicChannel.newBootstrap(bootstrap)
+                        .handler(new QuicClientChannelConHandler(self,host,streamEventExecutor,metrics))
+                        .streamHandler(new ServerChannelInitializer(streamEventExecutor,metrics))
+                        .remoteAddress(host);
+                quicChannelBootstrap.connect().addListener(future -> {
+                    if(future.isSuccess()){
+                        logger.info("RECONNECTION WITH SUCCESS!!!");
+                    }else {
+                        logger.info("SELF:{}. PEER {} IS DOWN!",self,host);
+                        future.cause().printStackTrace();
+                    }
+                }).get();
+                return;
+            }
+        }catch (Exception e){
+            //e.printStackTrace();
+        }
         ChannelFuture f = quicStreamChannel.writeAndFlush(Logics.writeBytes(len,message, QuicStreamReadHandler.APP_DATA));
         if(promise!=null){
             f.addListener(new PromiseNotifier<>(promise));

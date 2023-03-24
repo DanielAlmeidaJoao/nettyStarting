@@ -26,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.funcHandlers.SocketBindHandler;
+import quicSupport.handlers.pipeline.CustomTokenHandler;
 import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
@@ -39,17 +40,12 @@ import java.security.cert.X509Certificate;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import static quicSupport.client_server.QuicClientExample.DEFAULT_IDLE_TIMEOUT;
-
 public final class QuicServerExample {
     private boolean started;
-
     private final InetSocketAddress self;
     private final QuicListenerExecutor streamListenerExecutor;
     private final Properties properties;
-
     private QuicChannelMetrics metrics;
-
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
@@ -74,23 +70,14 @@ public final class QuicServerExample {
     }
 
     public ChannelHandler getChannelHandler(QuicSslContext context, Properties properties) {
-        /**
-         new QuicServerCodecBuilder().sslContext(context)
-         .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
-         // Configure some limits for the maximal number of streams (and the data) that we want to handle.
-         .initialMaxData(10000000)
-         .initialMaxStreamDataBidirectionalLocal(1000000)
-         .initialMaxStreamDataBidirectionalRemote(1000000)
-         .initialMaxStreamsBidirectional(100)
-         .initialMaxStreamsUnidirectional(100)
-         **/
         QuicServerCodecBuilder serverCodecBuilder =  new QuicServerCodecBuilder()
                 .sslContext(context);
         serverCodecBuilder = (QuicServerCodecBuilder) Logics.addConfigs(serverCodecBuilder,properties);
         ChannelHandler codec = serverCodecBuilder
                 // Setup a token handler. In a production system you would want to implement and provide your custom
                 // one.
-                .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
+                //.tokenHandler(InsecureQuicTokenHandler.INSTANCE)
+                .tokenHandler(new CustomTokenHandler())
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new QuicServerChannelConHandler(streamListenerExecutor,metrics))
                 .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
@@ -116,6 +103,7 @@ public final class QuicServerExample {
                     .handler(codec)
                     .bind(self).sync()
                     .addListener(future -> {
+
                         streamListenerExecutor.getLoop().execute(() -> {
                             handler.execute(future.isSuccess(),future.cause());
                         });

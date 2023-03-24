@@ -9,10 +9,9 @@ import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.QuicChannelMetrics;
 import quicSupport.utils.entities.QuicConnectionMetrics;
 
+import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-
-import static quicSupport.client_server.QuicClientExample.DEFAULT_IDLE_TIMEOUT;
 
 public class Logics {
     public static final int WRT_OFFSET=5; //4 BYTES(DATA LEN)+ 1 BYTE (MESSAGE CODE)
@@ -22,12 +21,14 @@ public class Logics {
     public static final String PORT = "PORT";
     public static final Gson gson = new Gson();
 
-    private static final long maxIdleTimeoutInSeconds=DEFAULT_IDLE_TIMEOUT;
+    private static final long maxIdleTimeoutInSeconds=30;
     private static final long initialMaxData=10000000;
     private static final long initialMaxStreamDataBidirectionalLocal=1000000;
     private static final long initialMaxStreamDataBidirectionalRemote=1000000;
     private static final long initialMaxStreamsBidirectional=10;
     private static final long initialMaxStreamsUnidirectional=10;
+
+    private static final long maxAckDelay = 100;
 
     public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor, QuicChannelMetrics metrics) throws Exception{
         QuicStreamChannel streamChannel = quicChan
@@ -58,6 +59,8 @@ public class Logics {
                 .initialMaxStreamDataBidirectionalLocal((Long) properties.getOrDefault("initialMaxStreamDataBidirectionalLocal",initialMaxStreamDataBidirectionalLocal))
                 .initialMaxStreamDataBidirectionalRemote((Long) properties.getOrDefault("initialMaxStreamDataBidirectionalRemote",initialMaxStreamDataBidirectionalRemote))
                 .initialMaxStreamsBidirectional((Long) properties.getOrDefault("initialMaxStreamsBidirectional",initialMaxStreamsBidirectional))
-                .initialMaxStreamsUnidirectional((Long) properties.getOrDefault("initialMaxStreamsUnidirectional",initialMaxStreamsUnidirectional));
+                .initialMaxStreamsUnidirectional((Long) properties.getOrDefault("initialMaxStreamsUnidirectional",initialMaxStreamsUnidirectional))
+                .maxAckDelay((Long) properties.getOrDefault("maxAckDelay",maxAckDelay), TimeUnit.MILLISECONDS)
+                .activeMigration(true);
     }
 }

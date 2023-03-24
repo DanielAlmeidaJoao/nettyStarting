@@ -44,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 public final class QuicClientExample {
     //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
     private static final Logger logger = LogManager.getLogger(QuicClientExample.class);
-    public static final int DEFAULT_IDLE_TIMEOUT = 60*30;
     private QuicChannel quicChannel;
     private final InetSocketAddress self;
     private NioEventLoopGroup group;
@@ -65,58 +64,41 @@ public final class QuicClientExample {
         String keystorePassword = "simple";
         String alias = "clientcert";
         //Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
-
         QuicSslContext context = QuicSslContextBuilder.forClient().
                 //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
                 trustManager(InsecureTrustManagerFactory.INSTANCE)
                 //trustManager((X509Certificate) pair.getLeft())
                 .applicationProtocols("QUIC")
                 .build();
-
         QuicClientCodecBuilder clientCodecBuilder =  new QuicClientCodecBuilder()
                 .sslContext(context);
         clientCodecBuilder = (QuicClientCodecBuilder) Logics.addConfigs(clientCodecBuilder,properties);
-        /**
-         *  Logics.addConfigs(clientCodecBuilder,DEFAULT_IDLE_TIMEOUT,
-         *                 10000000,1000000,1000000,100,
-         *                 100);
-         */
         ChannelHandler codec = clientCodecBuilder.build();
-        /**
-        ChannelHandler codec = new QuicClientCodecBuilder()
-                .sslContext(context)
-                .maxIdleTimeout(DEFAULT_IDLE_TIMEOUT, TimeUnit.SECONDS)
-                .initialMaxData(10000000)
-                .initialMaxStreamDataBidirectionalLocal(1000000)
-                .initialMaxStreamDataBidirectionalRemote(1000000)
-                .initialMaxStreamsBidirectional(100)
-                .initialMaxStreamsUnidirectional(100)
-                .build();
-         **/
         return codec;
     }
     private void closeConnection(){
         quicChannel.close();
     }
-    public void connect(InetSocketAddress remote, Properties properties) throws Exception{
+    public Channel connect(InetSocketAddress remote, Properties properties) throws Exception{
         Bootstrap bs = new Bootstrap();
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
-        quicChannel = QuicChannel.newBootstrap(channel)
+        QuicChannelBootstrap quicChannelBootstrap = QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,streamListenerExecutor,metrics))
                 .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
-                .remoteAddress(remote)
-                .connect().addListener(future -> {
+                .remoteAddress(remote);
+
+        quicChannel = quicChannelBootstrap.connect().addListener(future -> {
                     if(future.isSuccess()){
                         logger.info("CLIENT CONNECTED TO {}",remote);
                     }else{
                         logger.info("CLIENT NOT CONNECTED TO {}",remote);
                         streamListenerExecutor.onConnectionError(remote,future.cause());
                     }
-                })
-                .get();
+                }).get();
+        return channel;
     }
 
     private QuicStreamChannel getOrThrow(long id){

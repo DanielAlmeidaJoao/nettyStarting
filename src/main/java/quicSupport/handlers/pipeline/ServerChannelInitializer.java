@@ -3,6 +3,8 @@ package quicSupport.handlers.pipeline;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.utils.entities.QuicChannelMetrics;
@@ -22,6 +24,8 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
     protected void initChannel(QuicStreamChannel ch)  {
         System.out.println("CHANNEL CREATED INITIALISED!!! INIT CALLED");
         ChannelPipeline cp = ch.pipeline();
+
+        //cp.addLast(new LoggingHandler(LogLevel.INFO));
         if(quicChannelMetrics!=null){
             cp.addLast(new QuicMessageEncoder(quicChannelMetrics));
         }
