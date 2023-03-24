@@ -2,6 +2,9 @@ package org.streamingAPI.server.channelHandlers.messages;
 
 import lombok.Getter;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +19,10 @@ public class HandShakeMessage {
         this.properties = new HashMap<>();
         this.hostName=hostName;
         this.port=port;
+    }
+
+    public InetSocketAddress getAddress() throws UnknownHostException {
+        return new InetSocketAddress( InetAddress.getByName(hostName),port);
     }
 
     public void addProperties(String key, Object val){

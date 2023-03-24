@@ -22,24 +22,21 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.incubator.codec.quic.*;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.handlers.funcHandlers.ClientConnectHandler;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
-import quicSupport.utils.LoadCertificate;
+import quicSupport.utils.CustomPair;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
-import java.security.PrivateKey;
-import java.security.cert.Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 public final class QuicClientExample {
     //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
@@ -76,29 +73,20 @@ public final class QuicClientExample {
         ChannelHandler codec = clientCodecBuilder.build();
         return codec;
     }
-    private void closeConnection(){
-        quicChannel.close();
-    }
-    public Channel connect(InetSocketAddress remote, Properties properties) throws Exception{
+    public void connect(InetSocketAddress remote, Properties properties) throws Exception{
         Bootstrap bs = new Bootstrap();
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
-        QuicChannelBootstrap quicChannelBootstrap = QuicChannel.newBootstrap(channel)
+        QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,streamListenerExecutor,metrics))
                 .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics))
-                .remoteAddress(remote);
-
-        quicChannel = quicChannelBootstrap.connect().addListener(future -> {
-                    if(future.isSuccess()){
-                        logger.info("CLIENT CONNECTED TO {}",remote);
-                    }else{
-                        logger.info("CLIENT NOT CONNECTED TO {}",remote);
-                        streamListenerExecutor.onConnectionError(remote,future.cause());
-                    }
-                }).get();
-        return channel;
+                .remoteAddress(remote).connect().addListener(future -> {
+            if(!future.isSuccess()){
+                streamListenerExecutor.onConnectionError(remote,future.cause());
+            }
+        }).get();
     }
 
     private QuicStreamChannel getOrThrow(long id){
