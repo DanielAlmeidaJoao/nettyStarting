@@ -20,14 +20,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
-    /**
+
     private final boolean incoming;
     private QuicListenerExecutor streamListenerExecutor;
     private final QuicChannelMetrics metrics;
-    private ScheduledFuture scheduledFuture;
-    private boolean canSendHeartBeat; **/
 
-    public QuicDelimitedMessageDecoder(){}
+    public QuicDelimitedMessageDecoder(QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics metrics, boolean incoming){
+        this.incoming=incoming;
+        this.streamListenerExecutor=streamListenerExecutor;
+        this.metrics=metrics;
+    }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
@@ -44,38 +46,31 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         byte msgType = msg.readByte();
         byte [] data = new byte[length];
         msg.readBytes(data);
-        MessageDecoderOutput messageDecoderOutput = new MessageDecoderOutput(msgType,data);
-        out.add(messageDecoderOutput);
-        /**
+        //MessageDecoderOutput messageDecoderOutput = new MessageDecoderOutput(msgType,data);
+        //out.add(messageDecoderOutput);
+
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
         if(Logics.APP_DATA==msgType){
             streamListenerExecutor.onChannelRead(ch.id().asShortText(),data);
             if(metrics!=null){
+                QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
                 q.setReceivedAppBytes(q.getReceivedAppBytes()+length+Logics.WRT_OFFSET);
             }
         }else if(Logics.KEEP_ALIVE==msgType){
             logger.info("HEART BEAT RECEIVED INCOMING ? {}",incoming);
+            streamListenerExecutor.onKeepAliveMessage(ch.parent().id().asShortText());
             if(metrics!=null){
+                QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedKeepAliveMessages(1+q.getReceivedKeepAliveMessages());
-            }
-            if(incoming==Logics.OUTGOING_CONNECTION){
-                scheduleSendHeartBeat_KeepAlive(ch);
-                return;
-            }else{//heartbeat reply
-                canSendHeartBeat=true;
             }
         }else{
             streamListenerExecutor.onChannelActive(ch,data,null);
             if(metrics!=null){
+                QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+Logics.WRT_OFFSET);
             }
         }
-        if(incoming&&canSendHeartBeat){
-            scheduleSendHeartBeat_KeepAlive(ch);
-            canSendHeartBeat=false;
-        } **/
     }
 }

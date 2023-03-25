@@ -16,7 +16,7 @@ import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.funcHandlers.QuicFuncHandlers;
 import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
-import quicSupport.handlers.pipeline.DefautQuicStreamReadHandler;
+import quicSupport.handlers.pipeline.QuicStreamReadHandler;
 import quicSupport.utils.CustomConnection;
 import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicChannelMetrics;
@@ -71,6 +71,7 @@ public abstract class CustomQuicChannel {
                 this::channelActive,
                 this::channelClosed,
                 this::onOpenConnectionFailed,
+                this::onKeepAliveMessage,
                 this::streamCreatedHandler,
                 this::streamReader,
                 this::streamClosedHandler,
@@ -121,8 +122,16 @@ public abstract class CustomQuicChannel {
     public abstract void onStreamCreatedHandler(InetSocketAddress peer,QuicStreamChannel channel);
 
     public void streamReader(String streamId, byte[] bytes){
-        logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED DATA.",self,streamId,streamHostMapping.get(streamId));
+        InetSocketAddress remote = streamHostMapping.get(streamId);
+        CustomConnection connection = connections.get(remote);
+        connection.scheduleSendHeartBeat_KeepAlive();
+        logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED DATA.",self,streamId,remote);
         onChannelRead(streamId,bytes,channelIds.get(streamId));
+    }
+    private void onKeepAliveMessage(String parentId){
+        InetSocketAddress host = channelIds.get(parentId);
+        connections.get(host).scheduleSendHeartBeat_KeepAlive();
+
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
@@ -140,10 +149,11 @@ public abstract class CustomQuicChannel {
                 handShakeMessage = Logics.gson.fromJson(new String(controlData),HandShakeMessage.class);
                 listeningAddress =handShakeMessage.getAddress();
                 incoming=true;
+
             }
-            connections.put(listeningAddress, new CustomConnection(streamChannel,remotePeer,incoming));
+            connections.put(listeningAddress, new CustomConnection(streamChannel,listeningAddress,incoming));
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
-            streamHostMapping.put(streamChannel.id().asShortText(),remotePeer);
+            streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
 
             onChannelActive(streamChannel,handShakeMessage,listeningAddress);
             if(enableMetrics){
@@ -182,16 +192,18 @@ public abstract class CustomQuicChannel {
         }
     }
     public void closeConnection(InetSocketAddress peer){
-        CustomConnection connection = connections.remove(peer);
-        if(connection==null){
-            logger.info("{} IS NOT CONNECTED TO {}",self,peer);
-        }else{
-            connection.close();
-        }
+        executor.execute(() -> {
+            CustomConnection connection = connections.get(peer);
+            if(connection==null){
+                logger.info("{} IS NOT CONNECTED TO {}",self,peer);
+            }else{
+                connection.close();
+            }
+        });
     }
-    public QuicConnectionStats getStats(InetSocketAddress peer) throws ExecutionException, InterruptedException, UnknownElement {
+    public QuicConnectionMetrics getStats(InetSocketAddress peer) throws Exception {
         QuicChannel connection = getOrThrow(peer).getConnection();
-        return connection.collectStats().get();
+        return metrics.getConnectionMetrics(connection.remoteAddress());
     }
     public ConcurrentLinkedQueue<QuicConnectionMetrics> oldMetrics(){
         return metrics.oldConnections;
@@ -238,7 +250,7 @@ public abstract class CustomQuicChannel {
         }catch (Exception e){
             e.printStackTrace();
         }
-        ChannelFuture f = streamChannel.writeAndFlush(Logics.writeBytes(len,message, DefautQuicStreamReadHandler.APP_DATA));
+        ChannelFuture f = streamChannel.writeAndFlush(Logics.writeBytes(len,message, QuicStreamReadHandler.APP_DATA));
         if(promise!=null){
             f.addListener(new PromiseNotifier<>(promise));
         }

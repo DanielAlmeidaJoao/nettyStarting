@@ -12,7 +12,7 @@ import java.net.InetSocketAddress;
 @Setter
 @AllArgsConstructor
 @ToString(exclude = "stats")
-public class QuicConnectionMetrics {
+public class QuicConnectionMetrics{
     private InetSocketAddress dest;
     private long receivedAppBytes, sentAppBytes, receivedControlBytes, sentControlBytes;
     private long receivedAppMessages, sentAppMessages, receivedControlMessages, sentControlMessages;

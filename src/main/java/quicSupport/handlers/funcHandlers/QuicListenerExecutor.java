@@ -57,4 +57,9 @@ public class QuicListenerExecutor {
             handlerFunctions.getStreamReader().execute(streamId,data);
         });
     }
+    public void onKeepAliveMessage(String connectionId){
+        loop.execute(() -> {
+            handlerFunctions.getOnConnectionKeepAlive().execute(connectionId);
+        });
+    }
 }

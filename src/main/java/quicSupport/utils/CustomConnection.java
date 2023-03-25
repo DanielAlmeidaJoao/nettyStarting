@@ -11,9 +11,9 @@ import quicSupport.UnknownElement;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 public class CustomConnection {
@@ -24,9 +24,10 @@ public class CustomConnection {
     private final QuicStreamChannel defaultStream;
     private final boolean  inComing;
     private Map<String,QuicStreamChannel> streams;
-
+    private ScheduledFuture scheduledFuture;
 
     private InetSocketAddress remote;
+    private boolean canSendHeartBeat;
 
     public CustomConnection(QuicStreamChannel quicStreamChannel,InetSocketAddress remote, boolean inComing){
         defaultStream = quicStreamChannel;
@@ -35,6 +36,9 @@ public class CustomConnection {
         streams = new HashMap<>();
         this.remote = remote;
         addStream(defaultStream);//TO DO: REMOVE THIS LINE
+        scheduledFuture = null;
+        canSendHeartBeat = inComing;
+        serverStartScheduling();
         logger.info("CONNECTION TO {} ON. DEFAULT STREAM: {} .",remote,defaultStream.id().asShortText());
     }
     public void addStream(QuicStreamChannel streamChannel){
@@ -58,6 +62,21 @@ public class CustomConnection {
             connection.disconnect();
             connection.close();
         }
+    }
+    private void serverStartScheduling(){
+        if(inComing){
+            scheduleSendHeartBeat_KeepAlive();
+            canSendHeartBeat=false;
+        }
+    }
+    public void scheduleSendHeartBeat_KeepAlive(){
+            if(scheduledFuture!=null){
+                scheduledFuture.cancel(true);
+            }
+            scheduledFuture = defaultStream.eventLoop().schedule(() -> {
+                logger.info("HEART BEAT SENT. INCOMING ? {}",inComing);
+                defaultStream.writeAndFlush(Logics.writeBytes(1,"a".getBytes(),Logics.KEEP_ALIVE));
+            }, (long) (Logics.maxIdleTimeoutInSeconds*0.75), TimeUnit.SECONDS);
     }
     public boolean connectionDown(){
         return connection.isTimedOut();

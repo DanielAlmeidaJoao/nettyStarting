@@ -12,7 +12,7 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
     private final QuicChannelMetrics quicChannelMetrics;
     private final boolean incoming;
     private final boolean defaultStream;
-
+    private int cc = 0;
     public ServerChannelInitializer(QuicListenerExecutor streamListenerExecutor,
                                     QuicChannelMetrics quicChannelMetrics, boolean incoming,boolean defaultStream) {
         this.streamListenerExecutor = streamListenerExecutor;
@@ -20,22 +20,20 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
         this.incoming = incoming;
         this.defaultStream = defaultStream;
         System.out.println("CHANNEL CREATED INITIALISED!!!");
+        cc = 1;
     }
 
     @Override
     protected void initChannel(QuicStreamChannel ch)  {
-        System.out.println("CHANNEL CREATED INITIALISED!!! INIT CALLED");
+        cc++;
+        System.out.println("CHANNEL CREATED INITIALISED!!! INIT CALLED "+cc);
         ChannelPipeline cp = ch.pipeline();
         //cp.addLast(new LoggingHandler(LogLevel.INFO));
         if(quicChannelMetrics!=null){
             cp.addLast(new QuicMessageEncoder(quicChannelMetrics));
         }
-        cp.addLast(new QuicDelimitedMessageDecoder());
-        if(defaultStream){
-            cp.addLast(new DefautQuicStreamReadHandler(streamListenerExecutor,quicChannelMetrics,incoming));
-        }else{
-            cp.addLast(new NonDefaultQuicStreamReadHandler(streamListenerExecutor,quicChannelMetrics,incoming));
-        }
+        cp.addLast(new QuicDelimitedMessageDecoder(streamListenerExecutor,quicChannelMetrics,incoming));
+        cp.addLast(new QuicStreamReadHandler(streamListenerExecutor,quicChannelMetrics,incoming));
     }
 
     @Override
