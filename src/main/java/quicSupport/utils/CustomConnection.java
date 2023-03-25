@@ -58,10 +58,8 @@ public class CustomConnection {
     }
     public void close(){
         streams = null;
-        if(!connection.isTimedOut()){
-            connection.disconnect();
-            connection.close();
-        }
+        connection.disconnect();
+        connection.close();
     }
     private void serverStartScheduling(){
         if(inComing){

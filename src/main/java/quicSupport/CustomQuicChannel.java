@@ -149,7 +149,6 @@ public abstract class CustomQuicChannel {
                 handShakeMessage = Logics.gson.fromJson(new String(controlData),HandShakeMessage.class);
                 listeningAddress =handShakeMessage.getAddress();
                 incoming=true;
-
             }
             connections.put(listeningAddress, new CustomConnection(streamChannel,listeningAddress,incoming));
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
@@ -208,7 +207,7 @@ public abstract class CustomQuicChannel {
     public ConcurrentLinkedQueue<QuicConnectionMetrics> oldMetrics(){
         return metrics.oldConnections;
     }
-    public CustomConnection getOrThrow(InetSocketAddress peer) throws UnknownElement {
+    private CustomConnection getOrThrow(InetSocketAddress peer) throws UnknownElement {
         CustomConnection quicConnection = connections.get(peer);
         if(quicConnection==null){
             throw new UnknownElement("NO SUCH CONNECTION TO: "+peer);
@@ -239,11 +238,12 @@ public abstract class CustomQuicChannel {
     public void send(InetSocketAddress peer,byte[] message, int len, Promise<Void> promise) throws UnknownElement {
         send(getOrThrow(peer).getDefaultStream(),message,len,promise);
     }
-    private void send(QuicStreamChannel streamChannel, byte[] message, int len, Promise<Void> promise) throws UnknownElement {
+    private void send(QuicStreamChannel streamChannel, byte[] message, int len, Promise<Void> promise){
         try{
             if(streamChannel.parent().isTimedOut()){
                 InetSocketAddress remote = streamHostMapping.get(streamChannel.id().asShortText());
                 CustomConnection customConnection = connections.get(remote);
+                customConnection.close();
                 logger.info("CONNECTION TO  {} IS DOWN. INCOMING ? {}",remote,customConnection.isInComing());
                 return;
             }
@@ -267,30 +267,9 @@ public abstract class CustomQuicChannel {
 
     protected void onOutboundConnectionDown() {}
 
-    public void end(){
-        /**
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("SHUTTING DOWN");
-            ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-            connections.forEach((inetSocketAddress, channel) -> {
-                channelGroup.add(channel);
-            });
-            try {
-                channelGroup.close().sync();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }));
-         **/
-    }
+    protected void onInboundConnectionUp() {}
 
-    protected void onInboundConnectionUp() {
-
-    }
-
-    protected void onInboundConnectionDown() {
-
-    }
+    protected void onInboundConnectionDown() {}
 
     public void onServerSocketBind(boolean success, Throwable cause) {
         if (success)
