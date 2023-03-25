@@ -79,7 +79,7 @@ public final class QuicClientExample {
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,streamListenerExecutor,metrics))
-                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics,Logics.OUTGOING_CONNECTION,true))
+                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics,Logics.OUTGOING_CONNECTION))
                 .remoteAddress(remote).connect().addListener(future -> {
             if(!future.isSuccess()){
                 streamListenerExecutor.onConnectionError(remote,future.cause());

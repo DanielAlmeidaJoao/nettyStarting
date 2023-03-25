@@ -36,9 +36,9 @@ public class Logics {
 
     private static final long maxAckDelay = 100;
 
-    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor, QuicChannelMetrics metrics, boolean incoming, boolean defaultReader) throws Exception{
+    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor, QuicChannelMetrics metrics, boolean incoming) throws Exception{
         QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor,metrics,incoming,defaultReader))
+                .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor,metrics,incoming))
                 .addListener(future -> {
                     if(metrics!=null && future.isSuccess()){
                         QuicConnectionMetrics q = metrics.getConnectionMetrics(quicChan.remoteAddress());

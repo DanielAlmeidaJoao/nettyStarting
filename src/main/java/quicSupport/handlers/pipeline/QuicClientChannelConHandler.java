@@ -38,7 +38,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
         byte [] hs = Logics.gson.toJson(handShakeMessage).getBytes();
-        QuicStreamChannel streamChannel = Logics.createStream(out,quicListenerExecutor,metrics,false,true);
+        QuicStreamChannel streamChannel = Logics.createStream(out,quicListenerExecutor,metrics,false);
         streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, QuicStreamReadHandler.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
