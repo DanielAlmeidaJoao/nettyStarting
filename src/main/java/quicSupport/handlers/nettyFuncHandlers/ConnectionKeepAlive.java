@@ -1,4 +1,4 @@
-package quicSupport.handlers.funcHandlers;
+package quicSupport.handlers.nettyFuncHandlers;
 
 @FunctionalInterface
 public interface ConnectionKeepAlive {

@@ -1,4 +1,4 @@
-package quicSupport.handlers.funcHandlers;
+package quicSupport.handlers.nettyFuncHandlers;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 

@@ -4,7 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.utils.entities.QuicChannelMetrics;
 
 public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChannel> {

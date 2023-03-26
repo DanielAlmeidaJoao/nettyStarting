@@ -7,7 +7,7 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicChannelMetrics;
 

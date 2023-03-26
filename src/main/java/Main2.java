@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 import quicSupport.testing.TestQuicChannel;
+import quicSupport.utils.entities.QuicConnectionMetrics;
 
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;
@@ -101,9 +102,9 @@ public class Main2 {
                 System.out.println("PORT");
                 int p = scanner.nextInt();
                 InetSocketAddress address = new InetSocketAddress(host,p);
-                System.out.println(testQuicChannel.getStats(address));
+                testQuicChannel.getStats(address);
             }else if("old".equalsIgnoreCase(input)){
-                System.out.println(testQuicChannel.oldMetrics());
+                testQuicChannel.oldMetrics();
             }else if("bb".equalsIgnoreCase(input)){
                 testQuicChannel.setBb();
             }
@@ -111,4 +112,5 @@ public class Main2 {
         System.out.println("STILL HERE!!!");
         scanner.close();
     }
+
 }

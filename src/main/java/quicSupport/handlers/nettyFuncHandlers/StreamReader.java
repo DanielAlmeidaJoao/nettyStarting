@@ -1,6 +1,4 @@
-package quicSupport.handlers.funcHandlers;
-
-import io.netty.incubator.codec.quic.QuicStreamChannel;
+package quicSupport.handlers.nettyFuncHandlers;
 
 @FunctionalInterface
 public interface StreamReader {

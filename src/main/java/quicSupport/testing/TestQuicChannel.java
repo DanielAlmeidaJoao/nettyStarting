@@ -8,12 +8,17 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import pt.unl.fct.di.novasys.channel.tcp.events.ChannelMetrics;
 import quicSupport.CustomQuicChannel;
 import quicSupport.client_server.QuicServerExample;
+import quicSupport.handlers.channelFuncHandlers.OldMetricsHandler;
+import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
+import quicSupport.utils.entities.QuicConnectionMetrics;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Properties;
 
 public class TestQuicChannel extends CustomQuicChannel {
@@ -34,6 +39,19 @@ public class TestQuicChannel extends CustomQuicChannel {
     @Override
     public void onStreamClosedHandler(InetSocketAddress peer, QuicStreamChannel channel) {
 
+    }
+
+    public void readStats(InetSocketAddress peer, QuicConnectionMetrics metrics){
+
+    }
+    public void getStats(InetSocketAddress peer){
+        super.getStats(peer,this::readStats);
+    }
+    public void readOldMetrics(List<QuicConnectionMetrics> old){
+
+    }
+    public void oldMetrics(){
+        super.oldMetrics(this::readOldMetrics);
     }
 
     QuicStreamChannel bb=null;
@@ -58,6 +76,27 @@ public class TestQuicChannel extends CustomQuicChannel {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void failedToCreateStream(InetSocketAddress peer, Throwable error) {
+
+    }
+
+    @Override
+    public void failedToGetMetrics(Throwable cause) {
+
+    }
+
+    @Override
+    public void failedToCloseStream(String streamId, Throwable reason) {
+
+    }
+
+    @Override
+    public void failedToSend(InetSocketAddress host, byte[] message, int len, Throwable error) {
+
+    }
+
     FileOutputStream fos = new FileOutputStream("TESTQUIC.MP4");
     @Override
     public void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from) {
@@ -81,6 +120,11 @@ public class TestQuicChannel extends CustomQuicChannel {
 
     }
 
+    @Override
+    public void failedToSend(String streamId, byte[] message, int len, Throwable error) {
+
+    }
+
     public static void main(String args []) throws IOException {
         logger.info("STARREDD");
         Properties properties = new Properties();
@@ -93,4 +137,5 @@ public class TestQuicChannel extends CustomQuicChannel {
             testQuicChannel.openConnection(remote);
         }
     }
+
 }

@@ -1,4 +1,4 @@
-package quicSupport.handlers.funcHandlers;
+package quicSupport.handlers.nettyFuncHandlers;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

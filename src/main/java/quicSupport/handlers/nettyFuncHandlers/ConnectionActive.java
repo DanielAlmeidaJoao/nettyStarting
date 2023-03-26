@@ -1,7 +1,6 @@
-package quicSupport.handlers.funcHandlers;
+package quicSupport.handlers.nettyFuncHandlers;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import quicSupport.utils.entities.ControlDataEntity;
 
 import java.net.InetSocketAddress;
 

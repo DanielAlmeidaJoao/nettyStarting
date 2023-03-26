@@ -24,7 +24,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.incubator.codec.quic.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.utils.Logics;

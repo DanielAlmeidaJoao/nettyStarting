@@ -7,7 +7,7 @@ import io.netty.incubator.codec.quic.QuicStreamChannelConfig;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.client_server.QuicServerExample;
-import quicSupport.handlers.funcHandlers.QuicListenerExecutor;
+import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.utils.entities.QuicChannelMetrics;
 import quicSupport.utils.entities.QuicConnectionMetrics;
 

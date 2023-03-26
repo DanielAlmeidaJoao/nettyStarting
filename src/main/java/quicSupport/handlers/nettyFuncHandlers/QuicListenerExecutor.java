@@ -1,12 +1,9 @@
-package quicSupport.handlers.funcHandlers;
+package quicSupport.handlers.nettyFuncHandlers;
 
-import io.netty.channel.Channel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import quicSupport.utils.entities.ControlDataEntity;
 
 import java.net.InetSocketAddress;
 

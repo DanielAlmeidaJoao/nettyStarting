@@ -1,13 +1,11 @@
 package quicSupport.utils;
 
-import io.netty.channel.Channel;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.CustomQuicChannel;
-import quicSupport.UnknownElement;
+import quicSupport.Exceptions.UnclosableStreamException;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -48,10 +46,10 @@ public class CustomConnection {
         return streams.get(id);
     }
 
-    public void closeStream(String streamId) throws UnknownElement{
+    public void closeStream(String streamId) throws UnclosableStreamException {
         QuicStreamChannel streamChannel = streams.get(streamId);
-        if(streamChannel==null){
-            throw new UnknownElement("UNKNOWN STREAM: "+streamId);
+        if(defaultStream==streamChannel){
+            throw new UnclosableStreamException("DEFAULT STREAM <"+streamId+"> CANNOT BE CLOSED.");
         }
         streamChannel.shutdown();
         streamChannel.disconnect();
