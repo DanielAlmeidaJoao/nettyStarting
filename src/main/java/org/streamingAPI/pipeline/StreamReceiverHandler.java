@@ -1,4 +1,4 @@
-package org.streamingAPI.server.channelHandlers;
+package org.streamingAPI.pipeline;
 
 import io.netty.channel.ChannelHandlerContext;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
@@ -8,13 +8,8 @@ public class StreamReceiverHandler extends CustomChannelHandler {
     public StreamReceiverHandler(InNettyChannelListener inNettyChannelListener){
         super(inNettyChannelListener);
     }
-    /**
-     * Used when the sender specified the length of the data in the first bytes of the array
-     * @param ctx
-     * @param msg
-     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        getInNettyChannelListener().onChannelRead(ctx.channel().id().asShortText(), (byte []) msg);
+        getConsumer().onChannelRead(ctx.channel().id().asShortText(), (byte []) msg);
     }
 }

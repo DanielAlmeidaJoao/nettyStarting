@@ -76,8 +76,8 @@ public abstract class CustomQuicChannel {
                 this::streamErrorHandler);
         streamEventExecutor = new QuicListenerExecutor(StreamInConnection.newDefaultEventExecutor(), streamFuncHandlers);
 
-        connections = new ConcurrentHashMap<>();
-        channelIds = new ConcurrentHashMap<>();
+        connections = new HashMap<>();
+        channelIds = new HashMap<>();
         streamHostMapping = new HashMap<>();
 
         QuicServerExample server = new QuicServerExample(addr.getHostName(), port, streamEventExecutor,metrics,properties);
@@ -211,7 +211,6 @@ public abstract class CustomQuicChannel {
     }
 
     public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler){
-        //TODO MISSING A HANDLER THAT WILL GET THE METRICS
         executor.execute(() -> {
             if(isEnableMetrics()){
                 try {

@@ -45,9 +45,9 @@ public class InNettyChannelListener {
         });
     }
 
-    public void onOpenConnectionFailedHandler(InetSocketAddress peer, Throwable cause){
+    public void onOpenConnectionFailedHandler(String channelId, Throwable cause){
         loop.execute(() -> {
-            handlerFunctions.getConnectionFailedHandler().execute(peer,cause);
+            handlerFunctions.getConnectionFailedHandler().execute(channelId,cause);
         });
     }
 }

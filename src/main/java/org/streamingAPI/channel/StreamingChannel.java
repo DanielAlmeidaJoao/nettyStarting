@@ -5,8 +5,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.DefaultEventExecutor;
-import io.netty.util.concurrent.Promise;
-import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,8 +50,8 @@ public abstract class StreamingChannel {
         ChannelFuncHandlers handlers = new ChannelFuncHandlers(this::channelActive,
                 this::channelReadConfigData,
                 this::channelRead,
-                this::channelClosed,
-                this::onOpenConnectionFailed);
+                this::channelInactive,
+                this::onConnectionFailed);
         InNettyChannelListener listener = new InNettyChannelListener(StreamInConnection.newDefaultEventExecutor(),handlers);
         connections = new HashMap<>();
         channelIds = new HashMap<>();
@@ -69,13 +67,14 @@ public abstract class StreamingChannel {
 
     }
 
-    public  void channelClosed(String channelId){
-        InetSocketAddress peer = channelIds.get(channelId);
+    /******************************************* CHANNEL EVENTS ****************************************************/
+    public  void channelInactive(String channelId){
+        InetSocketAddress peer = channelIds.remove(channelId);
         connections.remove(peer);
-        onChannelClosed(channelIds.get(channelId));
+        onChannelInactive(peer);
     }
 
-    public abstract void onChannelClosed(InetSocketAddress peer);
+    public abstract void onChannelInactive(InetSocketAddress peer);
 
     public void channelRead(String channelId, byte[] bytes){
         onChannelRead(channelId,bytes,channelIds.get(channelId));
@@ -109,7 +108,9 @@ public abstract class StreamingChannel {
     }
     public abstract void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer);
 
+    /******************************************* CHANNEL EVENTS ****************************************************/
 
+    /******************************************* USER EVENTS ****************************************************/
 
     protected void openConnection(InetSocketAddress peer) {
         if(connections.containsKey(peer)){
@@ -124,16 +125,8 @@ public abstract class StreamingChannel {
         connections.get(peer).close();
     }
 
-
-    protected void send(byte [] message, InetSocketAddress peer) {
-        connections.get(peer).writeAndFlush(message);
-    }
-
     public void send(byte[] message, int len,InetSocketAddress host){
-        sendWithListener(message,len, null,host);
-    }
-    public void sendWithListener(byte[] message, int len, Promise<Void> promise,InetSocketAddress peer){
-        sendDelimited(Unpooled.copiedBuffer(message,0,len), promise,peer);
+        send(Unpooled.copiedBuffer(message,0,len),host);
     }
     /**
      * ByteBuf buf = ...
@@ -141,15 +134,26 @@ public abstract class StreamingChannel {
      * but.writeBytes(data)
      * sendDelimited(buf,promise)
      * @param byteBuf
-     * @param promise
      */
-    public void sendDelimited(ByteBuf byteBuf, Promise<Void> promise,InetSocketAddress peer){
+    public void send(ByteBuf byteBuf,InetSocketAddress peer){
+        byte [] data = byteBuf.array();
         ChannelFuture f =  connections.get(peer).writeAndFlush(byteBuf);
-        if (promise!=null){
-            f.addListener(new PromiseNotifier<>(promise));
-        }
+        f.addListener(future -> {
+            if(future.isSuccess()){
+                sendSuccess(data,peer);
+            }else {
+                sendFailed(peer,future.cause());
+            }
+        });
     }
+    public abstract void sendFailed(InetSocketAddress peer, Throwable reason);
+    public abstract void sendSuccess(byte[] data, InetSocketAddress peer);
+    /******************************************* USER EVENTS ****************************************************/
 
+    public void onConnectionFailed(String channelId, Throwable cause){
+        InetSocketAddress peer = channelIds.get(channelId);
+        onOpenConnectionFailed(peer,cause);
+    }
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
 
     protected void onOutboundConnectionUp() {}

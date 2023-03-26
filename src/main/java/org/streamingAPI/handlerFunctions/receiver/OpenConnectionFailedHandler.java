@@ -7,5 +7,5 @@ import java.net.InetSocketAddress;
 
 @FunctionalInterface
 public interface OpenConnectionFailedHandler {
-    void execute(InetSocketAddress peer,Throwable cause);
+    void execute(String channelId,Throwable cause);
 }

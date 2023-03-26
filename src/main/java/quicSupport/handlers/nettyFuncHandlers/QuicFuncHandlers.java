@@ -10,7 +10,7 @@ public class QuicFuncHandlers {
 
     private ConnectionActive connectionActive;
     private ConnectionInactive connectionInactive;
-    private OpenConnectionFailedHandler connectionError;
+    private ConnectionError connectionError;
     private ConnectionKeepAlive onConnectionKeepAlive;
 
     private StreamCreated streamCreated;

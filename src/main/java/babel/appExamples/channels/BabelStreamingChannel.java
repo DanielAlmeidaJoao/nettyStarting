@@ -51,7 +51,7 @@ public class BabelStreamingChannel<T> extends StreamingChannel implements IChann
         buf.writeShort(babelMessage.getSourceProto());
         buf.writeShort(ReceiveFileProtocol.ID);
         buf.writeBytes(message.getData(),0, message.getDataLength());
-        sendDelimited(buf,null,toInetSocketAddress(peer));
+        send(buf,toInetSocketAddress(peer));
     }
 
     @Override
@@ -65,7 +65,7 @@ public class BabelStreamingChannel<T> extends StreamingChannel implements IChann
     }
 
     @Override
-    public void onChannelClosed(InetSocketAddress peer) {
+    public void onChannelInactive(InetSocketAddress peer) {
         Throwable cause = new Throwable(String.format("CHANNEL %S CLOSED.",peer));
         listener.deliverEvent(new InConnectionDown(toBabelHost(peer), cause));
     }
@@ -96,6 +96,16 @@ public class BabelStreamingChannel<T> extends StreamingChannel implements IChann
     @Override
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer) {
         listener.deliverEvent(new InConnectionUp(toBabelHost(peer)));
+    }
+
+    @Override
+    public void sendFailed(InetSocketAddress peer, Throwable reason) {
+
+    }
+
+    @Override
+    public void sendSuccess(byte[] data, InetSocketAddress peer) {
+
     }
 
     @Override

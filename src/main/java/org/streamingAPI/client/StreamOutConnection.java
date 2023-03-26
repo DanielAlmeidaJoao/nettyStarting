@@ -11,10 +11,10 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
-import org.streamingAPI.client.channelHandlers.StreamSenderHandler;
+import org.streamingAPI.pipeline.StreamSenderHandler;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
-import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
-import org.streamingAPI.server.channelHandlers.encodings.StreamMessageDecoder;
+import org.streamingAPI.pipeline.encodings.DelimitedMessageDecoder;
+import org.streamingAPI.pipeline.encodings.StreamMessageDecoder;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
@@ -24,11 +24,8 @@ import static org.streamingAPI.server.StreamInConnection.newDefaultEventExecutor
 
 public class StreamOutConnection {
 
-    public static Gson g = new Gson();
 
-    private final InetSocketAddress listenningAddress;
     private HandShakeMessage handShakeMessage;
-    private byte [] handshake;
     private final InNettyChannelListener inNettyChannelListener;
 
     private Channel channel;
@@ -40,9 +37,7 @@ public class StreamOutConnection {
     public StreamOutConnection(InNettyChannelListener listener,InetSocketAddress host) {
         this.inNettyChannelListener = listener;
         group = createNewWorkerGroup(1);
-        this.listenningAddress=host;
         handShakeMessage = new HandShakeMessage(host.getHostName(),host.getPort());
-        handshake = g.toJson(handShakeMessage).getBytes();
     }
 
     public void connect(InetSocketAddress peer, boolean readDelimited){
@@ -60,12 +55,12 @@ public class StreamOutConnection {
                             }else{
                                 ch.pipeline().addLast(new StreamMessageDecoder());
                             }
-                        ch.pipeline().addLast( new StreamSenderHandler(handshake,inNettyChannelListener,false));
+                        ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,inNettyChannelListener));
                     }
                     });
             channel = b.connect().sync().addListener(future -> {
                 if(!future.isSuccess()){
-                    inNettyChannelListener.onOpenConnectionFailedHandler(peer,future.cause());
+                    //TODO
                 }
             }).channel();
 
@@ -75,7 +70,7 @@ public class StreamOutConnection {
             updateConfiguration(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK,2*64*1024);
             updateConfiguration(ChannelOption.AUTO_READ,Boolean.TRUE);**/
         } catch (Exception e) {
-            inNettyChannelListener.onOpenConnectionFailedHandler(peer,e.getCause());
+
         }
     }
 

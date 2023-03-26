@@ -11,10 +11,10 @@ import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.streamingAPI.handlerFunctions.receiver.*;
-import org.streamingAPI.server.channelHandlers.CustomHandshakeHandler;
-import org.streamingAPI.server.channelHandlers.encodings.DelimitedMessageDecoder;
-import org.streamingAPI.server.channelHandlers.StreamReceiverHandler;
-import org.streamingAPI.server.channelHandlers.encodings.StreamMessageDecoder;
+import org.streamingAPI.pipeline.CustomHandshakeHandler;
+import org.streamingAPI.pipeline.encodings.DelimitedMessageDecoder;
+import org.streamingAPI.pipeline.StreamReceiverHandler;
+import org.streamingAPI.pipeline.encodings.StreamMessageDecoder;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 import java.net.InetSocketAddress;

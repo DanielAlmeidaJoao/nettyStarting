@@ -1,4 +1,4 @@
-package org.streamingAPI.server.channelHandlers;
+package org.streamingAPI.pipeline;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -6,6 +6,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import org.streamingAPI.utils.FactoryMethods;
 
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
@@ -37,7 +38,7 @@ public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
             controlData = new byte[len];
             in.readBytes(controlData,0,len);
             String gg = new String(controlData);
-            HandShakeMessage handShakeMessage = StreamOutConnection.g.fromJson(gg, HandShakeMessage.class);
+            HandShakeMessage handShakeMessage = FactoryMethods.g.fromJson(gg, HandShakeMessage.class);
             inNettyChannelListener.onChannelActive(ctx.channel(),handShakeMessage);
         }
         ctx.fireChannelRead(msg);

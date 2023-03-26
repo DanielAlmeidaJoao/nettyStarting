@@ -52,7 +52,7 @@ public class ReceiveFileProtocol extends GenericProtocol {
         registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
 
         registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, this::uponInConnectionDown);
-        openConnection(forwarder);
+        //openConnection(forwarder);
     }
 
     private void uponInConnectionDown(InConnectionDown event, int channelId) {
@@ -67,7 +67,7 @@ public class ReceiveFileProtocol extends GenericProtocol {
             totoal +=msg.getDataLength();
             fos.write(msg.getData(), 0,msg.getDataLength());
             fos.flush();
-            sendMessage(msg,forwarder);
+            //sendMessage(msg,forwarder);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -78,8 +78,8 @@ public class ReceiveFileProtocol extends GenericProtocol {
             System.out.println("CONNECTION CLOSED! "+totoal);
             logger.info("{} Stream Ended! from {}",self,from);
             fos.close();
-            StreamMessage streamMessage = new StreamMessage(new byte[0],0,"OLA");
-            sendMessage(streamMessage,forwarder);
+            //StreamMessage streamMessage = new StreamMessage(new byte[0],0,"OLA");
+            //sendMessage(streamMessage,forwarder);
         }catch (Exception e){e.printStackTrace();};
     }
 }

@@ -1,4 +1,4 @@
-package org.streamingAPI.server.channelHandlers.encodings;
+package org.streamingAPI.pipeline.encodings;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;

@@ -1,4 +1,4 @@
-package org.streamingAPI.server.channelHandlers.encodings;
+package org.streamingAPI.pipeline.encodings;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -8,7 +8,7 @@ import java.util.List;
 
 public class DelimitedMessageDecoder extends ByteToMessageDecoder {
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out){
         if(in.readableBytes()<4){
             return;
         }
