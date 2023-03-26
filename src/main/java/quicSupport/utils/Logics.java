@@ -28,6 +28,7 @@ public class Logics {
 
     public static final long maxIdleTimeoutInSeconds=30;
     private static final long initialMaxData=10000000;
+                                           //1035368729
     private static final long initialMaxStreamDataBidirectionalLocal=1000000;
     private static final long initialMaxStreamDataBidirectionalRemote=1000000;
     private static final long initialMaxStreamsBidirectional=10;

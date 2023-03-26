@@ -44,69 +44,82 @@ public class Main2 {
         String input = "";
 
         while (!"quit".equalsIgnoreCase(input)){
-            input = scanner.nextLine();
-            if(input.equalsIgnoreCase("S")){//send message
-                System.out.println("Enter data:");
+            try {
                 input = scanner.nextLine();
-                System.out.println("Enter streamId:");
-                String streamId = scanner.nextLine().trim();
-                System.out.println("ENTERED: "+input);
-                System.out.println("STREAM_ID: "+streamId);
-                testQuicChannel.send(streamId,input.getBytes(),input.length());
-            }else if(input.equalsIgnoreCase("C")){//create stream
-                System.out.println("HOST NAME:");
-                String host = scanner.nextLine();
-                System.out.println("PORT");
-                int p = scanner.nextInt();
-                InetSocketAddress address = new InetSocketAddress(host,p);
-                testQuicChannel.createStream(address);
-            }else if(input.equalsIgnoreCase("CS")){//close stream
-                System.out.println("STREAM ID:");
-                String streamId = scanner.nextLine();
-                testQuicChannel.closeStream(streamId);
-            }else if(input.equalsIgnoreCase("O")){//OPEN CONNECTION
-                System.out.println("HOST NAME:");
-                String host = scanner.nextLine();
-                System.out.println("PORT");
-                int p = scanner.nextInt();
-                InetSocketAddress address = new InetSocketAddress(host,p);
-                testQuicChannel.openConnection(address);
-            }else if(input.equalsIgnoreCase("CC")){//CLOSE CONNECTIONS
-                System.out.println("HOST NAME:");
-                String host = scanner.nextLine();
-                System.out.println("PORT");
-                int p = scanner.nextInt();
-                InetSocketAddress address = new InetSocketAddress(host,p);
-                testQuicChannel.closeConnection(address);
-            } else if ("SS".equalsIgnoreCase(input)) {
-                System.out.println("STREAM ID:");
-                String streamId = scanner.nextLine();
-                System.out.println("HOW MUCH:");
-                int toSend = scanner.nextInt();
-                Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-                //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
-                FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
-                int bufferSize = toSend; // 8KB buffer size
-                byte [] bytes = new byte[bufferSize];
+                if (input.equalsIgnoreCase("S")) {//send message
+                    System.out.println("Enter data:");
+                    input = scanner.nextLine();
+                    System.out.println("Enter streamId:");
+                    String streamId = scanner.nextLine().trim();
+                    System.out.println("ENTERED: " + input);
+                    System.out.println("STREAM_ID: " + streamId);
+                    testQuicChannel.send(streamId, input.getBytes(), input.length());
+                } else if (input.equalsIgnoreCase("C")) {//create stream
+                    System.out.println("HOST NAME:");
+                    String host = scanner.nextLine();
+                    System.out.println("PORT");
+                    int p = scanner.nextInt();
+                    InetSocketAddress address = new InetSocketAddress(host, p);
+                    testQuicChannel.createStream(address);
+                } else if (input.equalsIgnoreCase("CS")) {//close stream
+                    System.out.println("STREAM ID:");
+                    String streamId = scanner.nextLine();
+                    testQuicChannel.closeStream(streamId);
+                } else if (input.equalsIgnoreCase("O")) {//OPEN CONNECTION
+                    System.out.println("HOST NAME:");
+                    String host = scanner.nextLine();
+                    System.out.println("PORT");
+                    int p = scanner.nextInt();
+                    InetSocketAddress address = new InetSocketAddress(host, p);
+                    testQuicChannel.openConnection(address);
+                } else if (input.equalsIgnoreCase("CC")) {//CLOSE CONNECTIONS
+                    System.out.println("HOST NAME:");
+                    String host = scanner.nextLine();
+                    System.out.println("PORT");
+                    int p = scanner.nextInt();
+                    InetSocketAddress address = new InetSocketAddress(host, p);
+                    testQuicChannel.closeConnection(address);
+                } else if ("SS".equalsIgnoreCase(input)) {
+                    System.out.println("STREAM ID:");
+                    String streamId = scanner.nextLine();
+                    System.out.println("HOW MUCH:");
+                    int toSend = scanner.nextInt();
+                    Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+                    //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+                    FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
+                    int bufferSize = toSend; // 8KB buffer size
+                    byte[] bytes = new byte[bufferSize];
 
-                //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-                int read=0, totalSent = 0;
-                if ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
-                    totalSent += read;
-                    testQuicChannel.send(streamId,bytes,read);
-                    System.out.println("SENT "+totalSent);
+                    //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+                    int read = 0, totalSent = 0;
+                    if (((read = fileInputStream.read(bytes)) != -1)) {
+                        totalSent += read;
+                        testQuicChannel.send(streamId, bytes, read);
+                        System.out.println("SENT " + totalSent);
+                    }
+                } else if ("T".equalsIgnoreCase(input)) {
+                    System.out.println("HOST NAME:");
+                    String host = scanner.nextLine();
+                    System.out.println("PORT");
+                    int p = scanner.nextInt();
+                    InetSocketAddress address = new InetSocketAddress(host, p);
+                    testQuicChannel.getStats(address);
+                } else if ("old".equalsIgnoreCase(input)) {
+                    testQuicChannel.oldMetrics();
+                } else if ("bb".equalsIgnoreCase(input)) {
+                    testQuicChannel.setBb();
+                } else if ("stream".equalsIgnoreCase(input)) {
+                    System.out.println("HOST NAME:");
+                    String host = scanner.nextLine();
+                    System.out.println("PORT");
+                    int p = scanner.nextInt();
+                    InetSocketAddress address = new InetSocketAddress(host, p);
+                    new Thread(() -> {
+                        testQuicChannel.startStreaming(address);
+                    }).start();
                 }
-            }else if("T".equalsIgnoreCase(input)){
-                System.out.println("HOST NAME:");
-                String host = scanner.nextLine();
-                System.out.println("PORT");
-                int p = scanner.nextInt();
-                InetSocketAddress address = new InetSocketAddress(host,p);
-                testQuicChannel.getStats(address);
-            }else if("old".equalsIgnoreCase(input)){
-                testQuicChannel.oldMetrics();
-            }else if("bb".equalsIgnoreCase(input)){
-                testQuicChannel.setBb();
+            } catch (Exception e){
+              System.out.println(e.getCause());
             }
         }
         System.out.println("STILL HERE!!!");

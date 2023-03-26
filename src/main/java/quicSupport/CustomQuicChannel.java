@@ -171,6 +171,7 @@ public abstract class CustomQuicChannel {
         CustomConnection connection = connections.remove(host);
         logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
         connection.close();
+        onChannelClosed(host);
     }
     public abstract void onChannelClosed(InetSocketAddress peer);
 
@@ -291,7 +292,12 @@ public abstract class CustomQuicChannel {
                 logger.info("CONNECTION TO  {} IS DOWN. INCOMING ? {}",remote,customConnection.isInComing());
                 return;
             }
-            streamChannel.writeAndFlush(Logics.writeBytes(len,message, QuicStreamReadHandler.APP_DATA));
+            streamChannel.writeAndFlush(Logics.writeBytes(len,message, QuicStreamReadHandler.APP_DATA))
+                    .addListener(future -> {
+                        if(!future.isSuccess()){
+                            failedToSend(streamChannel.id().asShortText(),message,len,future.cause());
+                        }
+                    });
         }catch (Exception e){
             e.printStackTrace();
         }

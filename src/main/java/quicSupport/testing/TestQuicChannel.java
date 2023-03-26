@@ -13,11 +13,15 @@ import quicSupport.CustomQuicChannel;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.channelFuncHandlers.OldMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
+import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicConnectionMetrics;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
@@ -42,13 +46,14 @@ public class TestQuicChannel extends CustomQuicChannel {
     }
 
     public void readStats(InetSocketAddress peer, QuicConnectionMetrics metrics){
-
+        System.out.println("GETTING THE STATS!!!");
+        System.out.println(metrics);
     }
     public void getStats(InetSocketAddress peer){
         super.getStats(peer,this::readStats);
     }
     public void readOldMetrics(List<QuicConnectionMetrics> old){
-
+        System.out.println(old);
     }
     public void oldMetrics(){
         super.oldMetrics(this::readOldMetrics);
@@ -71,6 +76,7 @@ public class TestQuicChannel extends CustomQuicChannel {
     @Override
     public void onChannelClosed(InetSocketAddress peer) {
         try{
+            System.out.println("RECEIVED TOTAL "+total);
             fos.close();
         }catch (Exception e){
             e.printStackTrace();
@@ -84,7 +90,7 @@ public class TestQuicChannel extends CustomQuicChannel {
 
     @Override
     public void failedToGetMetrics(Throwable cause) {
-
+        System.out.println("FAILED TO GET THE STATS "+cause);
     }
 
     @Override
@@ -98,9 +104,10 @@ public class TestQuicChannel extends CustomQuicChannel {
     }
 
     FileOutputStream fos = new FileOutputStream("TESTQUIC.MP4");
+    int total = 0;
     @Override
     public void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from) {
-        System.out.println("RECEIVED: "+bytes.length);
+        total += bytes.length;
         try{
             fos.write(bytes, 0, bytes.length);
             fos.flush();
@@ -122,8 +129,31 @@ public class TestQuicChannel extends CustomQuicChannel {
 
     @Override
     public void failedToSend(String streamId, byte[] message, int len, Throwable error) {
-
+        System.out.println("FAILED TO SEND!!!! "+len);
     }
+    public void startStreaming(InetSocketAddress peer){
+        System.out.println("STREAMING STARTED!!!");
+        try{
+            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+            FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
+            int bufferSize = 2*128*1024; // 8KB buffer size
+            byte [] bytes = new byte[bufferSize];
+
+            //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+            int read, totalSent = 0;
+            while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
+                totalSent += read;
+                send(peer,bytes,read);
+                Thread.sleep(100);
+            }
+            System.out.println("TOTAL SENT "+totalSent);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
 
     public static void main(String args []) throws IOException {
         logger.info("STARREDD");
