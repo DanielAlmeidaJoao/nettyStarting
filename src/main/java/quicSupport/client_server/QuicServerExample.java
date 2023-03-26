@@ -26,7 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.handlers.nettyFuncHandlers.SocketBindHandler;
-import quicSupport.handlers.pipeline.CustomTokenHandler;
 import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
@@ -75,8 +74,7 @@ public final class QuicServerExample {
         ChannelHandler codec = serverCodecBuilder
                 // Setup a token handler. In a production system you would want to implement and provide your custom
                 // one.
-                //.tokenHandler(InsecureQuicTokenHandler.INSTANCE)
-                .tokenHandler(new CustomTokenHandler())
+                .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new QuicServerChannelConHandler(streamListenerExecutor,metrics))
                 .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics,Logics.INCOMING_CONNECTION))

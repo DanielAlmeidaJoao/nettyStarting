@@ -6,6 +6,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.incubator.codec.quic.*;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
+import quicSupport.utils.entities.MessageToByteEncoderParameter;
 import quicSupport.utils.entities.QuicChannelMetrics;
 import quicSupport.utils.entities.QuicConnectionMetrics;
 
@@ -51,12 +52,14 @@ public class Logics {
         config.setAllowHalfClosure(false);
         return streamChannel;
     }
-    public static ByteBuf writeBytes(int len, byte [] data, byte msgType){
+    public static MessageToByteEncoderParameter writeBytes(int len, byte [] data, byte msgType){
+        return new MessageToByteEncoderParameter(msgType,data,len);
+        /**
         ByteBuf buf = Unpooled.buffer(len+WRT_OFFSET);
         buf.writeInt(len);
         buf.writeByte(msgType);
         buf.writeBytes(data,0,len);
-        return buf;
+         **/
     }
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
         return codecBuilder

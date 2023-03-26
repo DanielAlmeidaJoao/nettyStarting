@@ -1,3 +1,6 @@
     public ServerChannelInitializer(AtomicBoolean calledOnce, QuicListenerExecutor streamListenerExecutor) {
         this.calledOnce = calledOnce;
         --> CALLED ONCE ???
+
+        DOUBTS TO TEACHERS:
+        //while (!streamChannel.isWritable()){}

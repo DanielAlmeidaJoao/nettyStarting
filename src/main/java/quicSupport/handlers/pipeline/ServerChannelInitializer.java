@@ -1,5 +1,6 @@
 package quicSupport.handlers.pipeline;
 
+import io.netty.channel.ChannelConfig;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -26,7 +27,7 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
             cp.addLast(new QuicMessageEncoder(quicChannelMetrics));
         }
         cp.addLast(new QuicDelimitedMessageDecoder(streamListenerExecutor,quicChannelMetrics,incoming));
-        cp.addLast(new QuicStreamReadHandler(streamListenerExecutor,quicChannelMetrics,incoming));
+        cp.addLast(new QuicStreamReadHandler(streamListenerExecutor,quicChannelMetrics));
     }
 
     @Override

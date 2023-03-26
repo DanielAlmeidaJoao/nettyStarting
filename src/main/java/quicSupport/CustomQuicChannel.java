@@ -17,11 +17,9 @@ import quicSupport.handlers.channelFuncHandlers.OldMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.nettyFuncHandlers.QuicFuncHandlers;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
-import quicSupport.handlers.pipeline.QuicStreamReadHandler;
 import quicSupport.utils.CustomConnection;
 import quicSupport.utils.Logics;
 import quicSupport.utils.entities.QuicChannelMetrics;
-import quicSupport.utils.entities.QuicConnectionMetrics;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -292,9 +290,10 @@ public abstract class CustomQuicChannel {
                 logger.info("CONNECTION TO  {} IS DOWN. INCOMING ? {}",remote,customConnection.isInComing());
                 return;
             }
-            streamChannel.writeAndFlush(Logics.writeBytes(len,message, QuicStreamReadHandler.APP_DATA))
+            streamChannel.writeAndFlush(Logics.writeBytes(len,message, Logics.APP_DATA))
                     .addListener(future -> {
                         if(!future.isSuccess()){
+                            future.cause().printStackTrace();
                             failedToSend(streamChannel.id().asShortText(),message,len,future.cause());
                         }
                     });

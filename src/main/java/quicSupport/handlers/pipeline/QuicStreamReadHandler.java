@@ -18,7 +18,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     private final QuicListenerExecutor streamListenerExecutor;
     private final QuicChannelMetrics metrics;
 
-    public QuicStreamReadHandler(QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics metrics, boolean incoming) {
+    public QuicStreamReadHandler(QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics metrics) {
         this.streamListenerExecutor = streamListenerExecutor;
         this.metrics = metrics;
     }

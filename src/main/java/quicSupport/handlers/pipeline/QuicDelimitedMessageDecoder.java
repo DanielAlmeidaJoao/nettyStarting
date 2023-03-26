@@ -42,8 +42,6 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         byte msgType = msg.readByte();
         byte [] data = new byte[length];
         msg.readBytes(data);
-        //MessageDecoderOutput messageDecoderOutput = new MessageDecoderOutput(msgType,data);
-        //out.add(messageDecoderOutput);
 
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(Logics.APP_DATA==msgType){

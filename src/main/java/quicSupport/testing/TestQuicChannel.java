@@ -146,7 +146,7 @@ public class TestQuicChannel extends CustomQuicChannel {
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
                 send(peer,bytes,read);
-                Thread.sleep(100);
+                //Thread.sleep(100);
             }
             System.out.println("TOTAL SENT "+totalSent);
         }catch (Exception e){
