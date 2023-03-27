@@ -11,6 +11,7 @@ import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
 import org.streamingAPI.handlerFunctions.receiver.*;
+import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.pipeline.CustomHandshakeHandler;
 import org.streamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.streamingAPI.pipeline.StreamReceiverHandler;
@@ -58,7 +59,7 @@ public class StreamInConnection {
      * @param sync whether to block the main thread or not
      * @throws Exception
      */
-    public void startListening(boolean sync, boolean readDelimited) throws Exception{
+    public void startListening(boolean sync, boolean readDelimited, TCPStreamMetrics metrics) throws Exception{
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
         ServerBootstrap b = new ServerBootstrap();
@@ -68,13 +69,13 @@ public class StreamInConnection {
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(inListener));
+                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(inListener,metrics));
                         if(readDelimited){
-                            ch.pipeline().addLast(new DelimitedMessageDecoder());
+                            ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
                         }else{
-                            ch.pipeline().addLast(new StreamMessageDecoder());
+                            ch.pipeline().addLast(new StreamMessageDecoder(metrics));
                         }
-                        ch.pipeline().addLast(new StreamReceiverHandler(inListener));
+                        ch.pipeline().addLast(new StreamReceiverHandler(inListener,metrics));
                         clients.put(ch.id().asShortText(),ch);
                     }
                 });

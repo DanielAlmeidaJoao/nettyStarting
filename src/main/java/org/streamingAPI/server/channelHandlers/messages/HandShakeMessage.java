@@ -20,6 +20,11 @@ public class HandShakeMessage {
         this.hostName=hostName;
         this.port=port;
     }
+    public HandShakeMessage(InetSocketAddress host) {
+        this.properties = new HashMap<>();
+        this.hostName=host.getHostName();
+        this.port=host.getPort();
+    }
 
     public InetSocketAddress getAddress() throws UnknownHostException {
         return new InetSocketAddress( InetAddress.getByName(hostName),port);

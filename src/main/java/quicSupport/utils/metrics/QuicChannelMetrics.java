@@ -1,4 +1,4 @@
-package quicSupport.utils.entities;
+package quicSupport.utils.metrics;
 
 import io.netty.incubator.codec.quic.QuicConnectionStats;
 import lombok.Getter;
@@ -8,9 +8,6 @@ import org.apache.logging.log4j.Logger;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentMap;
 
 //EVERY STREAM HAS THIS OBJECT????
 public class QuicChannelMetrics {
@@ -32,12 +29,6 @@ public class QuicChannelMetrics {
         logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }
 
-
-    public void addConnectionMetrics(SocketAddress connectionId, QuicConnectionMetrics connectionMetrics) throws Exception {
-        if(currentConnections.put(connectionId,connectionMetrics)!=null){
-            throw new Exception("TRYING TO REGISTER CONNECTION_METRICS TWICE");
-        }
-    }
     public void initConnectionMetrics(SocketAddress connectionId){
         currentConnections.put(connectionId,new QuicConnectionMetrics(
                 null,0,0,0,0,

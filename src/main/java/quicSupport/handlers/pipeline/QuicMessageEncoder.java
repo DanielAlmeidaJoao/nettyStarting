@@ -3,11 +3,10 @@ package quicSupport.handlers.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import io.netty.util.ReferenceCountUtil;
 import quicSupport.utils.Logics;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
-import quicSupport.utils.entities.QuicChannelMetrics;
-import quicSupport.utils.entities.QuicConnectionMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncoderParameter> {
 

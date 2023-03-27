@@ -30,7 +30,7 @@ import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.Logics;
-import quicSupport.utils.entities.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
 import java.security.PrivateKey;

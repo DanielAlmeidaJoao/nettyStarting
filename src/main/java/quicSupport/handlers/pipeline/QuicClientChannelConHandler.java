@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.utils.Logics;
-import quicSupport.utils.entities.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
 

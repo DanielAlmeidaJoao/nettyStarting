@@ -1,4 +1,4 @@
-package quicSupport.utils.entities;
+package quicSupport.utils.metrics;
 
 import io.netty.incubator.codec.quic.QuicConnectionStats;
 import lombok.AllArgsConstructor;

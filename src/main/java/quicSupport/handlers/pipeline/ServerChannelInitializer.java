@@ -1,12 +1,11 @@
 package quicSupport.handlers.pipeline;
 
-import io.netty.channel.ChannelConfig;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
-import quicSupport.utils.entities.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
 
 public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChannel> {
     private final QuicListenerExecutor streamListenerExecutor;

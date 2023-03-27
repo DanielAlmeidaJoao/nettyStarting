@@ -1,6 +1,6 @@
 package quicSupport.handlers.channelFuncHandlers;
 
-import quicSupport.utils.entities.QuicConnectionMetrics;
+import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.net.InetSocketAddress;
 

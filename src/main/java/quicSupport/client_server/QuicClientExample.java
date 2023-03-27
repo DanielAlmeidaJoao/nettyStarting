@@ -28,7 +28,7 @@ import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.utils.Logics;
-import quicSupport.utils.entities.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;

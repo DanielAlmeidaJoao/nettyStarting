@@ -1,14 +1,12 @@
 package quicSupport.utils;
 
 import com.google.gson.Gson;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.incubator.codec.quic.*;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
-import quicSupport.utils.entities.QuicChannelMetrics;
-import quicSupport.utils.entities.QuicConnectionMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;

@@ -10,9 +10,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.client.StreamOutConnection;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
+import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
+import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import org.streamingAPI.utils.FactoryMethods;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -38,6 +41,8 @@ public abstract class StreamingChannel {
 
     private StreamInConnection server;
     private StreamOutConnection client;
+    private final boolean metricsOn;
+    private final TCPStreamMetrics tcpStreamMetrics;
     public StreamingChannel( Properties properties)throws IOException{
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
@@ -47,6 +52,12 @@ public abstract class StreamingChannel {
 
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
+        metricsOn = properties.containsKey("metrics");
+        if(metricsOn){
+            tcpStreamMetrics = new TCPStreamMetrics(self);
+        }else{
+            tcpStreamMetrics = null;
+        }
         ChannelFuncHandlers handlers = new ChannelFuncHandlers(this::channelActive,
                 this::channelReadConfigData,
                 this::channelRead,
@@ -60,7 +71,7 @@ public abstract class StreamingChannel {
         executor = listener.getLoop();
 
         try{
-            server.startListening(false,true);
+            server.startListening(false,true,tcpStreamMetrics);
         }catch (Exception e){
             throw new IOException(e);
         }
@@ -70,7 +81,8 @@ public abstract class StreamingChannel {
     /******************************************* CHANNEL EVENTS ****************************************************/
     public  void channelInactive(String channelId){
         InetSocketAddress peer = channelIds.remove(channelId);
-        connections.remove(peer);
+        Channel chan = connections.remove(peer);
+        System.out.println(FactoryMethods.g.toJson(tcpStreamMetrics.getConnectionMetrics(chan.remoteAddress())));
         onChannelInactive(peer);
     }
 
@@ -88,17 +100,20 @@ public abstract class StreamingChannel {
         InetAddress hostName;
         int port;
         try {
+            boolean incoming;
+            InetSocketAddress listeningAddress;
             if(handShakeMessage==null){//out connection
-                InetSocketAddress address = (InetSocketAddress) channel.remoteAddress();
-                hostName = address.getAddress();
-                port = address.getPort();
+                listeningAddress = (InetSocketAddress) channel.remoteAddress();
+                incoming = false;
             }else {//in connection
-                hostName = InetAddress.getByName(handShakeMessage.getHostName());
-                port = handShakeMessage.getPort();
+                listeningAddress = handShakeMessage.getAddress();
+                incoming = true;
             }
-            InetSocketAddress listeningAddress = new InetSocketAddress(hostName,port);
             connections.put(listeningAddress,channel);
             channelIds.put(channel.id().asShortText(),listeningAddress);
+            if(metricsOn){
+                tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,incoming);
+            }
             onChannelActive(channel,handShakeMessage,listeningAddress);
             logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){
@@ -117,7 +132,7 @@ public abstract class StreamingChannel {
             logger.info("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
             logger.info("{} CONNECTING TO {}",self,peer);
-            client.connect(peer,true);
+            client.connect(peer,true,tcpStreamMetrics);
         }
     }
     protected void closeConnection(InetSocketAddress peer) {
@@ -140,6 +155,11 @@ public abstract class StreamingChannel {
         ChannelFuture f =  connections.get(peer).writeAndFlush(byteBuf);
         f.addListener(future -> {
             if(future.isSuccess()){
+                if(metricsOn){
+                    TCPStreamConnectionMetrics metrics1 = tcpStreamMetrics.getConnectionMetrics(f.channel().remoteAddress());
+                    metrics1.setSentAppBytes(metrics1.getSentAppBytes()+data.length);
+                    metrics1.setSentAppMessages(metrics1.getSentAppMessages()+1);
+                }
                 sendSuccess(data,peer);
             }else {
                 sendFailed(peer,future.cause());

@@ -3,7 +3,8 @@ package org.streamingAPI.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import org.streamingAPI.client.StreamOutConnection;
+import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
+import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.utils.FactoryMethods;
@@ -12,14 +13,12 @@ import org.streamingAPI.utils.FactoryMethods;
 public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
 
     public static final String NAME ="CHSHAKE_HANDLER";
-    private static final int UNCHANGED_VALUE = -2;
-
     private InNettyChannelListener inNettyChannelListener;
-    private byte [] controlData;
+    private final TCPStreamMetrics metrics;
     private int len;
-    public CustomHandshakeHandler(InNettyChannelListener inNettyChannelListener){
+    public CustomHandshakeHandler(InNettyChannelListener inNettyChannelListener, TCPStreamMetrics metrics){
        this.inNettyChannelListener = inNettyChannelListener;
-       this.len = UNCHANGED_VALUE;
+        this.metrics = metrics;
     }
 
     @Override
@@ -28,18 +27,21 @@ public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
         if(in.readableBytes()<4){
             return;
         }
-        if(len==UNCHANGED_VALUE){
-            len = in.readInt();
+        in.markReaderIndex();
+        len = in.readInt();
+        if(in.readableBytes()<len){
+            in.resetReaderIndex();
+            return;
         }
-        if (len > 0 ){
-            if(in.readableBytes()<len){
-                return;
-            }
-            controlData = new byte[len];
-            in.readBytes(controlData,0,len);
-            String gg = new String(controlData);
-            HandShakeMessage handShakeMessage = FactoryMethods.g.fromJson(gg, HandShakeMessage.class);
-            inNettyChannelListener.onChannelActive(ctx.channel(),handShakeMessage);
+        byte [] controlData = new byte[len];
+        in.readBytes(controlData,0,len);
+        String gg = new String(controlData);
+        HandShakeMessage handShakeMessage = FactoryMethods.g.fromJson(gg, HandShakeMessage.class);
+        inNettyChannelListener.onChannelActive(ctx.channel(),handShakeMessage);
+        if(metrics!=null){
+            TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
+            metrics1.setReceivedControlBytes(metrics1.getReceivedControlBytes()+len);
+            metrics1.setReceivedControlMessages(metrics1.getReceivedControlMessages()+1);
         }
         ctx.fireChannelRead(msg);
         ctx.channel().pipeline().remove(CustomHandshakeHandler.NAME);

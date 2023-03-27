@@ -31,6 +31,7 @@ public class SendFileProtocol extends GenericProtocol {
     private int channelId;
     private String streamId;
     private FileOutputStream fos;
+    private Properties properties;
 
     public SendFileProtocol(Properties props) throws IOException {
         super(ReceiveFileProtocol.class.getSimpleName(),ID);
@@ -38,6 +39,7 @@ public class SendFileProtocol extends GenericProtocol {
         String port = props.getProperty("p2p_port");
         logger.info("Receiver on {}:{}", address, port);
         this.receiver = new Host(InetAddress.getByName(address), Integer.parseInt(port));
+        properties = props;
 
         Properties channelProps = new Properties();
         channelId = createChannel(BabelStreamingChannel.NAME, props);
@@ -55,10 +57,14 @@ public class SendFileProtocol extends GenericProtocol {
         registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
         registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, this::uponInConnectionDown);
         registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
-        Host peer = new Host(InetAddress.getByName("localhost"),Integer.parseInt(props.getProperty("p2p_port")));
-        if(props.getProperty("forwarder")==null){
-            sendFile(peer);
+        try {
+        Host peer = new Host(InetAddress.getByName("localhost"),Integer.parseInt(properties.getProperty("p2p_port")));
+        openConnection(peer);
+        logger.info("OPENING CONNECTION TO {}",peer);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
         }
+
     }
 
     private void uponInConnectionDown(InConnectionDown event, int channelId) {
@@ -79,10 +85,18 @@ public class SendFileProtocol extends GenericProtocol {
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
+        if(properties.getProperty("forwarder")==null){
+            Host peer = null;
+            try {
+                peer = new Host(InetAddress.getByName("localhost"),Integer.parseInt(properties.getProperty("p2p_port")));
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            }
+            sendFile(peer);
+        }
     }
 
     public void sendFile(Host peer){
-        openConnection(peer);
         try{
             Thread.sleep(1000);
             System.out.println("STARTING SENDING FILE!");

@@ -1,13 +1,6 @@
-import babel.appExamples.channels.BabelStreamingChannel;
-import babel.appExamples.channels.initializers.BabelStreamInitializer;
-import babel.appExamples.channels.messages.StreamMessage;
-import babel.appExamples.protocols.ReceiveFileProtocol;
-import babel.appExamples.protocols.SendFileProtocol;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.core.Babel;
 import quicSupport.testing.TestQuicChannel;
-import quicSupport.utils.entities.QuicConnectionMetrics;
 
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;

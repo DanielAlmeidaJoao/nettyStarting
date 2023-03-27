@@ -5,7 +5,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
-import quicSupport.utils.entities.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
 
 public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     private QuicListenerExecutor listener;
@@ -20,8 +20,6 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        System.out.println(ctx.channel().config());
-        LOGGER.info("SERVER CHANNEL ACTIVE!!!");
         if(metrics!=null){
             metrics.initConnectionMetrics(ctx.channel().remoteAddress());
         }

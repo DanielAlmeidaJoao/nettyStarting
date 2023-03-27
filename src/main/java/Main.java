@@ -1,9 +1,5 @@
 import babel.appExamples.channels.BabelStreamingChannel;
-import babel.appExamples.channels.StreamReceiverChannel;
-import babel.appExamples.channels.StreamSenderChannel;
 import babel.appExamples.channels.initializers.BabelStreamInitializer;
-import babel.appExamples.channels.initializers.StreamReceiverInitializer;
-import babel.appExamples.channels.initializers.StreamSenderInitializers;
 import babel.appExamples.protocols.ReceiveFileProtocol;
 import babel.appExamples.protocols.SendFileProtocol;
 import pt.unl.fct.di.novasys.babel.core.Babel;

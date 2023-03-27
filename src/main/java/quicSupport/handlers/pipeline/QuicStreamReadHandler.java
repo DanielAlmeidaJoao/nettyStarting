@@ -8,8 +8,8 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
-import quicSupport.utils.entities.QuicChannelMetrics;
-import quicSupport.utils.entities.QuicConnectionMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(QuicServerExample.class);

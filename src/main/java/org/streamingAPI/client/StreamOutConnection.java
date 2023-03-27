@@ -11,6 +11,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
+import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.pipeline.StreamSenderHandler;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.pipeline.encodings.DelimitedMessageDecoder;
@@ -37,10 +38,10 @@ public class StreamOutConnection {
     public StreamOutConnection(InNettyChannelListener listener,InetSocketAddress host) {
         this.inNettyChannelListener = listener;
         group = createNewWorkerGroup(1);
-        handShakeMessage = new HandShakeMessage(host.getHostName(),host.getPort());
+        handShakeMessage = new HandShakeMessage(host);
     }
 
-    public void connect(InetSocketAddress peer, boolean readDelimited){
+    public void connect(InetSocketAddress peer, boolean readDelimited, TCPStreamMetrics metrics){
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
@@ -51,11 +52,11 @@ public class StreamOutConnection {
                     public void initChannel(SocketChannel ch)
                             throws Exception {
                             if(readDelimited){
-                                ch.pipeline().addLast(new DelimitedMessageDecoder());
+                                ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
                             }else{
-                                ch.pipeline().addLast(new StreamMessageDecoder());
+                                ch.pipeline().addLast(new StreamMessageDecoder(metrics));
                             }
-                        ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,inNettyChannelListener));
+                        ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,inNettyChannelListener,metrics));
                     }
                     });
             channel = b.connect().sync().addListener(future -> {

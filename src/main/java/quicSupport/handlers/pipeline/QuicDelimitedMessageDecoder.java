@@ -9,8 +9,8 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.CustomQuicChannel;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.utils.Logics;
-import quicSupport.utils.entities.QuicChannelMetrics;
-import quicSupport.utils.entities.QuicConnectionMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.util.List;
 

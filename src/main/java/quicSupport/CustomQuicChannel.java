@@ -1,7 +1,6 @@
 package quicSupport;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.*;
 import io.netty.util.concurrent.DefaultEventExecutor;
@@ -19,17 +18,15 @@ import quicSupport.handlers.nettyFuncHandlers.QuicFuncHandlers;
 import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.utils.CustomConnection;
 import quicSupport.utils.Logics;
-import quicSupport.utils.entities.QuicChannelMetrics;
+import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class CustomQuicChannel {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
