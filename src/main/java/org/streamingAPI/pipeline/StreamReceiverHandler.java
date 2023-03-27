@@ -1,15 +1,15 @@
 package org.streamingAPI.pipeline;
 
 import io.netty.channel.ChannelHandlerContext;
+import org.streamingAPI.channel.StreamingNettyConsumer;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 
 //@ChannelHandler.Sharable
 public class StreamReceiverHandler extends CustomChannelHandler {
     private final TCPStreamMetrics metrics;
-
-    public StreamReceiverHandler(InNettyChannelListener inNettyChannelListener, TCPStreamMetrics metrics){
-        super(inNettyChannelListener);
+    public StreamReceiverHandler(TCPStreamMetrics metrics, StreamingNettyConsumer consumer){
+        super(consumer);
         this.metrics = metrics;
     }
 
@@ -22,6 +22,6 @@ public class StreamReceiverHandler extends CustomChannelHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        getConsumer().onChannelRead(ctx.channel().id().asShortText(), (byte []) msg);
+        getConsumer().channelRead(ctx.channel().id().asShortText(), (byte []) msg);
     }
 }

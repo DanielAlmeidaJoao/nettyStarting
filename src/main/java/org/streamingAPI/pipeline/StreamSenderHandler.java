@@ -3,6 +3,7 @@ package org.streamingAPI.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import org.streamingAPI.channel.StreamingNettyConsumer;
 import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.streamingAPI.metrics.TCPStreamMetrics;
@@ -17,8 +18,8 @@ public class StreamSenderHandler extends CustomChannelHandler {
     private HandShakeMessage handshakeData;
     private final TCPStreamMetrics metrics;
 
-    public StreamSenderHandler(HandShakeMessage handshakeData, InNettyChannelListener inNettyChannelListener, TCPStreamMetrics metrics){
-        super(inNettyChannelListener);
+    public StreamSenderHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics){
+        super(consumer);
         this.handshakeData = handshakeData;
         this.metrics = metrics;
     }
@@ -44,7 +45,7 @@ public class StreamSenderHandler extends CustomChannelHandler {
                 ctx.channel().close();
             }
         });
-        getConsumer().onChannelActive(ctx.channel(),null);
+        getConsumer().channelActive(ctx.channel(),null);
         handshakeData=null;
     }
 

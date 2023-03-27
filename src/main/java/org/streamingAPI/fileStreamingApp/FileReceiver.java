@@ -72,8 +72,8 @@ public class FileReceiver {
 
     public void start(){
         try {
-            streamReceiver = new StreamInConnection("localhost",port,handlerFunctions);
-            streamReceiver.startListening(false,true,null);
+            streamReceiver = new StreamInConnection("localhost",port);
+            streamReceiver.startListening(false,true,null,null);
         }catch (Exception e){
             e.printStackTrace();
         }

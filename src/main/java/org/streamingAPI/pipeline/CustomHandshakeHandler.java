@@ -3,6 +3,7 @@ package org.streamingAPI.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.streamingAPI.channel.StreamingNettyConsumer;
 import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
@@ -13,12 +14,12 @@ import org.streamingAPI.utils.FactoryMethods;
 public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
 
     public static final String NAME ="CHSHAKE_HANDLER";
-    private InNettyChannelListener inNettyChannelListener;
     private final TCPStreamMetrics metrics;
+    private final StreamingNettyConsumer consumer;
     private int len;
-    public CustomHandshakeHandler(InNettyChannelListener inNettyChannelListener, TCPStreamMetrics metrics){
-       this.inNettyChannelListener = inNettyChannelListener;
+    public CustomHandshakeHandler(TCPStreamMetrics metrics, StreamingNettyConsumer consumer){
         this.metrics = metrics;
+        this.consumer = consumer;
     }
 
     @Override
@@ -37,7 +38,7 @@ public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
         in.readBytes(controlData,0,len);
         String gg = new String(controlData);
         HandShakeMessage handShakeMessage = FactoryMethods.g.fromJson(gg, HandShakeMessage.class);
-        inNettyChannelListener.onChannelActive(ctx.channel(),handShakeMessage);
+        consumer.channelActive(ctx.channel(),handShakeMessage);
         if(metrics!=null){
             TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
             metrics1.setReceivedControlBytes(metrics1.getReceivedControlBytes()+len);

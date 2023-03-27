@@ -26,7 +26,7 @@ public class FileStreamer {
                 this::channelRead,
                 this::channelInactive, null
         );
-        streamSender = new StreamOutConnection(handlerFunctions,null);
+        streamSender = new StreamOutConnection(null);
         try {
             fileOutputStream = new FileOutputStream("copyOFmine.mp4");
         }catch (Exception e){

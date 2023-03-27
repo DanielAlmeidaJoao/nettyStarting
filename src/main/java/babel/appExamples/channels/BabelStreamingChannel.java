@@ -9,6 +9,7 @@ import io.netty.channel.Channel;
 import io.netty.util.concurrent.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.streamingAPI.channel.SingleThreadedStreamingChannel;
 import org.streamingAPI.channel.StreamingChannel;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
@@ -24,7 +25,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class BabelStreamingChannel<T> extends StreamingChannel implements IChannel<T> {
+public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel implements IChannel<T> {
 
     private static final Logger logger = LogManager.getLogger(BabelStreamingChannel.class);
 
@@ -37,14 +38,8 @@ public class BabelStreamingChannel<T> extends StreamingChannel implements IChann
 
     @Override
     public void sendMessage(T msg, Host peer, int connection) {
-        boolean triggerSent = false;
         BabelMessage babelMessage = (BabelMessage) msg;
         StreamMessage message = (StreamMessage) babelMessage.getMessage();
-        Promise<Void> promise = getExecutor().newPromise();
-        promise.addListener(future -> {
-            if (future.isSuccess() && triggerSent) listener.messageSent(msg, peer);
-            else if (!future.isSuccess()) listener.messageFailed(msg, peer, future.cause());
-        });
 
         ByteBuf buf = Unpooled.buffer(message.getDataLength()+8);
         buf.writeInt(message.getDataLength()+4);
@@ -88,11 +83,6 @@ public class BabelStreamingChannel<T> extends StreamingChannel implements IChann
         BabelMessage babelMessage = new BabelMessage(p,src,dest);
         listener.deliverMessage((T) babelMessage,toBabelHost(from));
     }
-    @Override
-    public void channelReadConfigData(String s, byte[] bytes) {
-
-    }
-
     @Override
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer) {
         listener.deliverEvent(new InConnectionUp(toBabelHost(peer)));

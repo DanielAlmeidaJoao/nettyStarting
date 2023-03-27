@@ -58,14 +58,8 @@ public class StreamSenderChannel<T> implements IChannel<T> {
 
     @Override
     public void sendMessage(T msg, Host peer, int connection) {
-        boolean triggerSent = false;
         BabelMessage babelMessage = (BabelMessage) msg;
         StreamMessage message = (StreamMessage) babelMessage.getMessage();
-        Promise<Void> promise = streamSender.getDefaultEventExecutor().newPromise();
-        promise.addListener(future -> {
-            if (future.isSuccess() && triggerSent) listener.messageSent(msg, peer);
-            else if (!future.isSuccess()) listener.messageFailed(msg, peer, future.cause());
-        });
 
         ByteBuf buf = Unpooled.buffer(message.getDataLength()+8);
         buf.writeInt(message.getDataLength()+4);
@@ -84,7 +78,7 @@ public class StreamSenderChannel<T> implements IChannel<T> {
     @Override
     public void openConnection(Host peer) {
         //streamSender.setHost(self.getAddress().getHostName(),self.getPort());
-        streamSender.connect(null,true,null);
+        streamSender.connect(null,true,null,null);
     }
     private void channelActive(Channel channel, HandShakeMessage handShakeMessage){
 

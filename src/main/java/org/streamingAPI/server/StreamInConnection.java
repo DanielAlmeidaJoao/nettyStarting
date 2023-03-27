@@ -10,6 +10,7 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
 import lombok.Getter;
+import org.streamingAPI.channel.StreamingNettyConsumer;
 import org.streamingAPI.handlerFunctions.receiver.*;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.pipeline.CustomHandshakeHandler;
@@ -36,18 +37,11 @@ public class StreamInConnection {
     private final String hostName;
     private Channel serverChannel;
 
-    @Getter
-    private InNettyChannelListener inListener;
     private Map<String,SocketChannel> clients;
 
-    public StreamInConnection(String hostName, int port,
-                              ChannelFuncHandlers handlerFunctions) {
-        this(hostName,port,new InNettyChannelListener(newDefaultEventExecutor(),handlerFunctions));
-    }
-    public StreamInConnection(String hostName, int port, InNettyChannelListener listener) {
+    public StreamInConnection(String hostName, int port) {
         this.port = port;
         this.hostName = hostName;
-        this.inListener = listener;
         clients = new HashMap<>();
     }
 
@@ -59,7 +53,8 @@ public class StreamInConnection {
      * @param sync whether to block the main thread or not
      * @throws Exception
      */
-    public void startListening(boolean sync, boolean readDelimited, TCPStreamMetrics metrics) throws Exception{
+    public void startListening(boolean sync, boolean readDelimited, TCPStreamMetrics metrics, StreamingNettyConsumer consumer)
+            throws Exception{
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
         ServerBootstrap b = new ServerBootstrap();
@@ -69,13 +64,13 @@ public class StreamInConnection {
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(inListener,metrics));
+                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(metrics,consumer));
                         if(readDelimited){
                             ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
                         }else{
                             ch.pipeline().addLast(new StreamMessageDecoder(metrics));
                         }
-                        ch.pipeline().addLast(new StreamReceiverHandler(inListener,metrics));
+                        ch.pipeline().addLast(new StreamReceiverHandler(metrics,consumer));
                         clients.put(ch.id().asShortText(),ch);
                     }
                 });
@@ -101,9 +96,6 @@ public class StreamInConnection {
     }
     public void send(String streamId , byte[] message, int len){
         sendBytesWithListener(streamId,message,len,null);
-    }
-    public DefaultEventExecutor getDefaultEventExecutor(){
-        return inListener.getLoop();
     }
     /**
      * DefaultEventExecutor loop = ...

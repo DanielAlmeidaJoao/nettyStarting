@@ -55,7 +55,7 @@ public class StreamReceiverChannel<T> implements IChannel<T> {
                 this::channelClosed
         ));**/
         try{
-            streamReceiver.startListening(false,true,null);
+            streamReceiver.startListening(false,true,null,null);
         }catch (Exception e){
             throw new IOException(e);
         }

@@ -7,10 +7,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 //EVERY STREAM HAS THIS OBJECT????
 public class TCPStreamMetrics {
@@ -22,13 +21,21 @@ public class TCPStreamMetrics {
     private final Map<SocketAddress, TCPStreamConnectionMetrics> currentConnections;
 
     @Getter
-    private final List<TCPStreamConnectionMetrics> oldConnections;
+    private final Queue<TCPStreamConnectionMetrics> oldConnections;
     //private Map<InetSocketAddress, QuicConnectionMetrics> metricsMap;
 
-    public TCPStreamMetrics(InetSocketAddress host){
+    public TCPStreamMetrics(InetSocketAddress host, boolean singleThreaded){
         self=host;
-        currentConnections=new HashMap<>();
-        oldConnections=new LinkedList<>();
+        if(singleThreaded){
+            logger.info("SINGLE THREADED METRICS ON!");
+            currentConnections=new HashMap<>();
+            oldConnections=new LinkedList<>();
+        }else{
+            logger.info("CONCURRENT METRICS ON!");
+            currentConnections=new ConcurrentHashMap<>();
+            oldConnections= new ConcurrentLinkedQueue<>();
+        }
+
         logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }
 

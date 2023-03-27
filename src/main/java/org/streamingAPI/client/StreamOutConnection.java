@@ -11,6 +11,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.PromiseNotifier;
+import org.streamingAPI.channel.StreamingNettyConsumer;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.pipeline.StreamSenderHandler;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
@@ -27,21 +28,15 @@ public class StreamOutConnection {
 
 
     private HandShakeMessage handShakeMessage;
-    private final InNettyChannelListener inNettyChannelListener;
-
     private Channel channel;
     private EventLoopGroup group;
 
-    public StreamOutConnection(ChannelFuncHandlers handlerFunctions, InetSocketAddress host) {
-        this(new InNettyChannelListener(newDefaultEventExecutor(),handlerFunctions),host);
-    }
-    public StreamOutConnection(InNettyChannelListener listener,InetSocketAddress host) {
-        this.inNettyChannelListener = listener;
+    public StreamOutConnection(InetSocketAddress host) {
         group = createNewWorkerGroup(1);
         handShakeMessage = new HandShakeMessage(host);
     }
 
-    public void connect(InetSocketAddress peer, boolean readDelimited, TCPStreamMetrics metrics){
+    public void connect(InetSocketAddress peer, boolean readDelimited, TCPStreamMetrics metrics, StreamingNettyConsumer consumer){
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
@@ -56,7 +51,7 @@ public class StreamOutConnection {
                             }else{
                                 ch.pipeline().addLast(new StreamMessageDecoder(metrics));
                             }
-                        ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,inNettyChannelListener,metrics));
+                        ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,consumer,metrics));
                     }
                     });
             channel = b.connect().sync().addListener(future -> {
@@ -135,7 +130,4 @@ public class StreamOutConnection {
         return NioSocketChannel.class;
     }
 
-    public DefaultEventExecutor getDefaultEventExecutor(){
-        return inNettyChannelListener.getLoop();
-    }
 }
