@@ -58,7 +58,6 @@ public abstract class SingleThreadedStreamingChannel extends StreamingChannel{
     @Override
     protected void closeConnection(InetSocketAddress peer) {
         executor.execute(() -> {
-            logger.info("CLOSING CONNECTION TO {}", peer);
             super.closeConnection(peer);
         });
     }
@@ -66,14 +65,14 @@ public abstract class SingleThreadedStreamingChannel extends StreamingChannel{
     @Override
     public void send(byte[] message, int len,InetSocketAddress host){
         executor.execute(() -> {
-            send(message,len,host);
+            super.send(message,len,host);
         });
     }
 
     @Override
     public void send(ByteBuf byteBuf, InetSocketAddress peer){
         executor.execute(() -> {
-            send(byteBuf,peer);
+            super.send(byteBuf,peer);
         });
     }
 }

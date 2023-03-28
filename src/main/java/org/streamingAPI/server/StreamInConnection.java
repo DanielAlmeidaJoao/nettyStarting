@@ -58,7 +58,7 @@ public class StreamInConnection {
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
         ServerBootstrap b = new ServerBootstrap();
-        b.group(parentGroup,childGroup)
+        b.group(parentGroup)
                 .channel(socketChannel())
                 .localAddress(new InetSocketAddress(hostName,port))
                 .childHandler(new ChannelInitializer<SocketChannel>(){

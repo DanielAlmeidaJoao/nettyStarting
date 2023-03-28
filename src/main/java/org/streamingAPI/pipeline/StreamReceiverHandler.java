@@ -20,8 +20,4 @@ public class StreamReceiverHandler extends CustomChannelHandler {
         }
     }
 
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        getConsumer().channelRead(ctx.channel().id().asShortText(), (byte []) msg);
-    }
 }

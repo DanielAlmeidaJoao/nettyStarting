@@ -120,7 +120,7 @@ public class StreamOutConnection {
     public static EventLoopGroup createNewWorkerGroup(int nThreads) {
         //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
         //else
-        return new NioEventLoopGroup();
+        return new NioEventLoopGroup(nThreads);
     }
     private Class<? extends Channel> socketChannel(){
         /**

@@ -9,6 +9,7 @@ import io.netty.channel.Channel;
 import io.netty.util.concurrent.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.streamingAPI.channel.MultiThreadedStreamingChannel;
 import org.streamingAPI.channel.SingleThreadedStreamingChannel;
 import org.streamingAPI.channel.StreamingChannel;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
