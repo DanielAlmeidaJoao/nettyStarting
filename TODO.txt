@@ -11,3 +11,24 @@
         quicListenerExecutor.onConnectionError((InetSocketAddress) ctx.channel().remoteAddress(),cause);
         cause.printStackTrace();
     }
+
+//   IN TCPSTREAM MULTI THREADING:
+       private void test(InetSocketAddress host){
+           new Thread(() -> {
+               System.out.println("TESTING STARTED!!!");
+               while (true){
+                   Channel channel = connections.get(host);
+                   if(channel!=null){
+                       channelIds.get(channel.id().asShortText()).getPort();
+                   }
+               }
+           }).start();
+       }
+       The error below happens when the connection is being closed.
+Exception in thread "Thread-2" null
+java.lang.NullPointerException: Cannot invoke "java.net.InetSocketAddress.getPort()" because the return value of "java.util.Map.get(Object)" is null
+CONNECTION CLOSED! 0
+        at org.streamingAPI.channel.StreamingChannel.lambda$test$0(StreamingChannel.java:131)
+        at java.base/java.lang.Thread.run(Thread.java:833)
+^CAPP ENEDED!!
+

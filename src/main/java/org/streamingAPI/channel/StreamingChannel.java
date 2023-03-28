@@ -4,17 +4,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.util.concurrent.DefaultEventExecutor;
-import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.client.StreamOutConnection;
-import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.server.StreamInConnection;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.utils.FactoryMethods;
 
 import java.io.IOException;
@@ -80,10 +76,23 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     public  void channelInactive(String channelId){
         InetSocketAddress peer = channelIds.remove(channelId);
         Channel chan = connections.remove(peer);
+        if(metricsOn){
+            tcpStreamMetrics.onConnectionClosed(chan.remoteAddress());
+        }
         System.out.println(FactoryMethods.g.toJson(tcpStreamMetrics.getConnectionMetrics(chan.remoteAddress())));
         onChannelInactive(peer);
     }
-
+    private void test(InetSocketAddress host){
+        new Thread(() -> {
+            System.out.println("TESTING STARTED!!!");
+            while (true){
+                Channel channel = connections.get(host);
+                if(channel!=null){
+                    channelIds.get(channel.id().asShortText()).getPort();
+                }
+            }
+        }).start();
+    }
     public abstract void onChannelInactive(InetSocketAddress peer);
 
     public void channelRead(String channelId, byte[] bytes){
@@ -117,6 +126,8 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             channel.disconnect();
         }
     }
+
+
     public abstract void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer);
 
     public void onConnectionFailed(String channelId, Throwable cause){
@@ -153,7 +164,12 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
      */
     public void send(ByteBuf byteBuf,InetSocketAddress peer){
         byte [] data = byteBuf.array();
-        ChannelFuture f =  connections.get(peer).writeAndFlush(byteBuf);
+        Channel channel = connections.get(peer);
+        if(channel==null){
+            sendFailed(peer,new Throwable("Unknow Peer : "+peer));
+            return;
+        }
+        ChannelFuture f =  channel.writeAndFlush(byteBuf);
         f.addListener(future -> {
             if(future.isSuccess()){
                 if(metricsOn){

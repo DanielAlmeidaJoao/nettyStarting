@@ -57,7 +57,7 @@ public class ReceiveFileProtocol extends GenericProtocol {
 
     private void uponInConnectionDown(InConnectionDown event, int channelId) {
         try {
-            System.out.println("CONNECTION CLOSED! "+totoal);
+            System.out.println("CONNECTION CLOSED 2! "+totoal);
             fos.close();
         }catch (Exception e){e.printStackTrace();};
     }
