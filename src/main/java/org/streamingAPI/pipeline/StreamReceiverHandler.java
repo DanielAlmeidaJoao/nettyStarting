@@ -2,7 +2,6 @@ package org.streamingAPI.pipeline;
 
 import io.netty.channel.ChannelHandlerContext;
 import org.streamingAPI.channel.StreamingNettyConsumer;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 
 //@ChannelHandler.Sharable

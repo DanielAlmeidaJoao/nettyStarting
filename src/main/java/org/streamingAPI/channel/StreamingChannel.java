@@ -13,6 +13,7 @@ import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.connectionSetups.StreamInConnection;
 import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
+import org.streamingAPI.utils.FactoryMethods;
 import org.streamingAPI.utils.MetricsDisabledException;
 
 import java.io.IOException;
@@ -197,6 +198,19 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             handler.readMetrics(tcpStreamMetrics.currentMetrics(),tcpStreamMetrics.oldMetrics());
         }else {
             throw new MetricsDisabledException("METRICS WAS NOT ENABLED!");
+        }
+    }
+
+    private void debugPrintMetrics(){
+        System.out.println("curr: ");
+        var ll = tcpStreamMetrics.currentMetrics();
+        for (TCPStreamConnectionMetrics tcpStreamConnectionMetrics : ll) {
+            System.out.println(FactoryMethods.g.toJson(tcpStreamConnectionMetrics));
+        }
+        System.out.println("old: ");
+        ll = tcpStreamMetrics.oldMetrics();
+        for (TCPStreamConnectionMetrics tcpStreamConnectionMetrics : ll) {
+            System.out.println(FactoryMethods.g.toJson(tcpStreamConnectionMetrics));
         }
     }
 }

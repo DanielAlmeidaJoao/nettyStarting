@@ -6,7 +6,6 @@ import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.channel.StreamingNettyConsumer;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 //@ChannelHandler.Sharable
 public abstract class CustomChannelHandler extends ChannelInboundHandlerAdapter {
