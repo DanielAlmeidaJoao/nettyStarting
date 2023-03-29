@@ -1,4 +1,4 @@
-package org.streamingAPI.server.channelHandlers.messages;
+package org.streamingAPI.connectionSetups.messages;
 
 import lombok.Getter;
 

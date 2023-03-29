@@ -4,13 +4,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import org.streamingAPI.channel.StreamingNettyConsumer;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.streamingAPI.metrics.TCPStreamMetrics;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.streamingAPI.utils.FactoryMethods;
 
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 //@ChannelHandler.Sharable

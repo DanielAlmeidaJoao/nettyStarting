@@ -1,7 +1,7 @@
 package org.streamingAPI.channel;
 
 import io.netty.channel.Channel;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 
 public interface StreamingNettyConsumer {
 
@@ -9,5 +9,7 @@ public interface StreamingNettyConsumer {
     void channelRead(String channelId, byte[] bytes);
     void channelInactive(String channelId);
     void onConnectionFailed(String channelId, Throwable cause);
+
+    void onServerSocketBind(boolean success, Throwable cause);
 
 }

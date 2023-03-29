@@ -1,10 +1,9 @@
 package org.streamingAPI.fileStreamingApp;
 
 import io.netty.channel.Channel;
-import org.streamingAPI.channel.StreamingHost;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
-import org.streamingAPI.server.StreamInConnection;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import org.streamingAPI.connectionSetups.StreamInConnection;
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 
 import java.io.FileOutputStream;
 import java.util.HashMap;

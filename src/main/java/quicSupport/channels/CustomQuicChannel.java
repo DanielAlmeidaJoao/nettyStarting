@@ -5,7 +5,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;

@@ -6,8 +6,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.streamingAPI.channel.StreamingNettyConsumer;
 import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.streamingAPI.metrics.TCPStreamMetrics;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.streamingAPI.utils.FactoryMethods;
 
 //@ChannelHandler.Sharable

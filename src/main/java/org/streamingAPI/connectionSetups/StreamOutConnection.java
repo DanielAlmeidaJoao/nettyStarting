@@ -1,34 +1,21 @@
-package org.streamingAPI.client;
+package org.streamingAPI.connectionSetups;
 
-import com.google.gson.Gson;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.concurrent.DefaultEventExecutor;
-import io.netty.util.concurrent.Promise;
-import io.netty.util.concurrent.PromiseNotifier;
 import org.streamingAPI.channel.StreamingNettyConsumer;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.pipeline.StreamSenderHandler;
-import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.streamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.streamingAPI.pipeline.encodings.StreamMessageDecoder;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
-
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 import java.net.InetSocketAddress;
-
-import static org.streamingAPI.server.StreamInConnection.newDefaultEventExecutor;
-
 public class StreamOutConnection {
 
 
     private HandShakeMessage handShakeMessage;
-    private Channel channel;
     private EventLoopGroup group;
 
     public StreamOutConnection(InetSocketAddress host) {
@@ -54,7 +41,7 @@ public class StreamOutConnection {
                         ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,consumer,metrics));
                     }
                     });
-            channel = b.connect().sync().addListener(future -> {
+            b.connect().sync().addListener(future -> {
                 if(!future.isSuccess()){
                     //TODO
                 }
@@ -68,53 +55,6 @@ public class StreamOutConnection {
         } catch (Exception e) {
 
         }
-    }
-
-    private void printSomeConfigs(){
-        System.out.println("CONFIGS:");
-        System.out.println(channel.config().getOptions().get(ChannelOption.SO_RCVBUF));
-        System.out.println(channel.config().getMaxMessagesPerRead());
-    }
-
-    /**
-     * @pre Connection must be established/active before calling this method
-     * @param option Netty option
-     * @param value the new value
-     * @param <T> primitive type of the value
-     */
-    public <T> void updateConfiguration(ChannelOption<T> option, T value){
-        channel.config().setOption(option,value);
-    }
-
-    /**
-     * Closes the connection after sending all pending data
-     */
-    public void close(){
-        try {
-            while (channel.unsafe().outboundBuffer().totalPendingWriteBytes()>0){
-                Thread.sleep(1000);
-            }
-            channel.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            group.shutdownGracefully();
-        }
-    }
-    public void send(byte[] message, int len){
-        sendWithListener(message,len, null);
-    }
-    public void sendWithListener(byte[] message, int len, Promise<Void> promise){
-        sendDelimited(Unpooled.copiedBuffer(message,0,len), promise);
-    }
-    public void sendDelimited(ByteBuf byteBuf, Promise<Void> promise){
-        ChannelFuture f = channel.writeAndFlush(byteBuf);
-        if (promise!=null){
-            f.addListener(new PromiseNotifier<>(promise));
-        }
-    }
-    public String streamId(){
-        return channel.id().asShortText();
     }
 
     public static EventLoopGroup createNewWorkerGroup(int nThreads) {

@@ -6,18 +6,20 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.client.StreamOutConnection;
+import org.streamingAPI.connectionSetups.StreamOutConnection;
+import org.streamingAPI.handlerFunctions.ReadMetricsHandler;
 import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.streamingAPI.metrics.TCPStreamMetrics;
-import org.streamingAPI.server.StreamInConnection;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import org.streamingAPI.utils.FactoryMethods;
+import org.streamingAPI.connectionSetups.StreamInConnection;
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
+import org.streamingAPI.utils.MetricsDisabledException;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,7 +71,6 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         }catch (Exception e){
             throw new IOException(e);
         }
-
     }
 
     /******************************************* CHANNEL EVENTS ****************************************************/
@@ -79,19 +80,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         if(metricsOn){
             tcpStreamMetrics.onConnectionClosed(chan.remoteAddress());
         }
-        System.out.println(FactoryMethods.g.toJson(tcpStreamMetrics.getConnectionMetrics(chan.remoteAddress())));
         onChannelInactive(peer);
-    }
-    private void test(InetSocketAddress host){
-        new Thread(() -> {
-            System.out.println("TESTING STARTED!!!");
-            while (true){
-                Channel channel = connections.get(host);
-                if(channel!=null){
-                    channelIds.get(channel.id().asShortText()).getPort();
-                }
-            }
-        }).start();
     }
     public abstract void onChannelInactive(InetSocketAddress peer);
 
@@ -127,7 +116,6 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         }
     }
 
-
     public abstract void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer);
 
     public void onConnectionFailed(String channelId, Throwable cause){
@@ -156,7 +144,9 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             logger.info("{} CONNECTION TO {} ALREADY CLOSED",self,peer);
         }
     }
-
+    protected void closeServerSocket(){
+        server.closeServerSocket();
+    }
     public void send(byte[] message, int len,InetSocketAddress host){
         send(Unpooled.copiedBuffer(message,0,len),host);
     }
@@ -191,26 +181,6 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
 
     /******************************************* USER EVENTS ****************************************************/
 
-
-    public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
-    public abstract void sendFailed(InetSocketAddress peer, Throwable reason);
-    public abstract void sendSuccess(byte[] data, InetSocketAddress peer);
-    protected void onOutboundConnectionUp() {}
-
-
-    protected void onOutboundConnectionDown() {
-    }
-
-
-
-    protected void onInboundConnectionUp() {
-
-    }
-
-    protected void onInboundConnectionDown() {
-
-    }
-
     public void onServerSocketBind(boolean success, Throwable cause) {
         if (success)
             logger.debug("Server socket ready");
@@ -218,8 +188,14 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             logger.error("Server socket bind failed: " + cause);
     }
 
-    public void onServerSocketClose(boolean success, Throwable cause) {
-        logger.debug("Server socket closed. " + (success ? "" : "Cause: " + cause));
+    public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+    public abstract void sendFailed(InetSocketAddress peer, Throwable reason);
+    public abstract void sendSuccess(byte[] data, InetSocketAddress peer);
+    protected void readMetrics(ReadMetricsHandler handler) throws MetricsDisabledException {
+        if(metricsOn){
+            handler.readMetrics(tcpStreamMetrics.currentMetrics(),tcpStreamMetrics.oldMetrics());
+        }else {
+            throw new MetricsDisabledException("METRICS WAS NOT ENABLED!");
+        }
     }
-
 }

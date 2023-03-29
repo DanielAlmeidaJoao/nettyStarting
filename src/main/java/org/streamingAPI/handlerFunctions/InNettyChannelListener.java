@@ -2,13 +2,10 @@ package org.streamingAPI.handlerFunctions;
 
 
 import io.netty.channel.Channel;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import lombok.Getter;
 import org.streamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-
-import java.net.InetSocketAddress;
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 
 public class InNettyChannelListener {
     @Getter

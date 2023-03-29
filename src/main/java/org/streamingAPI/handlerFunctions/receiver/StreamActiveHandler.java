@@ -1,7 +1,7 @@
 package org.streamingAPI.handlerFunctions.receiver;
 
 import io.netty.channel.Channel;
-import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
+import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 
 @FunctionalInterface
 public interface StreamActiveHandler {

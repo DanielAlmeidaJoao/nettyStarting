@@ -4,6 +4,8 @@ import io.netty.incubator.codec.quic.QuicConnectionStats;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.modelmapper.ModelMapper;
+import org.streamingAPI.utils.FactoryMethods;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -19,6 +21,8 @@ public class TCPStreamMetrics {
 
     @Getter
     private final Map<SocketAddress, TCPStreamConnectionMetrics> currentConnections;
+    private final ModelMapper modelMapper;
+
 
     @Getter
     private final Queue<TCPStreamConnectionMetrics> oldConnections;
@@ -35,7 +39,7 @@ public class TCPStreamMetrics {
             currentConnections=new ConcurrentHashMap<>();
             oldConnections= new ConcurrentLinkedQueue<>();
         }
-
+        modelMapper = new ModelMapper();
         logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }
 
@@ -58,5 +62,23 @@ public class TCPStreamMetrics {
     }
     public TCPStreamConnectionMetrics getConnectionMetrics(SocketAddress peer){
         return currentConnections.get(peer);
+    }
+
+    private TCPStreamConnectionMetrics cloneChannelMetric(TCPStreamConnectionMetrics chanMetrics){
+        return modelMapper.map(chanMetrics,TCPStreamConnectionMetrics.class);
+    }
+    public List<TCPStreamConnectionMetrics> oldMetrics(){
+        var copy = new LinkedList<TCPStreamConnectionMetrics>();
+        for (TCPStreamConnectionMetrics oldConnection : oldConnections) {
+            copy.add(cloneChannelMetric(oldConnection));
+        }
+        return copy;
+    }
+    public List<TCPStreamConnectionMetrics> currentMetrics(){
+        var copy = new LinkedList<TCPStreamConnectionMetrics>();
+        for (TCPStreamConnectionMetrics value : currentConnections.values()) {
+            copy.add(cloneChannelMetric(value));
+        }
+        return copy;
     }
 }
