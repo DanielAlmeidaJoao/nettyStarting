@@ -7,7 +7,7 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
+import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.Logics;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
@@ -17,13 +17,13 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(QuicClientChannelConHandler.class);
     private final InetSocketAddress self;
     private final InetSocketAddress remote;
-    private final QuicListenerExecutor quicListenerExecutor;
+    private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
 
-    public QuicClientChannelConHandler(InetSocketAddress self, InetSocketAddress remote, QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics  metrics) {
+    public QuicClientChannelConHandler(InetSocketAddress self, InetSocketAddress remote, CustomQuicChannelConsumer consumer, QuicChannelMetrics  metrics) {
         this.self = self;
         this.remote = remote;
-        this.quicListenerExecutor = streamListenerExecutor;
+        this.consumer = consumer;
         this.metrics = metrics;
     }
 
@@ -38,14 +38,14 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
         byte [] hs = Logics.gson.toJson(handShakeMessage).getBytes();
-        QuicStreamChannel streamChannel = Logics.createStream(out,quicListenerExecutor,metrics,false);
+        QuicStreamChannel streamChannel = Logics.createStream(out,consumer,metrics,false);
         streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, Logics.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
-                        quicListenerExecutor.onChannelActive(streamChannel,null,remote);
+                        consumer.channelActive(streamChannel,null,remote);
                     }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
-                        quicListenerExecutor.onConnectionError(remote,future.cause());
+                        consumer.streamErrorHandler(streamChannel,future.cause());
                         future.cause().printStackTrace();
                         out.close();
                     }
@@ -58,12 +58,12 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         if(metrics!=null){
             metrics.onConnectionClosed(ctx.channel().remoteAddress());
         }
-        quicListenerExecutor.onChannelInactive(ctx.channel().id().asShortText());
+        consumer.channelInactive(ctx.channel().id().asShortText());
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        quicListenerExecutor.onConnectionError((InetSocketAddress) ctx.channel().remoteAddress(),cause);
+        consumer.onOpenConnectionFailed((InetSocketAddress) ctx.channel().remoteAddress(),cause);
         cause.printStackTrace();
     }
 }

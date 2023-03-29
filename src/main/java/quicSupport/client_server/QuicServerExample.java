@@ -24,8 +24,8 @@ import io.netty.incubator.codec.quic.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
-import quicSupport.handlers.nettyFuncHandlers.SocketBindHandler;
+import quicSupport.channels.CustomQuicChannelConsumer;
+import quicSupport.handlers.channelFuncHandlers.SocketBindHandler;
 import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
@@ -39,17 +39,17 @@ import java.security.cert.X509Certificate;
 import java.util.Properties;
 
 public final class QuicServerExample {
+    private final CustomQuicChannelConsumer consumer;
     private boolean started;
     private final InetSocketAddress self;
-    private final QuicListenerExecutor streamListenerExecutor;
     private final Properties properties;
     private QuicChannelMetrics metrics;
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
-    public QuicServerExample(String host, int port, QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics metrics, Properties properties) {
+    public QuicServerExample(String host, int port, CustomQuicChannelConsumer consumer, QuicChannelMetrics metrics, Properties properties) {
+        this.consumer = consumer;
         self = new InetSocketAddress(host,port);
-        this.streamListenerExecutor = streamListenerExecutor;
         this.metrics = metrics;
         started = false;
         this.properties=properties;
@@ -76,8 +76,8 @@ public final class QuicServerExample {
                 // one.
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
-                .handler(new QuicServerChannelConHandler(streamListenerExecutor,metrics))
-                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics,Logics.INCOMING_CONNECTION))
+                .handler(new QuicServerChannelConHandler(consumer,metrics))
+                .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.INCOMING_CONNECTION))
                 .build();
         return codec;
     }
@@ -85,13 +85,11 @@ public final class QuicServerExample {
     public void start(SocketBindHandler handler) throws Exception {
         if(started){
             logger.info("SERVER STARTED AT host:{} port:{} ",self.getHostName(),self.getPort());
-            streamListenerExecutor.getLoop().execute(() -> {
-                handler.execute(true,null);
-            });
+            handler.execute(true,null);
             return;
         }
         QuicSslContext context = getSignedSslContext();
-        NioEventLoopGroup group = new NioEventLoopGroup(1);
+        NioEventLoopGroup group = new NioEventLoopGroup();
         ChannelHandler codec = getChannelHandler(context,properties);
         try {
             Bootstrap bs = new Bootstrap();
@@ -100,10 +98,7 @@ public final class QuicServerExample {
                     .handler(codec)
                     .bind(self).sync()
                     .addListener(future -> {
-
-                        streamListenerExecutor.getLoop().execute(() -> {
-                            handler.execute(future.isSuccess(),future.cause());
-                        });
+                        handler.execute(future.isSuccess(),future.cause());
                     })
                     .channel();
             started=true;
@@ -117,10 +112,4 @@ public final class QuicServerExample {
             e.printStackTrace();
         }
     }
-    public static void main(String[] args) throws Exception {
-        //new QuicServerExample(NetUtil.LOCALHOST4.getHostAddress(),8081,null, streamListenerExecutor).start();
-    }
-
-
-
 }

@@ -6,7 +6,7 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.server.channelHandlers.messages.HandShakeMessage;
-import quicSupport.CustomQuicChannel;
+import quicSupport.channels.CustomQuicChannel;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.FileInputStream;

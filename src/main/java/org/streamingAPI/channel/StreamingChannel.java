@@ -149,7 +149,12 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     }
     protected void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING CONNECTION TO {}", peer);
-        connections.get(peer).close();
+        Channel channel = connections.get(peer);
+        if(channel!=null){
+            channel.close();
+        }else {
+            logger.info("{} CONNECTION TO {} ALREADY CLOSED",self,peer);
+        }
     }
 
     public void send(byte[] message, int len,InetSocketAddress host){
@@ -166,7 +171,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         byte [] data = byteBuf.array();
         Channel channel = connections.get(peer);
         if(channel==null){
-            sendFailed(peer,new Throwable("Unknow Peer : "+peer));
+            sendFailed(peer,new Throwable("Unknown Peer : "+peer));
             return;
         }
         ChannelFuture f =  channel.writeAndFlush(byteBuf);

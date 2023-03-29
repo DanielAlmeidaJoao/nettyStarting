@@ -24,7 +24,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.incubator.codec.quic.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
+import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.utils.Logics;
@@ -41,14 +41,14 @@ public final class QuicClientExample {
     private static final Logger logger = LogManager.getLogger(QuicClientExample.class);
     private QuicChannel quicChannel;
     private final InetSocketAddress self;
+    private final CustomQuicChannelConsumer consumer;
     private NioEventLoopGroup group;
     private Map<Long,QuicStreamChannel> streams;
-    private QuicListenerExecutor streamListenerExecutor;
     private QuicChannelMetrics metrics;
 
-    public QuicClientExample(InetSocketAddress self, QuicListenerExecutor streamListenerExecutor, NioEventLoopGroup g, QuicChannelMetrics metrics){
+    public QuicClientExample(InetSocketAddress self, CustomQuicChannelConsumer consumer, NioEventLoopGroup g, QuicChannelMetrics metrics){
         this.self = self;
-        this.streamListenerExecutor = streamListenerExecutor;
+        this.consumer = consumer;
         //
         this.group = g;
         this.metrics = metrics;
@@ -68,8 +68,7 @@ public final class QuicClientExample {
         QuicClientCodecBuilder clientCodecBuilder =  new QuicClientCodecBuilder()
                 .sslContext(context);
         clientCodecBuilder = (QuicClientCodecBuilder) Logics.addConfigs(clientCodecBuilder,properties);
-        ChannelHandler codec = clientCodecBuilder.build();
-        return codec;
+        return clientCodecBuilder.build();
     }
     public void connect(InetSocketAddress remote, Properties properties) throws Exception{
         Bootstrap bs = new Bootstrap();
@@ -78,11 +77,11 @@ public final class QuicClientExample {
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
-                .handler(new QuicClientChannelConHandler(self,remote,streamListenerExecutor,metrics))
-                .streamHandler(new ServerChannelInitializer(streamListenerExecutor,metrics,Logics.OUTGOING_CONNECTION))
+                .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics))
+                .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.OUTGOING_CONNECTION))
                 .remoteAddress(remote).connect().addListener(future -> {
             if(!future.isSuccess()){
-                streamListenerExecutor.onConnectionError(remote,future.cause());
+                consumer.onOpenConnectionFailed(remote,future.cause());
             }
         }).get();
     }

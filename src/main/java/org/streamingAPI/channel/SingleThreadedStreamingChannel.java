@@ -15,7 +15,7 @@ import java.util.Properties;
 public abstract class SingleThreadedStreamingChannel extends StreamingChannel{
     private static final Logger logger = LogManager.getLogger(SingleThreadedStreamingChannel.class);
 
-    private DefaultEventExecutor executor;
+    private final DefaultEventExecutor executor;
     public SingleThreadedStreamingChannel(Properties properties) throws IOException {
         super(properties,true);
         executor = new DefaultEventExecutor();

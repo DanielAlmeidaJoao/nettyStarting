@@ -2,7 +2,7 @@ package quicSupport.utils;
 
 import com.google.gson.Gson;
 import io.netty.incubator.codec.quic.*;
-import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
+import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
 import quicSupport.utils.metrics.QuicChannelMetrics;
@@ -35,7 +35,7 @@ public class Logics {
 
     private static final long maxAckDelay = 100;
 
-    public static QuicStreamChannel createStream(QuicChannel quicChan, QuicListenerExecutor quicListenerExecutor, QuicChannelMetrics metrics, boolean incoming) throws Exception{
+    public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor, QuicChannelMetrics metrics, boolean incoming) throws Exception{
         QuicStreamChannel streamChannel = quicChan
                 .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor,metrics,incoming))
                 .addListener(future -> {

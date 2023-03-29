@@ -4,16 +4,16 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
+import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
 public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChannel> {
-    private final QuicListenerExecutor streamListenerExecutor;
+    private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics quicChannelMetrics;
     private final boolean incoming;
-    public ServerChannelInitializer(QuicListenerExecutor streamListenerExecutor,
+    public ServerChannelInitializer(CustomQuicChannelConsumer consumer,
                                     QuicChannelMetrics quicChannelMetrics, boolean incoming) {
-        this.streamListenerExecutor = streamListenerExecutor;
+        this.consumer = consumer;
         this.quicChannelMetrics = quicChannelMetrics;
         this.incoming = incoming;
     }
@@ -25,8 +25,8 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
         if(quicChannelMetrics!=null){
             cp.addLast(new QuicMessageEncoder(quicChannelMetrics));
         }
-        cp.addLast(new QuicDelimitedMessageDecoder(streamListenerExecutor,quicChannelMetrics,incoming));
-        cp.addLast(new QuicStreamReadHandler(streamListenerExecutor,quicChannelMetrics));
+        cp.addLast(new QuicDelimitedMessageDecoder(consumer,quicChannelMetrics,incoming));
+        cp.addLast(new QuicStreamReadHandler(consumer,quicChannelMetrics));
     }
 
     @Override

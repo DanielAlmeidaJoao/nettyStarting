@@ -6,8 +6,8 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannelConfig;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.client_server.QuicServerExample;
-import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -15,11 +15,11 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(QuicServerExample.class);
     public final static byte HANDSHAKE_MESSAGE = 'A';
     public final static byte APP_DATA = 'B';
-    private final QuicListenerExecutor streamListenerExecutor;
+    private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
 
-    public QuicStreamReadHandler(QuicListenerExecutor streamListenerExecutor, QuicChannelMetrics metrics) {
-        this.streamListenerExecutor = streamListenerExecutor;
+    public QuicStreamReadHandler(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics) {
+        this.consumer = streamListenerExecutor;
         this.metrics = metrics;
     }
 
@@ -32,18 +32,18 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
             QuicConnectionMetrics m = metrics.getConnectionMetrics(ch.parent().remoteAddress());
             m.setStreamCount(m.getStreamCount()+1);
         }
-        streamListenerExecutor.onStreamCreated(ch);
+        consumer.streamCreatedHandler(ch);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        streamListenerExecutor.onStreamClosed((QuicStreamChannel) ctx.channel());
+        consumer.streamClosedHandler((QuicStreamChannel) ctx.channel());
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         cause.printStackTrace();
-        streamListenerExecutor.onStreamError(ch,cause);
+        consumer.streamErrorHandler(ch,cause);
     }
 }

@@ -4,16 +4,16 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import quicSupport.handlers.nettyFuncHandlers.QuicListenerExecutor;
+import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
 public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
-    private QuicListenerExecutor listener;
+    private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
     private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerChannelConHandler.class);
 
-    public QuicServerChannelConHandler(QuicListenerExecutor listener, QuicChannelMetrics metrics) {
-        this.listener = listener;
+    public QuicServerChannelConHandler(CustomQuicChannelConsumer consumer, QuicChannelMetrics metrics) {
+        this.consumer = consumer;
         this.metrics = metrics;
 
     }
@@ -29,7 +29,7 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
         if(metrics!=null){
             metrics.onConnectionClosed(ctx.channel().remoteAddress());
         }
-        listener.onChannelInactive(ctx.channel().id().asShortText());
+        consumer.channelInactive(ctx.channel().id().asShortText());
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
