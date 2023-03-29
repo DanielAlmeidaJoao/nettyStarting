@@ -46,10 +46,10 @@ public class FileStreamer {
             int read=0, totalSent = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-                streamSender.send(bytes,read);
+                //streamSender.send(bytes,read);
             }
             Thread.sleep(2*1000);
-            streamSender.close();
+            //streamSender.close();
             System.out.println("TOTAL SENT "+totalSent);
         }catch (Exception e){
             e.printStackTrace();

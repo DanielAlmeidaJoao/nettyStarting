@@ -65,11 +65,10 @@ public class StreamSenderChannel<T> implements IChannel<T> {
         buf.writeBytes(message.getData(),0, message.getDataLength());
 
         //streamSender.send(buf.array(),buf.readableBytes());
-        streamSender.sendDelimited(buf,null);
     }
     @Override
     public void closeConnection(Host peer, int connection) {
-        streamSender.close();
+        //streamSender.close();
     }
 
     @Override

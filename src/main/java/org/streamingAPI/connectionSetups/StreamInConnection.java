@@ -1,36 +1,30 @@
 package org.streamingAPI.connectionSetups;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.DefaultEventExecutor;
-import io.netty.util.concurrent.Promise;
-import io.netty.util.concurrent.PromiseNotifier;
-import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.channel.StreamingChannel;
 import org.streamingAPI.channel.StreamingNettyConsumer;
-import org.streamingAPI.handlerFunctions.receiver.*;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.pipeline.CustomHandshakeHandler;
 import org.streamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.streamingAPI.pipeline.StreamReceiverHandler;
 import org.streamingAPI.pipeline.encodings.StreamMessageDecoder;
-import org.streamingAPI.handlerFunctions.InNettyChannelListener;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
 
 public class StreamInConnection {
     //One of the main advantages of using a single thread to
     // execute tasks is that it eliminates the need for
     // synchronization primitives such as locks and semaphores.
+
+
+
     private static final Logger logger = LogManager.getLogger(StreamInConnection.class);
 
     private final int port;
@@ -39,7 +33,9 @@ public class StreamInConnection {
     public StreamInConnection(String hostName, int port) {
         this.port = port;
         this.hostName = hostName;
+
     }
+
 
     public static DefaultEventExecutor newDefaultEventExecutor(){
         return new DefaultEventExecutor();
@@ -54,8 +50,7 @@ public class StreamInConnection {
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
         ServerBootstrap b = new ServerBootstrap();
-        b.group(parentGroup)
-                .channel(socketChannel())
+        b.group(parentGroup,childGroup).channel(socketChannel())
                 .localAddress(new InetSocketAddress(hostName,port))
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
@@ -80,26 +75,18 @@ public class StreamInConnection {
         }
         // Wait for the server channel to close. Blocks.
         f.addListener(future -> {
-            //TO DO
             parentGroup.shutdownGracefully().sync();
             childGroup.shutdownGracefully().sync();
             logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });
     }
-
     public void closeServerSocket(){
         serverChannel.close();
     }
 
     public <T> void updateConfiguration(ChannelOption<T> option, T value) {
-        //serverChannel.config().setOption(option,value);
+        serverChannel.config().setOption(option,value);
     }
-
-    public <T> void updateConfiguration(String streamId,ChannelOption<T> option, T value) {
-        //clients.get(streamId).config().setOption(option,value);
-    }
-
-
 
     public static EventLoopGroup createNewWorkerGroup() {
         //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);

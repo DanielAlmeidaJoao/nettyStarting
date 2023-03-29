@@ -47,6 +47,7 @@ public class StreamOutConnection {
                 }
             }).channel();
 
+
             //printSomeConfigs();
             /***
             updateConfiguration(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK,64*1024);

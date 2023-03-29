@@ -46,7 +46,7 @@ public class FileReceiver {
             FileOutputStream fos = files.get(streamId);
             fos.write(data, 0, data.length);
             fos.flush();
-            streamReceiver.send(streamId,data,data.length);
+            //streamReceiver.send(streamId,data,data.length);
         }catch (Exception e){
             e.printStackTrace();
         }
