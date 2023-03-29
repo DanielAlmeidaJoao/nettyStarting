@@ -51,6 +51,9 @@ public class StreamInConnection {
         EventLoopGroup childGroup = createNewWorkerGroup();
         ServerBootstrap b = new ServerBootstrap();
         b.group(parentGroup,childGroup).channel(socketChannel())
+                .option(ChannelOption.SO_BACKLOG, 128)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.TCP_NODELAY, true)
                 .localAddress(new InetSocketAddress(hostName,port))
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
