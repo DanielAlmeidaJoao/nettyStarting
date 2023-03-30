@@ -67,7 +67,7 @@ public class Logics {
                 .initialMaxStreamDataBidirectionalRemote((Long) properties.getOrDefault("initialMaxStreamDataBidirectionalRemote",initialMaxStreamDataBidirectionalRemote))
                 .initialMaxStreamsBidirectional((Long) properties.getOrDefault("initialMaxStreamsBidirectional",initialMaxStreamsBidirectional))
                 .initialMaxStreamsUnidirectional((Long) properties.getOrDefault("initialMaxStreamsUnidirectional",initialMaxStreamsUnidirectional))
-                //.maxAckDelay((Long) properties.getOrDefault("maxAckDelay",maxAckDelay), TimeUnit.MILLISECONDS)
+                .maxAckDelay((Long) properties.getOrDefault("maxAckDelay",maxAckDelay/4), TimeUnit.MILLISECONDS)
                 .activeMigration(true);
     }
 }
