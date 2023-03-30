@@ -90,10 +90,10 @@ public class TestQuicChannel extends CustomQuicChannel {
 
     @Override
     public void failedToSend(InetSocketAddress host, byte[] message, int len, Throwable error) {
-
+        logger.info("FAILED TO SEND. REASON {}",error);
     }
 
-    FileOutputStream fos = new FileOutputStream("TESTQUIC.MP4");
+    FileOutputStream fos = new FileOutputStream("TESTQUIC33.MP4");
     int total = 0;
     @Override
     public void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from) {
@@ -119,7 +119,7 @@ public class TestQuicChannel extends CustomQuicChannel {
 
     @Override
     public void failedToSend(String streamId, byte[] message, int len, Throwable error) {
-        System.out.println("FAILED TO SEND!!!! "+len);
+        System.out.println("FAILED TO SEND!!!! "+error);
     }
     public void startStreaming(InetSocketAddress peer){
         System.out.println("STREAMING STARTED!!!");
@@ -128,7 +128,7 @@ public class TestQuicChannel extends CustomQuicChannel {
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
-            int bufferSize = 2*128*1024; // 8KB buffer size
+            int bufferSize = 2*1024*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
             //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
@@ -136,7 +136,7 @@ public class TestQuicChannel extends CustomQuicChannel {
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
                 send(peer,bytes,read);
-                //Thread.sleep(100);
+                Thread.sleep(50);
             }
             System.out.println("TOTAL SENT "+totalSent);
         }catch (Exception e){

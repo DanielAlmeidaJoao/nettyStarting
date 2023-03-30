@@ -76,7 +76,8 @@ public final class QuicClientExample {
                 .channel(NioDatagramChannel.class)
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
-        QuicChannel.newBootstrap(channel)
+        var chan = QuicChannel.newBootstrap(channel)
+                //.option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(64*1024,128*1024))
                 .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics))
                 .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.OUTGOING_CONNECTION))
                 .remoteAddress(remote).connect().addListener(future -> {
@@ -84,6 +85,10 @@ public final class QuicClientExample {
                 consumer.onOpenConnectionFailed(remote,future.cause());
             }
         }).get();
+        var config = chan.config();
+        System.out.println(config.getWriteBufferHighWaterMark());
+        System.out.println(config.getWriteBufferLowWaterMark());
+
     }
 
     private QuicStreamChannel getOrThrow(long id){

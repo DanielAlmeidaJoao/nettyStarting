@@ -113,7 +113,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         InetSocketAddress remote = streamHostMapping.get(streamId);
         CustomConnection connection = connections.get(remote);
         connection.scheduleSendHeartBeat_KeepAlive();
-        logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED DATA.",self,streamId,remote);
+        //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
         onChannelRead(streamId,bytes,channelIds.get(streamId));
     }
     public void onKeepAliveMessage(String parentId){
@@ -245,6 +245,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         try {
             send(getOrThrow(peer).getDefaultStream(),message,len);
         } catch (Exception e) {
+            e.printStackTrace();
             failedToSend(peer,message,len,e.getCause());
         }
     }

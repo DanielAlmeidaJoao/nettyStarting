@@ -18,6 +18,8 @@ package quicSupport.client_server;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
@@ -95,6 +97,7 @@ public final class QuicServerExample {
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(64*1024,128*1024))
                     .handler(codec)
                     .bind(self).sync()
                     .addListener(future -> {
@@ -102,6 +105,10 @@ public final class QuicServerExample {
                     })
                     .channel();
             started=true;
+            var config = channel.config();
+            System.out.println(config.getWriteBufferLowWaterMark());
+            System.out.println(config.getWriteBufferHighWaterMark());
+            System.out.println(config.getWriteBufferHighWaterMark());
 
             channel.closeFuture().addListener(future -> {
                 group.shutdownGracefully();

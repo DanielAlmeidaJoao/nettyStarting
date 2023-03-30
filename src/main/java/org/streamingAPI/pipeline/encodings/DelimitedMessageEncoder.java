@@ -14,8 +14,10 @@ public class DelimitedMessageEncoder extends MessageToByteEncoder {
     public DelimitedMessageEncoder() {}
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, Object o, ByteBuf byteBuf) throws Exception {
+    protected void encode(ChannelHandlerContext channelHandlerContext, Object o, ByteBuf byteBuf){
         ByteBuf buf = (ByteBuf) o;
+        byteBuf.writeBytes(buf);
+        /**
         buf.markReaderIndex();
         int len = buf.readInt();
         if(len+4 != buf.readableBytes()){
@@ -25,9 +27,9 @@ public class DelimitedMessageEncoder extends MessageToByteEncoder {
              * b.writeBytes(data)
              */
             //throw new RuntimeException("THE FIRST 4 BYTES MUST BE THE LENGTH OF THE DATA TO BE SENT!");
-            buf.resetReaderIndex();
-            byteBuf.writeInt(buf.readableBytes());
-        }
-        byteBuf.writeBytes(buf,0, buf.readableBytes());
+            //buf.resetReaderIndex();
+            //byteBuf.writeInt(buf.readableBytes());
+        //}
+        //byteBuf.writeBytes(buf,0, buf.readableBytes());**/
     }
 }

@@ -59,8 +59,8 @@ public class StreamInConnection {
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(metrics,consumer));
                         ch.pipeline().addLast(new DelimitedMessageEncoder());
+                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(metrics,consumer));
                         ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
                         ch.pipeline().addLast(new StreamReceiverHandler(metrics,consumer));
                     }
