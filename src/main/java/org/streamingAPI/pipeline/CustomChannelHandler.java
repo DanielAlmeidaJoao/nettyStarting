@@ -13,18 +13,18 @@ public abstract class CustomChannelHandler extends ChannelInboundHandlerAdapter 
     private static final Logger logger = LogManager.getLogger(CustomChannelHandler.class);
 
     @Getter
-    private StreamingNettyConsumer consumer;
+    private final StreamingNettyConsumer consumer;
 
     public CustomChannelHandler(StreamingNettyConsumer consumer){
         this.consumer = consumer;
     }
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        getConsumer().channelRead(ctx.channel().id().asShortText(), (byte []) msg);
+        getConsumer().onChannelRead(ctx.channel().id().asShortText(), (byte []) msg);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx){
-        consumer.channelInactive(ctx.channel().id().asShortText());
+        consumer.onChannelInactive(ctx.channel().id().asShortText());
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,

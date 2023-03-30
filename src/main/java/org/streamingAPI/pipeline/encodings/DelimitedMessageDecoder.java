@@ -37,12 +37,4 @@ public class DelimitedMessageDecoder extends ByteToMessageDecoder {
             metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+length+4);
         }
     }
-    private void beforeLikeThis(){
-        /**
-        ByteBuf msgData = in.readSlice(in.readableBytes());
-
-        StreamMessage streamMessage = new StreamMessage(msgData.array(),msgData.readableBytes(),ctx.channel().id().asShortText());
-        out.add(streamMessage);
-         **/
-    }
 }

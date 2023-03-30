@@ -10,6 +10,8 @@ import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 //EVERY STREAM HAS THIS OBJECT????
 public class QuicChannelMetrics {
@@ -21,13 +23,19 @@ public class QuicChannelMetrics {
     private final Map<SocketAddress,QuicConnectionMetrics> currentConnections;
 
     @Getter
-    private final List<QuicConnectionMetrics> oldConnections;
+    private final Queue<QuicConnectionMetrics> oldConnections;
     //private Map<InetSocketAddress, QuicConnectionMetrics> metricsMap;
 
-    public QuicChannelMetrics(InetSocketAddress host){
+    public QuicChannelMetrics(InetSocketAddress host, boolean singleThreaded){
         self=host;
-        currentConnections=new HashMap<>();
-        oldConnections=new LinkedList<>();
+        if(singleThreaded){
+            currentConnections=new HashMap<>();
+            oldConnections=new LinkedList<>();
+        }else{
+            currentConnections=new ConcurrentHashMap<>();
+            oldConnections=new ConcurrentLinkedQueue<>();
+        }
+
         modelMapper = new ModelMapper();
         logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }

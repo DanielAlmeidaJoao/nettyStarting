@@ -98,7 +98,7 @@ public class Main2 {
                     InetSocketAddress address = new InetSocketAddress(host, p);
                     testQuicChannel.getStats(address);
                 } else if ("old".equalsIgnoreCase(input)) {
-                    testQuicChannel.oldMetrics();
+                    //testQuicChannel.oldMetrics();
                 } else if ("bb".equalsIgnoreCase(input)) {
                     testQuicChannel.setBb();
                 } else if ("stream".equalsIgnoreCase(input)) {

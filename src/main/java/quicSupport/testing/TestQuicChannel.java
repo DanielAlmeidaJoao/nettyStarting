@@ -25,7 +25,7 @@ public class TestQuicChannel extends CustomQuicChannel {
 
 
     public TestQuicChannel(Properties properties) throws IOException {
-        super(properties);
+        super(properties,true);
     }
 
     @Override
@@ -47,9 +47,6 @@ public class TestQuicChannel extends CustomQuicChannel {
     }
     public void readOldMetrics(List<QuicConnectionMetrics> old){
         System.out.println(old);
-    }
-    public void oldMetrics(){
-        super.oldMetrics(this::readOldMetrics);
     }
 
     QuicStreamChannel bb=null;

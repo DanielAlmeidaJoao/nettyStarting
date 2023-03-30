@@ -35,11 +35,11 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     public final static String PORT_KEY = "port";
 
     public final static String DEFAULT_PORT = "8574";
-    private Map<InetSocketAddress, Channel> connections;
-    private Map<String,InetSocketAddress> channelIds;
+    private final Map<InetSocketAddress, Channel> connections;
+    private final Map<String,InetSocketAddress> channelIds;
 
-    private StreamInConnection server;
-    private StreamOutConnection client;
+    private final StreamInConnection server;
+    private final StreamOutConnection client;
     private final boolean metricsOn;
     private final TCPStreamMetrics tcpStreamMetrics;
     public StreamingChannel( Properties properties, boolean singleThreaded)throws IOException{
@@ -76,8 +76,11 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     }
 
     /******************************************* CHANNEL EVENTS ****************************************************/
-    public  void channelInactive(String channelId){
+    public  void onChannelInactive(String channelId){
         InetSocketAddress peer = channelIds.remove(channelId);
+        if(peer==null){
+            return;
+        }
         Channel chan = connections.remove(peer);
         if(metricsOn){
             tcpStreamMetrics.onConnectionClosed(chan.remoteAddress());
@@ -86,15 +89,13 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     }
     public abstract void onChannelInactive(InetSocketAddress peer);
 
-    public void channelRead(String channelId, byte[] bytes){
+    public void onChannelRead(String channelId, byte[] bytes){
         onChannelRead(channelId,bytes,channelIds.get(channelId));
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
-    public void channelActive(Channel channel, HandShakeMessage handShakeMessage){
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage){
         logger.info("{} CHANNEL ACTIVATED.",self);
-        InetAddress hostName;
-        int port;
         try {
             boolean incoming;
             InetSocketAddress listeningAddress;
@@ -134,7 +135,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             logger.info("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
             logger.info("{} CONNECTING TO {}",self,peer);
-            client.connect(peer,true,tcpStreamMetrics,this);
+            client.connect(peer,tcpStreamMetrics,this);
         }
     }
     protected void closeConnection(InetSocketAddress peer) {

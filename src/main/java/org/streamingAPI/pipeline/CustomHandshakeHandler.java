@@ -37,7 +37,7 @@ public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
         in.readBytes(controlData,0,len);
         String gg = new String(controlData);
         HandShakeMessage handShakeMessage = FactoryMethods.g.fromJson(gg, HandShakeMessage.class);
-        consumer.channelActive(ctx.channel(),handShakeMessage);
+        consumer.onChannelActive(ctx.channel(),handShakeMessage);
         if(metrics!=null){
             TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
             metrics1.setReceivedControlBytes(metrics1.getReceivedControlBytes()+len);

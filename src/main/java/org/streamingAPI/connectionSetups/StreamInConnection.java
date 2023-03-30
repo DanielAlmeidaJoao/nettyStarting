@@ -14,6 +14,7 @@ import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.pipeline.CustomHandshakeHandler;
 import org.streamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.streamingAPI.pipeline.StreamReceiverHandler;
+import org.streamingAPI.pipeline.encodings.DelimitedMessageEncoder;
 import org.streamingAPI.pipeline.encodings.StreamMessageDecoder;
 
 import java.net.InetSocketAddress;
@@ -59,11 +60,8 @@ public class StreamInConnection {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(metrics,consumer));
-                        if(readDelimited){
-                            ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
-                        }else{
-                            ch.pipeline().addLast(new StreamMessageDecoder(metrics));
-                        }
+                        ch.pipeline().addLast(new DelimitedMessageEncoder());
+                        ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
                         ch.pipeline().addLast(new StreamReceiverHandler(metrics,consumer));
                     }
                 });

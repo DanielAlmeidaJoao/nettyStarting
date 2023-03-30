@@ -3,14 +3,18 @@ package quicSupport.channels;
 import io.netty.channel.Channel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.*;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
+import org.streamingAPI.handlerFunctions.ReadMetricsHandler;
+import org.streamingAPI.utils.MetricsDisabledException;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.channelFuncHandlers.OldMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
+import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.CustomConnection;
 import quicSupport.utils.Logics;
 import quicSupport.utils.metrics.QuicChannelMetrics;
@@ -22,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
@@ -40,7 +45,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private final QuicClientExample client;
     private final Properties properties;
     private QuicChannelMetrics metrics;
-    public CustomQuicChannel(Properties properties)throws IOException {
+    public CustomQuicChannel(Properties properties, boolean singleThreaded)throws IOException {
         this.properties=properties;
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
@@ -52,12 +57,18 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         self = new InetSocketAddress(addr,port);
         enableMetrics = (boolean) properties.getOrDefault("metrics",true);
         if(enableMetrics){
-            metrics=new QuicChannelMetrics(self);
+            metrics=new QuicChannelMetrics(self,singleThreaded);
+        }
+        if(singleThreaded){
+            connections = new HashMap<>();
+            channelIds = new HashMap<>();
+            streamHostMapping = new HashMap<>();
+        }else {
+            connections = new ConcurrentHashMap<>();
+            channelIds = new ConcurrentHashMap<>();
+            streamHostMapping = new ConcurrentHashMap<>();
         }
 
-        connections = new HashMap<>();
-        channelIds = new HashMap<>();
-        streamHostMapping = new HashMap<>();
 
         QuicServerExample server = new QuicServerExample(addr.getHostName(), port, this,metrics,properties);
         client = new QuicClientExample(self,this,new NioEventLoopGroup(1), metrics);
@@ -195,11 +206,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             }
         }
     }
-    public void oldMetrics(OldMetricsHandler handler){
-        if(isEnableMetrics()){
-            handler.handle(metrics.getOldConnections());
-        }
-    }
     private CustomConnection getOrThrow(InetSocketAddress peer) throws UnknownElement {
         CustomConnection quicConnection = connections.get(peer);
         if(quicConnection==null){
@@ -280,7 +286,14 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public void onServerSocketClose(boolean success, Throwable cause) {
         logger.debug("Server socket closed. " + (success ? "" : "Cause: " + cause));
     }
-
+    @SneakyThrows
+    public void readMetrics(QuicReadMetricsHandler handler){
+        if(isEnableMetrics()){
+            handler.readMetrics(metrics.currentMetrics(),metrics.oldMetrics());
+        }else {
+            throw new Exception("METRICS WAS NOT ENABLED!");
+        }
+    }
     /************************************ FAILURE HANDLERS ************************************************************/
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
     public abstract void failedToSend(String streamId,byte[] message, int len, Throwable error);

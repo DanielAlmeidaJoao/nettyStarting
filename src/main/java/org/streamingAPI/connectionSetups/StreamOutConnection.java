@@ -9,6 +9,7 @@ import org.streamingAPI.channel.StreamingNettyConsumer;
 import org.streamingAPI.metrics.TCPStreamMetrics;
 import org.streamingAPI.pipeline.StreamSenderHandler;
 import org.streamingAPI.pipeline.encodings.DelimitedMessageDecoder;
+import org.streamingAPI.pipeline.encodings.DelimitedMessageEncoder;
 import org.streamingAPI.pipeline.encodings.StreamMessageDecoder;
 import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 import java.net.InetSocketAddress;
@@ -23,7 +24,7 @@ public class StreamOutConnection {
         handShakeMessage = new HandShakeMessage(host);
     }
 
-    public void connect(InetSocketAddress peer, boolean readDelimited, TCPStreamMetrics metrics, StreamingNettyConsumer consumer){
+    public void connect(InetSocketAddress peer,TCPStreamMetrics metrics, StreamingNettyConsumer consumer){
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
@@ -33,12 +34,9 @@ public class StreamOutConnection {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                            if(readDelimited){
-                                ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
-                            }else{
-                                ch.pipeline().addLast(new StreamMessageDecoder(metrics));
-                            }
-                        ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,consumer,metrics));
+                            ch.pipeline().addLast(new DelimitedMessageEncoder());
+                            ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
+                            ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,consumer,metrics));
                     }
                     });
             b.connect().sync().addListener(future -> {

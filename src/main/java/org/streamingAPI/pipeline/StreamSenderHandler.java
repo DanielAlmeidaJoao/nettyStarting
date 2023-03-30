@@ -43,7 +43,7 @@ public class StreamSenderHandler extends CustomChannelHandler {
                 ctx.channel().close();
             }
         });
-        getConsumer().channelActive(ctx.channel(),null);
+        getConsumer().onChannelActive(ctx.channel(),null);
         handshakeData=null;
     }
 

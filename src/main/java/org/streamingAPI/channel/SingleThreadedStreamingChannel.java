@@ -23,18 +23,18 @@ public abstract class SingleThreadedStreamingChannel extends StreamingChannel{
     }
 
     @Override
-    public void channelActive(Channel channel, HandShakeMessage handShakeMessage) {
-        executor.execute(() -> super.channelActive(channel,handShakeMessage));
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage) {
+        executor.execute(() -> super.onChannelActive(channel,handShakeMessage));
     }
 
     @Override
-    public void channelRead(String channelId, byte[] bytes) {
-        executor.execute(() -> super.channelRead(channelId,bytes));
+    public void onChannelRead(String channelId, byte[] bytes) {
+        executor.execute(() -> super.onChannelRead(channelId,bytes));
     }
 
     @Override
-    public void channelInactive(String channelId) {
-        executor.execute(() -> super.channelInactive(channelId));
+    public void onChannelInactive(String channelId) {
+        executor.execute(() -> super.onChannelInactive(channelId));
     }
 
     @Override

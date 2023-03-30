@@ -24,9 +24,10 @@ public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncode
         byteBuf.writeInt(message.getDataLen());
         byteBuf.writeByte(message.getMsgCode());
         byteBuf.writeBytes(message.getData(),0, message.getDataLen());
-        byteBuf.markReaderIndex();
-        int bytes = byteBuf.readInt();
-        byte msgType = byteBuf.readByte();
+        //byteBuf.markReaderIndex();
+
+        int bytes = message.getDataLen();// byteBuf.readInt(); //TODO MAKES NO SENSE ...
+        byte msgType = message.getMsgCode(); // byteBuf.readByte();
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             switch (msgType){
@@ -45,6 +46,6 @@ public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncode
                     throw new AssertionError("Unknown msg code in encoder: " + msgType);
             }
         }
-        byteBuf.resetReaderIndex();
+        //byteBuf.resetReaderIndex();
     }
 }

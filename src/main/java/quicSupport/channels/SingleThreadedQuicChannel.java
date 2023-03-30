@@ -2,8 +2,10 @@ package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import org.streamingAPI.utils.MetricsDisabledException;
 import quicSupport.handlers.channelFuncHandlers.OldMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
+import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,7 +15,7 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
     private final DefaultEventExecutor executor;
 
     public SingleThreadedQuicChannel(Properties properties) throws IOException {
-        super(properties);
+        super(properties,true);
         executor = new DefaultEventExecutor();
     }
 
@@ -61,16 +63,15 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
     public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler){
         executor.execute(() -> super.getStats(peer,handler));
     }
-    public void oldMetrics(OldMetricsHandler handler){
-        executor.execute(() -> super.oldMetrics(handler));
-    }
     public void createStream(InetSocketAddress peer) {
         executor.execute(() -> super.createStream(peer));
     }
     public void closeStream(String streamId){
         executor.execute(() -> super.closeStream(streamId));
     }
-
+    public void readMetrics(QuicReadMetricsHandler handler){
+        executor.execute(() -> super.readMetrics(handler));
+    }
     public void send(String streamId,byte[] message, int len) {
         executor.execute(() -> super.send(streamId,message,len));
     }

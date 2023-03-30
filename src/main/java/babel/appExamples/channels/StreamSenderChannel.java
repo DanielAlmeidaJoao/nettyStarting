@@ -74,7 +74,7 @@ public class StreamSenderChannel<T> implements IChannel<T> {
     @Override
     public void openConnection(Host peer) {
         //streamSender.setHost(self.getAddress().getHostName(),self.getPort());
-        streamSender.connect(null,true,null,null);
+        streamSender.connect(null,null,null);
     }
     private void channelActive(Channel channel, HandShakeMessage handShakeMessage){
 
