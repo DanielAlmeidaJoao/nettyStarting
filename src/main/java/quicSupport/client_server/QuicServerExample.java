@@ -97,7 +97,9 @@ public final class QuicServerExample {
             Bootstrap bs = new Bootstrap();
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
-                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(64*1024,128*1024))
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(2*1024*1024,2*1024*1024*2))
+                    .option(ChannelOption.SO_RCVBUF,2*1024*1024)
+                    .option(ChannelOption.SO_SNDBUF,2*1024*1024)
                     .handler(codec)
                     .bind(self).sync()
                     .addListener(future -> {
@@ -109,6 +111,8 @@ public final class QuicServerExample {
             System.out.println(config.getWriteBufferLowWaterMark());
             System.out.println(config.getWriteBufferHighWaterMark());
             System.out.println(config.getWriteBufferHighWaterMark());
+            System.out.println("SO_RCVBUF "+config.getOptions().get(ChannelOption.SO_RCVBUF));
+            System.out.println("SO_SNDBUF "+config.getOptions().get(ChannelOption.SO_SNDBUF));
 
             channel.closeFuture().addListener(future -> {
                 group.shutdownGracefully();

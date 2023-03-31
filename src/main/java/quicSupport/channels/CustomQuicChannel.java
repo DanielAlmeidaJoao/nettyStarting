@@ -4,6 +4,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.*;
 import lombok.SneakyThrows;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
@@ -109,10 +110,14 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     }
     public abstract void onStreamCreatedHandler(InetSocketAddress peer,QuicStreamChannel channel);
 
+    byte [] readHash = new byte[0];
+
     public void streamReader(String streamId, byte[] bytes){
         InetSocketAddress remote = streamHostMapping.get(streamId);
         CustomConnection connection = connections.get(remote);
         connection.scheduleSendHeartBeat_KeepAlive();
+        readHash = Logics.appendOpToHash(readHash,bytes);
+        logger.info("RECEIVED HASH {}",Hex.encodeHexString(readHash));
         //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
         onChannelRead(streamId,bytes,channelIds.get(streamId));
     }
@@ -249,13 +254,18 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             failedToSend(peer,message,len,e.getCause());
         }
     }
+    byte [] cumulativeHash = new byte[0];
     private void send(QuicStreamChannel streamChannel, byte[] message, int len){
         try{
+            System.out.println("IS WRITABLE "+streamChannel.isWritable());
             streamChannel.writeAndFlush(Logics.writeBytes(len,message, Logics.APP_DATA))
                     .addListener(future -> {
                         if(!future.isSuccess()){
                             future.cause().printStackTrace();
                             failedToSend(streamChannel.id().asShortText(),message,len,future.cause());
+                        }else{
+                            cumulativeHash = Logics.appendOpToHash(cumulativeHash,message);
+                            logger.info("SENT HASH {}",Hex.encodeHexString(cumulativeHash));
                         }
                     });
         }catch (Exception e){

@@ -2,12 +2,16 @@ package quicSupport.utils;
 
 import com.google.gson.Gson;
 import io.netty.incubator.codec.quic.*;
+import org.apache.commons.codec.binary.Hex;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
+import java.io.ByteArrayOutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -69,5 +73,27 @@ public class Logics {
                 .initialMaxStreamsUnidirectional((Long) properties.getOrDefault("initialMaxStreamsUnidirectional",initialMaxStreamsUnidirectional))
                 .maxAckDelay((Long) properties.getOrDefault("maxAckDelay",maxAckDelay/4), TimeUnit.MILLISECONDS)
                 .activeMigration(true);
+    }
+
+    public static byte[] appendOpToHash(byte[] hash, byte[] op) {
+        MessageDigest mDigest;
+        try {
+            mDigest = MessageDigest.getInstance("sha-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new AssertionError("sha-256 not available...");
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            baos.write(hash);
+            baos.write(op);
+            return mDigest.digest(baos.toByteArray());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new AssertionError();
+        }
+    }
+    private void ttest(byte [] cumulativeHash, byte [] sentData){
+        cumulativeHash = appendOpToHash(cumulativeHash,sentData);
+        Hex.encodeHexString(cumulativeHash);
     }
 }

@@ -74,6 +74,7 @@ public class StreamInConnection {
         }else{
             f = serverChannel.closeFuture();
         }
+
         // Wait for the server channel to close. Blocks.
         f.addListener(future -> {
             parentGroup.shutdownGracefully().sync();

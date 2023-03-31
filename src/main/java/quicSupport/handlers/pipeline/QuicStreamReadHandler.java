@@ -34,7 +34,17 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         }
         consumer.streamCreatedHandler(ch);
     }
-
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        if (ctx.channel().isWritable()) {
+            // Channel is now writable, so we can start sending data
+            System.out.println("CHANNEL READY TO WRITE");
+        } else {
+            // Channel is not writable, so we need to pause sending data
+            // or take other appropriate action
+            System.out.println("CHANNEL NOT NOT READY TO WRITE");
+        }
+    }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         consumer.streamClosedHandler((QuicStreamChannel) ctx.channel());

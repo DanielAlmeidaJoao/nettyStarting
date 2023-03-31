@@ -27,6 +27,7 @@ public class StreamOutConnection {
     public void connect(InetSocketAddress peer,TCPStreamMetrics metrics, StreamingNettyConsumer consumer){
         try {
             Bootstrap b = new Bootstrap();
+
             b.group(group)
                     .channel(socketChannel())
                     .remoteAddress(peer)
@@ -39,7 +40,8 @@ public class StreamOutConnection {
                             ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,consumer,metrics));
                     }
                     });
-            b.connect().sync().addListener(future -> {
+
+            Channel channel = b.connect().sync().addListener(future -> {
                 if(!future.isSuccess()){
                     //TODO
                 }

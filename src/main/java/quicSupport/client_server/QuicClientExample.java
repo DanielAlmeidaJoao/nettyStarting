@@ -74,6 +74,9 @@ public final class QuicClientExample {
         Bootstrap bs = new Bootstrap();
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(2*1024*1024,2*1024*1024*2))
+                .option(ChannelOption.SO_RCVBUF,2*1024*1024)
+                .option(ChannelOption.SO_SNDBUF,2*1024*1024)
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         var chan = QuicChannel.newBootstrap(channel)

@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
 import quicSupport.channels.CustomQuicChannel;
+import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.FileInputStream;
@@ -18,14 +19,14 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
-public class TestQuicChannel extends CustomQuicChannel {
+public class TestQuicChannel extends SingleThreadedQuicChannel {
 
     private static final Logger logger = LogManager.getLogger(TestQuicChannel.class);
     //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(TestQuicChannel.class);
 
 
     public TestQuicChannel(Properties properties) throws IOException {
-        super(properties,true);
+        super(properties);
     }
 
     @Override
@@ -133,10 +134,16 @@ public class TestQuicChannel extends CustomQuicChannel {
 
             //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             int read, totalSent = 0;
+            int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
                 send(peer,bytes,read);
-                //Thread.sleep(50);
+                cc ++;
+                if(cc>10){
+                    break;
+                }
+                //break;
+                //Thread.sleep(100);
             }
             System.out.println("TOTAL SENT "+totalSent);
         }catch (Exception e){
