@@ -89,10 +89,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
 
     }
 
-    @Override
-    public void failedToSend(InetSocketAddress host, byte[] message, int len, Throwable error) {
-        logger.info("FAILED TO SEND. REASON {}",error);
-    }
+
 
     FileOutputStream fos = new FileOutputStream("TESTQUIC33.MP4");
     int total = 0;
@@ -117,26 +114,39 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
     public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
 
     }
-
+    @Override
+    public void failedToSend(InetSocketAddress host, byte[] message, int len, Throwable error) {
+        logger.info("FAILED TO SEND. REASON {}: ",error.getLocalizedMessage());
+    }
     @Override
     public void failedToSend(String streamId, byte[] message, int len, Throwable error) {
-        System.out.println("FAILED TO SEND!!!! "+error);
+        logger.info("FAILED TO SEND. REASON: {}",error.getLocalizedMessage());
     }
     public void startStreaming(InetSocketAddress peer){
         System.out.println("STREAMING STARTED!!!");
         try{
-            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
+            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+            Path filePath = Paths.get(p);
+            //
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             int bufferSize = 2*1024*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
             //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             int read, totalSent = 0;
+            int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
                 send(peer,bytes,read);
+                cc++;
+                if(cc>100){
+                    cc=0;
+                    Thread.sleep(1000);
+                    System.out.println("UP");
+                }
                 bytes = new byte[bufferSize];
             }
             System.out.println("TOTAL SENT "+totalSent);

@@ -3,6 +3,7 @@ package quicSupport.handlers.pipeline;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.metrics.QuicChannelMetrics;

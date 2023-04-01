@@ -237,35 +237,32 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public void send(String streamId,byte[] message, int len) {
         try{
             InetSocketAddress host = streamHostMapping.get(streamId);
-            send(getOrThrow(host).getStream(streamId),message,len);
-        }catch (Exception e){
-            failedToSend(streamId,message,len,e.getCause());
+            if(host==null){
+                failedToSend(streamId,message,len,new Throwable("UNKNOWN STREAM ID: "+streamId));
+            }else {
+                send(getOrThrow(host).getStream(streamId),message,len);
+            }
+        }catch (UnknownElement e){
+            logger.debug(e.getMessage());
+            failedToSend(streamId,message,len,e);
         }
     }
     public void send(InetSocketAddress peer,byte[] message, int len){
         try {
             send(getOrThrow(peer).getDefaultStream(),message,len);
         } catch (Exception e) {
-            e.printStackTrace();
-            failedToSend(peer,message,len,e.getCause());
+            logger.debug(e.getMessage());
+            failedToSend(peer,message,len,e);
         }
     }
     private void send(QuicStreamChannel streamChannel, byte[] message, int len){
-        try{
-            /**
-            TestSendReceived testSendReceived = new TestSendReceived(message,Hex.encodeHexString(hash(message)));
-            System.out.println("SENT HASH: "+testSendReceived.getHash());
-            byte [] toSend = gson.toJson(testSendReceived).getBytes();**/
-            streamChannel.writeAndFlush(Logics.writeBytes(len,message,Logics.APP_DATA))
-                    .addListener(future -> {
-                        if(!future.isSuccess()){
-                            future.cause().printStackTrace();
-                            failedToSend(streamChannel.id().asShortText(),message,len,future.cause());
-                        }
-                    });
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        streamChannel.writeAndFlush(Logics.writeBytes(len,message,Logics.APP_DATA))
+                .addListener(future -> {
+                    if(!future.isSuccess()){
+                        future.cause().printStackTrace();
+                        failedToSend(streamChannel.id().asShortText(),message,len,null);
+                    }
+                });
     }
 
     /*********************************** User Actions **************************************/
@@ -302,8 +299,9 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     }
     /************************************ FAILURE HANDLERS ************************************************************/
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
-    public abstract void failedToSend(String streamId,byte[] message, int len, Throwable error);
     public abstract void failedToCloseStream(String streamId, Throwable reason);
+    public abstract void failedToSend(String streamId,byte[] message, int len, Throwable error);
+
     public abstract void failedToSend(InetSocketAddress host,byte[] message, int len, Throwable error);
     public abstract void failedToCreateStream(InetSocketAddress peer, Throwable error);
     public abstract void failedToGetMetrics(Throwable cause);
