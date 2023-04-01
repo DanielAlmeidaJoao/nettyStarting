@@ -1,25 +1,18 @@
 package babel.appExamples.protocols;
 
 import babel.appExamples.channels.BabelStreamingChannel;
-import babel.appExamples.channels.StreamReceiverChannel;
 import babel.appExamples.channels.messages.EndOfStreaming;
 import babel.appExamples.channels.messages.StreamMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import pt.unl.fct.di.novasys.channel.ChannelEvent;
-import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
 import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionDown;
 import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Properties;
 
 public class ReceiveFileProtocol extends GenericProtocol {

@@ -1,13 +1,12 @@
 package quicSupport.channels;
 
-import io.netty.channel.Channel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.*;
+import lombok.Getter;
 import lombok.SneakyThrows;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
+import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
@@ -31,6 +30,8 @@ import static quicSupport.utils.Logics.gson;
 public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
     private final InetSocketAddress self;
+
+    @Getter
     private static boolean enableMetrics;
     public final static String NAME = "QUIC_CHANNEL";
 
@@ -79,7 +80,9 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             throw new IOException(e);
         }
     }
-
+    public boolean enabledMetrics(){
+        return enableMetrics;
+    }
     /*********************************** Stream Handlers **********************************/
 
     public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable) {
@@ -95,7 +98,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         InetSocketAddress peer = streamHostMapping.remove(streamId);
         onStreamClosedHandler(peer,channel);
     }
-    public abstract void onStreamClosedHandler(InetSocketAddress peer,QuicStreamChannel channel);
 
     public void streamCreatedHandler(QuicStreamChannel channel) {
         InetSocketAddress peer = channelIds.get(channel.parent().id().asShortText());
@@ -143,7 +145,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
             streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
 
-            onChannelActive(streamChannel,handShakeMessage,listeningAddress);
+            onConnectionUp(incoming,listeningAddress);
             if(enableMetrics){
                 metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),incoming);
             }
@@ -153,16 +155,16 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             streamChannel.disconnect();
         }
     }
-    public abstract void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer);
+    public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
 
     public  void channelInactive(String channelId){
         InetSocketAddress host = channelIds.remove(channelId);
         CustomConnection connection = connections.remove(host);
         logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
         connection.close();
-        onChannelClosed(host);
+        onConnectionDown(host,connection.isInComing());
     }
-    public abstract void onChannelClosed(InetSocketAddress peer);
+    public abstract void onConnectionDown(InetSocketAddress peer, boolean incoming);
 
     /*********************************** Channel Handlers **********************************/
 
@@ -226,6 +228,8 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         try{
             InetSocketAddress host = streamHostMapping.get(streamId);
             if(host==null){
+                logger.debug("UNKNOWN STREAM ID: ",streamId);
+            }else{
                 CustomConnection connection = connections.get(host);
                 connection.closeStream(streamId);
             }
@@ -235,32 +239,33 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     }
 
     public void send(String streamId,byte[] message, int len) {
+        InetSocketAddress host = streamHostMapping.get(streamId);
         try{
-            InetSocketAddress host = streamHostMapping.get(streamId);
             if(host==null){
-                failedToSend(streamId,message,len,new Throwable("UNKNOWN STREAM ID: "+streamId));
+                onMessageSent(message,len,new Throwable("UNKNOWN STREAM ID: "+streamId),host);
             }else {
-                send(getOrThrow(host).getStream(streamId),message,len);
+                send(getOrThrow(host).getStream(streamId),message,len,host);
             }
         }catch (UnknownElement e){
             logger.debug(e.getMessage());
-            failedToSend(streamId,message,len,e);
+            onMessageSent(message,len,e,host);
         }
     }
     public void send(InetSocketAddress peer,byte[] message, int len){
         try {
-            send(getOrThrow(peer).getDefaultStream(),message,len);
+            send(getOrThrow(peer).getDefaultStream(),message,len,peer);
         } catch (Exception e) {
             logger.debug(e.getMessage());
-            failedToSend(peer,message,len,e);
+            onMessageSent(message,len,e,peer);
         }
     }
-    private void send(QuicStreamChannel streamChannel, byte[] message, int len){
+    private void send(QuicStreamChannel streamChannel, byte[] message, int len, InetSocketAddress peer){
         streamChannel.writeAndFlush(Logics.writeBytes(len,message,Logics.APP_DATA))
                 .addListener(future -> {
-                    if(!future.isSuccess()){
-                        future.cause().printStackTrace();
-                        failedToSend(streamChannel.id().asShortText(),message,len,null);
+                    if(future.isSuccess()){
+                        onMessageSent(message,len,null,peer);
+                    }else{
+                        onMessageSent(message,len,future.cause(),peer);
                     }
                 });
     }
@@ -300,10 +305,11 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     /************************************ FAILURE HANDLERS ************************************************************/
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
     public abstract void failedToCloseStream(String streamId, Throwable reason);
-    public abstract void failedToSend(String streamId,byte[] message, int len, Throwable error);
+    public abstract void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer);
 
-    public abstract void failedToSend(InetSocketAddress host,byte[] message, int len, Throwable error);
     public abstract void failedToCreateStream(InetSocketAddress peer, Throwable error);
     public abstract void failedToGetMetrics(Throwable cause);
+
+    public abstract void onStreamClosedHandler(InetSocketAddress peer,QuicStreamChannel channel);
 
 }

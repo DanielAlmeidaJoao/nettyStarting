@@ -1,6 +1,5 @@
 package quicSupport.handlers.channelFuncHandlers;
 
-import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.util.List;

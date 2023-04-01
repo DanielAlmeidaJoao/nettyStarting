@@ -5,7 +5,6 @@ import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
-import org.streamingAPI.metrics.TCPStreamConnectionMetrics;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

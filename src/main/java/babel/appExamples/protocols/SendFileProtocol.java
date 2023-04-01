@@ -1,8 +1,6 @@
 package babel.appExamples.protocols;
 
 import babel.appExamples.channels.BabelStreamingChannel;
-import babel.appExamples.channels.StreamReceiverChannel;
-import babel.appExamples.channels.StreamSenderChannel;
 import babel.appExamples.channels.messages.EndOfStreaming;
 import babel.appExamples.channels.messages.StreamMessage;
 import org.apache.logging.log4j.LogManager;

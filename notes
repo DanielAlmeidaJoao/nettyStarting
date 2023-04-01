@@ -1,22 +1,22 @@
 java -Xmx500M -cp asdProj2.jar Main p2p_port=10101 server_port=35000 &
 java -cp target\nettyStart.jar Main
 
-java -cp target\nettyStart.jar org.streamingAPI.connectionSetups.StreamSender localhost 8081
-java -cp target\nettyStart.jar org.streamingAPI.connectionSetups.StreamInConnection 8081
+java -cp target\nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamSender localhost 8081
+java -cp target\nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamInConnection 8081
 
-java -cp target/nettyStart.jar org.streamingAPI.connectionSetups.StreamSender localhost 8081
-java -cp target/nettyStart.jar org.streamingAPI.fileStreamingApp.FileStreamer localhost 8081
+java -cp target/nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamSender localhost 8081
+java -cp target/nettyStart.jar org.tcpStreamingAPI.fileStreamingApp.FileStreamer localhost 8081
 
-java -cp target/nettyStart.jar org.streamingAPI.connectionSetups.StreamInConnection 8081
+java -cp target/nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamInConnection 8081
 
-java -cp target/nettyStart.jar org.streamingAPI.fileStreamingApp.FileReceiver 8081
+java -cp target/nettyStart.jar org.tcpStreamingAPI.fileStreamingApp.FileReceiver 8081
 
-java -cp target/nettyStart.jar org.streamingAPI.p2p.PeerToPeerChannel
+java -cp target/nettyStart.jar org.tcpStreamingAPI.p2p.PeerToPeerChannel
 
 WINDOWS:
-java -cp target/nettyStart.jar org.streamingAPI.fileStreamingApp.FileReceiver 8081
+java -cp target/nettyStart.jar org.tcpStreamingAPI.fileStreamingApp.FileReceiver 8081
 
-java -cp target/nettyStart.jar org.streamingAPI.fileStreamingApp.FileStreamer localhost 8081
+java -cp target/nettyStart.jar org.tcpStreamingAPI.fileStreamingApp.FileStreamer localhost 8081
 
 
 

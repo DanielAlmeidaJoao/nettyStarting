@@ -1,12 +1,9 @@
 package quicSupport.testing;
 
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
-import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -65,7 +62,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
         }).run();
     }
     @Override
-    public void onChannelClosed(InetSocketAddress peer) {
+    public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
         try{
             System.out.println("RECEIVED TOTAL "+total);
             fos.close();
@@ -106,7 +103,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
     }
 
     @Override
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, InetSocketAddress peer) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer) {
 
     }
 
@@ -115,11 +112,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
 
     }
     @Override
-    public void failedToSend(InetSocketAddress host, byte[] message, int len, Throwable error) {
-        logger.info("FAILED TO SEND. REASON {}: ",error.getLocalizedMessage());
-    }
-    @Override
-    public void failedToSend(String streamId, byte[] message, int len, Throwable error) {
+    public void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer) {
         logger.info("FAILED TO SEND. REASON: {}",error.getLocalizedMessage());
     }
     public void startStreaming(InetSocketAddress peer){
