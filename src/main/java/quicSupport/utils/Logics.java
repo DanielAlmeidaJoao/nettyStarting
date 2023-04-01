@@ -71,8 +71,9 @@ public class Logics {
                 .initialMaxStreamDataBidirectionalRemote((Long) properties.getOrDefault("initialMaxStreamDataBidirectionalRemote",initialMaxStreamDataBidirectionalRemote))
                 .initialMaxStreamsBidirectional((Long) properties.getOrDefault("initialMaxStreamsBidirectional",initialMaxStreamsBidirectional))
                 .initialMaxStreamsUnidirectional((Long) properties.getOrDefault("initialMaxStreamsUnidirectional",initialMaxStreamsUnidirectional))
-                .maxAckDelay((Long) properties.getOrDefault("maxAckDelay",maxAckDelay/4), TimeUnit.MILLISECONDS)
-                .activeMigration(true).maxRecvUdpPayloadSize(1024*1024);
+                .maxAckDelay((Long) properties.getOrDefault("maxAckDelay",maxAckDelay), TimeUnit.MILLISECONDS)
+                .activeMigration(true)
+                .maxRecvUdpPayloadSize(1024*1024).maxSendUdpPayloadSize(1024*1024);
     }
 
     public static byte[] appendOpToHash(byte[] hash, byte[] op) {
@@ -90,6 +91,15 @@ public class Logics {
         } catch (Exception e) {
             e.printStackTrace();
             throw new AssertionError();
+        }
+    }
+    public static byte[] hash(byte[] hash) {
+        MessageDigest mDigest;
+        try {
+            mDigest = MessageDigest.getInstance("sha-256");
+            return mDigest.digest(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new AssertionError("sha-256 not available...");
         }
     }
     private void ttest(byte [] cumulativeHash, byte [] sentData){

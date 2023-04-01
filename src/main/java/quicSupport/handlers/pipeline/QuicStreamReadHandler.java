@@ -36,6 +36,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     }
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        /**
         if (ctx.channel().isWritable()) {
             // Channel is now writable, so we can start sending data
             System.out.println("CHANNEL READY TO WRITE");
@@ -44,6 +45,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
             // or take other appropriate action
             System.out.println("CHANNEL NOT NOT READY TO WRITE");
         }
+         **/
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {

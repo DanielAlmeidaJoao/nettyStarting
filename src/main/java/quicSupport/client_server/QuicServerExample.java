@@ -100,6 +100,7 @@ public final class QuicServerExample {
                     .channel(NioDatagramChannel.class)
                     .option(QuicChannelOption.SO_RCVBUF,1024*1024)
                     .option(QuicChannelOption.SO_SNDBUF,1024*1024)
+                    .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(1024*1024))
                     .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(2*1024*1024,2*1024*1024*2))
                     .handler(codec)
                     .bind(self).sync()
@@ -108,19 +109,6 @@ public final class QuicServerExample {
                     })
                     .channel();
             started=true;
-
-            var config = channel.config();
-            config.setRecvByteBufAllocator(new FixedRecvByteBufAllocator(1024*1024));
-
-            System.out.println("getWriteBufferLowWaterMark "+config.getWriteBufferLowWaterMark());
-            System.out.println(config.getWriteBufferHighWaterMark());
-            System.out.println(config.getWriteBufferHighWaterMark());
-            System.out.println("SET "+config.setOption(QuicChannelOption.SO_RCVBUF,1024*1024));
-            System.out.println(config.getOptions().put(QuicChannelOption.SO_RCVBUF,1024*1024)+" putt");
-            System.out.println("SO_RCVBUF "+config.getOptions().get(QuicChannelOption.SO_RCVBUF));
-            System.out.println("SO_SNDBUF "+config.getOptions().get(QuicChannelOption.SO_SNDBUF));
-
-            System.out.println("setRecvByteBufAllocator "+config.getOptions().get(QuicChannelOption.RCVBUF_ALLOCATOR));
 
             channel.closeFuture().addListener(future -> {
                 group.shutdownGracefully();

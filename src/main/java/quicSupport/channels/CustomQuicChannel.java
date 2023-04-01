@@ -8,12 +8,9 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.streamingAPI.connectionSetups.messages.HandShakeMessage;
-import org.streamingAPI.handlerFunctions.ReadMetricsHandler;
-import org.streamingAPI.utils.MetricsDisabledException;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
-import quicSupport.handlers.channelFuncHandlers.OldMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.CustomConnection;
@@ -28,6 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static quicSupport.utils.Logics.gson;
 
 public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
@@ -110,14 +109,11 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     }
     public abstract void onStreamCreatedHandler(InetSocketAddress peer,QuicStreamChannel channel);
 
-    byte [] readHash = new byte[0];
 
     public void streamReader(String streamId, byte[] bytes){
         InetSocketAddress remote = streamHostMapping.get(streamId);
         CustomConnection connection = connections.get(remote);
         connection.scheduleSendHeartBeat_KeepAlive();
-        readHash = Logics.appendOpToHash(readHash,bytes);
-        logger.info("RECEIVED HASH {}",Hex.encodeHexString(readHash));
         //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
         onChannelRead(streamId,bytes,channelIds.get(streamId));
     }
@@ -139,7 +135,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             if(controlData==null){//is OutGoing
                 listeningAddress = remotePeer;
             }else{//is InComing
-                handShakeMessage = Logics.gson.fromJson(new String(controlData),HandShakeMessage.class);
+                handShakeMessage = gson.fromJson(new String(controlData),HandShakeMessage.class);
                 listeningAddress =handShakeMessage.getAddress();
                 incoming=true;
             }
@@ -254,18 +250,17 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             failedToSend(peer,message,len,e.getCause());
         }
     }
-    byte [] cumulativeHash = new byte[0];
     private void send(QuicStreamChannel streamChannel, byte[] message, int len){
         try{
-            System.out.println("IS WRITABLE "+streamChannel.isWritable());
-            streamChannel.writeAndFlush(Logics.writeBytes(len,message, Logics.APP_DATA))
+            /**
+            TestSendReceived testSendReceived = new TestSendReceived(message,Hex.encodeHexString(hash(message)));
+            System.out.println("SENT HASH: "+testSendReceived.getHash());
+            byte [] toSend = gson.toJson(testSendReceived).getBytes();**/
+            streamChannel.writeAndFlush(Logics.writeBytes(len,message,Logics.APP_DATA))
                     .addListener(future -> {
                         if(!future.isSuccess()){
                             future.cause().printStackTrace();
                             failedToSend(streamChannel.id().asShortText(),message,len,future.cause());
-                        }else{
-                            cumulativeHash = Logics.appendOpToHash(cumulativeHash,message);
-                            logger.info("SENT HASH {}",Hex.encodeHexString(cumulativeHash));
                         }
                     });
         }catch (Exception e){

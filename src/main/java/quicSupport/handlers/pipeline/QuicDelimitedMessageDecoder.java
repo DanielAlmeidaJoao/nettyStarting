@@ -42,9 +42,14 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         byte msgType = msg.readByte();
         byte [] data = new byte[length];
         msg.readBytes(data);
-
+        msg.discardSomeReadBytes();
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(Logics.APP_DATA==msgType){
+            /**
+            TestSendReceived testSendReceived = Logics.gson.fromJson(new String(data),TestSendReceived.class);
+            System.out.println("RECEIVED HASH: "+testSendReceived.getHash());
+            System.out.println("ORIGINAL: "+ Hex.encodeHexString(Logics.hash(testSendReceived.getData())));
+            System.out.println(); **/
             consumer.streamReader(ch.id().asShortText(),data);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());

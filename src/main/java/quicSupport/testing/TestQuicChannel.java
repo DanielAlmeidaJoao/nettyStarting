@@ -129,21 +129,15 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
-            int bufferSize = 212992;//2*1024*1024; // 8KB buffer size
+            int bufferSize = 2*1024*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
             //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             int read, totalSent = 0;
-            int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
                 send(peer,bytes,read);
-                cc ++;
-                if(cc>10){
-                    break;
-                }
-                //break;
-                //Thread.sleep(100);
+                bytes = new byte[bufferSize];
             }
             System.out.println("TOTAL SENT "+totalSent);
         }catch (Exception e){
