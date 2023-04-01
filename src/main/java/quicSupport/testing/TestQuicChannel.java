@@ -129,7 +129,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
-            int bufferSize = 2*1024*1024; // 8KB buffer size
+            int bufferSize = 212992;//2*1024*1024; // 8KB buffer size
             byte [] bytes = new byte[bufferSize];
 
             //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);

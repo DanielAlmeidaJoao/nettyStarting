@@ -72,14 +72,18 @@ public final class QuicClientExample {
     }
     public void connect(InetSocketAddress remote, Properties properties) throws Exception{
         Bootstrap bs = new Bootstrap();
+
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
                 .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(2*1024*1024,2*1024*1024*2))
-                .option(ChannelOption.SO_RCVBUF,2*1024*1024)
-                .option(ChannelOption.SO_SNDBUF,2*1024*1024)
+                .option(QuicChannelOption.SO_RCVBUF,2*1024*1024)
+                .option(QuicChannelOption.SO_SNDBUF,2*1024*1024)
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         var chan = QuicChannel.newBootstrap(channel)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(2*1024*1024,2*1024*1024*2))
+                .option(QuicChannelOption.SO_RCVBUF,2*1024*1024)
+                .option(QuicChannelOption.SO_SNDBUF,2*1024*1024)
                 //.option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(64*1024,128*1024))
                 .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics))
                 .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.OUTGOING_CONNECTION))
@@ -91,7 +95,10 @@ public final class QuicClientExample {
         var config = chan.config();
         System.out.println(config.getWriteBufferHighWaterMark());
         System.out.println(config.getWriteBufferLowWaterMark());
-
+        System.out.println("SET "+config.setOption(QuicChannelOption.SO_RCVBUF,1024*1024));
+        System.out.println(config.getOptions().put(QuicChannelOption.SO_RCVBUF,1024*1024)+" putt");
+        System.out.println("SO_RCVBUF "+config.getOptions().get(QuicChannelOption.SO_RCVBUF));
+        System.out.println("SO_SNDBUF "+config.getOptions().get(QuicChannelOption.SO_SNDBUF));
     }
 
     private QuicStreamChannel getOrThrow(long id){

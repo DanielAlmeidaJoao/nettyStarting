@@ -72,7 +72,7 @@ public class Logics {
                 .initialMaxStreamsBidirectional((Long) properties.getOrDefault("initialMaxStreamsBidirectional",initialMaxStreamsBidirectional))
                 .initialMaxStreamsUnidirectional((Long) properties.getOrDefault("initialMaxStreamsUnidirectional",initialMaxStreamsUnidirectional))
                 .maxAckDelay((Long) properties.getOrDefault("maxAckDelay",maxAckDelay/4), TimeUnit.MILLISECONDS)
-                .activeMigration(true);
+                .activeMigration(true).maxRecvUdpPayloadSize(1024*1024);
     }
 
     public static byte[] appendOpToHash(byte[] hash, byte[] op) {

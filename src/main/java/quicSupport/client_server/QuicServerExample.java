@@ -16,11 +16,9 @@
 package quicSupport.client_server;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.DatagramChannelConfig;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
 import org.apache.commons.lang3.tuple.Pair;
@@ -95,11 +93,14 @@ public final class QuicServerExample {
         ChannelHandler codec = getChannelHandler(context,properties);
         try {
             Bootstrap bs = new Bootstrap();
+            bs = bs.option(ChannelOption.SO_RCVBUF,1024*1024)
+                    .option(ChannelOption.SO_SNDBUF,1024*1024);
+
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
+                    .option(QuicChannelOption.SO_RCVBUF,1024*1024)
+                    .option(QuicChannelOption.SO_SNDBUF,1024*1024)
                     .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(2*1024*1024,2*1024*1024*2))
-                    .option(ChannelOption.SO_RCVBUF,2*1024*1024)
-                    .option(ChannelOption.SO_SNDBUF,2*1024*1024)
                     .handler(codec)
                     .bind(self).sync()
                     .addListener(future -> {
@@ -107,12 +108,19 @@ public final class QuicServerExample {
                     })
                     .channel();
             started=true;
+
             var config = channel.config();
-            System.out.println(config.getWriteBufferLowWaterMark());
+            config.setRecvByteBufAllocator(new FixedRecvByteBufAllocator(1024*1024));
+
+            System.out.println("getWriteBufferLowWaterMark "+config.getWriteBufferLowWaterMark());
             System.out.println(config.getWriteBufferHighWaterMark());
             System.out.println(config.getWriteBufferHighWaterMark());
-            System.out.println("SO_RCVBUF "+config.getOptions().get(ChannelOption.SO_RCVBUF));
-            System.out.println("SO_SNDBUF "+config.getOptions().get(ChannelOption.SO_SNDBUF));
+            System.out.println("SET "+config.setOption(QuicChannelOption.SO_RCVBUF,1024*1024));
+            System.out.println(config.getOptions().put(QuicChannelOption.SO_RCVBUF,1024*1024)+" putt");
+            System.out.println("SO_RCVBUF "+config.getOptions().get(QuicChannelOption.SO_RCVBUF));
+            System.out.println("SO_SNDBUF "+config.getOptions().get(QuicChannelOption.SO_SNDBUF));
+
+            System.out.println("setRecvByteBufAllocator "+config.getOptions().get(QuicChannelOption.RCVBUF_ALLOCATOR));
 
             channel.closeFuture().addListener(future -> {
                 group.shutdownGracefully();
