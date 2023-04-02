@@ -27,12 +27,12 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
     }
 
     @Override
-    public void onStreamErrorHandler(InetSocketAddress peer, QuicStreamChannel channel) {
+    public void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId) {
 
     }
 
     @Override
-    public void onStreamClosedHandler(InetSocketAddress peer, QuicStreamChannel channel) {
+    public void onStreamClosedHandler(InetSocketAddress peer, String streamId) {
 
     }
 
@@ -47,20 +47,10 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
         System.out.println(old);
     }
 
-    QuicStreamChannel bb=null;
     @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, QuicStreamChannel channel) {
-        bb=channel;
+    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId) {
     }
 
-    public void setBb(){
-        ((Runnable) () -> {
-            while (bb.isActive()) {
-                System.out.println("SENTD");
-                bb.writeAndFlush(Unpooled.copiedBuffer("o".getBytes()));
-            }
-        }).run();
-    }
     @Override
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
         try{

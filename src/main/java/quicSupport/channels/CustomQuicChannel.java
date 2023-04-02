@@ -56,7 +56,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
 
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        enableMetrics = (boolean) properties.getOrDefault("metrics",true);
+        enableMetrics = properties.containsKey("metrics");
         if(enableMetrics){
             metrics=new QuicChannelMetrics(self,singleThreaded);
         }
@@ -86,30 +86,31 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     /*********************************** Stream Handlers **********************************/
 
     public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable) {
-        logger.info("{} STREAM {} ERROR: {}",self,channel.id().asShortText(),throwable);
+        String streamId = channel.id().asShortText();
+        logger.info("{} STREAM {} ERROR: {}",self,streamId,throwable);
         InetSocketAddress peer = channelIds.get(channel.parent().id().asShortText());
-        onStreamErrorHandler(peer,channel);
+        onStreamErrorHandler(peer,throwable,streamId);
     }
-    public abstract void onStreamErrorHandler(InetSocketAddress peer,QuicStreamChannel channel);
+    public abstract void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId);
 
     public void streamClosedHandler(QuicStreamChannel channel) {
         String streamId = channel.id().asShortText();
         logger.info("{}. STREAM {} CLOSED",self,streamId);
         InetSocketAddress peer = streamHostMapping.remove(streamId);
-        onStreamClosedHandler(peer,channel);
+        onStreamClosedHandler(peer,streamId);
     }
 
     public void streamCreatedHandler(QuicStreamChannel channel) {
         InetSocketAddress peer = channelIds.get(channel.parent().id().asShortText());
         if(peer!=null){//THE SERVER HAS NOT RECEIVED THE CLIENT'S LISTENING ADDRESS YET
-            streamHostMapping.put(channel.id().asShortText(),peer);
             String streamId = channel.id().asShortText();
+            streamHostMapping.put(streamId,peer);
             logger.info("{}. STREAM CREATED {}",self,streamId);
             connections.get(peer).addStream(channel);
-            onStreamCreatedHandler(peer,channel);
+            onStreamCreatedHandler(peer,streamId);
         }
     }
-    public abstract void onStreamCreatedHandler(InetSocketAddress peer,QuicStreamChannel channel);
+    public abstract void onStreamCreatedHandler(InetSocketAddress peer, String streamId);
 
 
     public void streamReader(String streamId, byte[] bytes){
@@ -117,7 +118,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         CustomConnection connection = connections.get(remote);
         connection.scheduleSendHeartBeat_KeepAlive();
         //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
-        onChannelRead(streamId,bytes,channelIds.get(streamId));
+        onChannelRead(streamId,bytes,remote);
     }
     public void onKeepAliveMessage(String parentId){
         InetSocketAddress host = channelIds.get(parentId);
@@ -310,6 +311,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public abstract void failedToCreateStream(InetSocketAddress peer, Throwable error);
     public abstract void failedToGetMetrics(Throwable cause);
 
-    public abstract void onStreamClosedHandler(InetSocketAddress peer,QuicStreamChannel channel);
+    public abstract void onStreamClosedHandler(InetSocketAddress peer, String streamId);
 
 }

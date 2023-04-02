@@ -54,7 +54,9 @@ public class QuicChannelMetrics {
         logger.info("{} TO {} METRICS ENABLED.",self,dest);
     }
     public void onConnectionClosed(SocketAddress connectionId){
-        oldConnections.add(currentConnections.remove(connectionId));
+        var metrics =currentConnections.remove(connectionId);
+        oldConnections.add(metrics);
+        System.out.println(metrics);
     }
     public QuicConnectionMetrics getConnectionMetrics(SocketAddress peer){
         return currentConnections.get(peer);

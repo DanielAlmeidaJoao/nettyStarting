@@ -103,7 +103,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>Main2</mainClass>
+                            <mainClass>Main3</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Multi-Release>true</Multi-Release>

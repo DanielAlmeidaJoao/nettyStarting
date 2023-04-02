@@ -100,7 +100,7 @@ public class Main2 {
                 } else if ("old".equalsIgnoreCase(input)) {
                     //testQuicChannel.oldMetrics();
                 } else if ("bb".equalsIgnoreCase(input)) {
-                    testQuicChannel.setBb();
+                    //testQuicChannel.setBb();
                 } else if ("stream".equalsIgnoreCase(input)) {
                     System.out.println("HOST NAME:");
                     String host = scanner.nextLine();

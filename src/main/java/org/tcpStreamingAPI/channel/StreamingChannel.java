@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class StreamingChannel implements StreamingNettyConsumer{
     private static final Logger logger = LogManager.getLogger(StreamingChannel.class);
     private InetSocketAddress self;
+
     public final static String NAME = "STREAMING_CHANNEL";
 
     public final static String ADDRESS_KEY = "address";
