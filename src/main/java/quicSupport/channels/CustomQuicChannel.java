@@ -159,11 +159,13 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
 
     public  void channelInactive(String channelId){
-        InetSocketAddress host = channelIds.remove(channelId);
-        CustomConnection connection = connections.remove(host);
-        logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
-        connection.close();
-        onConnectionDown(host,connection.isInComing());
+        try{
+            InetSocketAddress host = channelIds.remove(channelId);
+            CustomConnection connection = connections.remove(host);
+            logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
+            connection.close();
+            onConnectionDown(host,connection.isInComing());
+        }catch (Exception e){}
     }
     public abstract void onConnectionDown(InetSocketAddress peer, boolean incoming);
 
