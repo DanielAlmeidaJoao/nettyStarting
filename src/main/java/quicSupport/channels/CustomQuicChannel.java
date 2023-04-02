@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
@@ -14,6 +13,7 @@ import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.CustomConnection;
 import quicSupport.utils.Logics;
+import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import java.io.IOException;
@@ -134,11 +134,11 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         boolean incoming = false;
         try {
             InetSocketAddress listeningAddress;
-            HandShakeMessage handShakeMessage=null;
+            QuicHandShakeMessage handShakeMessage=null;
             if(controlData==null){//is OutGoing
                 listeningAddress = remotePeer;
             }else{//is InComing
-                handShakeMessage = gson.fromJson(new String(controlData),HandShakeMessage.class);
+                handShakeMessage = gson.fromJson(new String(controlData),QuicHandShakeMessage.class);
                 listeningAddress =handShakeMessage.getAddress();
                 incoming=true;
             }

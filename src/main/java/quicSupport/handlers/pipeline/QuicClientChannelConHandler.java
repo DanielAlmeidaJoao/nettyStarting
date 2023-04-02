@@ -6,9 +6,9 @@ import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.Logics;
+import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
@@ -36,7 +36,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
             metrics.initConnectionMetrics(out.remoteAddress());
         }
         logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
-        HandShakeMessage handShakeMessage = new HandShakeMessage(self.getHostName(),self.getPort());
+        QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort());
         byte [] hs = Logics.gson.toJson(handShakeMessage).getBytes();
         QuicStreamChannel streamChannel = Logics.createStream(out,consumer,metrics,false);
         streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, Logics.HANDSHAKE_MESSAGE))
