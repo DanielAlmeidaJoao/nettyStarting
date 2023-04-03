@@ -33,11 +33,11 @@ public class CustomConnection {
         this.inComing = inComing;
         streams = new HashMap<>();
         this.remote = remote;
-        addStream(defaultStream);//TO DO: REMOVE THIS LINE
+        addStream(defaultStream);
         scheduledFuture = null;
         canSendHeartBeat = inComing;
         serverStartScheduling();
-        logger.info("CONNECTION TO {} ON. DEFAULT STREAM: {} .",remote,defaultStream.id().asShortText());
+        //logger.info("CONNECTION TO {} ON. DEFAULT STREAM: {} .",remote,defaultStream.id().asShortText());
     }
     public void addStream(QuicStreamChannel streamChannel){
         streams.put(streamChannel.id().asShortText(),streamChannel);

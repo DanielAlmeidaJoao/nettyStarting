@@ -13,12 +13,14 @@ public class QuicHandShakeMessage {
 
     private String hostName;
     private int port;
+    private String streamId;
     private final Map<String,Object> properties;
 
-    public QuicHandShakeMessage(String hostName, int port) {
+    public QuicHandShakeMessage(String hostName, int port,String streamId) {
         this.properties = new HashMap<>();
         this.hostName=hostName;
         this.port=port;
+        this.streamId=streamId;
     }
     public QuicHandShakeMessage(InetSocketAddress host) {
         this.properties = new HashMap<>();

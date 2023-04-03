@@ -134,7 +134,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
 
     /*********************************** Channel Handlers **********************************/
     public void channelActive(QuicStreamChannel streamChannel, byte [] controlData,InetSocketAddress remotePeer){
-        boolean incoming = false;
+        boolean inConnection = false;
         try {
             InetSocketAddress listeningAddress;
             QuicHandShakeMessage handShakeMessage=null;
@@ -144,7 +144,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             }else{//is InComing
                 handShakeMessage = gson.fromJson(new String(controlData),QuicHandShakeMessage.class);
                 listeningAddress =handShakeMessage.getAddress();
-                incoming=true;
+                inConnection=true;
             }
             /**
             if(connections.containsKey(listeningAddress)&&listeningAddress.getPort()!=self.getPort()){
@@ -153,20 +153,32 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 return;
             }**/
 
-            CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,incoming);
+            CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection);
             CustomConnection old = connections.put(listeningAddress,current);
             if(old!=null){
                 if(Logics.sameAddress(self,listeningAddress)){//CONNECTING TO ITSELF
-                    current.addStream(old.getDefaultStream());
-                    System.out.println("SAME");
+                    connections.put(listeningAddress,old);
+                    old.addStream(current.getDefaultStream());
                 }else if(self.hashCode()<listeningAddress.hashCode()){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
-                    connections.replace(listeningAddress,old);//keep the old connection
-                    streamChannel.parent().close();
-                    System.out.println("KEEP OLD "+old.getDefaultStream().id().asShortText());
-                    return;
-                }else if(self.hashCode()>listeningAddress.hashCode()){//keep the new connection
-                    silentlyCloseFirstCon(old.getDefaultStream());
-                    System.out.println("KEEP NEW "+streamChannel.id().asShortText());
+                    //keep the in connection
+                    if(inConnection){
+                        silentlyCloseCon(old.getDefaultStream());
+                        logger.info("KEPT NEW STREAM {}. IN CONNECTION: {}",streamChannel.id().asShortText(),inConnection);
+                    }else{
+                        keepOldSilently(streamChannel, listeningAddress, old);
+                        logger.info("KEPT OLD STREAM {}. IN CONNECTION: {}",old.getDefaultStream().id().asShortText(),inConnection);
+                        return;
+                    }
+                }else if(self.hashCode()>listeningAddress.hashCode()){
+                    //keep the out connection
+                    if(inConnection){
+                        keepOldSilently(streamChannel, listeningAddress, old);
+                        logger.info("KEPT OLD STREAM {}. IN CONNECTION: {}",streamChannel.id().asShortText(),inConnection);
+                        return;
+                    }else{
+                        silentlyCloseCon(old.getDefaultStream());
+                        logger.info("KEPT NEW STREAM {}. IN CONNECTION: {}",streamChannel.id().asShortText(),inConnection);
+                    }
                 }else{
                     throw new RuntimeException("THE HASHES CANNOT BE THE SAME: "+self+" VS "+listeningAddress);
                 }
@@ -174,20 +186,27 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
             streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
 
-            onConnectionUp(incoming,listeningAddress);
+            onConnectionUp(inConnection,listeningAddress);
             if(enableMetrics){
-                metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),incoming);
+                metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
             }
-            logger.info("{} CHANNEL {} TO {} ACTIVATED. INCOMING ? {}",self,streamChannel.parent().id().asShortText(),listeningAddress,incoming);
+            logger.info("{} CHANNEL {} TO {} ACTIVATED. INCOMING ? {}. DEFAULT STREAM: {}",self,streamChannel.parent().id().asShortText(),listeningAddress,inConnection,streamChannel.id().asShortText());
         }catch (Exception e){
             e.printStackTrace();
             streamChannel.disconnect();
         }
     }
-    private void silentlyCloseFirstCon(QuicStreamChannel streamChannel){
+
+    private void keepOldSilently(QuicStreamChannel streamChannel, InetSocketAddress listeningAddress, CustomConnection old) {
+        connections.put(listeningAddress, old);
+        streamChannel.parent().close();
+    }
+
+    private void silentlyCloseCon(QuicStreamChannel streamChannel){
         channelIds.remove(streamChannel.parent().id().asShortText());
         streamHostMapping.remove(streamChannel.id().asShortText());
         streamChannel.parent().close();
+        System.out.println("CLOSING THE OLD CLONNECTION");
     }
     public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
 

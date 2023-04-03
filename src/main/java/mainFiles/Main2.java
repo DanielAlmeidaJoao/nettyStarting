@@ -25,6 +25,7 @@ public class Main2 {
         properties.setProperty("address","localhost");
         String port = args[0];
         properties.setProperty("port",port);
+        properties.setProperty("metrics","true");
         TestQuicChannel testQuicChannel = new TestQuicChannel(properties);
         /**
         if("8081".equals(port)){
