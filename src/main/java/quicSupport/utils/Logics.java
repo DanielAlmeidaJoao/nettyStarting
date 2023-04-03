@@ -10,6 +10,7 @@ import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.ByteArrayOutputStream;
+import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
@@ -62,6 +63,9 @@ public class Logics {
         buf.writeByte(msgType);
         buf.writeBytes(data,0,len);
          **/
+    }
+    public static boolean sameAddress(InetSocketAddress address, InetSocketAddress socketAddress){
+        return address.getHostName().equals(socketAddress.getHostName())&&address.getPort()== socketAddress.getPort();
     }
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
         return codecBuilder

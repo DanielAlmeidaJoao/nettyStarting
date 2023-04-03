@@ -125,7 +125,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
             int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-                sendMessage(peer,bytes,read);
+                send(peer,bytes,read);
                 cc++;
                 if(cc>100){
                     cc=0;

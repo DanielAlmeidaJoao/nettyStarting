@@ -33,6 +33,17 @@ public class Main2 {
         }
         System.out.println("CONNECTED"); **/
         //testQuicChannel.end();
+        InetSocketAddress socketAddress;
+        if(port.equals("8081")){
+            socketAddress = new InetSocketAddress("localhost",8082);
+            try{
+                Thread.sleep(2*1000);
+                System.out.println("AWAKEN");
+            }catch (Exception e){};
+        }else{
+            socketAddress = new InetSocketAddress("localhost",8081);
+        }
+        testQuicChannel.openConnection(socketAddress);
         Scanner scanner = new Scanner(System.in);
 
 
@@ -48,7 +59,7 @@ public class Main2 {
                     String streamId = scanner.nextLine().trim();
                     System.out.println("ENTERED: " + input);
                     System.out.println("STREAM_ID: " + streamId);
-                    testQuicChannel.sendMessage(streamId, input.getBytes(), input.length());
+                    testQuicChannel.send(streamId, input.getBytes(), input.length());
                 } else if (input.equalsIgnoreCase("C")) {//create stream
                     System.out.println("HOST NAME:");
                     String host = scanner.nextLine();
@@ -89,7 +100,7 @@ public class Main2 {
                     int read = 0, totalSent = 0;
                     if (((read = fileInputStream.read(bytes)) != -1)) {
                         totalSent += read;
-                        testQuicChannel.sendMessage(streamId, bytes, read);
+                        testQuicChannel.send(streamId, bytes, read);
                         System.out.println("SENT " + totalSent);
                     }
                 } else if ("T".equalsIgnoreCase(input)) {

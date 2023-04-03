@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static quicSupport.utils.Logics.gson;
 
@@ -41,6 +42,8 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private final Map<InetSocketAddress, CustomConnection> connections;
     private final Map<String,InetSocketAddress> channelIds; //streamParentID, peer
     private final Map<String,InetSocketAddress> streamHostMapping;
+    private Set<InetSocketAddress> connecting;
+
     private final QuicClientExample client;
     private final Properties properties;
     private QuicChannelMetrics metrics;
@@ -62,10 +65,12 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             connections = new HashMap<>();
             channelIds = new HashMap<>();
             streamHostMapping = new HashMap<>();
+            connecting=new HashSet<>();
         }else {
             connections = new ConcurrentHashMap<>();
             channelIds = new ConcurrentHashMap<>();
             streamHostMapping = new ConcurrentHashMap<>();
+            connecting=new ConcurrentSkipListSet<>();
         }
 
 
@@ -135,20 +140,36 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             QuicHandShakeMessage handShakeMessage=null;
             if(controlData==null){//is OutGoing
                 listeningAddress = remotePeer;
+                connecting.remove(remotePeer);
             }else{//is InComing
                 handShakeMessage = gson.fromJson(new String(controlData),QuicHandShakeMessage.class);
                 listeningAddress =handShakeMessage.getAddress();
                 incoming=true;
             }
+            /**
             if(connections.containsKey(listeningAddress)&&listeningAddress.getPort()!=self.getPort()){
                 System.out.println(self+" CLOSING THIS CONNECTION BECAUSE ALREADY CONNECTED "+listeningAddress);
                 streamChannel.parent().close();
                 return;
-            }
+            }**/
+
             CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,incoming);
             CustomConnection old = connections.put(listeningAddress,current);
             if(old!=null){
-                current.addStream(old.getDefaultStream());
+                if(Logics.sameAddress(self,listeningAddress)){//CONNECTING TO ITSELF
+                    current.addStream(old.getDefaultStream());
+                    System.out.println("SAME");
+                }else if(self.hashCode()<listeningAddress.hashCode()){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
+                    connections.replace(listeningAddress,old);//keep the old connection
+                    streamChannel.parent().close();
+                    System.out.println("KEEP OLD "+old.getDefaultStream().id().asShortText());
+                    return;
+                }else if(self.hashCode()>listeningAddress.hashCode()){//keep the new connection
+                    silentlyCloseFirstCon(old.getDefaultStream());
+                    System.out.println("KEEP NEW "+streamChannel.id().asShortText());
+                }else{
+                    throw new RuntimeException("THE HASHES CANNOT BE THE SAME: "+self+" VS "+listeningAddress);
+                }
             }
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
             streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
@@ -162,6 +183,11 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             e.printStackTrace();
             streamChannel.disconnect();
         }
+    }
+    private void silentlyCloseFirstCon(QuicStreamChannel streamChannel){
+        channelIds.remove(streamChannel.parent().id().asShortText());
+        streamHostMapping.remove(streamChannel.id().asShortText());
+        streamChannel.parent().close();
     }
     public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
 
@@ -180,7 +206,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
 
     /*********************************** User Actions **************************************/
 
-    private Set<InetSocketAddress> connecting=new HashSet<>();
     public void openConnection(InetSocketAddress peer) {
         if(connecting.contains(peer)){
             System.out.println("ALREADY TRYING TO CONNECT 23 !");
@@ -255,7 +280,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         }
     }
 
-    public void sendMessage(String streamId, byte[] message, int len) {
+    public void send(String streamId, byte[] message, int len) {
         InetSocketAddress host = streamHostMapping.get(streamId);
         try{
             if(host==null){
@@ -268,7 +293,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             onMessageSent(message,len,e,host);
         }
     }
-    public void sendMessage(InetSocketAddress peer, byte[] message, int len){
+    public void send(InetSocketAddress peer, byte[] message, int len){
         try {
             sendMessage(getOrThrow(peer).getDefaultStream(),message,len,peer);
         } catch (Exception e) {
