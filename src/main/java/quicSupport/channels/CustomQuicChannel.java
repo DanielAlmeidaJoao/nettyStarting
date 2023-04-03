@@ -140,6 +140,11 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 listeningAddress =handShakeMessage.getAddress();
                 incoming=true;
             }
+            if(connections.containsKey(listeningAddress)&&listeningAddress.getPort()!=self.getPort()){
+                System.out.println(self+" CLOSING THIS CONNECTION BECAUSE ALREADY CONNECTED "+listeningAddress);
+                streamChannel.parent().close();
+                return;
+            }
             CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,incoming);
             CustomConnection old = connections.put(listeningAddress,current);
             if(old!=null){
