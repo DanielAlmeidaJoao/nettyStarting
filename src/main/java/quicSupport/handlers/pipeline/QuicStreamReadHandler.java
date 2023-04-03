@@ -2,6 +2,8 @@ package quicSupport.handlers.pipeline;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannelConfig;
 import io.netty.util.internal.logging.InternalLogger;
@@ -35,19 +37,6 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         consumer.streamCreatedHandler(ch);
     }
     @Override
-    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-        /**
-        if (ctx.channel().isWritable()) {
-            // Channel is now writable, so we can start sending data
-            System.out.println("CHANNEL READY TO WRITE");
-        } else {
-            // Channel is not writable, so we need to pause sending data
-            // or take other appropriate action
-            System.out.println("CHANNEL NOT NOT READY TO WRITE");
-        }
-         **/
-    }
-    @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         consumer.streamClosedHandler((QuicStreamChannel) ctx.channel());
     }
@@ -56,5 +45,17 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         cause.printStackTrace();
         consumer.streamErrorHandler(ch,cause);
+    }
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            logger.info("IDLE TIMEOUT IS GOING TO OCURR");
+            IdleStateEvent e = (IdleStateEvent) evt;
+            if (e.state() == IdleState.READER_IDLE) {
+                // Handle idle timeout event
+                System.out.println("Idle timeout has occurred.");
+                //ctx.close();
+            }
+        }
     }
 }

@@ -1,3 +1,5 @@
+package mainFiles;
+
 import babel.appExamples.channels.BabelStreamingChannel;
 import babel.appExamples.channels.initializers.BabelStreamInitializer;
 import babel.appExamples.protocols.ReceiveFileProtocol;

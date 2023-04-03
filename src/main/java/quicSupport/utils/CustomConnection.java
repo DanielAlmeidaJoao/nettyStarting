@@ -70,7 +70,7 @@ public class CustomConnection {
                 scheduledFuture.cancel(true);
             }
             scheduledFuture = defaultStream.eventLoop().schedule(() -> {
-                logger.info("HEART BEAT SENT. INCOMING ? {}",inComing);
+                logger.info("HEART BEAT SENT TO {}",remote);
                 defaultStream.writeAndFlush(Logics.writeBytes(1,"a".getBytes(),Logics.KEEP_ALIVE));
             }, (long) (Logics.maxIdleTimeoutInSeconds*0.75), TimeUnit.SECONDS);
     }

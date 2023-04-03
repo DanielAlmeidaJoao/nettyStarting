@@ -1,5 +1,5 @@
-java -Xmx500M -cp asdProj2.jar Main p2p_port=10101 server_port=35000 &
-java -cp target\nettyStart.jar Main
+java -Xmx500M -cp asdProj2.jar mainFiles.Main p2p_port=10101 server_port=35000 &
+java -cp target\nettyStart.jar mainFiles.Main
 
 java -cp target\nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamSender localhost 8081
 java -cp target\nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamInConnection 8081
@@ -25,13 +25,13 @@ the receiver must be the client
 
 Starting Babel
 
-java -Xmx500M -cp target/nettyStart.jar Main sender=o
+java -Xmx500M -cp target/nettyStart.jar mainFiles.Main sender=o
 
-java -cp target/nettyStart.jar Main address=localhost port=10101
+java -cp target/nettyStart.jar mainFiles.Main address=localhost port=10101
 
-java -cp target/nettyStart.jar Main address=localhost port=10103 sender=o
+java -cp target/nettyStart.jar mainFiles.Main address=localhost port=10103 sender=o
 
-java -cp target/nettyStart.jar Main address=localhost port=10109 sender=o forwarder=f
+java -cp target/nettyStart.jar mainFiles.Main address=localhost port=10109 sender=o forwarder=f
 
 QUIC
 java -cp target/nettyStart.jar quicSupport.client_server.QuicServerExample
@@ -40,9 +40,9 @@ java -cp target/nettyStart.jar quicSupport.client_server.QuicClientExample
 java -cp target/nettyStart.jar quicSupport.testing.TestQuicChannel
 -Dio.netty.maxDirectMemory=2147483648
 
-java -Dio.netty.maxDirectMemory=4147483648 -cp target/nettyStart.jar Main2 8081
+java -Dio.netty.maxDirectMemory=4147483648 -cp target/nettyStart.jar mainFiles.Main2 8081
 
-java java -Xmx3g -cp target/nettyStart.jar Main2 8082
+java java -Xmx3g -cp target/nettyStart.jar mainFiles.Main2 8082
 
 
 Udp

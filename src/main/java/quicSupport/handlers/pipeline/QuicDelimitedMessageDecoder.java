@@ -57,7 +57,6 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 q.setReceivedAppBytes(q.getReceivedAppBytes()+length+Logics.WRT_OFFSET);
             }
         }else if(Logics.KEEP_ALIVE==msgType){
-            logger.info("HEART BEAT RECEIVED INCOMING ? {}",incoming);
             consumer.onKeepAliveMessage(ch.parent().id().asShortText());
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());

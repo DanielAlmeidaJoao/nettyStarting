@@ -30,8 +30,6 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         QuicChannel out = (QuicChannel) ctx.channel();
-        System.out.println(out.config());
-        logger.info("CLIENT CHANNEL ACTIVE!!!");
         if(metrics!=null){
             metrics.initConnectionMetrics(out.remoteAddress());
         }

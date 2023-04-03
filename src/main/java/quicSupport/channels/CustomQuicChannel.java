@@ -20,9 +20,7 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static quicSupport.utils.Logics.gson;
@@ -122,8 +120,8 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     }
     public void onKeepAliveMessage(String parentId){
         InetSocketAddress host = channelIds.get(parentId);
+        logger.info("SELF:{} -- HEART BEAT RECEIVED -- {}",self,host);
         connections.get(host).scheduleSendHeartBeat_KeepAlive();
-
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
@@ -177,7 +175,14 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
 
     /*********************************** User Actions **************************************/
 
+    private Set<InetSocketAddress> connecting=new HashSet<>();
     public void openConnection(InetSocketAddress peer) {
+        if(connecting.contains(peer)){
+            System.out.println("ALREADY TRYING TO CONNECT 23 !");
+            return;
+        }else{
+            connecting.add(peer);
+        }
         if(connections.containsKey(peer)){
             logger.info("{} ALREADY CONNECTED TO {}",self,peer);
         }else {

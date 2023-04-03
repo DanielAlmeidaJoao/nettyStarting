@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.nettyStarting</groupId>
-    <artifactId>nettyStarting</artifactId>
+    <groupId>org.bena</groupId>
+    <artifactId>bena_testing</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -91,6 +91,11 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                    <!--
+                    <excludes>
+                        <exclude>babel.appExamples.channels.**</exclude>
+                        <exclude>org.tcpStreamingAPI.**</exclude>
+                    </excludes> -->
                 </configuration>
             </plugin>
 
@@ -103,7 +108,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>Main3</mainClass>
+                            <!-- <mainClass>mainFiles.Main3</mainClass> -->
                         </manifest>
                         <manifestEntries>
                             <Multi-Release>true</Multi-Release>
