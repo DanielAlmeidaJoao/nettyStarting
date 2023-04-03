@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import pt.unl.fct.di.novasys.babel.internal.InternalEvent;
+import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
 import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionUp;
 import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.network.data.Host;
@@ -33,7 +34,9 @@ public class EchoProtocol extends GenericProtocol {
         String port = properties.getProperty("port");
         logger.info("Receiver on {}:{}", address, port);
         this.myself = new Host(InetAddress.getByName(address), Integer.parseInt(port));
-        channelId = createChannel(BabelQuicChannel.NAME, properties);
+        channelId = createChannel(TCPChannel.NAME, properties);
+        System.out.println(myself);
+        System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
     }
 
@@ -47,15 +50,20 @@ public class EchoProtocol extends GenericProtocol {
             if(myself.getPort()==8081){
                 //Integer.parseInt(props.getProperty("nei_port")
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                openConnection(dest);
-                registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
-                registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
             }
+            openConnection(myself);
+            registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
+            registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
+
         } catch (Exception e) {
             logger.error("Error registering message handler: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }
+
+        logger.info("OPENING CONNECTION TO {}",myself);
+        EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
+        sendMessage(message,myself);
     }
 
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
@@ -77,7 +85,7 @@ public class EchoProtocol extends GenericProtocol {
         }
     }
     private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
-        logger.trace("Received {} from {}", msg.getMessage(), from);
+        logger.info("Received {} from {}", msg.getMessage(), from);
     }
 
     private void uponMsgFail(EchoMessage msg, Host host, short destProto,

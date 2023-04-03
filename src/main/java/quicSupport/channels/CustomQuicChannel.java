@@ -142,7 +142,11 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 listeningAddress =handShakeMessage.getAddress();
                 incoming=true;
             }
-            connections.put(listeningAddress, new CustomConnection(streamChannel,listeningAddress,incoming));
+            CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,incoming);
+            CustomConnection old = connections.put(listeningAddress,current);
+            if(old!=null){
+                current.addStream(old.getDefaultStream());
+            }
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
             streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
 
@@ -241,31 +245,32 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         }
     }
 
-    public void send(String streamId,byte[] message, int len) {
+    public void sendMessage(String streamId, byte[] message, int len) {
         InetSocketAddress host = streamHostMapping.get(streamId);
         try{
             if(host==null){
                 onMessageSent(message,len,new Throwable("UNKNOWN STREAM ID: "+streamId),host);
             }else {
-                send(getOrThrow(host).getStream(streamId),message,len,host);
+                sendMessage(getOrThrow(host).getStream(streamId),message,len,host);
             }
         }catch (UnknownElement e){
             logger.debug(e.getMessage());
             onMessageSent(message,len,e,host);
         }
     }
-    public void send(InetSocketAddress peer,byte[] message, int len){
+    public void sendMessage(InetSocketAddress peer, byte[] message, int len){
         try {
-            send(getOrThrow(peer).getDefaultStream(),message,len,peer);
+            sendMessage(getOrThrow(peer).getDefaultStream(),message,len,peer);
         } catch (Exception e) {
             logger.debug(e.getMessage());
             onMessageSent(message,len,e,peer);
         }
     }
-    private void send(QuicStreamChannel streamChannel, byte[] message, int len, InetSocketAddress peer){
+    private void sendMessage(QuicStreamChannel streamChannel, byte[] message, int len, InetSocketAddress peer){
         streamChannel.writeAndFlush(Logics.writeBytes(len,message,Logics.APP_DATA))
                 .addListener(future -> {
                     if(future.isSuccess()){
+                        System.out.println("MESSAGE SENT!!!");
                         onMessageSent(message,len,null,peer);
                     }else{
                         onMessageSent(message,len,future.cause(),peer);

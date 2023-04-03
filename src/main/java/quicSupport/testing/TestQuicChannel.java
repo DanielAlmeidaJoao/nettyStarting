@@ -1,7 +1,5 @@
 package quicSupport.testing;
 
-import io.netty.buffer.Unpooled;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.SingleThreadedQuicChannel;
@@ -82,6 +80,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
     int total = 0;
     @Override
     public void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from) {
+        logger.info("READ "+bytes.length);
         total += bytes.length;
         try{
             fos.write(bytes, 0, bytes.length);
@@ -103,6 +102,9 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
     }
     @Override
     public void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer) {
+        if(error==null){
+            return;
+        }
         logger.info("FAILED TO SEND. REASON: {}",error.getLocalizedMessage());
     }
     public void startStreaming(InetSocketAddress peer){
@@ -123,7 +125,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
             int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-                send(peer,bytes,read);
+                sendMessage(peer,bytes,read);
                 cc++;
                 if(cc>100){
                     cc=0;

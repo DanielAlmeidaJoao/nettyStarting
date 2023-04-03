@@ -46,7 +46,7 @@ public class Main2 {
                     String streamId = scanner.nextLine().trim();
                     System.out.println("ENTERED: " + input);
                     System.out.println("STREAM_ID: " + streamId);
-                    testQuicChannel.send(streamId, input.getBytes(), input.length());
+                    testQuicChannel.sendMessage(streamId, input.getBytes(), input.length());
                 } else if (input.equalsIgnoreCase("C")) {//create stream
                     System.out.println("HOST NAME:");
                     String host = scanner.nextLine();
@@ -87,7 +87,7 @@ public class Main2 {
                     int read = 0, totalSent = 0;
                     if (((read = fileInputStream.read(bytes)) != -1)) {
                         totalSent += read;
-                        testQuicChannel.send(streamId, bytes, read);
+                        testQuicChannel.sendMessage(streamId, bytes, read);
                         System.out.println("SENT " + totalSent);
                     }
                 } else if ("T".equalsIgnoreCase(input)) {

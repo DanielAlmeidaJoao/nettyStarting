@@ -116,7 +116,7 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel  implements I
             serializer.serialize(msg, out);
             byte [] toSend = new byte[out.readableBytes()];
             out.readBytes(toSend);
-            super.send(dest,toSend,toSend.length);
+            super.sendMessage(dest,toSend,toSend.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

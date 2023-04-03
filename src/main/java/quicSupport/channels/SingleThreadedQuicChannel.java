@@ -81,12 +81,12 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
         executor.execute(() -> super.readMetrics(handler));
     }
     @Override
-    public void send(String streamId,byte[] message, int len) {
-        executor.execute(() -> super.send(streamId,message,len));
+    public void sendMessage(String streamId, byte[] message, int len) {
+        executor.execute(() -> super.sendMessage(streamId,message,len));
     }
     @Override
-    public void send(InetSocketAddress peer,byte[] message, int len) {
-        executor.execute(() -> super.send(peer,message,len));
+    public void sendMessage(InetSocketAddress peer, byte[] message, int len) {
+        executor.execute(() -> super.sendMessage(peer,message,len));
     }
     /*********************************** User Actions **************************************/
 
