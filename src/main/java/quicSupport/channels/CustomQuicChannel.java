@@ -140,12 +140,13 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             QuicHandShakeMessage handShakeMessage=null;
             if(controlData==null){//is OutGoing
                 listeningAddress = remotePeer;
-                connecting.remove(remotePeer);
             }else{//is InComing
                 handShakeMessage = gson.fromJson(new String(controlData),QuicHandShakeMessage.class);
-                listeningAddress =handShakeMessage.getAddress();
+                listeningAddress = handShakeMessage.getAddress();
                 inConnection=true;
             }
+            connecting.remove(listeningAddress);
+
             /**
             if(connections.containsKey(listeningAddress)&&listeningAddress.getPort()!=self.getPort()){
                 System.out.println(self+" CLOSING THIS CONNECTION BECAUSE ALREADY CONNECTED "+listeningAddress);
@@ -227,7 +228,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
 
     public void openConnection(InetSocketAddress peer) {
         if(connecting.contains(peer)){
-            System.out.println("ALREADY TRYING TO CONNECT 23 !");
             return;
         }else{
             connecting.add(peer);
@@ -324,7 +324,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         streamChannel.writeAndFlush(Logics.writeBytes(len,message,Logics.APP_DATA))
                 .addListener(future -> {
                     if(future.isSuccess()){
-                        System.out.println("MESSAGE SENT!!!");
                         onMessageSent(message,len,null,peer);
                     }else{
                         onMessageSent(message,len,future.cause(),peer);
