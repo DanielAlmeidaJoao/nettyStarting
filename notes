@@ -58,3 +58,6 @@ DO ANOTHER CHANNEL WHICH WILL USE ACKs, and HEARTBEATS (PERIOD: MAX_IDLE/2).
 
 mvn clean package -P linux-x86_64
 mvn clean package -P windows-x86_64
+
+java -cp target/nettyStart.jar udpSupport.client_server.NettyUDPServer
+java -cp target/nettyStart.jar udpSupport.client_server.NettyUDPClient
