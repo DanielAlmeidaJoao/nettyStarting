@@ -29,6 +29,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         QuicChannel out = (QuicChannel) ctx.channel();
         if(metrics!=null){
             metrics.initConnectionMetrics(out.remoteAddress());

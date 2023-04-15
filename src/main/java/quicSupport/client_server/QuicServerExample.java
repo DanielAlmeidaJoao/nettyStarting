@@ -56,6 +56,7 @@ public final class QuicServerExample {
     }
 
     public QuicSslContext getSignedSslContext() throws Exception {
+        System.out.println("CALLED CALLED");
         String keystoreFilename = "keystore.jks";
         String keystorePassword = "simple";
         String alias = "quicTestCert";
@@ -63,7 +64,7 @@ public final class QuicServerExample {
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
         return QuicSslContextBuilder.forServer(
                 pair.getRight(), null, (X509Certificate) pair.getLeft())
-                .applicationProtocols("QUIC")
+                .applicationProtocols("QUIC").earlyData(true)
                 .build();
     }
 

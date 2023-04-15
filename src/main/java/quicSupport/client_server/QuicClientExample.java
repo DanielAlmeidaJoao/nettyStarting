@@ -25,6 +25,7 @@ import io.netty.incubator.codec.quic.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
+import quicSupport.handlers.pipeline.CustomEarlyDataSendCallback;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.utils.Logics;
@@ -45,6 +46,7 @@ public final class QuicClientExample {
     private NioEventLoopGroup group;
     private Map<Long,QuicStreamChannel> streams;
     private QuicChannelMetrics metrics;
+    private QuicSslContext context;
 
     public QuicClientExample(InetSocketAddress self, CustomQuicChannelConsumer consumer, NioEventLoopGroup g, QuicChannelMetrics metrics){
         this.self = self;
@@ -53,18 +55,22 @@ public final class QuicClientExample {
         this.group = g;
         this.metrics = metrics;
         streams = new HashMap<>();
+        context = null;
     }
     public ChannelHandler getCodec(Properties properties)throws Exception{
         String keystoreFilename = "keystore2.jks";
         String keystorePassword = "simple";
         String alias = "clientcert";
         //Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
-        QuicSslContext context = QuicSslContextBuilder.forClient().
-                //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
-                trustManager(InsecureTrustManagerFactory.INSTANCE)
-                //trustManager((X509Certificate) pair.getLeft())
-                .applicationProtocols("QUIC")
-                .build();
+        if(context==null){
+            context = QuicSslContextBuilder.forClient().
+                    //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
+                            trustManager(InsecureTrustManagerFactory.INSTANCE)
+                    //trustManager((X509Certificate) pair.getLeft())
+                    .applicationProtocols("QUIC").earlyData(true)
+                    .build();
+        }
+
         QuicClientCodecBuilder clientCodecBuilder =  new QuicClientCodecBuilder()
                 .sslContext(context);
         clientCodecBuilder = (QuicClientCodecBuilder) Logics.addConfigs(clientCodecBuilder,properties);
@@ -79,18 +85,16 @@ public final class QuicClientExample {
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
-                //.option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(2*1024*1024,2*1024*1024*2))
-                //.option(QuicChannelOption.SO_RCVBUF,2*1024*1024)
-                //.option(QuicChannelOption.SO_SNDBUF,2*1024*1024)
-                //.option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(64*1024,128*1024))
                 .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics))
                 .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.OUTGOING_CONNECTION))
-                .remoteAddress(remote).connect().addListener(future -> {
+                .remoteAddress(remote)
+                //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
+                .connect().addListener(future -> {
             if(!future.isSuccess()){
                 consumer.onOpenConnectionFailed(remote,future.cause());
             }
         });
-        }
+    }
 
     private QuicStreamChannel getOrThrow(long id){
         QuicStreamChannel stream = streams.get(id);

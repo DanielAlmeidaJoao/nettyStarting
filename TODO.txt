@@ -32,3 +32,4 @@ CONNECTION CLOSED! 0
         at java.base/java.lang.Thread.run(Thread.java:833)
 ^CAPP ENEDED!!
 
+REMOVE FROM CONNECTING WHEN SENDING HANDSHAKE FAILS !!!

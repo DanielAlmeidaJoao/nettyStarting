@@ -13,6 +13,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <!--
     <profiles>
         <profile>
             <id>linux-x86_64</id>
@@ -36,6 +37,7 @@
             </activation>
         </profile>
     </profiles>
+    -->
     <repositories>
         <repository>
             <id>novasys</id>
@@ -75,8 +77,8 @@
             <groupId>io.netty.incubator</groupId>
             <artifactId>netty-incubator-codec-native-quic</artifactId>
             <version>0.0.38.Final</version>
-            <!-- <classifier>linux-x86_64</classifier> -->
-            <classifier>${project.build.classifier}</classifier>
+            <classifier>linux-x86_64</classifier>
+            <!-- <classifier>${project.build.classifier}</classifier> -->
 
         </dependency>
         <dependency>

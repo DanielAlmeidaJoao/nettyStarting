@@ -42,7 +42,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
         super.getStats(peer,this::readStats);
     }
     public void readOldMetrics(List<QuicConnectionMetrics> old){
-        System.out.println(old);
+        //TODO
     }
 
     @Override
@@ -110,11 +110,11 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
     public void startStreaming(InetSocketAddress peer){
         System.out.println("STREAMING STARTED!!!");
         try{
-            String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
-            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
+            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
-            Path filePath = Paths.get(p);
+            //Path filePath = Paths.get(p);
             //
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
             int bufferSize = 2*1024*1024; // 8KB buffer size

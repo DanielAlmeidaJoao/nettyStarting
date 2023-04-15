@@ -34,6 +34,8 @@ public class Main2 {
         }
         System.out.println("CONNECTED"); **/
         //testQuicChannel.end();
+
+        /**
         InetSocketAddress socketAddress;
         if(port.equals("8081")){
             socketAddress = new InetSocketAddress("localhost",8082);
@@ -45,6 +47,7 @@ public class Main2 {
             socketAddress = new InetSocketAddress("localhost",8081);
         }
         testQuicChannel.openConnection(socketAddress);
+         **/
         Scanner scanner = new Scanner(System.in);
 
 
