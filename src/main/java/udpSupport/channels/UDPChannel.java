@@ -7,7 +7,6 @@ import java.net.InetSocketAddress;
 import java.util.Properties;
 
 public abstract class UDPChannel implements UDPChannelConsumer{
-
     private NettyUDPServer nettyUDPServer;
     private ChannelStats metrics;
     public UDPChannel(Properties properties, boolean singleThreaded) throws Exception {
