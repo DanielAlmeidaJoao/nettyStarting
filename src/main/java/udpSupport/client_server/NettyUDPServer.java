@@ -8,59 +8,63 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import quicSupport.utils.Logics;
+import io.netty.util.concurrent.ScheduledFuture;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.pipeline.InMessageHandler;
-import udpSupport.pipeline.UDPMessageEncoder;
 import udpSupport.utils.Pair;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.concurrent.ScheduledFuture;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class NettyUDPServer implements UDPChannelConsumer{
-    private Map<Long,Pair<DatagramPacket,ScheduledFuture>> waitingForAcks;
+    private Set<Long> waitingForAcks;
     private AtomicLong datagramPacketCounter;
     private final Channel channel;
-    private final UDPChannelConsumer consumer;
+    private final NettyUDPServer consumer;
     private final ChannelStats stats;
 
     public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats) throws Exception {
         this.stats = stats;
-        channel = start();
         this.consumer = this;
-        waitingForAcks = new HashMap<>();
+        channel = start();
+        waitingForAcks = new ConcurrentSkipListSet<>();
         datagramPacketCounter = new AtomicLong(0);
     }
-    private void scheduleRetransmission(DatagramPacket packet, long msgId){
+    private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, boolean firstTime){
         ScheduledFuture scheduledFuture = channel.eventLoop().schedule(() -> {
-            if(!waitingForAcks.containsKey(msgId)) return;
-            channel.writeAndFlush(packet).addListener(future -> {
-                if(future.isSuccess()){
-                    scheduleRetransmission(packet,msgId);
+            System.out.println("BLA BLA");
+            if(!waitingForAcks.contains(msgId)) return;
+            System.out.println("SCHEDULER TRIGGERED!!!");
+            channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
+                System.out.println(future.isSuccess()+" 99999999 "+msgId);
+                if(!future.isSuccess()){
+                    future.cause().printStackTrace();
                 }
+                scheduleRetransmission(packet,msgId,dest,false);
             });
-        },30, TimeUnit.SECONDS);
-        Pair<DatagramPacket,ScheduledFuture> pair = waitingForAcks.get(msgId);
+        },5, TimeUnit.SECONDS);
+        if(firstTime){
+            waitingForAcks.add(msgId);
+        }
+        /**
+        Pair pair = waitingForAcks.get(msgId);
         if(pair==null){
-            pair = new Pair<>(packet,scheduledFuture);
+            pair = new Pair(packet,scheduledFuture);
             waitingForAcks.put(msgId,pair);
         }else {
             pair.setRight(scheduledFuture);
         }
+         **/
+        System.out.println("RETRANSMISSION CALLED!!!");
     }
     public void onAckReceived(long msgId){
         System.out.println("RECEIVED ACK FOR "+msgId);
-        Pair<DatagramPacket,ScheduledFuture> p = waitingForAcks.remove(msgId);
-        if(p!=null){
-            p.getRight().cancel(true);
-        }
+        waitingForAcks.remove(msgId);
     }
     private Channel start() throws Exception{
         Channel server;
@@ -89,27 +93,30 @@ public class NettyUDPServer implements UDPChannelConsumer{
         buf.writeByte(UDPLogics.APP_MESSAGE);
         buf.writeLong(c);
         buf.writeBytes(message);
+        byte [] toResend = new byte[buf.readableBytes()];
+        buf.markReaderIndex();
+        buf.readBytes(toResend);
+        buf.resetReaderIndex();
         DatagramPacket datagramPacket = new DatagramPacket(buf,peer);
         channel.writeAndFlush(datagramPacket).addListener(future -> {
             if(future.isSuccess()){
                 System.out.println("SENT "+c);
-                scheduleRetransmission(datagramPacket,c);
+                scheduleRetransmission(toResend,c,peer,true);
             }
             consumer.messageSentHandler(future.isSuccess(),future.cause(),message,peer);
         });
 
     }
-    @Override
+
     public void deliver(byte[] message, InetSocketAddress from) {
         System.out.println("RECEIVED MESSAGE "+message.length);
     }
 
-    @Override
     public void deliverAck(long msgId) {
+        System.out.println("PORRRAS ");
         onAckReceived(msgId);
     }
 
-    @Override
     public void messageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest) {
         if(!success){
             error.printStackTrace();

@@ -8,8 +8,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.DatagramPacket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.channels.CustomQuicChannel;
 import udpSupport.channels.UDPChannelConsumer;
+import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.utils.UDPLogics;
 
@@ -29,14 +29,12 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
-        System.out.println("RECEIVING MESSAGE!!");
         DatagramPacket datagramPacket = (DatagramPacket) o;
-        System.out.println("SENDER "+        datagramPacket.sender());
         ByteBuf content = datagramPacket.content();
         byte msgCode = content.readByte();
         long msgId = content.readLong();
         logger.info("RECEIVED MESSAGE CODE: {}",(msgCode==UDPLogics.APP_ACK?"APP_MESSAGE":"ACK"));
-        System.out.println("RECEVED MESSAGE CODE"+msgCode+" "+msgId);
+        System.out.println("RECEiVED MESSAGE CODE - "+msgCode+" - "+msgId);
         byte [] message=null;
         if(content.readableBytes()>0){
             message = new byte[content.readableBytes()];
@@ -44,37 +42,41 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         Channel channel = channelHandlerContext.channel();
         switch (msgCode){
             case UDPLogics.APP_MESSAGE: onAppMessage(channel,msgId,message,datagramPacket.sender());break;
-            case UDPLogics.APP_ACK: onAckMessage(channel,msgId,datagramPacket.sender());break;
+            case UDPLogics.APP_ACK: onAckMessage(msgId,datagramPacket.sender());break;
             default: System.out.println("DEFAULT ");throw new Exception("UNKNOWN MESSAGE CODE: "+msgCode);
         }
 
     }
+    int m = 0;
     private void onAppMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
-        System.out.println("APP MESSAGE ++++");
+        m++;
+        if(m<4){
+            return;
+        }
         ByteBuf buf = Unpooled.buffer(9);
         buf.writeByte(UDPLogics.APP_ACK);
         buf.writeLong(msgId);
         DatagramPacket datagramPacket = new DatagramPacket(buf,sender);
-        System.out.println(" 33333333 ");
         channel.writeAndFlush(datagramPacket).addListener(future -> {
-            if(future.isSuccess()){
-                System.out.println(" ++++++++++++++++++++++++++++++++++ ");
-            }else {
+            if(!future.isSuccess()){
                 future.cause().printStackTrace();
             }
         });
-        System.out.println("ACK SENT");
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,message.length+1,UDPLogics.APP_MESSAGE);
         }
         consumer.deliver(message,sender);
     }
-    private void onAckMessage(Channel channel, long msgId, InetSocketAddress sender){
+    private void onAckMessage(long msgId, InetSocketAddress sender){
         System.out.println("APP ACK");
         consumer.deliverAck(msgId);
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,1,UDPLogics.APP_ACK);
         }
+    }
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
     }
 }
 
