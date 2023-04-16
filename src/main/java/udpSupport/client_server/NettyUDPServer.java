@@ -37,11 +37,8 @@ public class NettyUDPServer implements UDPChannelConsumer{
     }
     private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, boolean firstTime){
         ScheduledFuture scheduledFuture = channel.eventLoop().schedule(() -> {
-            System.out.println("BLA BLA");
             if(!waitingForAcks.contains(msgId)) return;
-            System.out.println("SCHEDULER TRIGGERED!!!");
             channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
-                System.out.println(future.isSuccess()+" 99999999 "+msgId);
                 if(!future.isSuccess()){
                     future.cause().printStackTrace();
                 }
@@ -51,19 +48,8 @@ public class NettyUDPServer implements UDPChannelConsumer{
         if(firstTime){
             waitingForAcks.add(msgId);
         }
-        /**
-        Pair pair = waitingForAcks.get(msgId);
-        if(pair==null){
-            pair = new Pair(packet,scheduledFuture);
-            waitingForAcks.put(msgId,pair);
-        }else {
-            pair.setRight(scheduledFuture);
-        }
-         **/
-        System.out.println("RETRANSMISSION CALLED!!!");
     }
     public void onAckReceived(long msgId){
-        System.out.println("RECEIVED ACK FOR "+msgId);
         waitingForAcks.remove(msgId);
     }
     private Channel start() throws Exception{
@@ -100,7 +86,6 @@ public class NettyUDPServer implements UDPChannelConsumer{
         DatagramPacket datagramPacket = new DatagramPacket(buf,peer);
         channel.writeAndFlush(datagramPacket).addListener(future -> {
             if(future.isSuccess()){
-                System.out.println("SENT "+c);
                 scheduleRetransmission(toResend,c,peer,true);
             }
             consumer.messageSentHandler(future.isSuccess(),future.cause(),message,peer);
