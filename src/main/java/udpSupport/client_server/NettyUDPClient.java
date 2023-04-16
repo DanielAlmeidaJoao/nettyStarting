@@ -10,14 +10,15 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import udpSupport.channels.UDPChannelConsumer;
+import udpSupport.pipeline.ClientHandler;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.Scanner;
 
 public class NettyUDPClient {
 
-    public static void main(String[] args) throws Exception {
+    public void start(UDPChannelConsumer consumer)throws Exception{
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
@@ -28,7 +29,7 @@ public class NettyUDPClient {
                         @Override
                         protected void initChannel(DatagramChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(new ClientHandler());
+                            pipeline.addLast(new ClientHandler(consumer));
                         }
                     });
 
@@ -51,6 +52,10 @@ public class NettyUDPClient {
         } finally {
             group.shutdownGracefully();
         }
+    }
+    public static void main(String[] args) throws Exception {
+        NettyUDPClient nettyUDPClient = new NettyUDPClient();
+        nettyUDPClient.start(null);
     }
 
 }
