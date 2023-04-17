@@ -4,8 +4,6 @@ import java.net.InetSocketAddress;
 
 public interface UDPChannelConsumer {
 
-    void deliver(byte [] message, InetSocketAddress from);
-
-    void deliverAck(long msgId);
+    void deliverMessage(byte [] message, InetSocketAddress from);
     void messageSentHandler(boolean success, Throwable error, byte [] message, InetSocketAddress dest);
 }

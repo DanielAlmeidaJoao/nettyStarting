@@ -15,7 +15,6 @@ public class ChannelStats {
 
     public void addSentBytes(InetSocketAddress peer, long bytes, byte message_code){
         NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper());
-        networkStats.getMessageStats().addBytesSent(bytes);
         switch (message_code){
             case UDPLogics.APP_MESSAGE: networkStats.getMessageStats().addBytesSent(bytes);break;
             case UDPLogics.APP_ACK: networkStats.getAckStats().addBytesSent(bytes);break;

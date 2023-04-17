@@ -7,7 +7,7 @@ public class NetworkStatsWrapper {
     private NetworkStats messageStats;
     private NetworkStats ackStats;
     public NetworkStatsWrapper(){
-        messageStats = new NetworkStats();
-        ackStats = new NetworkStats();
+        messageStats = new NetworkStats("messageStats");
+        ackStats = new NetworkStats("ackStats");
     }
 }

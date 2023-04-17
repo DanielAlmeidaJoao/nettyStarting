@@ -11,7 +11,7 @@ import udpSupport.utils.UDPLogics;
 
 import java.util.List;
 
-public class UDPMessageEncoder extends MessageToMessageEncoder<MessageWrapper> {
+public class UDPMessageEncoder extends MessageToMessageEncoder<DatagramPacket> {
     private final ChannelStats channelStats;
 
     public UDPMessageEncoder(ChannelStats channelStats) {
@@ -19,7 +19,7 @@ public class UDPMessageEncoder extends MessageToMessageEncoder<MessageWrapper> {
     }
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, MessageWrapper messageWrapper, List<Object> list){
+    protected void encode(ChannelHandlerContext channelHandlerContext, DatagramPacket datagramPacket, List<Object> list){
         /**
         if(channelStats!=null){
             ByteBuf buf = datagramPacket.content();
@@ -28,11 +28,6 @@ public class UDPMessageEncoder extends MessageToMessageEncoder<MessageWrapper> {
             buf.resetReaderIndex();
         } **/
         System.out.println("COMING HEREEEEEEE");
-        ByteBuf buf = Unpooled.buffer(messageWrapper.getData().length+9);
-        buf.writeByte(messageWrapper.getMsgCode());
-        buf.writeLong(messageWrapper.getMsgId());
-        buf.writeBytes(messageWrapper.getData());
-        DatagramPacket datagramPacket = new DatagramPacket(buf,messageWrapper.getDest());
         channelHandlerContext.writeAndFlush(datagramPacket);
     }
 }

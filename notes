@@ -61,3 +61,6 @@ mvn clean package -P windows-x86_64
 
 java -cp target/nettyStart.jar udpSupport.client_server.NettyUDPServer
 java -cp target/nettyStart.jar udpSupport.client_server.NettyUDPClient
+
+java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8081
+java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8082

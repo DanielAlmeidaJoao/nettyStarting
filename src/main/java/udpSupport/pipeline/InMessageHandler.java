@@ -9,8 +9,8 @@ import io.netty.channel.socket.DatagramPacket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import udpSupport.channels.UDPChannelConsumer;
-import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
+import udpSupport.utils.OnAckFunction;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetSocketAddress;
@@ -24,10 +24,12 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
 
     private final UDPChannelConsumer consumer;
     private final ChannelStats channelStats;
+    private final OnAckFunction onAckfunction;
 
-    public InMessageHandler(UDPChannelConsumer consumer, ChannelStats channelStats){
+    public InMessageHandler(UDPChannelConsumer consumer, ChannelStats channelStats, OnAckFunction onAckfunction){
         this.consumer = consumer;
         this.channelStats = channelStats;
+        this.onAckfunction = onAckfunction;
         receivedMessages = new ConcurrentSkipListSet<>();
     }
 
@@ -37,7 +39,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             int len = receivedMessages.size();
             receivedMessages.clear();
             System.out.println("RECEIVED IDS CLEARED - "+len);
-        },1, TimeUnit.MINUTES);
+        },10, TimeUnit.MINUTES);
     }
 
     @Override
@@ -61,26 +63,32 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
 
     }
     private void onAppMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
-        if(!receivedMessages.add(msgId)){
-            logger.info("RECEIVED REPEATED MSG ID: ",msgId);
-            return;
-        }
         ByteBuf buf = Unpooled.buffer(9);
         buf.writeByte(UDPLogics.APP_ACK);
         buf.writeLong(msgId);
         DatagramPacket datagramPacket = new DatagramPacket(buf,sender);
         channel.writeAndFlush(datagramPacket).addListener(future -> {
-            if(!future.isSuccess()){
+            if(future.isSuccess()){
+                if(channelStats!=null){
+                    channelStats.addSentBytes(sender,9,UDPLogics.APP_ACK);
+                }
+            }else{
                 future.cause().printStackTrace();
             }
         });
+
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,message.length+9,UDPLogics.APP_MESSAGE);
         }
-        consumer.deliver(message,sender);
+        if(!receivedMessages.add(msgId)){
+            logger.info("RECEIVED REPEATED MSG ID: ",msgId);
+            System.out.println("RECEIVED REPEATED MSG ID: "+msgId);
+            return;
+        }
+        consumer.deliverMessage(message,sender);
     }
     private void onAckMessage(long msgId, InetSocketAddress sender){
-        consumer.deliverAck(msgId);
+        onAckfunction.execute(msgId);
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,9,UDPLogics.APP_ACK);
         }
