@@ -9,9 +9,11 @@ import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.util.concurrent.ScheduledFuture;
+import quicSupport.utils.Logics;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.pipeline.InMessageHandler;
+import udpSupport.pipeline.UDPMessageEncoder;
 import udpSupport.utils.Pair;
 import udpSupport.utils.UDPLogics;
 
@@ -36,7 +38,7 @@ public class NettyUDPServer implements UDPChannelConsumer{
         datagramPacketCounter = new AtomicLong(0);
     }
     private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, boolean firstTime){
-        ScheduledFuture scheduledFuture = channel.eventLoop().schedule(() -> {
+        channel.eventLoop().schedule(() -> {
             if(!waitingForAcks.contains(msgId)) return;
             channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
                 if(!future.isSuccess()){
@@ -64,7 +66,7 @@ public class NettyUDPServer implements UDPChannelConsumer{
                     @Override
                     protected void initChannel(DatagramChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
-                        //pipeline.addLast(new UDPMessageEncoder());
+                        //pipeline.addLast(new UDPMessageEncoder(stats));
                         pipeline.addLast(new InMessageHandler(consumer,stats));
                     }
                 });
@@ -75,7 +77,7 @@ public class NettyUDPServer implements UDPChannelConsumer{
 
     public void sendMessage(byte [] message, InetSocketAddress peer){
         long c = datagramPacketCounter.incrementAndGet();
-        ByteBuf buf = Unpooled.buffer(message.length+1);
+        ByteBuf buf = Unpooled.buffer(message.length+9);
         buf.writeByte(UDPLogics.APP_MESSAGE);
         buf.writeLong(c);
         buf.writeBytes(message);
@@ -90,7 +92,6 @@ public class NettyUDPServer implements UDPChannelConsumer{
             }
             consumer.messageSentHandler(future.isSuccess(),future.cause(),message,peer);
         });
-
     }
 
     public void deliver(byte[] message, InetSocketAddress from) {
@@ -98,7 +99,7 @@ public class NettyUDPServer implements UDPChannelConsumer{
     }
 
     public void deliverAck(long msgId) {
-        System.out.println("PORRRAS ");
+        System.out.println("RECEIVED ACK FOR "+msgId);
         onAckReceived(msgId);
     }
 
@@ -115,6 +116,10 @@ public class NettyUDPServer implements UDPChannelConsumer{
         while (true) {
             System.out.println("ENTER SOMETHING: ");
             String line = scanner.nextLine();
+            if(line.equalsIgnoreCase("m")){
+                System.out.println(Logics.gson.toJson(stats));
+                return;
+            }
             if (line == null || line.trim().isEmpty()) {
                 continue;
             }

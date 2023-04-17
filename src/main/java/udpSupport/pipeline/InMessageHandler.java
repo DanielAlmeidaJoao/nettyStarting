@@ -14,9 +14,13 @@ import udpSupport.metrics.ChannelStats;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetSocketAddress;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 
 public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(InMessageHandler.class);
+    private Set<Long> receivedMessages;
 
     private final UDPChannelConsumer consumer;
     private final ChannelStats channelStats;
@@ -24,8 +28,17 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     public InMessageHandler(UDPChannelConsumer consumer, ChannelStats channelStats){
         this.consumer = consumer;
         this.channelStats = channelStats;
+        receivedMessages = new ConcurrentSkipListSet<>();
     }
 
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        ctx.channel().eventLoop().schedule(() -> {
+            int len = receivedMessages.size();
+            receivedMessages.clear();
+            System.out.println("RECEIVED IDS CLEARED - "+len);
+        },1, TimeUnit.MINUTES);
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
@@ -34,11 +47,11 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         byte msgCode = content.readByte();
         long msgId = content.readLong();
         logger.info("RECEIVED MESSAGE CODE: {}",(msgCode==UDPLogics.APP_ACK?"APP_MESSAGE":"ACK"));
-        System.out.println("RECEiVED MESSAGE CODE - "+msgCode+" - "+msgId);
         byte [] message=null;
         if(content.readableBytes()>0){
             message = new byte[content.readableBytes()];
         }
+        content.release();
         Channel channel = channelHandlerContext.channel();
         switch (msgCode){
             case UDPLogics.APP_MESSAGE: onAppMessage(channel,msgId,message,datagramPacket.sender());break;
@@ -47,10 +60,9 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         }
 
     }
-    int m = 0;
     private void onAppMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
-        m++;
-        if(m<4){
+        if(!receivedMessages.add(msgId)){
+            logger.info("RECEIVED REPEATED MSG ID: ",msgId);
             return;
         }
         ByteBuf buf = Unpooled.buffer(9);
@@ -63,15 +75,14 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             }
         });
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,message.length+1,UDPLogics.APP_MESSAGE);
+            channelStats.addReceivedBytes(sender,message.length+9,UDPLogics.APP_MESSAGE);
         }
         consumer.deliver(message,sender);
     }
     private void onAckMessage(long msgId, InetSocketAddress sender){
-        System.out.println("APP ACK");
         consumer.deliverAck(msgId);
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,1,UDPLogics.APP_ACK);
+            channelStats.addReceivedBytes(sender,9,UDPLogics.APP_ACK);
         }
     }
     @Override
