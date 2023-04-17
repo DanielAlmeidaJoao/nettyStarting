@@ -4,6 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.testing.TestQuicChannel;
 import udpSupport.channels.SingleThreadedUDPChannel;
+import udpSupport.metrics.ChannelStats;
+import udpSupport.metrics.NetworkStatsWrapper;
+import udpSupport.utils.UDPLogics;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,9 +32,10 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
         try{
             fos.write(message, 0, message.length);
             fos.flush();
-            if(total>=1035368729){
-                fos.close();
+            if(total>= 1035368729){
+                //fos.close();
                 System.out.println("FILE CLOSEDDDDDDDDDDDD "+total);
+                readMetrics(this::onReadMetrics);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -65,17 +69,22 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
                 totalSent += read;
                 sendMessage(bytes,peer,read);
                 cc++;
-
-                if(cc>10){
-                    System.out.println("UP");
-                }
-
-                Thread.sleep(1000);
+                //Thread.sleep(1000);
                 bytes = new byte[bufferSize];
             }
             System.out.println("TOTAL SENT "+totalSent);
+            Thread.sleep(1000);
+            readMetrics(this::onReadMetrics);
+            System.out.println("METRICS OUT ?");
         }catch (Exception e){
             e.printStackTrace();
+        }
+    }
+    public void onReadMetrics(ChannelStats stats){
+        System.out.println("SUPPER METRICS CALLED ++++++++");
+
+        for (NetworkStatsWrapper value : stats.getStatsMap().values()) {
+            System.out.println(UDPLogics.gson.toJson(value));
         }
     }
 }

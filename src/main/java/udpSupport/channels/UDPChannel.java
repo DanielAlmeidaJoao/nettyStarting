@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
+import udpSupport.utils.funcs.OnReadMetricsFunc;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -31,8 +32,11 @@ public abstract class UDPChannel implements UDPChannelConsumer{
 
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        if( properties.containsKey("metrics")){
+        if( properties.getProperty("metrics")!=null){
+            System.out.println("metrics onnnn");
             metrics = new ChannelStats();
+        }else{
+            System.out.println("METRICS NOT ON");
         }
         udpServer=new NettyUDPServer(this,metrics,self);
     }
@@ -51,5 +55,10 @@ public abstract class UDPChannel implements UDPChannelConsumer{
         onMessageSentHandler(success,error,message,dest);
     }
     public abstract void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest);
+
+    public void readMetrics(OnReadMetricsFunc onReadMetricsFunc){
+        System.out.println("SUPPER METRICS CALLED "+metrics.getStatsMap().size());
+        onReadMetricsFunc.execute(metrics.cloneChannelMetric());
+    }
 
 }

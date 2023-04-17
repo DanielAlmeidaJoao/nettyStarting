@@ -13,6 +13,7 @@ public class UDPMainTester {
         logger.info("STARREDD");
         Properties properties = new Properties();
         properties.setProperty("address","localhost");
+        properties.setProperty("metrics","on");
         String port = args[0];
         properties.setProperty("port",port);
         TestUDPChannel testUDPChannel = new TestUDPChannel(properties);

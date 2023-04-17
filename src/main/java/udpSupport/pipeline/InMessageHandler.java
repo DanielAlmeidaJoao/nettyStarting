@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.metrics.ChannelStats;
-import udpSupport.utils.OnAckFunction;
+import udpSupport.utils.funcs.OnAckFunction;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetSocketAddress;
@@ -93,7 +93,6 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             previous = msgId;
         }else{
             misplaced++;
-            System.out.println("RECEIVED "+msgId+". BEFORE "+previous);
         }
         consumer.deliverMessage(message,sender);
     }

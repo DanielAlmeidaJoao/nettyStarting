@@ -1,4 +1,4 @@
-package udpSupport.utils;
+package udpSupport.utils.funcs;
 
 @FunctionalInterface
 public interface OnAckFunction {
