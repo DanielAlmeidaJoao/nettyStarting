@@ -63,13 +63,14 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-                sendMessage(bytes,peer);
+                sendMessage(bytes,peer,read);
                 cc++;
-                if(cc>100){
-                    cc=0;
-                    //Thread.sleep(1000);
+
+                if(cc>10){
                     System.out.println("UP");
                 }
+
+                Thread.sleep(1000);
                 bytes = new byte[bufferSize];
             }
             System.out.println("TOTAL SENT "+totalSent);

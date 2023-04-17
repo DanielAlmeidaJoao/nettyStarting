@@ -85,12 +85,12 @@ public class NettyUDPServer {
         return server;
     }
 
-    public void sendMessage(byte [] message, InetSocketAddress peer){
+    public void sendMessage(byte [] message, InetSocketAddress peer, int len){
         long c = datagramPacketCounter.incrementAndGet();
         ByteBuf buf = Unpooled.buffer(message.length+9);
         buf.writeByte(UDPLogics.APP_MESSAGE);
         buf.writeLong(c);
-        buf.writeBytes(message);
+        buf.writeBytes(message,0, len);
         byte [] toResend = new byte[buf.readableBytes()];
         buf.markReaderIndex();
         buf.readBytes(toResend);
@@ -122,7 +122,7 @@ public class NettyUDPServer {
             }
             int times = Integer.parseInt(line);
             line = "a".repeat(times);
-            sendMessage(line.getBytes(),dest);
+            sendMessage(line.getBytes(),dest,line.length());
             System.out.println("DATA SENT@ "+line.length());
         }
     }

@@ -15,8 +15,8 @@ public abstract class SingleThreadedUDPChannel extends UDPChannel {
     }
 
     @Override
-    public void sendMessage(byte [] message, InetSocketAddress dest){
-        executor.execute(() -> super.sendMessage(message,dest));
+    public void sendMessage(byte [] message, InetSocketAddress dest,int len){
+        executor.execute(() -> super.sendMessage(message,dest,len));
     }
 
     @Override

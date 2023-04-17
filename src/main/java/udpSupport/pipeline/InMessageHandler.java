@@ -36,6 +36,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ctx.channel().eventLoop().schedule(() -> {
+            System.out.println("MISPLACED "+misplaced);
             int len = receivedMessages.size();
             receivedMessages.clear();
             System.out.println("RECEIVED IDS CLEARED - "+len);
@@ -52,6 +53,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         byte [] message=null;
         if(content.readableBytes()>0){
             message = new byte[content.readableBytes()];
+            content.readBytes(message);
         }
         content.release();
         Channel channel = channelHandlerContext.channel();
@@ -62,6 +64,8 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         }
 
     }
+    long previous = -1;
+    int misplaced = 0;
     private void onAppMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
         ByteBuf buf = Unpooled.buffer(9);
         buf.writeByte(UDPLogics.APP_ACK);
@@ -82,8 +86,14 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         }
         if(!receivedMessages.add(msgId)){
             logger.info("RECEIVED REPEATED MSG ID: ",msgId);
-            System.out.println("RECEIVED REPEATED MSG ID: "+msgId);
+            //System.out.println("RECEIVED REPEATED MSG ID: "+msgId);
             return;
+        }
+        if(previous<msgId){
+            previous = msgId;
+        }else{
+            misplaced++;
+            System.out.println("RECEIVED "+msgId+". BEFORE "+previous);
         }
         consumer.deliverMessage(message,sender);
     }

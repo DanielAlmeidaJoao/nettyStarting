@@ -37,8 +37,8 @@ public abstract class UDPChannel implements UDPChannelConsumer{
         udpServer=new NettyUDPServer(this,metrics,self);
     }
 
-    public void sendMessage(byte [] message, InetSocketAddress dest){
-        udpServer.sendMessage(message,dest);
+    public void sendMessage(byte [] message, InetSocketAddress dest,int len){
+        udpServer.sendMessage(message,dest,len);
     }
 
     @Override
