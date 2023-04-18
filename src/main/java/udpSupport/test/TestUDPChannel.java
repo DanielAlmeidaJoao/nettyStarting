@@ -1,8 +1,10 @@
 package udpSupport.test;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.testing.TestQuicChannel;
+import quicSupport.utils.Logics;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStats;
@@ -14,7 +16,10 @@ import java.io.FileOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class TestUDPChannel extends SingleThreadedUDPChannel {
     private static final Logger logger = LogManager.getLogger(TestUDPChannel.class);
@@ -31,24 +36,39 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
     public void onDeliverMessage(byte[] message, InetSocketAddress from) {
         total += message.length;
         try{
-            fos.write(message, 0, message.length);
-            fos.flush();
+            if(32768==message.length){
+                receivedHashes.add(Hex.encodeHexString(Logics.hash(message)));
+            }else {
+                System.out.println("EXPECTED ONCE");
+            }
+            //fos.write(message, 0, message.length);
+            //fos.flush();
             if(total>= 1035368729){
                 //fos.close();
                 System.out.println("FILE CLOSEDDDDDDDDDDDD "+total);
+                sumHashes(receivedHashes);
                 readMetrics(this::onReadMetrics);
             }
         }catch (Exception e){
             e.printStackTrace();
         }
     }
-
+    private void sumHashes(SortedSet<String> set){
+        System.out.println("FILE CLOSEDDDDDDDDDDDD "+total);
+        long sum = 0;
+        for (String receivedHash : set) {
+            sum += receivedHash.hashCode();
+        }
+        System.out.println(" SUMM "+sum);
+    }
     @Override
     public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest) {
         if(!success){
             error.printStackTrace();
         }
     }
+    SortedSet<String> sentHashes=new TreeSet<>();
+    SortedSet<String> receivedHashes=new TreeSet<>();
 
     public void startStreaming(InetSocketAddress peer){
         System.out.println("STREAMING STARTED!!!");
@@ -68,12 +88,19 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
+                if(read==32768){
+                    sentHashes.add(Hex.encodeHexString(Logics.hash(bytes)));
+                }else {
+                    System.out.println("EXPECTED ONCE!!!");
+                }
                 sendMessage(bytes,peer,read);
                 cc++;
                 //Thread.sleep(1000);
                 bytes = new byte[bufferSize];
             }
             System.out.println("TOTAL SENT "+totalSent);
+            sumHashes(sentHashes);
+
             Thread.sleep(1000);
             readMetrics(this::onReadMetrics);
             System.out.println("METRICS OUT ?");
