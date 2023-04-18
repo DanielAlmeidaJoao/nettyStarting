@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.utils.Logics;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.metrics.ChannelStats;
+import udpSupport.metrics.NetworkStatsKindEnum;
 import udpSupport.pipeline.InMessageHandler;
 import udpSupport.utils.funcs.OnAckFunction;
 import udpSupport.utils.UDPLogics;
@@ -48,7 +49,7 @@ public class NettyUDPServer {
             channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
                 if(future.isSuccess()){
                     if(stats!=null){
-                        stats.addSentBytes(dest,packet.length,UDPLogics.APP_MESSAGE);
+                        stats.addSentBytes(dest,packet.length, NetworkStatsKindEnum.MESSAGE_STATS);
                     }
                 }else{
                     future.cause().printStackTrace();
@@ -99,7 +100,7 @@ public class NettyUDPServer {
             if(future.isSuccess()){
                 scheduleRetransmission(toResend,c,peer,0);
                 if(stats!=null){
-                    stats.addSentBytes(peer,toResend.length,UDPLogics.APP_MESSAGE);
+                    stats.addSentBytes(peer,toResend.length,NetworkStatsKindEnum.MESSAGE_STATS);
                 }
             }
             consumer.messageSentHandler(future.isSuccess(),future.cause(),message,peer);

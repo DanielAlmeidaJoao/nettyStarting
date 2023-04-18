@@ -17,6 +17,10 @@ public class UDPLogics {
 
     /*** METRIC TYPES ***/
 
+    public static final String MESSAGE_STAT_KEY="MS";
+    public static final String ACK_STAT_KEY="AS";
+    public static final String DELIVERED_MESSAGE_STATS="EMS";
+
     public static DatagramPacket datagramPacket(MessageWrapper messageWrapper){
         ByteBuf buf = Unpooled.buffer(messageWrapper.getData().length+9);
         buf.writeByte(messageWrapper.getMsgCode());

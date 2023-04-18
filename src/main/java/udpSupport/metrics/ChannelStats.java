@@ -20,19 +20,13 @@ public class ChannelStats {
         statsMap = map;
     }
 
-    public void addSentBytes(InetSocketAddress peer, long bytes, byte message_code){
+    public void addSentBytes(InetSocketAddress peer, long bytes, NetworkStatsKindEnum message_code){
         NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper(peer));
-        switch (message_code){
-            case UDPLogics.APP_MESSAGE: networkStats.getMessageStats().addBytesSent(bytes);break;
-            case UDPLogics.APP_ACK: networkStats.getAckStats().addBytesSent(bytes);break;
-        }
+        networkStats.getStats(message_code).addBytesSent(bytes);
     }
-    public void addReceivedBytes(InetSocketAddress peer, long bytes,byte message_code){
+    public void addReceivedBytes(InetSocketAddress peer, long bytes,NetworkStatsKindEnum message_code){
         NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper(peer));
-        switch (message_code){
-            case UDPLogics.APP_MESSAGE: networkStats.getMessageStats().addBytesReceived(bytes);break;
-            case UDPLogics.APP_ACK: networkStats.getAckStats().addBytesReceived(bytes);break;
-        }
+        networkStats.getStats(message_code).addBytesReceived(bytes);
     }
     private NetworkStats clone(NetworkStats stats){
         return UDPLogics.modelMapper.map(stats,NetworkStats.class);
@@ -40,7 +34,11 @@ public class ChannelStats {
     public ChannelStats cloneChannelMetric(){
         Map<InetSocketAddress,NetworkStatsWrapper> stats = new HashMap<>(statsMap.size());
         for (NetworkStatsWrapper value : statsMap.values()) {
-            NetworkStatsWrapper copy = new NetworkStatsWrapper(value.getDest(),clone(value.getMessageStats()),clone(value.getAckStats()));
+            Map<NetworkStatsKindEnum,NetworkStats> statsMap = new HashMap<>(3);
+            statsMap.put(NetworkStatsKindEnum.MESSAGE_STATS,clone(value.getStats(NetworkStatsKindEnum.MESSAGE_STATS)));
+            statsMap.put(NetworkStatsKindEnum.MESSAGE_DELIVERED,clone(value.getStats(NetworkStatsKindEnum.MESSAGE_DELIVERED)));
+            statsMap.put(NetworkStatsKindEnum.ACK_STATS,clone(value.getStats((NetworkStatsKindEnum.ACK_STATS))));
+            NetworkStatsWrapper copy = new NetworkStatsWrapper(value.getDest(),statsMap);
             stats.put(value.getDest(),copy);
         }
         return new ChannelStats(stats);

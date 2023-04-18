@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.testing.TestQuicChannel;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.metrics.ChannelStats;
+import udpSupport.metrics.NetworkStats;
 import udpSupport.metrics.NetworkStatsWrapper;
 import udpSupport.utils.UDPLogics;
 
@@ -82,9 +83,10 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
     }
     public void onReadMetrics(ChannelStats stats){
         System.out.println("SUPPER METRICS CALLED ++++++++");
-
         for (NetworkStatsWrapper value : stats.getStatsMap().values()) {
-            System.out.println(UDPLogics.gson.toJson(value));
+            for (NetworkStats networkStats : value.statsCollection()) {
+                System.out.println(UDPLogics.gson.toJson(networkStats));
+            }
         }
     }
 }
