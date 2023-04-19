@@ -15,13 +15,14 @@ import udpSupport.utils.funcs.OnAckFunction;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetSocketAddress;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 
 public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(InMessageHandler.class);
-    private Set<Long> receivedMessages;
+    private final Map<Long, SortedSet<byte []>> streams;
+    private final Set<Long> receivedMessages;
 
     private final UDPChannelConsumer consumer;
     private final ChannelStats channelStats;
@@ -32,6 +33,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         this.channelStats = channelStats;
         this.onAckfunction = onAckfunction;
         receivedMessages = new ConcurrentSkipListSet<>();
+        streams = new HashMap<>();
     }
 
     @Override
@@ -58,9 +60,24 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         content.release();
         Channel channel = channelHandlerContext.channel();
         switch (msgCode){
+            case UDPLogics.SINGLE_MESSAGE:/*TODO */break;
+            case UDPLogics.STREAM_MESSAGE: /* */ break;
             case UDPLogics.APP_MESSAGE: onAppMessage(channel,msgId,message,datagramPacket.sender());break;
             case UDPLogics.APP_ACK: onAckMessage(msgId,datagramPacket.sender());break;
             default: System.out.println("DEFAULT ");throw new Exception("UNKNOWN MESSAGE CODE: "+msgCode);
+        }
+    }
+    private byte [] readMessageBytes(ByteBuf buf){
+        byte [] message = new byte[buf.readableBytes()];
+        buf.readBytes(message);
+        return message;
+    }
+    private void onStreamRead(ByteBuf buf){
+        long streamId = buf.readLong();
+        int streamCount = buf.readInt();
+        byte [] message=readMessageBytes(buf);
+        SortedSet<byte[]> compute = streams.compute(streamId, (aLong, bytes) -> new TreeSet<>());
+        if(compute.size()==streamCount){
         }
 
     }

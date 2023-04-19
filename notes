@@ -64,3 +64,21 @@ java -cp target/nettyStart.jar udpSupport.client_server.NettyUDPClient
 
 java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8081
 java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8082
+
+BIG MESSAGE NOTES:
+if single message
+	write S
+	write Id
+	write message
+else
+	write M
+	write Id
+	write streamId
+	write STREAM_COUNT
+	write message
+
+RCV:
+
+if S DELIVER
+ELSE
+	streams(streamId).ORDERED_SET.ADD(stream)

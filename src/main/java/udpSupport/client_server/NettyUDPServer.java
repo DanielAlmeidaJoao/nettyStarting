@@ -28,7 +28,9 @@ public class NettyUDPServer {
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
 
     private Set<Long> waitingForAcks;
-    private AtomicLong datagramPacketCounter;
+    private final AtomicLong datagramPacketCounter;
+    private final AtomicLong streamIdCounter;
+
     private final Channel channel;
     private final UDPChannelConsumer consumer;
     private final InetSocketAddress address;
@@ -41,6 +43,7 @@ public class NettyUDPServer {
         channel = start();
         waitingForAcks = new ConcurrentSkipListSet<>();
         datagramPacketCounter = new AtomicLong(0);
+        streamIdCounter = new AtomicLong(0);
     }
     private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, int count){
         channel.eventLoop().schedule(() -> {
@@ -84,13 +87,33 @@ public class NettyUDPServer {
         logger.info("UDP SERVER LISTENING ON : {}",address);
         return server;
     }
-
     public void sendMessage(byte [] message, InetSocketAddress peer, int len){
-        long c = datagramPacketCounter.incrementAndGet();
-        ByteBuf buf = Unpooled.buffer(message.length+9);
-        buf.writeByte(UDPLogics.APP_MESSAGE);
-        buf.writeLong(c);
-        buf.writeBytes(message,0, len);
+        if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.length){
+            long streamId = streamIdCounter.incrementAndGet();
+            ByteBuf buf = Unpooled.copiedBuffer(message);
+            int streamCount = message.length/UDPLogics.MAX_UDP_PAYLOAD_SIZE; //do the %
+            for (int i = 0; i < streamCount; i++) {
+                long messageId = datagramPacketCounter.incrementAndGet();
+                int streamLen = Math.min(buf.readableBytes(), UDPLogics.MAX_UDP_PAYLOAD_SIZE);
+                byte [] stream = new byte[streamLen];
+                ByteBuf byteBuf = Unpooled.buffer(Byte.BYTES+Long.BYTES*2+Integer.BYTES+streamLen);
+                byteBuf.writeByte(UDPLogics.STREAM_MESSAGE);
+                byteBuf.writeLong(messageId);
+                byteBuf.writeLong(streamId);
+                byteBuf.writeInt(streamCount);
+                byteBuf.writeBytes(stream);
+                sendMessageAux(buf,peer,messageId);
+            }
+        }else{
+            long messageId = datagramPacketCounter.incrementAndGet();
+            ByteBuf buf = Unpooled.buffer(Byte.BYTES+Long.BYTES+message.length+9);
+            buf.writeByte(UDPLogics.SINGLE_MESSAGE);
+            buf.writeLong(messageId);
+            buf.writeBytes(message,0, len);
+            sendMessageAux(buf,peer,messageId);
+        }
+    }
+    public void sendMessageAux(ByteBuf buf, InetSocketAddress peer,long messageId){
         byte [] toResend = new byte[buf.readableBytes()];
         buf.markReaderIndex();
         buf.readBytes(toResend);
@@ -98,13 +121,16 @@ public class NettyUDPServer {
         DatagramPacket datagramPacket = new DatagramPacket(buf,peer);
         channel.writeAndFlush(datagramPacket).addListener(future -> {
             if(future.isSuccess()){
-                scheduleRetransmission(toResend,c,peer,0);
+                scheduleRetransmission(toResend,messageId,peer,0);
                 if(stats!=null){
                     stats.addSentBytes(peer,toResend.length,NetworkStatsKindEnum.MESSAGE_STATS);
                 }
             }
-            consumer.messageSentHandler(future.isSuccess(),future.cause(),message,peer);
+            consumer.messageSentHandler(future.isSuccess(),future.cause(),null /*TODO message */,peer);
         });
+    }
+    public void sendMessage(byte msgType,byte [] message, InetSocketAddress peer, int len){
+        //TODO : REMOVE
     }
 
     public void send(){

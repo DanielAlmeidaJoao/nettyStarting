@@ -8,11 +8,16 @@ import org.modelmapper.ModelMapper;
 
 public class UDPLogics {
     public static final Gson gson = new Gson();
+    public static final int MAX_UDP_PAYLOAD_SIZE = 66500;
 
     public static final ModelMapper modelMapper = new ModelMapper();
 
     /*** MESSAGE CODES ***/
     public final static byte APP_MESSAGE = 'M';
+    public final static byte SINGLE_MESSAGE = 'S';
+    public final static byte STREAM_MESSAGE = 'T';
+
+
     public final static byte APP_ACK = 'A';
 
     /*** METRIC TYPES ***/
