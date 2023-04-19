@@ -90,30 +90,46 @@ public class NettyUDPServer {
     public void sendMessage(byte [] message, InetSocketAddress peer, int len){
         if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.length){
             long streamId = streamIdCounter.incrementAndGet();
-            ByteBuf buf = Unpooled.copiedBuffer(message);
-            int streamCount = message.length/UDPLogics.MAX_UDP_PAYLOAD_SIZE; //do the %
+            ByteBuf wholeMessageBuf = Unpooled.copiedBuffer(message);
+            int streamCount = ceilDiv(message.length,UDPLogics.MAX_UDP_PAYLOAD_SIZE); //do the %
             for (int i = 0; i < streamCount; i++) {
                 long messageId = datagramPacketCounter.incrementAndGet();
-                int streamLen = Math.min(buf.readableBytes(), UDPLogics.MAX_UDP_PAYLOAD_SIZE);
+                int streamLen = Math.min(wholeMessageBuf.readableBytes(), UDPLogics.MAX_UDP_PAYLOAD_SIZE);
                 byte [] stream = new byte[streamLen];
-                ByteBuf byteBuf = Unpooled.buffer(Byte.BYTES+Long.BYTES*2+Integer.BYTES+streamLen);
+                wholeMessageBuf.readBytes(stream);
+                ByteBuf byteBuf = Unpooled.buffer(/* Byte.BYTES+Long.BYTES*2+Integer.BYTES+streamLen */);
                 byteBuf.writeByte(UDPLogics.STREAM_MESSAGE);
                 byteBuf.writeLong(messageId);
                 byteBuf.writeLong(streamId);
                 byteBuf.writeInt(streamCount);
                 byteBuf.writeBytes(stream);
-                sendMessageAux(buf,peer,messageId);
+                //sendMessageAux(byteBuf,peer,messageId);
+                //byteBuf.release();
             }
+            wholeMessageBuf.release();
         }else{
             long messageId = datagramPacketCounter.incrementAndGet();
-            ByteBuf buf = Unpooled.buffer(Byte.BYTES+Long.BYTES+message.length+9);
+            ByteBuf buf = Unpooled.buffer(9+len);
             buf.writeByte(UDPLogics.SINGLE_MESSAGE);
             buf.writeLong(messageId);
             buf.writeBytes(message,0, len);
-            sendMessageAux(buf,peer,messageId);
+            byte [] all = new byte [buf.readableBytes()];
+            buf.readBytes(all);
+            buf.release();
+            sendMessageAux(all,peer,messageId);
+            //buf.release();
+
         }
     }
-    public void sendMessageAux(ByteBuf buf, InetSocketAddress peer,long messageId){
+    private int ceilDiv(int a, int b){
+        if(a%b==0){
+            return a/b;
+        }else{
+            return (a/b) + 1;
+        }
+    }
+    public void sendMessageAux(byte [] all, InetSocketAddress peer,long messageId){
+        ByteBuf buf = Unpooled.copiedBuffer(all);
         byte [] toResend = new byte[buf.readableBytes()];
         buf.markReaderIndex();
         buf.readBytes(toResend);

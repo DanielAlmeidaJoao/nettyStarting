@@ -52,7 +52,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         byte msgCode = content.readByte();
         long msgId = content.readLong();
         logger.info("RECEIVED MESSAGE CODE: {}",(msgCode==UDPLogics.APP_ACK?"APP_MESSAGE":"ACK"));
-        byte [] message=null;
+        byte [] message = null;
         if(content.readableBytes()>0){
             message = new byte[content.readableBytes()];
             content.readBytes(message);
@@ -60,9 +60,10 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         content.release();
         Channel channel = channelHandlerContext.channel();
         switch (msgCode){
-            case UDPLogics.SINGLE_MESSAGE:/*TODO */break;
-            case UDPLogics.STREAM_MESSAGE: /* */ break;
-            case UDPLogics.APP_MESSAGE: onAppMessage(channel,msgId,message,datagramPacket.sender());break;
+            case UDPLogics.SINGLE_MESSAGE:
+                onSingleMessage(channel,msgId,message,datagramPacket.sender());break;
+            //case UDPLogics.STREAM_MESSAGE: onStreamRead(channel,msgId,content,datagramPacket.sender());break;
+            //case UDPLogics.APP_MESSAGE: onAppMessage(channel,msgId,content,datagramPacket.sender());break;
             case UDPLogics.APP_ACK: onAckMessage(msgId,datagramPacket.sender());break;
             default: System.out.println("DEFAULT ");throw new Exception("UNKNOWN MESSAGE CODE: "+msgCode);
         }
@@ -72,26 +73,41 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         buf.readBytes(message);
         return message;
     }
-    private void onStreamRead(ByteBuf buf){
+    private void onStreamRead(Channel channel,long msgId, ByteBuf buf, InetSocketAddress sender){
         long streamId = buf.readLong();
         int streamCount = buf.readInt();
         byte [] message=readMessageBytes(buf);
+        buf.release();
+        int receivedBytes = message.length+9;
+        buf=null;
         SortedSet<byte[]> compute = streams.compute(streamId, (aLong, bytes) -> new TreeSet<>());
+        compute.add(message);
+        ByteBuf all = Unpooled.buffer();
         if(compute.size()==streamCount){
+            for (byte[] bytes : compute) {
+                all.writeBytes(bytes);
+            }
+            message = new byte[all.readableBytes()];
+            all.readBytes(message);
+            all.release();
         }
-
+        onAppMessage(channel,msgId,message,sender,receivedBytes);
     }
-    private void onAppMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
+    private void onSingleMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
+        onAppMessage(channel,msgId,message,sender,message.length+9);
+    }
+    private void onAppMessage(Channel channel,long msgId, byte [] message,InetSocketAddress sender, int receivedBytes){
         sendAck(channel, msgId, sender);
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,message.length+9,NetworkStatsKindEnum.MESSAGE_STATS);
+            //TODO: add another parameter that indicates the length of the message received
+            channelStats.addReceivedBytes(sender,receivedBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
         if(!receivedMessages.add(msgId)){
             logger.info("RECEIVED REPEATED MSG ID: ",msgId);
             return;
         }
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,message.length+9,NetworkStatsKindEnum.MESSAGE_DELIVERED);
+            channelStats.addReceivedBytes(sender,receivedBytes,NetworkStatsKindEnum.MESSAGE_DELIVERED);
         }
         consumer.deliverMessage(message,sender);
     }

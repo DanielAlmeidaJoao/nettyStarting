@@ -13,7 +13,7 @@ public class UDPLogics {
     public static final ModelMapper modelMapper = new ModelMapper();
 
     /*** MESSAGE CODES ***/
-    public final static byte APP_MESSAGE = 'M';
+    //public final static byte APP_MESSAGE = 'M';
     public final static byte SINGLE_MESSAGE = 'S';
     public final static byte STREAM_MESSAGE = 'T';
 
