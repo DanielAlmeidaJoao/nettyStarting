@@ -82,3 +82,5 @@ RCV:
 if S DELIVER
 ELSE
 	streams(streamId).ORDERED_SET.ADD(stream)
+
+https://netty.io/wiki/reference-counted-objects.html
