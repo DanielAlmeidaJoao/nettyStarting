@@ -14,8 +14,8 @@ public class NetworkStatsWrapper {
     private Map<NetworkStatsKindEnum,NetworkStats> statsMap;
     public NetworkStatsWrapper(InetSocketAddress host){
         statsMap = new HashMap<>(3);
-        statsMap.put(NetworkStatsKindEnum.MESSAGE_STATS,new NetworkStats("messageStats"));
-        statsMap.put(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED, new NetworkStats("effective_Sent_Delivery"));
+        statsMap.put(NetworkStatsKindEnum.MESSAGE_STATS,new NetworkStats("totalMessageStats"));
+        statsMap.put(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED, new NetworkStats("effectiveMessageStats"));
         statsMap.put(NetworkStatsKindEnum.ACK_STATS,new NetworkStats("ackStats"));
         dest=host;
     }
