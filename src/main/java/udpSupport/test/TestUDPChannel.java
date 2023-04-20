@@ -69,15 +69,15 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
     }
     SortedSet<String> sentHashes=new TreeSet<>();
     SortedSet<String> receivedHashes=new TreeSet<>();
-    int bufferSize = 32*1024; // 8KB buffer size
+    int bufferSize = 128*1024; // 8KB buffer size
 
     public void startStreaming(InetSocketAddress peer){
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
             //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             //Path filePath = Paths.get(p);
             //
             FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
@@ -91,14 +91,14 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
                 if(read==bufferSize){
                     sentHashes.add(Hex.encodeHexString(Logics.hash(bytes)));
                 }else {
-                    System.out.println("EXPECTED ONCE!!!");
+                    System.out.println("EXPECTED ONCE!!! "+read);
                 }
                 sendMessage(bytes,peer,read);
                 cc++;
                 //Thread.sleep(1000);
                 bytes = new byte[bufferSize];
             }
-            System.out.println("TOTAL SENT "+totalSent);
+            System.out.println("TOTAL SENT "+totalSent+" COUNT -- "+cc);
             sumHashes(sentHashes);
 
             Thread.sleep(1000);

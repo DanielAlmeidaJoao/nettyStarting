@@ -90,7 +90,7 @@ public class NettyUDPServer {
     public void sendMessage(byte [] message, InetSocketAddress peer, int len){
         if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.length){
             long streamId = streamIdCounter.incrementAndGet();
-            ByteBuf wholeMessageBuf = Unpooled.copiedBuffer(message);
+            ByteBuf wholeMessageBuf = Unpooled.copiedBuffer(message,0,len);
             int streamCount = ceilDiv(message.length,UDPLogics.MAX_UDP_PAYLOAD_SIZE); //do the %
             for (int i = 0; i < streamCount; i++) {
                 long messageId = datagramPacketCounter.incrementAndGet();

@@ -40,7 +40,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ctx.channel().eventLoop().schedule(() -> {
             int len = receivedMessages.size();
-            System.out.println("TOTAL COUNT "+count);
+            System.out.println("TOTAL COUNT "+count+" MSGS "+msgs);
             receivedMessages.clear();
         },2, TimeUnit.MINUTES);
     }
@@ -76,6 +76,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         }
     }
     long count = 0;
+    int msgs = 0;
     private void onStreamRead(Channel channel,long streamId, byte [] message , int streamCount,InetSocketAddress sender,long msgId){
         int receivedBytes = message.length+8+8+4;
         sendAck(channel, msgId, sender);
@@ -102,6 +103,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             all.release();
             streams.remove(streamId);
             effectiveDelivery(sender,message,receivedBytes);
+            msgs++;
         }
     }
     private void onSingleMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
