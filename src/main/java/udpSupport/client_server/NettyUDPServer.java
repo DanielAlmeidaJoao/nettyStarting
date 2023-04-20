@@ -132,17 +132,13 @@ public class NettyUDPServer {
     }
     public void sendMessageAux(byte [] all, InetSocketAddress peer,long messageId){
         ByteBuf buf = Unpooled.copiedBuffer(all);
-        /**
-        byte [] toResend = new byte[buf.readableBytes()];
-        buf.markReaderIndex();
-        buf.readBytes(toResend);
-        buf.resetReaderIndex(); **/
         DatagramPacket datagramPacket = new DatagramPacket(buf,peer);
         channel.writeAndFlush(datagramPacket).addListener(future -> {
             if(future.isSuccess()){
                 scheduleRetransmission(all,messageId,peer,0);
                 if(stats!=null){
                     stats.addSentBytes(peer,all.length,NetworkStatsKindEnum.MESSAGE_STATS);
+                    stats.addSentBytes(peer,all.length, NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
                 }
             }
             consumer.messageSentHandler(future.isSuccess(),future.cause(),null /*TODO message */,peer);

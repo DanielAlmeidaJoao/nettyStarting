@@ -39,8 +39,6 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ctx.channel().eventLoop().schedule(() -> {
-            int len = receivedMessages.size();
-            System.out.println("TOTAL COUNT "+count+" MSGS "+msgs);
             receivedMessages.clear();
         },2, TimeUnit.MINUTES);
     }
@@ -78,7 +76,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     long count = 0;
     int msgs = 0;
     private void onStreamRead(Channel channel,long streamId, byte [] message , int streamCount,InetSocketAddress sender,long msgId){
-        int receivedBytes = message.length+8+8+4;
+        int receivedBytes = message.length+8+8+4+1;
         sendAck(channel, msgId, sender);
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,receivedBytes,NetworkStatsKindEnum.MESSAGE_STATS);
@@ -102,8 +100,11 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             all.readBytes(message);
             all.release();
             streams.remove(streamId);
-            effectiveDelivery(sender,message,receivedBytes);
+            consumer.deliverMessage(message,sender);
             msgs++;
+        }
+        if(channelStats!=null){
+            channelStats.addReceivedBytes(sender,receivedBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
         }
     }
     private void onSingleMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
@@ -116,12 +117,8 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             logger.info("RECEIVED REPEATED MSG ID: ",msgId);
             return;
         }
-        effectiveDelivery(sender,message,message.length+9);
-    }
-
-    private void effectiveDelivery(InetSocketAddress sender,byte [] message,int receivedBytes){
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,receivedBytes,NetworkStatsKindEnum.MESSAGE_DELIVERED);
+            channelStats.addReceivedBytes(sender,message.length+9,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
         }
         consumer.deliverMessage(message,sender);
     }

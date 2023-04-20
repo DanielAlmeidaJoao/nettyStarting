@@ -2,7 +2,7 @@ package udpSupport.metrics;
 
 public enum NetworkStatsKindEnum {
     MESSAGE_STATS("MS"),
-    MESSAGE_DELIVERED("MD"),
+    EFFECTIVE_SENT_DELIVERED("MD"),
     ACK_STATS("AS");
 
     private final String value;

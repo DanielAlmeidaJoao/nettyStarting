@@ -1,7 +1,6 @@
 package udpSupport.metrics;
 
 import lombok.Getter;
-import udpSupport.utils.UDPLogics;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -16,7 +15,7 @@ public class NetworkStatsWrapper {
     public NetworkStatsWrapper(InetSocketAddress host){
         statsMap = new HashMap<>(3);
         statsMap.put(NetworkStatsKindEnum.MESSAGE_STATS,new NetworkStats("messageStats"));
-        statsMap.put(NetworkStatsKindEnum.MESSAGE_DELIVERED, new NetworkStats("effectiveDeliveries"));
+        statsMap.put(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED, new NetworkStats("effective_Sent_Delivery"));
         statsMap.put(NetworkStatsKindEnum.ACK_STATS,new NetworkStats("ackStats"));
         dest=host;
     }

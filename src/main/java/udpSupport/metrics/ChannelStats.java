@@ -1,8 +1,6 @@
 package udpSupport.metrics;
 
 import lombok.Getter;
-import org.modelmapper.ModelMapper;
-import quicSupport.utils.metrics.QuicConnectionMetrics;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetSocketAddress;
@@ -36,7 +34,7 @@ public class ChannelStats {
         for (NetworkStatsWrapper value : statsMap.values()) {
             Map<NetworkStatsKindEnum,NetworkStats> statsMap = new HashMap<>(3);
             statsMap.put(NetworkStatsKindEnum.MESSAGE_STATS,clone(value.getStats(NetworkStatsKindEnum.MESSAGE_STATS)));
-            statsMap.put(NetworkStatsKindEnum.MESSAGE_DELIVERED,clone(value.getStats(NetworkStatsKindEnum.MESSAGE_DELIVERED)));
+            statsMap.put(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED,clone(value.getStats(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED)));
             statsMap.put(NetworkStatsKindEnum.ACK_STATS,clone(value.getStats((NetworkStatsKindEnum.ACK_STATS))));
             NetworkStatsWrapper copy = new NetworkStatsWrapper(value.getDest(),statsMap);
             stats.put(value.getDest(),copy);
