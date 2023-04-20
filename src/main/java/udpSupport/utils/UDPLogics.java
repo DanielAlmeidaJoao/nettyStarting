@@ -8,7 +8,7 @@ import org.modelmapper.ModelMapper;
 
 public class UDPLogics {
     public static final Gson gson = new Gson();
-    public static final int MAX_UDP_PAYLOAD_SIZE = 66500;
+    public static final int MAX_UDP_PAYLOAD_SIZE = 60000;
 
     public static final ModelMapper modelMapper = new ModelMapper();
 

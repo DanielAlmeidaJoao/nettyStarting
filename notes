@@ -43,7 +43,7 @@ java -cp target/nettyStart.jar quicSupport.testing.TestQuicChannel
 java -Dio.netty.maxDirectMemory=4147483648 -cp target/nettyStart.jar mainFiles.Main2 8081
 
 java java -Xmx3g -cp target/nettyStart.jar mainFiles.Main2 8082
-
+java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8081
 
 Udp
 java -cp target/nettyStart.jar udpSupport.client.UdpClient
