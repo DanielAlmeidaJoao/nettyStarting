@@ -12,6 +12,7 @@ import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.channels.SingleThreadedQuicChannel;
+import quicSupport.utils.NetworkRole;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -28,7 +29,7 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel  implements I
     private final ChannelListener<T> listener;
 
     public BabelQuicChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
-        super(properties);
+        super(properties, NetworkRole.CHANNEL);
         this.serializer = serializer;
         this.listener = list;
         metrics = super.enabledMetrics();

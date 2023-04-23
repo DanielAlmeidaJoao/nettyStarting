@@ -3,6 +3,7 @@ package mainFiles;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.testing.TestQuicChannel;
+import quicSupport.utils.Logics;
 
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;
@@ -26,6 +27,15 @@ public class Main2 {
         String port = args[0];
         properties.setProperty("port",port);
         properties.setProperty("metrics","true");
+
+        properties.setProperty(Logics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
+        properties.setProperty(Logics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
+        properties.setProperty(Logics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
+
+        properties.setProperty(Logics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
+        properties.setProperty(Logics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
+        properties.setProperty(Logics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
+
         TestQuicChannel testQuicChannel = new TestQuicChannel(properties);
         /**
         if("8081".equals(port)){

@@ -3,6 +3,7 @@ package quicSupport.testing;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.SingleThreadedQuicChannel;
+import quicSupport.utils.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.FileInputStream;
@@ -21,7 +22,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
 
 
     public TestQuicChannel(Properties properties) throws IOException {
-        super(properties);
+        super(properties, NetworkRole.CHANNEL);
     }
 
     @Override

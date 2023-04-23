@@ -20,18 +20,24 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.incubator.codec.quic.*;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
-import quicSupport.handlers.pipeline.CustomEarlyDataSendCallback;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
+import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.Logics;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
+import javax.net.ssl.TrustManagerFactory;
+import java.io.FileInputStream;
 import java.net.InetSocketAddress;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -57,16 +63,23 @@ public final class QuicClientExample {
         streams = new HashMap<>();
         context = null;
     }
+
+    private TrustManagerFactory serverTrustManager(Properties properties) throws Exception {
+        String s_keystoreFilename = properties.getProperty(Logics.SERVER_KEYSTORE_FILE_KEY);//"keystore.jks";
+        String s_keystorePassword = properties.getProperty(Logics.SERVER_KEYSTORE_PASSWORD_KEY);//"simple";
+        return Logics.trustManagerFactory(s_keystoreFilename,s_keystorePassword);
+    }
+
     public ChannelHandler getCodec(Properties properties)throws Exception{
-        String keystoreFilename = "keystore2.jks";
-        String keystorePassword = "simple";
-        String alias = "clientcert";
-        //Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
+        String keystoreFilename = properties.getProperty(Logics.CLIENT_KEYSTORE_FILE_KEY); //"keystore2.jks";
+        String keystorePassword = properties.getProperty(Logics.CLIENT_KEYSTORE_PASSWORD_KEY);//"simple";
+        String alias = properties.getProperty(Logics.CLIENT_KEYSTORE_ALIAS_KEY);//"clientcert";
+        Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
         if(context==null){
             context = QuicSslContextBuilder.forClient().
-                    //keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
-                            trustManager(InsecureTrustManagerFactory.INSTANCE)
-                    //trustManager((X509Certificate) pair.getLeft())
+                    keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
+                    //trustManager(InsecureTrustManagerFactory.INSTANCE)
+                    .trustManager(serverTrustManager(properties))
                     .applicationProtocols("QUIC").earlyData(true)
                     .build();
         }
@@ -89,7 +102,7 @@ public final class QuicClientExample {
                 .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.OUTGOING_CONNECTION))
                 .remoteAddress(remote)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
-                .connect().addListener(future -> {
+                .connect().sync().addListener(future -> {
             if(!future.isSuccess()){
                 consumer.onOpenConnectionFailed(remote,future.cause());
             }

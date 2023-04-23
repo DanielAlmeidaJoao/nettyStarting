@@ -13,6 +13,7 @@ import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.CustomConnection;
 import quicSupport.utils.Logics;
+import quicSupport.utils.NetworkRole;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
@@ -44,10 +45,10 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private final Map<String,InetSocketAddress> streamHostMapping;
     private Set<InetSocketAddress> connecting;
 
-    private final QuicClientExample client;
+    private QuicClientExample client;
     private final Properties properties;
     private QuicChannelMetrics metrics;
-    public CustomQuicChannel(Properties properties, boolean singleThreaded)throws IOException {
+    public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole)throws IOException {
         this.properties=properties;
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
@@ -73,14 +74,16 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             connecting=new ConcurrentSkipListSet<>();
         }
 
-
-        QuicServerExample server = new QuicServerExample(addr.getHostName(), port, this,metrics,properties);
-        client = new QuicClientExample(self,this,new NioEventLoopGroup(1), metrics);
-
-        try{
-            server.start(this::onServerSocketBind);
-        }catch (Exception e){
-            throw new IOException(e);
+        if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
+            try{
+                new QuicServerExample(addr.getHostName(), port, this,metrics,properties)
+                        .start(this::onServerSocketBind);
+            }catch (Exception e){
+                throw new IOException(e);
+            }
+        }
+        if(NetworkRole.CHANNEL==networkRole||NetworkRole.CLIENT==networkRole){
+            client = new QuicClientExample(self,this,new NioEventLoopGroup(1), metrics);
         }
     }
     public boolean enabledMetrics(){
@@ -146,13 +149,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 inConnection=true;
             }
             connecting.remove(listeningAddress);
-
-            /**
-            if(connections.containsKey(listeningAddress)&&listeningAddress.getPort()!=self.getPort()){
-                System.out.println(self+" CLOSING THIS CONNECTION BECAUSE ALREADY CONNECTED "+listeningAddress);
-                streamChannel.parent().close();
-                return;
-            }**/
 
             CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection);
             CustomConnection old = connections.put(listeningAddress,current);
@@ -239,6 +235,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             try {
                 client.connect(peer,properties);
             }catch (Exception e){
+                e.printStackTrace();
                 onOpenConnectionFailed(peer,e.getCause());
             }
         }

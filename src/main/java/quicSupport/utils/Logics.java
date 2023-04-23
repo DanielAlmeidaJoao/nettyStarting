@@ -9,8 +9,12 @@ import quicSupport.utils.entities.MessageToByteEncoderParameter;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
+import javax.net.ssl.TrustManagerFactory;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.net.InetSocketAddress;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
@@ -39,6 +43,15 @@ public class Logics {
     private static final long initialMaxStreamsUnidirectional=10;
 
     private static final long maxAckDelay = 100;
+
+    public static final String SERVER_KEYSTORE_FILE_KEY = "S_KEYSTORE_FILE";
+    public static final String SERVER_KEYSTORE_PASSWORD_KEY = "S_KEYSTORE_PASSWORD";
+    public static final String SERVER_KEYSTORE_ALIAS_KEY = "S_KEYSTORE_ALIAS_KEY";
+
+    public static final String CLIENT_KEYSTORE_FILE_KEY = "C_KEYSTORE_FILE";
+    public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "C_KEYSTORE_PASSWORD";
+    public static final String CLIENT_KEYSTORE_ALIAS_KEY = "C_KEYSTORE_ALIAS_KEY";
+
 
     public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor, QuicChannelMetrics metrics, boolean incoming) throws Exception{
         QuicStreamChannel streamChannel = quicChan
@@ -109,5 +122,12 @@ public class Logics {
     private void ttest(byte [] cumulativeHash, byte [] sentData){
         cumulativeHash = appendOpToHash(cumulativeHash,sentData);
         Hex.encodeHexString(cumulativeHash);
+    }
+    public static TrustManagerFactory trustManagerFactory(String keystoreFilename, String keystorePassword) throws Exception {
+        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+        ks.load(new FileInputStream(keystoreFilename),keystorePassword.toCharArray());
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(ks);
+        return tmf;
     }
 }

@@ -4,6 +4,7 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
+import quicSupport.utils.NetworkRole;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -12,8 +13,8 @@ import java.util.Properties;
 public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
     private final DefaultEventExecutor executor;
 
-    public SingleThreadedQuicChannel(Properties properties) throws IOException {
-        super(properties,true);
+    public SingleThreadedQuicChannel(Properties properties, NetworkRole role) throws IOException {
+        super(properties,true,role);
         executor = new DefaultEventExecutor();
     }
 
