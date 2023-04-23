@@ -102,7 +102,7 @@ public final class QuicClientExample {
                 .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.OUTGOING_CONNECTION))
                 .remoteAddress(remote)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
-                .connect().sync().addListener(future -> {
+                .connect().addListener(future -> {
             if(!future.isSuccess()){
                 consumer.onOpenConnectionFailed(remote,future.cause());
             }
