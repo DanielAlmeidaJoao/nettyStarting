@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class NetworkStats {
     private long bytesReceived, bytesSent;
-    private int messagesReceived, messagesSent;
+    private int messagesReceived, messagesSent, messagesAcked;
 
     private long sumRTT;
     private final String name;
@@ -23,6 +23,7 @@ public class NetworkStats {
     }
     public void addRTT(long timeMillis){
         //averageRTT = sumRTT/bytesSent
+        messagesAcked++;
         sumRTT +=timeMillis;
     }
 }

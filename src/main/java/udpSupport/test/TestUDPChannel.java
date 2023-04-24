@@ -39,6 +39,9 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             }else {
                 System.out.println("ONLY ONCE "+message.length);
             }
+            if(from.getPort()==8081){
+                sendMessage(message,from,message.length);
+            }
             //fos.write(message, 0, message.length);
             //fos.flush();
             if(total>=813782079/* 1035368729*/){
