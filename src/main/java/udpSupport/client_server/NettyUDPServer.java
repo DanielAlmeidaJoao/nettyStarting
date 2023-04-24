@@ -20,6 +20,7 @@ import udpSupport.utils.UDPLogics;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -27,7 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class NettyUDPServer {
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
 
-    private Set<Long> waitingForAcks;
+    private Map<Long,Long> waitingForAcks;
     private final AtomicLong datagramPacketCounter;
     private final AtomicLong streamIdCounter;
 
@@ -41,14 +42,20 @@ public class NettyUDPServer {
         this.consumer = consumer;
         this.address = address;
         channel = start();
-        waitingForAcks = new ConcurrentSkipListSet<>();
+        waitingForAcks = new ConcurrentHashMap<>();
         datagramPacketCounter = new AtomicLong(0);
         streamIdCounter = new AtomicLong(0);
     }
+    public void onAckReceived(long msgId, InetSocketAddress sender){
+        Long timeMillis = waitingForAcks.remove(msgId);
+        if(stats!=null&&timeMillis!=null){
+            stats.addTransmissionRTT(sender,(System.currentTimeMillis() - timeMillis));
+        }
+    }
     private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, int count){
         channel.eventLoop().schedule(() -> {
-            if(!waitingForAcks.contains(msgId)) return;
-            if(count > 100){waitingForAcks.remove(msgId);System.out.println(" PEER NOT RESPONGING "+dest); ;return;}
+            if(!waitingForAcks.containsKey(msgId)) return;
+            if(count > 100){waitingForAcks.remove(msgId);return;}
             channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
                 if(future.isSuccess()){
                     if(stats!=null){
@@ -61,12 +68,10 @@ public class NettyUDPServer {
             });
         },5, TimeUnit.SECONDS);
         if(count==0){
-            waitingForAcks.add(msgId);
+            waitingForAcks.put(msgId,System.currentTimeMillis());
         }
     }
-    public void onAckReceived(long msgId){
-        waitingForAcks.remove(msgId);
-    }
+
     private Channel start() throws Exception{
         OnAckFunction onAckReceived = this::onAckReceived;
         Channel server;
@@ -130,6 +135,7 @@ public class NettyUDPServer {
             return (a/b) + 1;
         }
     }
+
     public void sendMessageAux(byte [] all, InetSocketAddress peer,long messageId){
         ByteBuf buf = Unpooled.copiedBuffer(all);
         DatagramPacket datagramPacket = new DatagramPacket(buf,peer);

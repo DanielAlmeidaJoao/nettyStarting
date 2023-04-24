@@ -22,6 +22,10 @@ public class ChannelStats {
         NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper(peer));
         networkStats.getStats(message_code).addBytesSent(bytes);
     }
+    public void addTransmissionRTT(InetSocketAddress peer, long timeElapsedMillis){
+        NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper(peer));
+        networkStats.getStats(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED).addRTT(timeElapsedMillis);
+    }
     public void addReceivedBytes(InetSocketAddress peer, long bytes,NetworkStatsKindEnum message_code){
         NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper(peer));
         networkStats.getStats(message_code).addBytesReceived(bytes);

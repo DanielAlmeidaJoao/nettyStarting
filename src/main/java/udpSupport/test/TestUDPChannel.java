@@ -99,7 +99,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             System.out.println("TOTAL SENT "+totalSent+" COUNT -- "+cc);
             sumHashes(sentHashes);
 
-            Thread.sleep(1000);
+            Thread.sleep(10000);
             readMetrics(this::onReadMetrics);
             System.out.println("METRICS OUT ?");
         }catch (Exception e){
