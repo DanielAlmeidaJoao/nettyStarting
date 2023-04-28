@@ -42,18 +42,16 @@ public class StreamOutConnection {
 
             Channel channel = b.connect().sync().addListener(future -> {
                 if(!future.isSuccess()){
-                    //TODO
+                    consumer.handleOpenConnectionFailed(peer,future.cause());
                 }
             }).channel();
-
-
             //printSomeConfigs();
             /***
             updateConfiguration(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK,64*1024);
             updateConfiguration(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK,2*64*1024);
             updateConfiguration(ChannelOption.AUTO_READ,Boolean.TRUE);**/
         } catch (Exception e) {
-
+            consumer.handleOpenConnectionFailed(peer,e.getCause());
         }
     }
 

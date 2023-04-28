@@ -19,10 +19,9 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public abstract class StreamingChannel implements StreamingNettyConsumer{
     private static final Logger logger = LogManager.getLogger(StreamingChannel.class);
@@ -41,6 +40,8 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     private final StreamOutConnection client;
     private final boolean metricsOn;
     private final TCPStreamMetrics tcpStreamMetrics;
+    private Set<InetSocketAddress> connecting;
+
     public StreamingChannel( Properties properties, boolean singleThreaded)throws IOException{
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
@@ -59,9 +60,11 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         if(singleThreaded){
             connections = new HashMap<>();
             channelIds = new HashMap<>();
+            connecting=new HashSet<>();
         }else{
             connections = new ConcurrentHashMap<>();
             channelIds = new ConcurrentHashMap<>();
+            connecting=new ConcurrentSkipListSet<>();
         }
 
         server = new StreamInConnection(addr.getHostName(),port);
@@ -96,19 +99,47 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage){
         logger.info("{} CHANNEL ACTIVATED.",self);
         try {
-            boolean incoming;
+            boolean inConnection;
             InetSocketAddress listeningAddress;
             if(handShakeMessage==null){//out connection
                 listeningAddress = (InetSocketAddress) channel.remoteAddress();
-                incoming = false;
+                inConnection = false;
             }else {//in connection
                 listeningAddress = handShakeMessage.getAddress();
-                incoming = true;
+                inConnection = true;
             }
-            connections.put(listeningAddress,channel);
+            Channel oldConnection = connections.put(listeningAddress,channel);
+            if(oldConnection!=null&& oldConnection.isActive()){
+                if(self.hashCode()==listeningAddress.hashCode()) {
+                    connections.put(listeningAddress, oldConnection);
+                    channel.disconnect();
+                }else if(self.hashCode()<listeningAddress.hashCode()){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
+                    //keep the in connection
+                    if(inConnection){
+                        oldConnection.disconnect();
+                        logger.info("{} KEEPING NEW CONNECTION {}. IN CONNECTION: {}",self,channel.id().asShortText(), inConnection);
+                    }else{
+                        connections.put(listeningAddress,oldConnection);
+                        channel.disconnect();
+                        logger.info("{} KEEPING OLD CONNECTION {}. IN CONNECTION: {}",self,oldConnection.id().asShortText(),inConnection);
+                        return;
+                    }
+                }else /* if(self.hashCode()>listeningAddress.hashCode()) */ {
+                    //keep the out connection
+                    if (inConnection) {
+                        channel.disconnect();
+                        connections.put(listeningAddress,oldConnection);
+                        logger.info("{} KEEPING THE OLD CONNECTION {}. IN CONNECTION: {}",self,oldConnection.id().asShortText(), inConnection);
+                        return;
+                    } else {
+                        oldConnection.disconnect();
+                        logger.info("{} KEEPING THE NEW CONNECTION {}. IN CONNECTION: {}",self,channel.id().asShortText(),inConnection);
+                    }
+                }
+            }
             channelIds.put(channel.id().asShortText(),listeningAddress);
             if(metricsOn){
-                tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,incoming);
+                tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,inConnection);
             }
             onChannelActive(channel,handShakeMessage,listeningAddress);
             logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
@@ -130,6 +161,12 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     /******************************************* USER EVENTS ****************************************************/
 
     protected void openConnection(InetSocketAddress peer) {
+        if(connecting.contains(peer)){
+            logger.debug("{} ALREADY TRYING TO CONNECT TO {}",self,peer);
+            return;
+        }else{
+            connecting.add(peer);
+        }
         if(connections.containsKey(peer)){
             logger.info("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
@@ -189,7 +226,10 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         else
             logger.error("Server socket bind failed: " + cause);
     }
-
+    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
+        connecting.remove(peer);
+        onOpenConnectionFailed(peer,cause);
+    }
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
     public abstract void sendFailed(InetSocketAddress peer, Throwable reason);
     public abstract void sendSuccess(byte[] data, InetSocketAddress peer);

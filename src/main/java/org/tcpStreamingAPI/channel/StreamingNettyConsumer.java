@@ -3,6 +3,8 @@ package org.tcpStreamingAPI.channel;
 import io.netty.channel.Channel;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 
+import java.net.InetSocketAddress;
+
 public interface StreamingNettyConsumer {
 
     void onChannelActive(Channel channel, HandShakeMessage handShakeMessage);
@@ -11,5 +13,6 @@ public interface StreamingNettyConsumer {
     void onConnectionFailed(String channelId, Throwable cause);
 
     void onServerSocketBind(boolean success, Throwable cause);
+    void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
 
 }

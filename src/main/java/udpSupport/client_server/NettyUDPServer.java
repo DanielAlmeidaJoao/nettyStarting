@@ -175,8 +175,10 @@ public class NettyUDPServer {
     }
 
     public static void main(String[] args) throws Exception {
+        /**
         NettyUDPServer nettyUDPServer = new NettyUDPServer(null,new ChannelStats(),null);
-        nettyUDPServer.send();
+        nettyUDPServer.send();**/
+        System.out.println("STARTED");
 
     }
 
