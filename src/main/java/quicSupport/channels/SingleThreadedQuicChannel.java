@@ -2,6 +2,7 @@ package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import io.netty.util.concurrent.OrderedEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.NetworkRole;
@@ -11,35 +12,50 @@ import java.net.InetSocketAddress;
 import java.util.Properties;
 
 public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
-    private final DefaultEventExecutor executor;
+    private DefaultEventExecutor executor;
 
     public SingleThreadedQuicChannel(Properties properties, NetworkRole role) throws IOException {
         super(properties,true,role);
         executor = new DefaultEventExecutor();
+        executor.shutdownGracefully().addListener(future -> {
+            executor = new DefaultEventExecutor();
+        });
     }
 
     /*********************************** Stream Handlers **********************************/
 
     @Override
     public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable) {
-        executor.execute(() -> super.streamErrorHandler(channel,throwable));
+
+        executor.submit(() -> {
+            super.streamErrorHandler(channel,throwable);
+        });
     }
 
     @Override
     public void streamClosedHandler(QuicStreamChannel channel) {
-        executor.execute(() -> super.streamClosedHandler(channel));
+        executor.submit(() -> {
+            super.streamClosedHandler(channel);
+        });
     }
     @Override
     public void streamCreatedHandler(QuicStreamChannel channel) {
-        executor.execute(() -> super.streamCreatedHandler(channel));
+        executor.submit(() ->
+        {
+            super.streamCreatedHandler(channel);
+        });
     }
     @Override
     public void streamReader(String streamId, byte[] bytes){
-        executor.execute(() -> super.streamReader(streamId,bytes));
+        executor.submit(() -> {
+            super.streamReader(streamId, bytes);
+        });
     }
     @Override
     public void onKeepAliveMessage(String parentId){
-        executor.execute(() -> super.onKeepAliveMessage(parentId));
+        executor.submit(() -> {
+            super.onKeepAliveMessage(parentId);
+        });
     }
 
     /********************************** Stream Handlers **********************************/
@@ -47,53 +63,75 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
     /*********************************** Channel Handlers **********************************/
     @Override
     public void channelActive(QuicStreamChannel streamChannel, byte [] controlData,InetSocketAddress remotePeer){
-        executor.execute(() -> super.channelActive(streamChannel,controlData,remotePeer));
+        executor.submit(() -> {
+            super.channelActive(streamChannel,controlData,remotePeer);
+        });
     }
     @Override
     public  void channelInactive(String channelId){
-        executor.execute(() -> super.channelInactive(channelId));
+        executor.submit(() ->{
+            super.channelInactive(channelId);
+        });
     }
 
     /*********************************** Channel Handlers **********************************/
 
     /*********************************** User Actions **************************************/
     public void open(InetSocketAddress peer) {
-        executor.execute(() -> super.open(peer));
+        executor.submit(() -> {
+            super.open(peer);
+        });
     }
     @Override
     public void closeConnection(InetSocketAddress peer){
-        executor.execute(() -> super.closeConnection(peer));
+        executor.submit(() -> {
+            super.closeConnection(peer);
+        });
     }
     @Override
     public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler){
-        executor.execute(() -> super.getStats(peer,handler));
+        executor.submit(() -> {
+            super.getStats(peer,handler);
+        });
     }
     @Override
     public void createStream(InetSocketAddress peer) {
-        executor.execute(() -> super.createStream(peer));
+        executor.submit(() -> {
+            super.createStream(peer);
+        });
     }
     @Override
     public void closeStream(String streamId){
-        executor.execute(() -> super.closeStream(streamId));
+        executor.submit(() -> {
+            super.closeStream(streamId);
+        });
     }
     @Override
     public void readMetrics(QuicReadMetricsHandler handler){
-        executor.execute(() -> super.readMetrics(handler));
+        executor.submit(() -> {
+            super.readMetrics(handler);
+        });
     }
     @Override
     public void send(String streamId, byte[] message, int len) {
-        executor.execute(() -> super.send(streamId,message,len));
+        executor.submit(() -> {
+            super.send(streamId,message,len);
+        });
     }
     @Override
     public void send(InetSocketAddress peer, byte[] message, int len) {
-        executor.execute(() -> super.send(peer,message,len));
+        executor.submit(() -> {
+            super.send(peer,message,len);
+        });
     }
     /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/
         @Override
     public void onServerSocketClose(boolean success, Throwable cause) {
-        executor.execute(() -> onServerSocketClose(success,cause));
+        executor.submit(() -> {
+            super.onServerSocketClose(success,cause);
+        });
     }
 }
 

@@ -23,12 +23,16 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class BabelQuicChannel<T> extends MultiThreadedQuicChannel implements IChannel<T> {
+public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IChannel<T> {
     private static final Logger logger = LogManager.getLogger(BabelQuicChannel.class);
     public final boolean metrics;
     public final static String NAME = "BabelQuicChannel";
     public final static String METRICS_INTERVAL_KEY = "metrics_interval";
     public final static String DEFAULT_METRICS_INTERVAL = "-1";
+    public final static String TRIGGER_SENT_KEY = "trigger_sent";
+
+    private final boolean triggerSent;
+
 
     private final ISerializer<T> serializer;
     private final ChannelListener<T> listener;
@@ -42,6 +46,7 @@ public class BabelQuicChannel<T> extends MultiThreadedQuicChannel implements ICh
             int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY, DEFAULT_METRICS_INTERVAL));
             new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.MILLISECONDS);
         }
+        this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
 
     }
     void readMetricsMethod(List<QuicConnectionMetrics> current, List<QuicConnectionMetrics> old){
@@ -144,20 +149,20 @@ public class BabelQuicChannel<T> extends MultiThreadedQuicChannel implements ICh
 
     @Override
     public void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer) {
-        ByteBuf buf = Unpooled.buffer(len);
-        buf.writeBytes(message);
+        ByteBuf buf = Unpooled.copiedBuffer(message,0,len);
         T msg;
         try {
             msg = (T) serializer.deserialize(buf);
             Host host = BabelQuicChannelLogics.toBabelHost(peer);
-            if(error==null){
+            if(error==null&&triggerSent){
                 listener.messageSent(msg, host);
-            }else{
+            }else if(error!=null){
                 listener.messageFailed(msg, host,error);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        buf.release();
     }
 
     @Override

@@ -55,7 +55,7 @@ public class CustomConnection {
         streamChannel.disconnect();
     }
     public void close(){
-        streams = null;
+        //streams = null;
         connection.disconnect();
         connection.close();
     }

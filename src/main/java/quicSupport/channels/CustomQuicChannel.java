@@ -115,15 +115,24 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
 
     public void streamReader(String streamId, byte[] bytes){
         InetSocketAddress remote = streamHostMapping.get(streamId);
+        if(remote==null){return;}
         CustomConnection connection = connections.get(remote);
-        connection.scheduleSendHeartBeat_KeepAlive();
-        //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
-        onChannelRead(streamId,bytes,remote);
+        if(connection!=null){
+            connection.scheduleSendHeartBeat_KeepAlive();
+            //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
+            onChannelRead(streamId,bytes,remote);
+        }
+
     }
     public void onKeepAliveMessage(String parentId){
         InetSocketAddress host = channelIds.get(parentId);
         //logger.debug("SELF:{} -- HEART BEAT RECEIVED -- {}",self,host);
-        connections.get(host).scheduleSendHeartBeat_KeepAlive();
+        if(host!=null){
+            CustomConnection connection = connections.get(host);
+            if(connection!=null){
+                connection.scheduleSendHeartBeat_KeepAlive();
+            }
+        }
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
@@ -144,7 +153,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         boolean inConnection = false;
         try {
             InetSocketAddress listeningAddress;
-            QuicHandShakeMessage handShakeMessage=null;
+            QuicHandShakeMessage handShakeMessage;
             if(controlData==null){//is OutGoing
                 listeningAddress = remotePeer;
             }else{//is InComing
@@ -220,7 +229,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
                 connection.close();
                 onConnectionDown(host,connection.isInComing());
-                System.out.println("CHANNEL TO "+host+" INACTIVE "+connections.size());
+                //System.out.println("CHANNEL TO "+host+" INACTIVE "+connections.size());
             }
         }catch (Exception e){
             logger.debug(e.getLocalizedMessage());
@@ -252,6 +261,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         }
     }
     public void closeConnection(InetSocketAddress peer){
+        //System.out.println("CLOSING THIS CONNECTION: "+peer);
         CustomConnection connection = connections.get(peer);
         if(connection==null){
             logger.info("{} IS NOT CONNECTED TO {}",self,peer);
