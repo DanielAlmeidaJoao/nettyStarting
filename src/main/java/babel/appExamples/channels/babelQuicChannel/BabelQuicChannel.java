@@ -23,14 +23,11 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public class BabelQuicChannel<T> extends SingleThreadedQuicChannel  implements IChannel<T> {
-
     private static final Logger logger = LogManager.getLogger(BabelQuicChannel.class);
     public final boolean metrics;
     public final static String NAME = "BabelQuicChannel";
     public final static String METRICS_INTERVAL_KEY = "metrics_interval";
     public final static String DEFAULT_METRICS_INTERVAL = "-1";
-
-
 
     private final ISerializer<T> serializer;
     private final ChannelListener<T> listener;
@@ -61,12 +58,12 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel  implements I
 
     @Override
     public void onStreamCreatedHandler(InetSocketAddress peer, String streamId) {
-        logger.info("STREAM {} CREATED FOR {} CONNECTION",streamId,peer);
+        logger.debug("STREAM {} CREATED FOR {} CONNECTION",streamId,peer);
     }
 
     @Override
     public void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from) {
-        logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
+        //logger.debug("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         ByteBuf in = Unpooled.copiedBuffer(bytes);
         try {
             T payload = serializer.deserialize(in);

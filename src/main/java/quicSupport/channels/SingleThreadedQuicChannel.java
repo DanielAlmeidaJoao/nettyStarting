@@ -92,23 +92,7 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
     /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/
-    @Override
-    protected void onOutboundConnectionUp() {
-        executor.execute(super::onOutboundConnectionDown);
-    }
-    @Override
-    protected void onOutboundConnectionDown() {
-        executor.execute(super::onOutboundConnectionDown);
-    }
-    @Override
-    protected void onInboundConnectionUp() {
-        executor.execute(super::onInboundConnectionUp);
-    }
-    @Override
-    protected void onInboundConnectionDown() {
-        executor.execute(super::onInboundConnectionDown);
-    }
-    @Override
+        @Override
     public void onServerSocketClose(boolean success, Throwable cause) {
         executor.execute(() -> onServerSocketClose(success,cause));
     }

@@ -325,18 +325,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/
-
-
-
-    protected void onOutboundConnectionUp() {}
-
-
-    protected void onOutboundConnectionDown() {}
-
-    protected void onInboundConnectionUp() {}
-
-    protected void onInboundConnectionDown() {}
-
     private void onServerSocketBind(boolean success, Throwable cause) {
         if (success)
             logger.debug("Server socket ready");
