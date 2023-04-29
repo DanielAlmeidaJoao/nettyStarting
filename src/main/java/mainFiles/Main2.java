@@ -3,7 +3,7 @@ package mainFiles;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.testing.TestQuicChannel;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;
@@ -22,18 +22,18 @@ public class Main2 {
     private static final String DEFAULT_CONF = "config.properties";
     public static void main(String[] args) throws Exception {
         Properties properties = new Properties();
-        properties.setProperty(Logics.ADDRESS_KEY,"localhost");
+        properties.setProperty(QUICLogics.ADDRESS_KEY,"localhost");
         String port = args[0];
-        properties.setProperty(Logics.PORT_KEY,port);
-        properties.setProperty(Logics.QUIC_METRICS,"true");
+        properties.setProperty(QUICLogics.PORT_KEY,port);
+        properties.setProperty(QUICLogics.QUIC_METRICS,"true");
 
-        properties.setProperty(Logics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
-        properties.setProperty(Logics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
-        properties.setProperty(Logics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
+        properties.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
+        properties.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
+        properties.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
 
-        properties.setProperty(Logics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
-        properties.setProperty(Logics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
-        properties.setProperty(Logics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
+        properties.setProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
+        properties.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
+        properties.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
 
         TestQuicChannel testQuicChannel = new TestQuicChannel(properties);
         /**

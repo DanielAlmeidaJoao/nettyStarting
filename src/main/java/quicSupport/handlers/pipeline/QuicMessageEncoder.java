@@ -3,7 +3,7 @@ package quicSupport.handlers.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
@@ -31,16 +31,16 @@ public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncode
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             switch (msgType){
-                case Logics.APP_DATA:
+                case QUICLogics.APP_DATA:
                     q.setSentAppMessages(q.getSentAppMessages()+1);
-                    q.setSentAppBytes(q.getSentAppBytes()+bytes+Logics.WRT_OFFSET);
+                    q.setSentAppBytes(q.getSentAppBytes()+bytes+ QUICLogics.WRT_OFFSET);
                     break;
-                case Logics.KEEP_ALIVE:
+                case QUICLogics.KEEP_ALIVE:
                     q.setSentKeepAliveMessages(q.getSentKeepAliveMessages()+1);
                     break;
-                case Logics.HANDSHAKE_MESSAGE:
+                case QUICLogics.HANDSHAKE_MESSAGE:
                     q.setSentControlMessages(q.getSentControlMessages()+1);
-                    q.setSentControlBytes(q.getSentControlBytes()+bytes+Logics.WRT_OFFSET);
+                    q.setSentControlBytes(q.getSentControlBytes()+bytes+ QUICLogics.WRT_OFFSET);
                     break;
                 default:
                     throw new AssertionError("Unknown msg code in encoder: " + msgType);

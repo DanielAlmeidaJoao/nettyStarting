@@ -10,7 +10,7 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStatsKindEnum;
@@ -21,7 +21,6 @@ import udpSupport.utils.UDPLogics;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -161,7 +160,7 @@ public class NettyUDPServer {
             System.out.println("ENTER SOMETHING: ");
             String line = scanner.nextLine();
             if(line.equalsIgnoreCase("m")){
-                System.out.println(Logics.gson.toJson(stats));
+                System.out.println(QUICLogics.gson.toJson(stats));
                 continue;
             }
             if (line == null || line.trim().isEmpty()) {

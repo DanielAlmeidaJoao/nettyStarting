@@ -28,14 +28,11 @@ import quicSupport.handlers.channelFuncHandlers.SocketBindHandler;
 import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
-import java.io.FileInputStream;
 import java.net.InetSocketAddress;
-import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -58,14 +55,14 @@ public final class QuicServerExample {
         this.properties=properties;
     }
     private TrustManagerFactory clientTrustManager() throws Exception {
-        String keystoreFilename = properties.getProperty(Logics.CLIENT_KEYSTORE_FILE_KEY);
-        String keystorePassword = properties.getProperty(Logics.CLIENT_KEYSTORE_PASSWORD_KEY);
-        return Logics.trustManagerFactory(keystoreFilename,keystorePassword);
+        String keystoreFilename = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY);
+        String keystorePassword = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY);
+        return QUICLogics.trustManagerFactory(keystoreFilename,keystorePassword);
     }
     public QuicSslContext getSignedSslContext() throws Exception {
-        String keystoreFilename = properties.getProperty(Logics.SERVER_KEYSTORE_FILE_KEY);//"keystore.jks";
-        String keystorePassword = properties.getProperty(Logics.SERVER_KEYSTORE_PASSWORD_KEY);//"simple";
-        String alias = properties.getProperty(Logics.SERVER_KEYSTORE_ALIAS_KEY);//"quicTestCert";
+        String keystoreFilename = properties.getProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY);//"keystore.jks";
+        String keystorePassword = properties.getProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY);//"simple";
+        String alias = properties.getProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY);//"quicTestCert";
         //String alias = "wservercert";
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
         return QuicSslContextBuilder
@@ -78,14 +75,14 @@ public final class QuicServerExample {
     public ChannelHandler getChannelHandler(QuicSslContext context) {
         QuicServerCodecBuilder serverCodecBuilder =  new QuicServerCodecBuilder()
                 .sslContext(context);
-        serverCodecBuilder = (QuicServerCodecBuilder) Logics.addConfigs(serverCodecBuilder,properties);
+        serverCodecBuilder = (QuicServerCodecBuilder) QUICLogics.addConfigs(serverCodecBuilder,properties);
         ChannelHandler codec = serverCodecBuilder
                 // Setup a token handler. In a production system you would want to implement and provide your custom
                 // one.
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new QuicServerChannelConHandler(consumer,metrics))
-                .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.INCOMING_CONNECTION))
+                .streamHandler(new ServerChannelInitializer(consumer,metrics, QUICLogics.INCOMING_CONNECTION))
                 .build();
         return codec;
     }

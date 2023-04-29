@@ -14,13 +14,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class Logics {
+public class QUICLogics {
     public static final int WRT_OFFSET=5; //4 BYTES(DATA LEN)+ 1 BYTE (MESSAGE CODE)
     public final static byte HANDSHAKE_MESSAGE = 'A';
     public final static byte APP_DATA = 'B';
@@ -36,6 +35,10 @@ public class Logics {
     public static final String INITIAL_MAX_STREAMS_BIDIRECTIONAL = "QUIC_initialMaxStreamsBidirectional";
     public static final String INITIAL_MAX_STREAMS_UNIDIRECTIONAL = "QUIC_initialMaxStreamsUnidirectional";
     public static final String MAX_ACK_DELAY = "QUIC_maxAckDelay";
+
+
+
+
 
     public static boolean INCOMING_CONNECTION = true;
     public static boolean OUTGOING_CONNECTION = false;

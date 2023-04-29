@@ -8,7 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelConsumer;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -44,19 +44,14 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         msg.readBytes(data);
         msg.discardSomeReadBytes();
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        if(Logics.APP_DATA==msgType){
-            /**
-            TestSendReceived testSendReceived = Logics.gson.fromJson(new String(data),TestSendReceived.class);
-            System.out.println("RECEIVED HASH: "+testSendReceived.getHash());
-            System.out.println("ORIGINAL: "+ Hex.encodeHexString(Logics.hash(testSendReceived.getData())));
-            System.out.println(); **/
+        if(QUICLogics.APP_DATA==msgType){
             consumer.streamReader(ch.id().asShortText(),data);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
-                q.setReceivedAppBytes(q.getReceivedAppBytes()+length+Logics.WRT_OFFSET);
+                q.setReceivedAppBytes(q.getReceivedAppBytes()+length+ QUICLogics.WRT_OFFSET);
             }
-        }else if(Logics.KEEP_ALIVE==msgType){
+        }else if(QUICLogics.KEEP_ALIVE==msgType){
             consumer.onKeepAliveMessage(ch.parent().id().asShortText());
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
@@ -67,7 +62,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
-                q.setReceivedControlBytes(q.getReceivedControlBytes()+length+Logics.WRT_OFFSET);
+                q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
             }
         }
     }

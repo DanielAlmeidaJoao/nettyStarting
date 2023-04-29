@@ -7,7 +7,7 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
@@ -29,17 +29,15 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
+        logger.debug("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         QuicChannel out = (QuicChannel) ctx.channel();
         if(metrics!=null){
             metrics.initConnectionMetrics(out.remoteAddress());
         }
-        logger.info("{} ESTABLISHED CONNECTION WITH {}",self,remote);
-
-        QuicStreamChannel streamChannel = Logics.createStream(out,consumer,metrics,false);
+        QuicStreamChannel streamChannel = QUICLogics.createStream(out,consumer,metrics,false);
         QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText());
-        byte [] hs = Logics.gson.toJson(handShakeMessage).getBytes();
-        streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, Logics.HANDSHAKE_MESSAGE))
+        byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
+        streamChannel.writeAndFlush(QUICLogics.writeBytes(hs.length,hs, QUICLogics.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
                         consumer.channelActive(streamChannel,null,remote);
@@ -50,7 +48,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
                         out.close();
                     }
                 });
-        logger.info("{} SENT CUSTOM HANDSHAKE DATA TO {}",self,remote);
+        logger.debug("{} SENT CUSTOM HANDSHAKE DATA TO {}",self,remote);
     }
 
     @Override

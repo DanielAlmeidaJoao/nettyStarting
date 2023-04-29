@@ -49,7 +49,6 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
-            logger.info("IDLE TIMEOUT IS GOING TO OCURR");
             IdleStateEvent e = (IdleStateEvent) evt;
             if (e.state() == IdleState.READER_IDLE) {
                 // Handle idle timeout event

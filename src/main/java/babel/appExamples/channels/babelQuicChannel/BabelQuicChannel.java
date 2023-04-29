@@ -3,26 +3,33 @@ package babel.appExamples.channels.babelQuicChannel;
 import babel.appExamples.channels.babelQuicChannel.utils.BabelQuicChannelLogics;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
-import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionUp;
-import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
+import pt.unl.fct.di.novasys.channel.tcp.events.*;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.NetworkRole;
+import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class BabelQuicChannel<T> extends SingleThreadedQuicChannel  implements IChannel<T> {
 
     private static final Logger logger = LogManager.getLogger(BabelQuicChannel.class);
     public final boolean metrics;
     public final static String NAME = "BabelQuicChannel";
+    public final static String METRICS_INTERVAL_KEY = "QUIC_metrics_interval";
+    public final static String DEFAULT_METRICS_INTERVAL = "-1";
+
 
 
     private final ISerializer<T> serializer;
@@ -33,6 +40,18 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel  implements I
         this.serializer = serializer;
         this.listener = list;
         metrics = super.enabledMetrics();
+        if(metrics){
+            int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY, DEFAULT_METRICS_INTERVAL));
+            new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.MILLISECONDS);
+        }
+
+    }
+    void readMetricsMethod(List<QuicConnectionMetrics> current, List<QuicConnectionMetrics> old){
+        QUICMetricsEvent quicMetricsEvent = new QUICMetricsEvent(current,old);
+        listener.deliverEvent(quicMetricsEvent);
+    }
+    void triggerMetricsEvent() {
+        readMetrics(this::readMetricsMethod);
     }
 
     @Override
@@ -71,14 +90,14 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel  implements I
 
     @Override
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
+        Throwable t = new Throwable("PEER DISCONNECTED!");
+        Host host = BabelQuicChannelLogics.toBabelHost(peer);
         if(incoming){
-            logger.debug("OutboundConnectionDown to " +peer+ "");
-        }else{
             logger.error("Inbound connection from {} is down" + peer);
-        }
-
-        if (metrics){
-            //TODO in the implementation method
+            listener.deliverEvent(new InConnectionDown(host,t));
+        }else{
+            logger.debug("OutboundConnectionDown to " +peer+ "");
+            listener.deliverEvent(new OutConnectionDown(host,t));
         }
     }
 

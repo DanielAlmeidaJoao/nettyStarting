@@ -28,13 +28,11 @@ import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.utils.LoadCertificate;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import javax.net.ssl.TrustManagerFactory;
-import java.io.FileInputStream;
 import java.net.InetSocketAddress;
-import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -65,15 +63,15 @@ public final class QuicClientExample {
     }
 
     private TrustManagerFactory serverTrustManager(Properties properties) throws Exception {
-        String s_keystoreFilename = properties.getProperty(Logics.SERVER_KEYSTORE_FILE_KEY);//"keystore.jks";
-        String s_keystorePassword = properties.getProperty(Logics.SERVER_KEYSTORE_PASSWORD_KEY);//"simple";
-        return Logics.trustManagerFactory(s_keystoreFilename,s_keystorePassword);
+        String s_keystoreFilename = properties.getProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY);//"keystore.jks";
+        String s_keystorePassword = properties.getProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY);//"simple";
+        return QUICLogics.trustManagerFactory(s_keystoreFilename,s_keystorePassword);
     }
 
     public ChannelHandler getCodec(Properties properties)throws Exception{
-        String keystoreFilename = properties.getProperty(Logics.CLIENT_KEYSTORE_FILE_KEY); //"keystore2.jks";
-        String keystorePassword = properties.getProperty(Logics.CLIENT_KEYSTORE_PASSWORD_KEY);//"simple";
-        String alias = properties.getProperty(Logics.CLIENT_KEYSTORE_ALIAS_KEY);//"clientcert";
+        String keystoreFilename = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY); //"keystore2.jks";
+        String keystorePassword = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY);//"simple";
+        String alias = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY);//"clientcert";
         Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
         if(context==null){
             context = QuicSslContextBuilder.forClient().
@@ -86,7 +84,7 @@ public final class QuicClientExample {
 
         QuicClientCodecBuilder clientCodecBuilder =  new QuicClientCodecBuilder()
                 .sslContext(context);
-        clientCodecBuilder = (QuicClientCodecBuilder) Logics.addConfigs(clientCodecBuilder,properties);
+        clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
     }
     public void connect(InetSocketAddress remote, Properties properties) throws Exception{
@@ -99,7 +97,7 @@ public final class QuicClientExample {
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics))
-                .streamHandler(new ServerChannelInitializer(consumer,metrics,Logics.OUTGOING_CONNECTION))
+                .streamHandler(new ServerChannelInitializer(consumer,metrics, QUICLogics.OUTGOING_CONNECTION))
                 .remoteAddress(remote)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
                 .connect().addListener(future -> {

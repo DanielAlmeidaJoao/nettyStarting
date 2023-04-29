@@ -12,7 +12,7 @@ import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.CustomConnection;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.NetworkRole;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.metrics.QuicChannelMetrics;
@@ -25,7 +25,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import static quicSupport.utils.Logics.gson;
+import static quicSupport.utils.QUICLogics.QUIC_METRICS;
+import static quicSupport.utils.QUICLogics.gson;
 
 public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
@@ -50,14 +51,14 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole)throws IOException {
         this.properties=properties;
         InetAddress addr;
-        if (properties.containsKey(Logics.ADDRESS_KEY))
-            addr = Inet4Address.getByName(properties.getProperty(Logics.ADDRESS_KEY));
+        if (properties.containsKey(QUICLogics.ADDRESS_KEY))
+            addr = Inet4Address.getByName(properties.getProperty(QUICLogics.ADDRESS_KEY));
         else
             throw new IllegalArgumentException(NAME + " requires binding address");
 
-        int port = Integer.parseInt(properties.getProperty(Logics.PORT_KEY, DEFAULT_PORT));
+        int port = Integer.parseInt(properties.getProperty(QUICLogics.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        enableMetrics = properties.containsKey(Logics.QUIC_METRICS);
+        enableMetrics = properties.containsKey(QUICLogics.QUIC_METRICS);
         if(enableMetrics){
             metrics=new QuicChannelMetrics(self,singleThreaded);
         }
@@ -127,7 +128,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     }
     public void onKeepAliveMessage(String parentId){
         InetSocketAddress host = channelIds.get(parentId);
-        logger.info("SELF:{} -- HEART BEAT RECEIVED -- {}",self,host);
+        //logger.debug("SELF:{} -- HEART BEAT RECEIVED -- {}",self,host);
         connections.get(host).scheduleSendHeartBeat_KeepAlive();
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
@@ -152,7 +153,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection);
             CustomConnection old = connections.put(listeningAddress,current);
             if(old!=null){
-                if(Logics.sameAddress(self,listeningAddress)){//CONNECTING TO ITSELF
+                if(QUICLogics.sameAddress(self,listeningAddress)){//CONNECTING TO ITSELF
                     connections.put(listeningAddress,old);
                     old.addStream(current.getDefaultStream());
                 }else if(self.hashCode()<listeningAddress.hashCode()){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
@@ -276,7 +277,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public void createStream(InetSocketAddress peer) {
         try{
             CustomConnection customConnection = getOrThrow(peer);
-            Logics.createStream(customConnection.getConnection(),this,metrics,customConnection.isInComing());
+            QUICLogics.createStream(customConnection.getConnection(),this,metrics,customConnection.isInComing());
         }catch (Exception e){
             failedToCreateStream(peer,e.getCause());
         }
@@ -317,7 +318,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         }
     }
     private void sendMessage(QuicStreamChannel streamChannel, byte[] message, int len, InetSocketAddress peer){
-        streamChannel.writeAndFlush(Logics.writeBytes(len,message,Logics.APP_DATA))
+        streamChannel.writeAndFlush(QUICLogics.writeBytes(len,message, QUICLogics.APP_DATA))
                 .addListener(future -> {
                     if(future.isSuccess()){
                         onMessageSent(message,len,null,peer);
@@ -351,12 +352,13 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public void onServerSocketClose(boolean success, Throwable cause) {
         logger.debug("Server socket closed. " + (success ? "" : "Cause: " + cause));
     }
-    @SneakyThrows
+
     public void readMetrics(QuicReadMetricsHandler handler){
         if(isEnableMetrics()){
             handler.readMetrics(metrics.currentMetrics(),metrics.oldMetrics());
         }else {
-            throw new Exception("METRICS WAS NOT ENABLED!");
+            //throw new Exception("METRICS WAS NOT ENABLED!");
+            logger.info("METRICS WAS NOT ENABLED! ADD PROPERTY {}=TRUE TO ENABLE IT",QUIC_METRICS);
         }
     }
     /************************************ FAILURE HANDLERS ************************************************************/

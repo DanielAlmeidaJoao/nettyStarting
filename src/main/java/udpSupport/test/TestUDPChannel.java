@@ -3,7 +3,7 @@ package udpSupport.test;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStats;
@@ -35,7 +35,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
         total += message.length;
         try{
             if(message.length==bufferSize){
-                receivedHashes.add(Hex.encodeHexString(Logics.hash(message)));
+                receivedHashes.add(Hex.encodeHexString(QUICLogics.hash(message)));
             }else {
                 System.out.println("ONLY ONCE "+message.length);
             }
@@ -90,7 +90,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
                 if(read==bufferSize){
-                    sentHashes.add(Hex.encodeHexString(Logics.hash(bytes)));
+                    sentHashes.add(Hex.encodeHexString(QUICLogics.hash(bytes)));
                 }else {
                     System.out.println("EXPECTED ONCE!!! "+read);
                 }

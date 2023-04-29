@@ -3,12 +3,11 @@ package quicSupport.handlers.pipeline;
 import io.netty.incubator.codec.quic.EarlyDataSendCallback;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import io.netty.incubator.codec.quic.QuicStreamType;
 import io.netty.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
-import quicSupport.utils.Logics;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
@@ -33,10 +32,10 @@ public class CustomEarlyDataSendCallback implements EarlyDataSendCallback {
             metrics.initConnectionMetrics(quicChannel.remoteAddress());
         }
         try {
-            QuicStreamChannel streamChannel = Logics.createStream(quicChannel,consumer,metrics,false);
+            QuicStreamChannel streamChannel = QUICLogics.createStream(quicChannel,consumer,metrics,false);
             QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText());
-            byte [] hs = Logics.gson.toJson(handShakeMessage).getBytes();
-            streamChannel.writeAndFlush(Logics.writeBytes(hs.length,hs, Logics.HANDSHAKE_MESSAGE))
+            byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
+            streamChannel.writeAndFlush(QUICLogics.writeBytes(hs.length,hs, QUICLogics.HANDSHAKE_MESSAGE))
                     .addListener(future -> {
                         if(future.isSuccess()){
                             consumer.channelActive(streamChannel,null,remote);
@@ -47,13 +46,12 @@ public class CustomEarlyDataSendCallback implements EarlyDataSendCallback {
                             quicChannel.close();
                         }
                     });
-            logger.info("{} SENT CUSTOM HANDSHAKE DATA TO {}",self,remote);
+            logger.debug("{} SENT CUSTOM HANDSHAKE DATA TO {}",self,remote);
         } catch (Exception e) {
             e.printStackTrace();
+            logger.error(e.getMessage());
             throw new RuntimeException(e);
         }
-        logger.info("{} SENT2222 CUSTOM HANDSHAKE DATA TO {}",self,remote);
-
     }
 
     public void connectionFailed(QuicStreamChannel streamChannel, Future future,QuicChannel quicChannel){
