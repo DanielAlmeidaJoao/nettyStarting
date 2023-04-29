@@ -3,7 +3,6 @@ package quicSupport.channels;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.*;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.Exceptions.UnknownElement;
@@ -31,20 +30,13 @@ import static quicSupport.utils.QUICLogics.gson;
 public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
     private final InetSocketAddress self;
-
-    @Getter
     private static boolean enableMetrics;
     public final static String NAME = "QUIC_CHANNEL";
-
-
-
     public final static String DEFAULT_PORT = "8575";
-
     private final Map<InetSocketAddress, CustomConnection> connections;
     private final Map<String,InetSocketAddress> channelIds; //streamParentID, peer
     private final Map<String,InetSocketAddress> streamHostMapping;
-    private Set<InetSocketAddress> connecting;
-
+    private final Set<InetSocketAddress> connecting;
     private QuicClientExample client;
     private final Properties properties;
     private QuicChannelMetrics metrics;
@@ -214,7 +206,9 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
             connection.close();
             onConnectionDown(host,connection.isInComing());
-        }catch (Exception e){}
+        }catch (Exception e){
+            logger.debug(e.getLocalizedMessage());
+        }
     }
     public abstract void onConnectionDown(InetSocketAddress peer, boolean incoming);
 
@@ -286,7 +280,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         try{
             InetSocketAddress host = streamHostMapping.get(streamId);
             if(host==null){
-                logger.debug("UNKNOWN STREAM ID: ",streamId);
+                logger.debug("UNKNOWN STREAM ID: {}",streamId);
             }else{
                 CustomConnection connection = connections.get(host);
                 connection.closeStream(streamId);
@@ -331,6 +325,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/
+
 
 
     protected void onOutboundConnectionUp() {}

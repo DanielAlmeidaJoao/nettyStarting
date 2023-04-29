@@ -2,6 +2,7 @@ package babel.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import babel.appExamples.channels.BabelStreamingChannel;
 import babel.appExamples.channels.babelQuicChannel.BabelQuicChannel;
+import babel.appExamples.channels.babelQuicChannel.QUICMetricsEvent;
 import babel.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +13,7 @@ import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
 import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionUp;
 import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.network.data.Host;
+import quicSupport.utils.QUICLogics;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -34,7 +36,20 @@ public class EchoProtocol extends GenericProtocol {
         String port = properties.getProperty("port");
         logger.info("Receiver on {}:{}", address, port);
         this.myself = new Host(InetAddress.getByName(address), Integer.parseInt(port));
-        channelId = createChannel(TCPChannel.NAME, properties);
+        Properties channelProps = new Properties();
+        channelProps.setProperty("metrics_interval","2000");
+        channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
+        channelProps.setProperty(QUICLogics.PORT_KEY,port);
+        //channelProps.setProperty(QUICLogics.QUIC_METRICS,"true");
+
+        channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
+        channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
+        channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
+
+        channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
+        channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
+        channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
+        channelId = createChannel(BabelQuicChannel.NAME, channelProps);
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
@@ -46,6 +61,7 @@ public class EchoProtocol extends GenericProtocol {
         registerMessageSerializer(channelId, EchoMessage.MSG_ID, EchoMessage.serializer);
         /*---------------------- Register Message Handlers -------------------------- */
         try {
+            registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
             if(myself.getPort()==8081){
                 //Integer.parseInt(props.getProperty("nei_port")
@@ -65,7 +81,11 @@ public class EchoProtocol extends GenericProtocol {
         EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
         sendMessage(message,myself);
     }
-
+    private void uponChannelMetrics(QUICMetricsEvent event, int channelId) {
+        System.out.println("METRICS TRIGGERED!!!");
+        System.out.println("CURRENT: "+QUICLogics.gson.toJson(event.getCurrent()));
+        System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
+    }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
         if(dest!=null){

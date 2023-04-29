@@ -25,7 +25,7 @@ the receiver must be the client
 
 Starting Babel
 
-java -Xmx500M -cp target/nettyStart.jar mainFiles.Main sender=o
+java -Xmx500M -cp target/nettyStart.jar mainFiles.Main sender=o p2p_port=10101 p2p_port_f=10201
 
 java -cp target/nettyStart.jar mainFiles.Main address=localhost port=10101
 

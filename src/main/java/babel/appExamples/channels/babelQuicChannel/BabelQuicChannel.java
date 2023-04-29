@@ -27,7 +27,7 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel  implements I
     private static final Logger logger = LogManager.getLogger(BabelQuicChannel.class);
     public final boolean metrics;
     public final static String NAME = "BabelQuicChannel";
-    public final static String METRICS_INTERVAL_KEY = "QUIC_metrics_interval";
+    public final static String METRICS_INTERVAL_KEY = "metrics_interval";
     public final static String DEFAULT_METRICS_INTERVAL = "-1";
 
 
