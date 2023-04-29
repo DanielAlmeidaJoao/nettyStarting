@@ -25,8 +25,17 @@ public class Logics {
     public final static byte HANDSHAKE_MESSAGE = 'A';
     public final static byte APP_DATA = 'B';
     public final static byte KEEP_ALIVE = 'C';
-    public static final String HOST_NAME = "HOST";
-    public static final String PORT = "PORT";
+
+    public final static String ADDRESS_KEY = "QUIC_ADDRESS";
+    public final static String PORT_KEY = "QUIC_PORT";
+    public final static String QUIC_METRICS="QUIC_METRICS";
+    public static final String MAX_IDLE_TIMEOUT_IN_SECONDS = "QUIC_maxIdleTimeoutInSeconds";
+    public static final String INITIAL_MAX_DATA = "QUIC_initialMaxData";
+    public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL = "QUIC_initialMaxStreamDataBidirectionalLocal";
+    public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE = "QUIC_initialMaxStreamDataBidirectionalRemote";
+    public static final String INITIAL_MAX_STREAMS_BIDIRECTIONAL = "QUIC_initialMaxStreamsBidirectional";
+    public static final String INITIAL_MAX_STREAMS_UNIDIRECTIONAL = "QUIC_initialMaxStreamsUnidirectional";
+    public static final String MAX_ACK_DELAY = "QUIC_maxAckDelay";
 
     public static boolean INCOMING_CONNECTION = true;
     public static boolean OUTGOING_CONNECTION = false;
@@ -44,13 +53,13 @@ public class Logics {
 
     private static final long maxAckDelay = 100;
 
-    public static final String SERVER_KEYSTORE_FILE_KEY = "S_KEYSTORE_FILE";
-    public static final String SERVER_KEYSTORE_PASSWORD_KEY = "S_KEYSTORE_PASSWORD";
-    public static final String SERVER_KEYSTORE_ALIAS_KEY = "S_KEYSTORE_ALIAS_KEY";
+    public static final String SERVER_KEYSTORE_FILE_KEY = "QUIC_S_KEYSTORE_FILE";
+    public static final String SERVER_KEYSTORE_PASSWORD_KEY = "QUIC_S_KEYSTORE_PASSWORD";
+    public static final String SERVER_KEYSTORE_ALIAS_KEY = "QUIC_S_KEYSTORE_ALIAS_KEY";
 
-    public static final String CLIENT_KEYSTORE_FILE_KEY = "C_KEYSTORE_FILE";
-    public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "C_KEYSTORE_PASSWORD";
-    public static final String CLIENT_KEYSTORE_ALIAS_KEY = "C_KEYSTORE_ALIAS_KEY";
+    public static final String CLIENT_KEYSTORE_FILE_KEY = "QUIC_C_KEYSTORE_FILE";
+    public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_C_KEYSTORE_PASSWORD";
+    public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_C_KEYSTORE_ALIAS_KEY";
 
 
     public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor, QuicChannelMetrics metrics, boolean incoming) throws Exception{
@@ -82,13 +91,13 @@ public class Logics {
     }
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
         return codecBuilder
-                .maxIdleTimeout((Long) properties.getOrDefault("maxIdleTimeoutInSeconds",maxIdleTimeoutInSeconds), TimeUnit.SECONDS)
-                .initialMaxData((Long) properties.getOrDefault("initialMaxData",initialMaxData))
-                .initialMaxStreamDataBidirectionalLocal((Long) properties.getOrDefault("initialMaxStreamDataBidirectionalLocal",initialMaxStreamDataBidirectionalLocal))
-                .initialMaxStreamDataBidirectionalRemote((Long) properties.getOrDefault("initialMaxStreamDataBidirectionalRemote",initialMaxStreamDataBidirectionalRemote))
-                .initialMaxStreamsBidirectional((Long) properties.getOrDefault("initialMaxStreamsBidirectional",initialMaxStreamsBidirectional))
-                .initialMaxStreamsUnidirectional((Long) properties.getOrDefault("initialMaxStreamsUnidirectional",initialMaxStreamsUnidirectional))
-                .maxAckDelay((Long) properties.getOrDefault("maxAckDelay",maxAckDelay), TimeUnit.MILLISECONDS)
+                .maxIdleTimeout((Long) properties.getOrDefault(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds), TimeUnit.SECONDS)
+                .initialMaxData((Long) properties.getOrDefault(INITIAL_MAX_DATA,initialMaxData))
+                .initialMaxStreamDataBidirectionalLocal((Long) properties.getOrDefault(INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL,initialMaxStreamDataBidirectionalLocal))
+                .initialMaxStreamDataBidirectionalRemote((Long) properties.getOrDefault(INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE,initialMaxStreamDataBidirectionalRemote))
+                .initialMaxStreamsBidirectional((Long) properties.getOrDefault(INITIAL_MAX_STREAMS_BIDIRECTIONAL,initialMaxStreamsBidirectional))
+                .initialMaxStreamsUnidirectional((Long) properties.getOrDefault(INITIAL_MAX_STREAMS_UNIDIRECTIONAL,initialMaxStreamsUnidirectional))
+                .maxAckDelay((Long) properties.getOrDefault(MAX_ACK_DELAY,maxAckDelay), TimeUnit.MILLISECONDS)
                 .activeMigration(true)
                 .maxRecvUdpPayloadSize(1024*1024).maxSendUdpPayloadSize(1024*1024);
     }

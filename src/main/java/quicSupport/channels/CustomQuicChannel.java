@@ -35,8 +35,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private static boolean enableMetrics;
     public final static String NAME = "QUIC_CHANNEL";
 
-    public final static String ADDRESS_KEY = "address";
-    public final static String PORT_KEY = "port";
+
 
     public final static String DEFAULT_PORT = "8575";
 
@@ -51,14 +50,14 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole)throws IOException {
         this.properties=properties;
         InetAddress addr;
-        if (properties.containsKey(ADDRESS_KEY))
-            addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
+        if (properties.containsKey(Logics.ADDRESS_KEY))
+            addr = Inet4Address.getByName(properties.getProperty(Logics.ADDRESS_KEY));
         else
             throw new IllegalArgumentException(NAME + " requires binding address");
 
-        int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
+        int port = Integer.parseInt(properties.getProperty(Logics.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        enableMetrics = properties.containsKey("metrics");
+        enableMetrics = properties.containsKey(Logics.QUIC_METRICS);
         if(enableMetrics){
             metrics=new QuicChannelMetrics(self,singleThreaded);
         }

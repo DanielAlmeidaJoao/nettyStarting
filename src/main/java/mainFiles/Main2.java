@@ -21,12 +21,11 @@ public class Main2 {
 
     private static final String DEFAULT_CONF = "config.properties";
     public static void main(String[] args) throws Exception {
-        logger.info("STARREDD");
         Properties properties = new Properties();
-        properties.setProperty("address","localhost");
+        properties.setProperty(Logics.ADDRESS_KEY,"localhost");
         String port = args[0];
-        properties.setProperty("port",port);
-        properties.setProperty("metrics","true");
+        properties.setProperty(Logics.PORT_KEY,port);
+        properties.setProperty(Logics.QUIC_METRICS,"true");
 
         properties.setProperty(Logics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
         properties.setProperty(Logics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");

@@ -101,15 +101,18 @@ public final class QuicServerExample {
         ChannelHandler codec = getChannelHandler(context);
         try {
             Bootstrap bs = new Bootstrap();
-            bs = bs.option(ChannelOption.SO_RCVBUF,1024*1024)
-                    .option(ChannelOption.SO_SNDBUF,1024*1024);
 
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
+
                     .option(QuicChannelOption.SO_RCVBUF,1024*1024)
                     .option(QuicChannelOption.SO_SNDBUF,1024*1024)
-                    .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(1024*1024))
-                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK,new WriteBufferWaterMark(2*1024*1024,2*1024*1024*2))
+
+                    /*
+                    Allocates a new receive buffer whose capacity is probably large enough to read all inbound data
+                    and small enough not to waste its space.
+                    */
+                    .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(1024*65))
                     .handler(codec)
                     .bind(self).sync()
                     .addListener(future -> {
