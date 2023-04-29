@@ -46,13 +46,13 @@ public class QUICLogics {
 
     public static final Gson gson = new Gson();
 
-    public static final long maxIdleTimeoutInSeconds=30;
+    public static final long maxIdleTimeoutInSeconds=300;
     private static final long initialMaxData=10000000;
                                            //1035368729
     private static final long initialMaxStreamDataBidirectionalLocal=1000000;
     private static final long initialMaxStreamDataBidirectionalRemote=1000000;
-    private static final long initialMaxStreamsBidirectional=10;
-    private static final long initialMaxStreamsUnidirectional=10;
+    private static final long initialMaxStreamsBidirectional=200;
+    private static final long initialMaxStreamsUnidirectional=200;
 
     private static final long maxAckDelay = 100;
 

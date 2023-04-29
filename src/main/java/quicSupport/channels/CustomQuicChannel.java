@@ -220,7 +220,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
                 connection.close();
                 onConnectionDown(host,connection.isInComing());
-                System.out.println("CHANNEL TO "+host+" INACTIVE");
+                System.out.println("CHANNEL TO "+host+" INACTIVE "+connections.size());
             }
         }catch (Exception e){
             logger.debug(e.getLocalizedMessage());
@@ -332,7 +332,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         } catch (Exception e) {
             //e.printStackTrace();
             //logger.info(e.getMessage());
-            System.out.println(e.getMessage()+" CONNECTIONSS "+connections.size());
+            //System.out.println(e.getMessage()+" CONNECTIONSS "+connections.size());
             onMessageSent(message,len,e,peer);
         }
     }

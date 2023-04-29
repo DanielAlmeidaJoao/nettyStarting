@@ -36,6 +36,7 @@ public class Main2 {
         properties.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
 
         TestQuicChannel testQuicChannel = new TestQuicChannel(properties);
+
         /**
         if("8081".equals(port)){
             InetSocketAddress remote = new InetSocketAddress("localhost",8082);
@@ -43,6 +44,7 @@ public class Main2 {
         }
         System.out.println("CONNECTED"); **/
         //testQuicChannel.end();
+
 
         /**
         InetSocketAddress socketAddress;
@@ -55,8 +57,11 @@ public class Main2 {
         }else{
             socketAddress = new InetSocketAddress("localhost",8081);
         }
-        testQuicChannel.openConnection(socketAddress);
-         **/
+        testQuicChannel.open(socketAddress);
+        **/
+        if(!port.equals("8081")){
+            testQuicChannel.open( new InetSocketAddress("localhost",8081));
+        }
         Scanner scanner = new Scanner(System.in);
 
 

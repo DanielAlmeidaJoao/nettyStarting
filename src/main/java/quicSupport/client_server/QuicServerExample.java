@@ -94,13 +94,15 @@ public final class QuicServerExample {
             return;
         }
         QuicSslContext context = getSignedSslContext();
-        NioEventLoopGroup group = new NioEventLoopGroup();
+        NioEventLoopGroup group = new NioEventLoopGroup(4);
         ChannelHandler codec = getChannelHandler(context);
         try {
             Bootstrap bs = new Bootstrap();
 
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 1024)
+
                     /**
                     .option(QuicChannelOption.SO_RCVBUF,1024*1024)
                     .option(QuicChannelOption.SO_SNDBUF,1024*1024)
