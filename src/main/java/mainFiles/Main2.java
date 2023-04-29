@@ -90,7 +90,7 @@ public class Main2 {
                     System.out.println("PORT");
                     int p = scanner.nextInt();
                     InetSocketAddress address = new InetSocketAddress(host, p);
-                    testQuicChannel.openConnection(address);
+                    testQuicChannel.open(address);
                 } else if (input.equalsIgnoreCase("CC")) {//CLOSE CONNECTIONS
                     System.out.println("HOST NAME:");
                     String host = scanner.nextLine();

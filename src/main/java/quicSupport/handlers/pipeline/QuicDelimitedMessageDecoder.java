@@ -65,5 +65,9 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
             }
         }
+    }    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
     }
+
 }

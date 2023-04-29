@@ -90,7 +90,7 @@ public class QUICLogics {
          **/
     }
     public static boolean sameAddress(InetSocketAddress address, InetSocketAddress socketAddress){
-        return address.getHostName().equals(socketAddress.getHostName())&&address.getPort()== socketAddress.getPort();
+        return address.getHostName().equals(socketAddress.getHostName())&&address.getPort()==socketAddress.getPort();
     }
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
         return codecBuilder

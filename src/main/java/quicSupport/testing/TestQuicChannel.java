@@ -151,7 +151,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
         TestQuicChannel testQuicChannel = new TestQuicChannel(properties);
         if("8081".equals(port)){
             InetSocketAddress remote = new InetSocketAddress("localhost",8082);
-            testQuicChannel.openConnection(remote);
+            testQuicChannel.open(remote);
         }
     }
 

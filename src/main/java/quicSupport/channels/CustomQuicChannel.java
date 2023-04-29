@@ -2,7 +2,6 @@ package quicSupport.channels;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.*;
-import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.Exceptions.UnknownElement;
@@ -22,13 +21,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import static quicSupport.utils.QUICLogics.QUIC_METRICS;
 import static quicSupport.utils.QUICLogics.gson;
 
 public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
+
     private final InetSocketAddress self;
     private static boolean enableMetrics;
     public final static String NAME = "QUIC_CHANNEL";
@@ -36,7 +35,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private final Map<InetSocketAddress, CustomConnection> connections;
     private final Map<String,InetSocketAddress> channelIds; //streamParentID, peer
     private final Map<String,InetSocketAddress> streamHostMapping;
-    private final Set<InetSocketAddress> connecting;
+    private final Map<InetSocketAddress,List<byte []>> connecting;
     private QuicClientExample client;
     private final Properties properties;
     private QuicChannelMetrics metrics;
@@ -58,12 +57,12 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             connections = new HashMap<>();
             channelIds = new HashMap<>();
             streamHostMapping = new HashMap<>();
-            connecting=new HashSet<>();
+            connecting=new HashMap<>();
         }else {
             connections = new ConcurrentHashMap<>();
             channelIds = new ConcurrentHashMap<>();
             streamHostMapping = new ConcurrentHashMap<>();
-            connecting=new ConcurrentSkipListSet<>();
+            connecting=new ConcurrentHashMap<>();
         }
 
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
@@ -77,6 +76,9 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.CLIENT==networkRole){
             client = new QuicClientExample(self,this,new NioEventLoopGroup(1), metrics);
         }
+    }
+    public InetSocketAddress getSelf(){
+        return self;
     }
     public boolean enabledMetrics(){
         return enableMetrics;
@@ -125,6 +127,16 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
+    private void sendPendingMessages(InetSocketAddress peer){
+        List<byte []> messages = connecting.remove(peer);
+        if(messages!=null){
+            logger.info("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",getSelf(),messages.size(),peer);
+            for (byte[] message : messages) {
+                send(peer,message,message.length);
+            }
+        }
+    }
+
     /********************************** Stream Handlers **********************************/
 
     /*********************************** Channel Handlers **********************************/
@@ -140,15 +152,15 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 listeningAddress = handShakeMessage.getAddress();
                 inConnection=true;
             }
-            connecting.remove(listeningAddress);
 
             CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection);
             CustomConnection old = connections.put(listeningAddress,current);
             if(old!=null){
-                if(QUICLogics.sameAddress(self,listeningAddress)){//CONNECTING TO ITSELF
+                int comp = self.toString().compareTo(listeningAddress.toString());
+                if(comp==0){//CONNECTING TO ITSELF
                     connections.put(listeningAddress,old);
                     old.addStream(current.getDefaultStream());
-                }else if(self.hashCode()<listeningAddress.hashCode()){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
+                }else if(comp<0){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
                     //keep the in connection
                     if(inConnection){
                         silentlyCloseCon(old.getDefaultStream());
@@ -156,13 +168,15 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                     }else{
                         keepOldSilently(streamChannel, listeningAddress, old);
                         logger.info("KEPT OLD STREAM {}. IN CONNECTION: {}",old.getDefaultStream().id().asShortText(),inConnection);
+                        sendPendingMessages(listeningAddress);
                         return;
                     }
-                }else if(self.hashCode()>listeningAddress.hashCode()){
+                }else if(comp>0){
                     //keep the out connection
                     if(inConnection){
                         keepOldSilently(streamChannel, listeningAddress, old);
                         logger.info("KEPT OLD STREAM {}. IN CONNECTION: {}",streamChannel.id().asShortText(),inConnection);
+                        sendPendingMessages(listeningAddress);
                         return;
                     }else{
                         silentlyCloseCon(old.getDefaultStream());
@@ -174,7 +188,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             }
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
             streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
-
+            sendPendingMessages(listeningAddress);
             onConnectionUp(inConnection,listeningAddress);
             if(enableMetrics){
                 metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
@@ -195,17 +209,19 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         channelIds.remove(streamChannel.parent().id().asShortText());
         streamHostMapping.remove(streamChannel.id().asShortText());
         streamChannel.parent().close();
-        System.out.println("CLOSING THE OLD CLONNECTION");
     }
     public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
 
     public  void channelInactive(String channelId){
         try{
             InetSocketAddress host = channelIds.remove(channelId);
-            CustomConnection connection = connections.remove(host);
-            logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
-            connection.close();
-            onConnectionDown(host,connection.isInComing());
+            if(host!=null){
+                CustomConnection connection = connections.remove(host);
+                logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
+                connection.close();
+                onConnectionDown(host,connection.isInComing());
+                System.out.println("CHANNEL TO "+host+" INACTIVE");
+            }
         }catch (Exception e){
             logger.debug(e.getLocalizedMessage());
         }
@@ -216,15 +232,16 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
 
     /*********************************** User Actions **************************************/
 
-    public void openConnection(InetSocketAddress peer) {
-        if(connecting.contains(peer)){
-            return;
-        }else{
-            connecting.add(peer);
-        }
+    public void open(InetSocketAddress peer) {
+
         if(connections.containsKey(peer)){
             logger.info("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
+            if(connecting.containsKey(peer)){
+                return;
+            }else{
+                connecting.put(peer,new LinkedList<>());
+            }
             logger.info("{} CONNECTING TO {}",self,peer);
             try {
                 client.connect(peer,properties);
@@ -304,10 +321,18 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         }
     }
     public void send(InetSocketAddress peer, byte[] message, int len){
+        List<byte []> pendingMessages = connecting.get(peer);
+        if( pendingMessages !=null ){
+            pendingMessages.add(message);
+            logger.info("{}. MESSAGE TO {} ARCHIVED.",self,peer);
+            return;
+        }
         try {
             sendMessage(getOrThrow(peer).getDefaultStream(),message,len,peer);
         } catch (Exception e) {
-            logger.debug(e.getMessage());
+            //e.printStackTrace();
+            //logger.info(e.getMessage());
+            System.out.println(e.getMessage()+" CONNECTIONSS "+connections.size());
             onMessageSent(message,len,e,peer);
         }
     }

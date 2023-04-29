@@ -32,6 +32,7 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
             metrics.onConnectionClosed(ctx.channel().remoteAddress());
         }
         consumer.channelInactive(ctx.channel().id().asShortText());
+
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

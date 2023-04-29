@@ -57,9 +57,8 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
     /*********************************** Channel Handlers **********************************/
 
     /*********************************** User Actions **************************************/
-    @Override
-    public void openConnection(InetSocketAddress peer) {
-        executor.execute(() -> super.openConnection(peer));
+    public void open(InetSocketAddress peer) {
+        executor.execute(() -> super.open(peer));
     }
     @Override
     public void closeConnection(InetSocketAddress peer){

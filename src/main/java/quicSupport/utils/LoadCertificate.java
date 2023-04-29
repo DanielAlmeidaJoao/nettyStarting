@@ -22,10 +22,8 @@ public class LoadCertificate {
             keystore.load(fis, keystorePasswordChars);
             Certificate cert = keystore.getCertificate(alias);
             PrivateKey privateKey = (PrivateKey) keystore.getKey(alias, keystorePassword.toCharArray());
-            if (cert != null) {
-                System.out.println("Certificate loaded successfully!");
-            } else {
-                System.out.println("Certificate not found!");
+            if (cert == null) {
+                throw new Exception("ALIAS "+alias+" NOT FOUND");
             }
             return Pair.of(cert,privateKey);
         }catch (Exception e){

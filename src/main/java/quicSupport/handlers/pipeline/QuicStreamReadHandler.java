@@ -45,6 +45,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         cause.printStackTrace();
         consumer.streamErrorHandler(ch,cause);
+        cause.printStackTrace();
     }
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
