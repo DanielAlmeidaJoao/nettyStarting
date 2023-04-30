@@ -149,20 +149,23 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
 
     @Override
     public void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer) {
-        ByteBuf buf = Unpooled.copiedBuffer(message,0,len);
-        T msg;
         try {
-            msg = (T) serializer.deserialize(buf);
-            Host host = BabelQuicChannelLogics.toBabelHost(peer);
             if(error==null&&triggerSent){
+                Host host = BabelQuicChannelLogics.toBabelHost(peer);
+                ByteBuf buf = Unpooled.copiedBuffer(message,0,len);
+                T msg = (T) serializer.deserialize(buf);
+                buf.release();
                 listener.messageSent(msg, host);
             }else if(error!=null){
+                Host host = BabelQuicChannelLogics.toBabelHost(peer);
+                ByteBuf buf = Unpooled.copiedBuffer(message,0,len);
+                T msg = (T) serializer.deserialize(buf);
+                buf.release();
                 listener.messageFailed(msg, host,error);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        buf.release();
     }
 
     @Override

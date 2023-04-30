@@ -34,7 +34,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
     private final ISerializer<T> serializer;
     private final ChannelListener<T> listener;
 
-    public BabelUDPChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws Exception {
+    public BabelUDPChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
         super(properties);
         this.serializer = serializer;
         this.listener = list;
@@ -46,8 +46,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
     }
     void readMetricsMethod(ChannelStats stats){
-        UDPMetricsEvent quicMetricsEvent = new UDPMetricsEvent(stats);
-        listener.deliverEvent(quicMetricsEvent);
+        listener.deliverEvent(new UDPMetricsEvent(stats));
     }
     void triggerMetricsEvent() {
         readMetrics(this::readMetricsMethod);
@@ -75,6 +74,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
             byte [] toSend = new byte[out.readableBytes()];
             out.readBytes(toSend);
             super.sendMessage(toSend,dest,toSend.length);
+            msgSent(toSend,peer);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -83,20 +83,19 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
 
     @Override
     public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
-        ByteBuf buf = Unpooled.copiedBuffer(message,0,message.length);
-        T msg;
+
+    }
+    private void msgSent(byte[] message, Host host){
         try {
-            msg = (T) serializer.deserialize(buf);
-            Host host = BabelQuicChannelLogics.toBabelHost(dest);
-            if(error==null&&triggerSent){
+            if(triggerSent){
+                ByteBuf buf = Unpooled.copiedBuffer(message,0,message.length);
+                T msg = (T) serializer.deserialize(buf);
+                buf.release();
                 listener.messageSent(msg, host);
-            }else if(error!=null){
-                listener.messageFailed(msg, host,error);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        buf.release();
     }
 
     @Override

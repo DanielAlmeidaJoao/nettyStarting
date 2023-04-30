@@ -10,7 +10,7 @@ import java.util.Properties;
 public abstract class SingleThreadedUDPChannel extends UDPChannel {
     private final DefaultEventExecutor executor;
 
-    public SingleThreadedUDPChannel(Properties properties) throws Exception {
+    public SingleThreadedUDPChannel(Properties properties) throws IOException {
         super(properties, true);
         executor = new DefaultEventExecutor();
     }
@@ -32,7 +32,6 @@ public abstract class SingleThreadedUDPChannel extends UDPChannel {
 
     @Override
     public void readMetrics(OnReadMetricsFunc onReadMetricsFunc) {
-        System.out.println("BEING CALLLED ??");
         executor.execute(() -> super.readMetrics(onReadMetricsFunc));
     }
 

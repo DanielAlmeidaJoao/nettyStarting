@@ -6,6 +6,7 @@ import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -15,15 +16,16 @@ public abstract class UDPChannel implements UDPChannelConsumer{
     private static final Logger logger = LogManager.getLogger(UDPChannel.class);
     public final static String NAME = "UDP_CHANNEL";
 
-    public final static String ADDRESS_KEY = "address";
-    public final static String PORT_KEY = "port";
+    public final static String ADDRESS_KEY = "UDP_address";
+    public final static String PORT_KEY = "UDP_port";
 
-    public final static String DEFAULT_PORT = "8575";
+    public final static String DEFAULT_PORT = "8576";
+    public static final String UDP_METRICS = "UDP_metrics";
     private NettyUDPServer udpServer;
     private ChannelStats metrics;
     private final InetSocketAddress self;
 
-    public UDPChannel(Properties properties, boolean singleThreaded) throws Exception {
+    public UDPChannel(Properties properties, boolean singleThreaded) throws IOException {
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
@@ -32,7 +34,7 @@ public abstract class UDPChannel implements UDPChannelConsumer{
 
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        if( properties.getProperty("metrics")!=null){
+        if( properties.getProperty(UDP_METRICS)!=null){
             metrics = new ChannelStats(singleThreaded);
         }
         udpServer=new NettyUDPServer(this,metrics,self,properties);

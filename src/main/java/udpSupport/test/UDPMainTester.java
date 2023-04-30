@@ -12,10 +12,10 @@ public class UDPMainTester {
     public static void main(String [] args) throws Exception {
         logger.info("STARREDD");
         Properties properties = new Properties();
-        properties.setProperty("address","localhost");
-        properties.setProperty("metrics","on");
+        properties.setProperty("UDP_address","localhost");
+        properties.setProperty("UDP_metrics","on");
         String port = args[0];
-        properties.setProperty("port",port);
+        properties.setProperty("UDP_port",port);
         TestUDPChannel testUDPChannel = new TestUDPChannel(properties);
         if(port.equals("8081")){
             InetSocketAddress inetSocketAddress = new InetSocketAddress("localhost",8082);

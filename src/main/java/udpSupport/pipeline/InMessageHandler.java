@@ -49,7 +49,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         ByteBuf content = datagramPacket.content();
         byte msgCode = content.readByte();
         long msgId = content.readLong();
-        logger.info("RECEIVED MESSAGE CODE: {}",(msgCode==UDPLogics.APP_ACK?"APP_MESSAGE":"ACK"));
+        //logger.info("RECEIVED MESSAGE CODE: {}",(msgCode==UDPLogics.APP_ACK?"APP_MESSAGE":"ACK"));
         byte [] message = null;
         Channel channel = channelHandlerContext.channel();
 
@@ -114,7 +114,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             channelStats.addReceivedBytes(sender,message.length+9,NetworkStatsKindEnum.MESSAGE_STATS);
         }
         if(!receivedMessages.add(msgId)){
-            logger.info("RECEIVED REPEATED MSG ID: ",msgId);
+            //logger.info("RECEIVED REPEATED MSG ID: ",msgId);
             return;
         }
         if(channelStats!=null){

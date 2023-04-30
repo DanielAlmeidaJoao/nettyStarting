@@ -39,11 +39,16 @@ public class NettyUDPServer {
     private final InetSocketAddress address;
     private final ChannelStats stats;
 
-    public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address, Properties properties) throws Exception {
+    public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address, Properties properties){
         this.stats = stats;
         this.consumer = consumer;
         this.address = address;
-        channel = start();
+        try {
+            channel = start();
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("UDP LISTENER COULD NOT START!");
+        }
         waitingForAcks = new ConcurrentHashMap<>();
         datagramPacketCounter = new AtomicLong(0);
         streamIdCounter = new AtomicLong(0);
@@ -150,25 +155,5 @@ public class NettyUDPServer {
             }
             consumer.messageSentHandler(future.isSuccess(),future.cause(),null /*TODO message */,peer);
         });
-    }
-
-    public void send(){
-        InetSocketAddress dest =  new InetSocketAddress("localhost", 9999);
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.println("ENTER SOMETHING: ");
-            String line = scanner.nextLine();
-            if(line.equalsIgnoreCase("m")){
-                System.out.println(QUICLogics.gson.toJson(stats));
-                continue;
-            }
-            if (line == null || line.trim().isEmpty()) {
-                continue;
-            }
-            int times = Integer.parseInt(line);
-            line = "a".repeat(times);
-            sendMessage(line.getBytes(),dest,line.length());
-            System.out.println("DATA SENT@ "+line.length());
-        }
     }
 }
