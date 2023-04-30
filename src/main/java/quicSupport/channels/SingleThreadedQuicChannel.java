@@ -2,6 +2,7 @@ package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.OrderedEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
@@ -17,16 +18,24 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
     public SingleThreadedQuicChannel(Properties properties, NetworkRole role) throws IOException {
         super(properties,true,role);
         executor = new DefaultEventExecutor();
+        /*
         executor.shutdownGracefully().addListener(future -> {
-            executor = new DefaultEventExecutor();
+            System.out.println("FINISHED "+executor.isTerminated());
+            //executor = new DefaultEventExecutor();
+        });*/
+        executor.terminationFuture().addListener(future -> {
+           System.out.println("TERMINATED WHY ??? "+future.isSuccess()+" cause: "+future.cause());
         });
     }
 
     /*********************************** Stream Handlers **********************************/
-
+    private void ensureSubmission(){
+        if(executor.isTerminated()){
+            executor = new DefaultEventExecutor();
+        }
+    }
     @Override
     public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable) {
-
         executor.submit(() -> {
             super.streamErrorHandler(channel,throwable);
         });

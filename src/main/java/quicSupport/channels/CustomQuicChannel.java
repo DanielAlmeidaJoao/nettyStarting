@@ -139,7 +139,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private void sendPendingMessages(InetSocketAddress peer){
         List<byte []> messages = connecting.remove(peer);
         if(messages!=null){
-            logger.info("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",getSelf(),messages.size(),peer);
+            logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",getSelf(),messages.size(),peer);
             for (byte[] message : messages) {
                 send(peer,message,message.length);
             }

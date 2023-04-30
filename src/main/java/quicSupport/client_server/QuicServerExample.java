@@ -101,12 +101,6 @@ public final class QuicServerExample {
 
             Channel channel = bs.group(group)
                     .channel(NioDatagramChannel.class)
-                    .option(ChannelOption.SO_BACKLOG, 1024)
-
-                    /**
-                    .option(QuicChannelOption.SO_RCVBUF,1024*1024)
-                    .option(QuicChannelOption.SO_SNDBUF,1024*1024)
-                    **/
                     /*
                     Allocates a new receive buffer whose capacity is probably large enough to read all inbound data
                     and small enough not to waste its space.
