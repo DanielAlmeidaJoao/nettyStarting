@@ -6,13 +6,18 @@ import udpSupport.utils.UDPLogics;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ChannelStats {
 
     @Getter
     private Map<InetSocketAddress,NetworkStatsWrapper> statsMap;
-    public ChannelStats(){
-        statsMap = new HashMap<>();
+    public ChannelStats(boolean singleThreaded){
+        if(singleThreaded){
+            statsMap = new HashMap<>();
+        }else {
+            statsMap = new ConcurrentHashMap<>();
+        }
     }
     public ChannelStats(Map<InetSocketAddress,NetworkStatsWrapper> map){
         statsMap = map;

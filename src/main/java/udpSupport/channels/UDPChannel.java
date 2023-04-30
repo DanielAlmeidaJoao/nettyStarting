@@ -13,7 +13,7 @@ import java.util.Properties;
 
 public abstract class UDPChannel implements UDPChannelConsumer{
     private static final Logger logger = LogManager.getLogger(UDPChannel.class);
-    public final static String NAME = "QUIC_CHANNEL";
+    public final static String NAME = "UDP_CHANNEL";
 
     public final static String ADDRESS_KEY = "address";
     public final static String PORT_KEY = "port";
@@ -33,14 +33,13 @@ public abstract class UDPChannel implements UDPChannelConsumer{
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
         if( properties.getProperty("metrics")!=null){
-            System.out.println("metrics onnnn");
-            metrics = new ChannelStats();
-        }else{
-            System.out.println("METRICS NOT ON");
+            metrics = new ChannelStats(singleThreaded);
         }
-        udpServer=new NettyUDPServer(this,metrics,self);
+        udpServer=new NettyUDPServer(this,metrics,self,properties);
     }
-
+    public boolean metricsEnabled(){
+        return metrics!=null;
+    }
     public void sendMessage(byte [] message, InetSocketAddress dest,int len){
         udpServer.sendMessage(message,dest,len);
     }
@@ -58,7 +57,11 @@ public abstract class UDPChannel implements UDPChannelConsumer{
 
     public void readMetrics(OnReadMetricsFunc onReadMetricsFunc){
         System.out.println("SUPPER METRICS CALLED "+metrics.getStatsMap().size());
-        onReadMetricsFunc.execute(metrics.cloneChannelMetric());
+        if(metricsEnabled()){
+            onReadMetricsFunc.execute(metrics.cloneChannelMetric());
+        }else{
+            logger.info("METRICS NOT ENABLED. ADD PROPERTY 'metrics=true'");
+        }
     }
 
 }

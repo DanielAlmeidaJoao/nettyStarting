@@ -26,6 +26,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class NettyUDPServer {
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
+    public final int MAX_SEND_RETRIES;
+    public static final String MAX_SEND_RETRIES_KEY = "UPD_MAX_SEND_RETRIES";
+
 
     private Map<Long,Long> waitingForAcks;
     private final AtomicLong datagramPacketCounter;
@@ -36,7 +39,7 @@ public class NettyUDPServer {
     private final InetSocketAddress address;
     private final ChannelStats stats;
 
-    public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address) throws Exception {
+    public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address, Properties properties) throws Exception {
         this.stats = stats;
         this.consumer = consumer;
         this.address = address;
@@ -44,6 +47,7 @@ public class NettyUDPServer {
         waitingForAcks = new ConcurrentHashMap<>();
         datagramPacketCounter = new AtomicLong(0);
         streamIdCounter = new AtomicLong(0);
+        MAX_SEND_RETRIES = Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"100"));
     }
     public void onAckReceived(long msgId, InetSocketAddress sender){
         Long timeMillis = waitingForAcks.remove(msgId);
@@ -54,7 +58,7 @@ public class NettyUDPServer {
     private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, int count){
         channel.eventLoop().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) return;
-            if(count > 100){waitingForAcks.remove(msgId);return;}
+            if(count > MAX_SEND_RETRIES){waitingForAcks.remove(msgId);return;}
             channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
                 if(future.isSuccess()){
                     if(stats!=null){
@@ -123,8 +127,6 @@ public class NettyUDPServer {
             buf.readBytes(all);
             buf.release();
             sendMessageAux(all,peer,messageId);
-            //buf.release();
-
         }
     }
     private int ceilDiv(int a, int b){
@@ -149,9 +151,6 @@ public class NettyUDPServer {
             consumer.messageSentHandler(future.isSuccess(),future.cause(),null /*TODO message */,peer);
         });
     }
-    public void sendMessage(byte msgType,byte [] message, InetSocketAddress peer, int len){
-        //TODO : REMOVE
-    }
 
     public void send(){
         InetSocketAddress dest =  new InetSocketAddress("localhost", 9999);
@@ -172,13 +171,4 @@ public class NettyUDPServer {
             System.out.println("DATA SENT@ "+line.length());
         }
     }
-
-    public static void main(String[] args) throws Exception {
-        /**
-        NettyUDPServer nettyUDPServer = new NettyUDPServer(null,new ChannelStats(),null);
-        nettyUDPServer.send();**/
-        System.out.println("STARTED");
-
-    }
-
 }
