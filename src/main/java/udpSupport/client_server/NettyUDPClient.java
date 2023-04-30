@@ -2,10 +2,7 @@ package udpSupport.client_server;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
@@ -18,14 +15,17 @@ import udpSupport.pipeline.UDPMessageEncoder;
 import java.net.InetSocketAddress;
 import java.util.Scanner;
 
+import static udpSupport.client_server.NettyUDPServer.BUFFER_SIZE;
+
 public class NettyUDPClient {
 
-    public void start(UDPChannelConsumer consumer)throws Exception{
+    public DatagramChannel start(UDPChannelConsumer consumer)throws Exception{
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
                     .channel(NioDatagramChannel.class)
+                    .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(BUFFER_SIZE))
                     .option(ChannelOption.SO_BROADCAST, true)
                     .handler(new ChannelInitializer<DatagramChannel>() {
                         @Override
@@ -36,29 +36,9 @@ public class NettyUDPClient {
                         }
                     });
 
-            DatagramChannel channel = (DatagramChannel) b.bind(0).sync().channel();
-            System.out.println("CLIENT STARTED!!!");
-            InetSocketAddress dest =  new InetSocketAddress("localhost", 9999);
-            Scanner scanner = new Scanner(System.in);
-            while (true) {
-                System.out.print("ENTER SOMETHING: ");
-                String line = scanner.nextLine();
-                if (line == null || line.trim().isEmpty()) {
-                    continue;
-                }
-                int times = Integer.parseInt(line);
-                line = "a".repeat(times);
-                DatagramPacket datagramPacket = new DatagramPacket(Unpooled.copiedBuffer(line.getBytes()),dest);
-                channel.writeAndFlush(datagramPacket);
-                System.out.println("DATA SENT@ "+line.length());
-            }
+            return (DatagramChannel) b.bind(0).sync().channel();
         } finally {
             group.shutdownGracefully();
         }
     }
-    public static void main(String[] args) throws Exception {
-        NettyUDPClient nettyUDPClient = new NettyUDPClient();
-        nettyUDPClient.start(null);
-    }
-
 }
