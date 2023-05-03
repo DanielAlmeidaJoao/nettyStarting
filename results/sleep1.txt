@@ -1,0 +1,24 @@
+0.99991864
+run:1_faults_0<- FAULTS
+0.9628464
+run:1_faults_12<- FAULTS
+0.93309003
+run:1_faults_24<- FAULTS
+0.89418894
+run:1_faults_52<- FAULTS
+0.99997336
+run:2_faults_0<- FAULTS
+0.96282876
+run:2_faults_12<- FAULTS
+0.9330211
+run:2_faults_24<- FAULTS
+0.89044315
+run:2_faults_52<- FAULTS
+0.99988997
+run:3_faults_0<- FAULTS
+0.9627663
+run:3_faults_12<- FAULTS
+0.9330863
+run:3_faults_24<- FAULTS
+0.8940879
+run:3_faults_52<- FAULTS

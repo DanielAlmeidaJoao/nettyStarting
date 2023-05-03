@@ -28,7 +28,8 @@ public abstract class UDPChannel implements UDPChannelConsumer{
     public UDPChannel(Properties properties, boolean singleThreaded) throws IOException {
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
-            addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
+            //addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
+            addr = Inet4Address.getByName("0.0.0.0");
         else
             throw new IllegalArgumentException(NAME + " requires binding address");
 

@@ -37,11 +37,12 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             if(message.length==bufferSize){
                 receivedHashes.add(Hex.encodeHexString(QUICLogics.hash(message)));
             }else {
-                System.out.println("ONLY ONCE "+message.length);
+                System.out.println("ONLY ONCE "+message.length+" "+total);
             }
+            /**
             if(from.getPort()==8081){
                 sendMessage(message,from,message.length);
-            }
+            }**/
             //fos.write(message, 0, message.length);
             //fos.flush();
             if(total>=813782079/* 1035368729*/){
