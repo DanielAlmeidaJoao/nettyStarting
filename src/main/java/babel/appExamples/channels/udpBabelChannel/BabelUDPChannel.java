@@ -51,7 +51,6 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
     void triggerMetricsEvent() {
         readMetrics(this::readMetricsMethod);
     }
-
     @Override
     public void onDeliverMessage(byte[] message, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
@@ -59,8 +58,10 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
         ByteBuf in = Unpooled.copiedBuffer(message);
         try {
             T payload = serializer.deserialize(in);
-            listener.deliverMessage(payload, BabelQuicChannelLogics.toBabelHost(from));
-        } catch (IOException e) {
+            Host b = BabelQuicChannelLogics.toBabelHost(from);
+            listener.deliverMessage(payload, b);
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(InMessageHandler.class);
     private final Map<Long, SortedMap<Long,byte []>> streams;
-    private final Set<Long> receivedMessages;
+    private final Set<String> receivedMessages;
 
     private final UDPChannelConsumer consumer;
     private final ChannelStats channelStats;
@@ -75,13 +75,16 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     }
     long count = 0;
     int msgs = 0;
+    private String getStrID(InetSocketAddress sender,long msgId){
+        return sender+""+msgId;
+    }
     private void onStreamRead(Channel channel,long streamId, byte [] message , int streamCount,InetSocketAddress sender,long msgId){
         int receivedBytes = message.length+8+8+4+1;
         sendAck(channel, msgId, sender);
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,receivedBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
-        if(!receivedMessages.add(msgId)){
+        if(!receivedMessages.add(getStrID(sender,msgId))){
             return;
         }
         count += message.length;
@@ -113,8 +116,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             //TODO: add another parameter that indicates the length of the message received
             channelStats.addReceivedBytes(sender,message.length+9,NetworkStatsKindEnum.MESSAGE_STATS);
         }
-        if(!receivedMessages.add(msgId)){
-            //logger.info("RECEIVED REPEATED MSG ID: ",msgId);
+        if(!receivedMessages.add(getStrID(sender,msgId))){
             return;
         }
         if(channelStats!=null){

@@ -46,7 +46,9 @@ public abstract class UDPChannel implements UDPChannelConsumer{
     public void sendMessage(byte [] message, InetSocketAddress dest,int len){
         udpServer.sendMessage(message,dest,len);
     }
-
+    public InetSocketAddress getSelf(){
+        return self;
+    }
     @Override
     public void deliverMessage(byte[] message, InetSocketAddress from){
         onDeliverMessage(message,from);

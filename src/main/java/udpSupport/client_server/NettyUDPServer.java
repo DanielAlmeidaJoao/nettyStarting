@@ -71,7 +71,9 @@ public class NettyUDPServer {
     }
     private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, int count){
         channel.eventLoop().schedule(() -> {
-            if(!waitingForAcks.containsKey(msgId)) return;
+            if(!waitingForAcks.containsKey(msgId)) {
+                return;
+            }
             if(count > MAX_SEND_RETRIES){waitingForAcks.remove(msgId);return;}
             channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
                 if(future.isSuccess()){
@@ -151,7 +153,6 @@ public class NettyUDPServer {
             return (a/b) + 1;
         }
     }
-
     public void sendMessageAux(byte [] all, InetSocketAddress peer,long messageId){
         ByteBuf buf = Unpooled.copiedBuffer(all);
         DatagramPacket datagramPacket = new DatagramPacket(buf,peer);
@@ -162,6 +163,9 @@ public class NettyUDPServer {
                     stats.addSentBytes(peer,all.length,NetworkStatsKindEnum.MESSAGE_STATS);
                     stats.addSentBytes(peer,all.length, NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
                 }
+            }else{
+                future.cause().printStackTrace();
+                logger.info("NOT SUCCESS SENDING THE MESSAGE {}"+future.cause());
             }
             consumer.messageSentHandler(future.isSuccess(),future.cause(),null /*TODO message */,peer);
         });
