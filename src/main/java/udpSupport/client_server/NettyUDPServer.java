@@ -32,6 +32,8 @@ public class NettyUDPServer {
     public int RETRANSMISSION_TIMEOUT;
     public final int MAX_SEND_RETRIES;
     public static final String MAX_SEND_RETRIES_KEY = "UPD_MAX_SEND_RETRIES";
+    public static final String UDP_BROADCAST_PROP="broadcast";
+
 
 
     private Map<Long,Long> waitingForAcks;
@@ -96,7 +98,7 @@ public class NettyUDPServer {
         b.group(group)
                 .channel(NioDatagramChannel.class)
                 .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(BUFFER_SIZE))
-                .option(ChannelOption.SO_BROADCAST, true)
+                .option(ChannelOption.SO_BROADCAST, properties.getProperty(UDP_BROADCAST_PROP)!=null)
                 .handler(new ChannelInitializer<DatagramChannel>() {
                     @Override
                     protected void initChannel(DatagramChannel ch) throws Exception {

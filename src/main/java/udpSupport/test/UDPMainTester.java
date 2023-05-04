@@ -11,15 +11,19 @@ public class UDPMainTester {
 
     public static void main(String [] args) throws Exception {
         logger.info("STARREDD");
+        String selfHost = args[0];
+        String port = args[1];
+        System.out.println("SELF HOST "+selfHost);
         Properties properties = new Properties();
-        properties.setProperty("UDP_address","localhost");
+        properties.setProperty("UDP_address",selfHost);
         properties.setProperty("UDP_metrics","on");
-        String port = args[0];
         properties.setProperty("UDP_port",port);
         TestUDPChannel testUDPChannel = new TestUDPChannel(properties);
+        testUDPChannel.interact();
+        /**
         if(port.equals("8081")){
             InetSocketAddress inetSocketAddress = new InetSocketAddress("localhost",8082);
             testUDPChannel.startStreaming(inetSocketAddress);
-        }
+        }**/
     }
 }

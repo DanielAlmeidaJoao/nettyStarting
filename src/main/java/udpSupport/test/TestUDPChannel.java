@@ -16,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -32,6 +33,10 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
     int total = 0;
     @Override
     public void onDeliverMessage(byte[] message, InetSocketAddress from) {
+        if(message!=null){
+            System.out.println(from+" <- from "+new String(message));
+            return;
+        }
         total += message.length;
         try{
             if(message.length==bufferSize){
@@ -54,6 +59,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
         }catch (Exception e){
             e.printStackTrace();
         }
+
     }
     private void sumHashes(SortedSet<String> set){
         System.out.println("FILE CLOSEDDDDDDDDDDDD "+total);
@@ -102,12 +108,33 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             }
             System.out.println("TOTAL SENT "+totalSent+" COUNT -- "+cc);
             sumHashes(sentHashes);
-
             Thread.sleep(10000);
             readMetrics(this::onReadMetrics);
             System.out.println("METRICS OUT ?");
         }catch (Exception e){
             e.printStackTrace();
+        }
+    }
+    public void interact(){
+        Scanner scanner = new Scanner(System.in);
+        String input = "";
+        while(!"quit".equalsIgnoreCase(input)){
+            System.out.println("ENTER SOMETHING COMMAND:");
+            input = scanner.nextLine();
+            if("m".equalsIgnoreCase(input)){
+                readMetrics(this::onReadMetrics);
+            } else if ("send".equalsIgnoreCase(input)) {
+                System.out.println("Enter data:");
+                input = scanner.nextLine();
+                System.out.println("HOST NAME:");
+                String host = scanner.nextLine();
+                System.out.println("PORT");
+                int p = scanner.nextInt();
+                scanner.nextLine();
+                InetSocketAddress address = new InetSocketAddress(host, p);
+                sendMessage(input.getBytes(),address,input.length());
+                System.out.println("SENT "+input);
+            }
         }
     }
     public void onReadMetrics(ChannelStats stats){
