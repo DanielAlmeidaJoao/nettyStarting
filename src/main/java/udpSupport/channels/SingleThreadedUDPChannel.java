@@ -35,4 +35,8 @@ public abstract class SingleThreadedUDPChannel extends UDPChannel {
         executor.execute(() -> super.readMetrics(onReadMetricsFunc));
     }
 
+    @Override
+    public void peerDown(InetSocketAddress peer) {
+        executor.execute(() -> super.peerDown(peer));
+    }
 }

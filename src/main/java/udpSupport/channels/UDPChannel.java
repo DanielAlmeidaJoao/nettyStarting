@@ -49,6 +49,12 @@ public abstract class UDPChannel implements UDPChannelConsumer{
     public InetSocketAddress getSelf(){
         return self;
     }
+    public void peerDown(InetSocketAddress peer){
+        onPeerDown(peer);
+    }
+
+    public abstract void onPeerDown(InetSocketAddress peer);
+
     @Override
     public void deliverMessage(byte[] message, InetSocketAddress from){
         onDeliverMessage(message,from);

@@ -31,6 +31,12 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
     }
 
     int total = 0;
+
+    @Override
+    public void onPeerDown(InetSocketAddress peer) {
+        System.out.println("PEER DOWN "+peer);
+    }
+
     @Override
     public void onDeliverMessage(byte[] message, InetSocketAddress from) {
         if(message!=null){

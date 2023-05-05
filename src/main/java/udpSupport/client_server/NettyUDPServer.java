@@ -69,12 +69,17 @@ public class NettyUDPServer {
             stats.addTransmissionRTT(sender,(System.currentTimeMillis() - timeMillis));
         }
     }
+
     private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, int count){
         channel.eventLoop().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) {
                 return;
             }
-            if(count > MAX_SEND_RETRIES){waitingForAcks.remove(msgId);return;}
+            if(count > MAX_SEND_RETRIES){
+                waitingForAcks.remove(msgId);
+                consumer.peerDown(dest);
+                return;
+            }
             channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
                 if(future.isSuccess()){
                     if(stats!=null){

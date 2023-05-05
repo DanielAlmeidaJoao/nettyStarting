@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
+import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionDown;
 import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionDown;
 import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -51,6 +52,12 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
     void triggerMetricsEvent() {
         readMetrics(this::readMetricsMethod);
     }
+
+    @Override
+    public void onPeerDown(InetSocketAddress peer) {
+        listener.deliverEvent(new OutConnectionDown(BabelQuicChannelLogics.toBabelHost(peer),new Throwable("PEER DISCONNECTED!")));
+    }
+
     @Override
     public void onDeliverMessage(byte[] message, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
@@ -81,6 +88,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
             throw new RuntimeException(e);
         }
     }
+
 
     @Override
     public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
