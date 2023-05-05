@@ -19,7 +19,7 @@ public class UDPMainTester {
         properties.setProperty("UDP_metrics","on");
         properties.setProperty("UDP_port",port);
         properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_RETRANSMISSION_TIMEOUT,"3");
-        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"5");
+        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"1");
         TestUDPChannel testUDPChannel = new TestUDPChannel(properties);
         testUDPChannel.interact();
         /**

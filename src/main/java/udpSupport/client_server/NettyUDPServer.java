@@ -51,17 +51,17 @@ public class NettyUDPServer {
         this.stats = stats;
         this.consumer = consumer;
         this.address = address;
+        waitingForAcks = new ConcurrentHashMap<>();
+        datagramPacketCounter = new AtomicLong(0);
+        streamIdCounter = new AtomicLong(0);
+        MAX_SEND_RETRIES = Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"5"));
+        RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(UDP_RETRANSMISSION_TIMEOUT,"1"));
         try {
             channel = start();
         }catch (Exception e){
             e.printStackTrace();
             throw new RuntimeException("UDP LISTENER COULD NOT START!");
         }
-        waitingForAcks = new ConcurrentHashMap<>();
-        datagramPacketCounter = new AtomicLong(0);
-        streamIdCounter = new AtomicLong(0);
-        MAX_SEND_RETRIES = Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"5"));
-        RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(UDP_RETRANSMISSION_TIMEOUT,"1"));
     }
     public void onAckReceived(long msgId, InetSocketAddress sender){
         Long timeMillis = waitingForAcks.remove(msgId);
@@ -71,6 +71,10 @@ public class NettyUDPServer {
     }
 
     private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, int count){
+        //NO RETRANSMISSION
+        if(MAX_SEND_RETRIES <= 0){
+            return;
+        }
         channel.eventLoop().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) {
                 return;
@@ -110,7 +114,7 @@ public class NettyUDPServer {
                     @Override
                     protected void initChannel(DatagramChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast(new InMessageHandler(consumer,stats,onAckReceived));
+                        pipeline.addLast(new InMessageHandler(consumer,stats,onAckReceived,MAX_SEND_RETRIES));
                     }
                 });
         server = b.bind(address).sync().channel();

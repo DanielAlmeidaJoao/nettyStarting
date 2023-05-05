@@ -27,13 +27,14 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private final UDPChannelConsumer consumer;
     private final ChannelStats channelStats;
     private final OnAckFunction onAckfunction;
-
-    public InMessageHandler(UDPChannelConsumer consumer, ChannelStats channelStats, OnAckFunction onAckfunction){
+    private final int maxSendRetry;
+    public InMessageHandler(UDPChannelConsumer consumer, ChannelStats channelStats, OnAckFunction onAckfunction, int maxSendRetry){
         this.consumer = consumer;
         this.channelStats = channelStats;
         this.onAckfunction = onAckfunction;
         receivedMessages = new ConcurrentSkipListSet<>();
         streams = new HashMap<>();
+        this.maxSendRetry = maxSendRetry;
     }
 
     @Override
@@ -126,19 +127,21 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendAck(Channel channel, long msgId, InetSocketAddress sender) {
-        ByteBuf buf = Unpooled.buffer(9);
-        buf.writeByte(UDPLogics.APP_ACK);
-        buf.writeLong(msgId);
-        DatagramPacket datagramPacket = new DatagramPacket(buf, sender);
-        channel.writeAndFlush(datagramPacket).addListener(future -> {
-            if(future.isSuccess()){
-                if(channelStats!=null){
-                    channelStats.addSentBytes(sender,9, NetworkStatsKindEnum.ACK_STATS);
+        if(maxSendRetry>0){
+            ByteBuf buf = Unpooled.buffer(9);
+            buf.writeByte(UDPLogics.APP_ACK);
+            buf.writeLong(msgId);
+            DatagramPacket datagramPacket = new DatagramPacket(buf, sender);
+            channel.writeAndFlush(datagramPacket).addListener(future -> {
+                if(future.isSuccess()){
+                    if(channelStats!=null){
+                        channelStats.addSentBytes(sender,9, NetworkStatsKindEnum.ACK_STATS);
+                    }
+                }else{
+                    future.cause().printStackTrace();
                 }
-            }else{
-                future.cause().printStackTrace();
-            }
-        });
+            });
+        }
     }
 
     private void onAckMessage(long msgId, InetSocketAddress sender){
