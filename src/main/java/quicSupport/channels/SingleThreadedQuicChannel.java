@@ -2,8 +2,6 @@ package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
-import io.netty.util.concurrent.DefaultThreadFactory;
-import io.netty.util.concurrent.OrderedEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.NetworkRole;
@@ -29,11 +27,7 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
     }
 
     /*********************************** Stream Handlers **********************************/
-    private void ensureSubmission(){
-        if(executor.isTerminated()){
-            executor = new DefaultEventExecutor();
-        }
-    }
+
     @Override
     public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable) {
         executor.submit(() -> {
@@ -141,6 +135,9 @@ public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
         executor.submit(() -> {
             super.onServerSocketClose(success,cause);
         });
+    }
+    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
+        executor.submit(() -> super.handleOpenConnectionFailed(peer,cause));
     }
 }
 

@@ -158,7 +158,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
 
     public void onConnectionFailed(String channelId, Throwable cause){
         InetSocketAddress peer = channelIds.get(channelId);
-        onOpenConnectionFailed(peer,cause);
+        handleOpenConnectionFailed(peer,cause);
     }
 
     /******************************************* CHANNEL EVENTS ****************************************************/
@@ -179,7 +179,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
                 client.connect(peer,tcpStreamMetrics,this);
             }catch (Exception e){
                 e.printStackTrace();
-                onOpenConnectionFailed(peer,e.getCause());
+                handleOpenConnectionFailed(peer,e.getCause());
             }
         }
     }

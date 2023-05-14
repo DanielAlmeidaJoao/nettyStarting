@@ -102,7 +102,7 @@ public final class QuicClientExample {
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
                 .connect().addListener(future -> {
             if(!future.isSuccess()){
-                consumer.onOpenConnectionFailed(remote,future.cause());
+                consumer.handleOpenConnectionFailed(remote,future.cause());
             }
         });
     }

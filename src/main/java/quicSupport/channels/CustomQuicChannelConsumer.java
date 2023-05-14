@@ -9,7 +9,7 @@ public interface CustomQuicChannelConsumer {
     void channelActive(QuicStreamChannel streamChannel, byte [] controlData, InetSocketAddress remotePeer);
     void channelInactive(String channelId);
 
-    void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+    void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
 
     void onKeepAliveMessage(String parentId);
 

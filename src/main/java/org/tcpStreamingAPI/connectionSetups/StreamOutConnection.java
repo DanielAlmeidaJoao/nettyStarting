@@ -40,11 +40,11 @@ public class StreamOutConnection {
                     }
                     });
 
-            Channel channel = b.connect().sync().addListener(future -> {
+            b.connect().addListener(future -> {
                 if(!future.isSuccess()){
                     consumer.handleOpenConnectionFailed(peer,future.cause());
                 }
-            }).channel();
+            });
             //printSomeConfigs();
             /***
             updateConfiguration(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK,64*1024);

@@ -256,7 +256,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 client.connect(peer,properties);
             }catch (Exception e){
                 e.printStackTrace();
-                onOpenConnectionFailed(peer,e.getCause());
+                handleOpenConnectionFailed(peer,e.getCause());
             }
         }
     }
@@ -380,6 +380,10 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         }
     }
     /************************************ FAILURE HANDLERS ************************************************************/
+    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
+        connecting.remove(peer);
+        onOpenConnectionFailed(peer,cause);
+    }
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
     public abstract void failedToCloseStream(String streamId, Throwable reason);
     public abstract void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer);
