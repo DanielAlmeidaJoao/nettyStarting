@@ -54,10 +54,7 @@ public abstract class SingleThreadedStreamingChannel extends StreamingChannel{
     public void send(byte[] message, int len,InetSocketAddress host){
         executor.execute(() -> super.send(message,len,host));
     }
-    @Override
-    public void send(ByteBuf byteBuf, InetSocketAddress peer){
-        executor.execute(() -> super.send(byteBuf,peer));
-    }
+
     @Override
     public void closeServerSocket(){
         executor.execute(() -> super.closeServerSocket());

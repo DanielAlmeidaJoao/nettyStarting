@@ -1,5 +1,6 @@
 package babel.appExamples.channels.udpBabelChannel;
 
+import babel.appExamples.channels.FactoryMethods;
 import babel.appExamples.channels.babelQuicChannel.utils.BabelQuicChannelLogics;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -62,11 +63,8 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
     public void onDeliverMessage(byte[] message, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
-        ByteBuf in = Unpooled.copiedBuffer(message);
         try {
-            T payload = serializer.deserialize(in);
-            Host b = BabelQuicChannelLogics.toBabelHost(from);
-            listener.deliverMessage(payload, b);
+            listener.deliverMessage(FactoryMethods.unSerialize(serializer,message),BabelQuicChannelLogics.toBabelHost(from));
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -75,13 +73,9 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
 
     @Override
     public void sendMessage(T msg, Host peer, int connection) {
-        InetSocketAddress dest = BabelQuicChannelLogics.toInetSOcketAddress(peer);
-        ByteBuf out = Unpooled.buffer();
         try {
-            serializer.serialize(msg, out);
-            byte [] toSend = new byte[out.readableBytes()];
-            out.readBytes(toSend);
-            super.sendMessage(toSend,dest,toSend.length);
+            byte [] toSend = FactoryMethods.toSend(serializer,msg);
+            super.sendMessage(toSend,BabelQuicChannelLogics.toInetSOcketAddress(peer),toSend.length);
             msgSent(toSend,peer);
         } catch (IOException e) {
             e.printStackTrace();
@@ -97,10 +91,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
     private void msgSent(byte[] message, Host host){
         try {
             if(triggerSent){
-                ByteBuf buf = Unpooled.copiedBuffer(message,0,message.length);
-                T msg = (T) serializer.deserialize(buf);
-                buf.release();
-                listener.messageSent(msg, host);
+                listener.messageSent(FactoryMethods.unSerialize(serializer,message),host);
             }
         } catch (Exception e) {
             e.printStackTrace();

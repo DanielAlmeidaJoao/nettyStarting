@@ -23,6 +23,7 @@ public class Main3 {
         //Get the (singleton) babel instance
         Babel babel = Babel.getInstance();
         babel.registerChannelInitializer(BabelQuicChannel.NAME,new BabelQuicInitializer());
+        babel.registerChannelInitializer(BabelStreamingChannel.NAME,new BabelStreamInitializer());
 
 
         //Loads properties from the configuration file, and merges them with

@@ -6,6 +6,7 @@ import babel.appExamples.channels.babelQuicChannel.QUICMetricsEvent;
 import babel.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.tcpStreamingAPI.channel.StreamingChannel;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import pt.unl.fct.di.novasys.babel.internal.InternalEvent;
@@ -37,7 +38,9 @@ public class EchoProtocol extends GenericProtocol {
         logger.info("Receiver on {}:{}", address, port);
         this.myself = new Host(InetAddress.getByName(address), Integer.parseInt(port));
         Properties channelProps = new Properties();
+        /**
         channelProps.setProperty("metrics_interval","2000");
+
         channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
         channelProps.setProperty(QUICLogics.PORT_KEY,port);
         //channelProps.setProperty(QUICLogics.QUIC_METRICS,"true");
@@ -50,6 +53,12 @@ public class EchoProtocol extends GenericProtocol {
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
         channelId = createChannel(BabelQuicChannel.NAME, channelProps);
+        **/
+
+        channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
+        channelProps.setProperty(StreamingChannel.PORT_KEY,port);
+        channelId = createChannel(BabelStreamingChannel.NAME, channelProps);
+
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;

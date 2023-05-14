@@ -92,6 +92,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     public abstract void onChannelInactive(InetSocketAddress peer);
 
     public void onChannelRead(String channelId, byte[] bytes){
+        System.out.println("RECEIVED "+bytes.length);
         onChannelRead(channelId,bytes,channelIds.get(channelId));
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
@@ -110,10 +111,11 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             }
             Channel oldConnection = connections.put(listeningAddress,channel);
             if(oldConnection!=null&& oldConnection.isActive()){
-                if(self.hashCode()==listeningAddress.hashCode()) {
+                int comp = self.toString().compareTo(listeningAddress.toString());
+                if(comp==0) {
                     connections.put(listeningAddress, oldConnection);
                     channel.disconnect();
-                }else if(self.hashCode()<listeningAddress.hashCode()){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
+                }else if(comp<0){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
                     //keep the in connection
                     if(inConnection){
                         oldConnection.disconnect();
@@ -186,19 +188,11 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     protected void closeServerSocket(){
         server.closeServerSocket();
     }
-    public void send(byte[] message, int len,InetSocketAddress host){
-        send(Unpooled.copiedBuffer(message,0,len),host);
-    }
-    /**
-     * ByteBuf buf = ...
-     * buf.writeInt(dataLength);
-     * but.writeBytes(data)
-     * sendDelimited(buf,promise)
-     * @param byteBuf
-     */
-    public void send(ByteBuf byteBuf,InetSocketAddress peer){
-        byte [] data = byteBuf.array();
+    public void send(byte[] message, int len,InetSocketAddress peer){
         Channel channel = connections.get(peer);
+        ByteBuf byteBuf = Unpooled.buffer(message.length+4);
+        byteBuf.writeInt(len);
+        byteBuf.writeBytes(message,0,len);
         if(channel==null){
             sendFailed(peer,new Throwable("Unknown Peer : "+peer));
             return;
@@ -208,15 +202,22 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             if(future.isSuccess()){
                 if(metricsOn){
                     TCPStreamConnectionMetrics metrics1 = tcpStreamMetrics.getConnectionMetrics(f.channel().remoteAddress());
-                    metrics1.setSentAppBytes(metrics1.getSentAppBytes()+data.length);
+                    metrics1.setSentAppBytes(metrics1.getSentAppBytes()+message.length);
                     metrics1.setSentAppMessages(metrics1.getSentAppMessages()+1);
                 }
-                sendSuccess(data,peer);
+                sendSuccess(message,peer);
             }else {
                 sendFailed(peer,future.cause());
             }
         });
     }
+    /**
+     * ByteBuf buf = ...
+     * buf.writeInt(dataLength);
+     * but.writeBytes(data)
+     * sendDelimited(buf,promise)
+     * @param byteBuf
+     */
 
     /******************************************* USER EVENTS ****************************************************/
 
