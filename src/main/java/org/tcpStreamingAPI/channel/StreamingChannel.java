@@ -14,6 +14,7 @@ import org.tcpStreamingAPI.connectionSetups.StreamInConnection;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.utils.FactoryMethods;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
+import quicSupport.utils.QUICLogics;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -111,7 +112,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             }
             Channel oldConnection = connections.put(listeningAddress,channel);
             if(oldConnection!=null&& oldConnection.isActive()){
-                int comp = self.toString().compareTo(listeningAddress.toString());
+                int comp = QUICLogics.compAddresses(self,listeningAddress);
                 if(comp==0) {
                     connections.put(listeningAddress, oldConnection);
                     channel.disconnect();
