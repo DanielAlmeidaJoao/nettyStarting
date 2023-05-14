@@ -66,6 +66,8 @@ java -cp target/nettyStart.jar udpSupport.client_server.NettyUDPClient
 java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8081
 java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8082
 
+java -cp target/nettyStart.jar mainFiles.Main3 address=localhost port=8081
+
 BIG MESSAGE NOTES:
 if single message
 	write S

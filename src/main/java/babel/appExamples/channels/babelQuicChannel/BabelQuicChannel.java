@@ -6,6 +6,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
 import pt.unl.fct.di.novasys.channel.tcp.events.*;
@@ -137,6 +138,11 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
         InetSocketAddress dest = BabelQuicChannelLogics.toInetSOcketAddress(peer);
         ByteBuf out = Unpooled.buffer();
         try {
+            /**
+            BabelMessage babelMessage = (BabelMessage) msg;
+            System.out.println(babelMessage.getSourceProto());
+            System.out.println(babelMessage.getDestProto());
+             **/
             serializer.serialize(msg, out);
             byte [] toSend = new byte[out.readableBytes()];
             out.readBytes(toSend);

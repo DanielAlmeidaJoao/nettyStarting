@@ -63,23 +63,24 @@ public class EchoProtocol extends GenericProtocol {
         try {
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
+
+            registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
+            registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
             if(myself.getPort()==8081){
                 //Integer.parseInt(props.getProperty("nei_port")
                 dest = new Host(InetAddress.getByName("localhost"),8082);
+                openConnection(dest);
+                logger.info("OPENNING CONNECTION TO {}",dest);
             }
-            openConnection(myself);
-            registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
-            registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
-
         } catch (Exception e) {
             logger.error("Error registering message handler: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }
 
-        logger.info("OPENING CONNECTION TO {}",myself);
-        EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
-        sendMessage(message,myself);
+        //logger.info("OPENING CONNECTION TO {}",myself);
+        //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
+        //sendMessage(message,myself);
     }
     private void uponChannelMetrics(QUICMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");

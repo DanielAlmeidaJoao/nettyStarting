@@ -92,7 +92,7 @@ public final class QuicClientExample {
 
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
-                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(1024*1024))
+                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
