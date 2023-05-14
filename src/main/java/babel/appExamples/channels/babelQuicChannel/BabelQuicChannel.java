@@ -1,22 +1,16 @@
 package babel.appExamples.channels.babelQuicChannel;
 
 import babel.appExamples.channels.FactoryMethods;
-import babel.appExamples.channels.babelQuicChannel.utils.BabelQuicChannelLogics;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
 import pt.unl.fct.di.novasys.channel.tcp.events.*;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
-import quicSupport.channels.MultiThreadedQuicChannel;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.NetworkRole;
-import quicSupport.utils.QUICLogics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.IOException;
@@ -72,7 +66,7 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes),BabelQuicChannelLogics.toBabelHost(from));
+            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes),FactoryMethods.toBabelHost(from));
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -81,7 +75,7 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
 
     @Override
     public void onConnectionUp(boolean incoming, InetSocketAddress peer) {
-        Host host = BabelQuicChannelLogics.toBabelHost(peer);
+        Host host = FactoryMethods.toBabelHost(peer);
         if(incoming){
             logger.debug("InboundConnectionUp " + peer);
             listener.deliverEvent(new InConnectionUp(host));
@@ -94,7 +88,7 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
     @Override
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
         Throwable t = new Throwable("PEER DISCONNECTED!");
-        Host host = BabelQuicChannelLogics.toBabelHost(peer);
+        Host host = FactoryMethods.toBabelHost(peer);
         if(incoming){
             logger.error("Inbound connection from {} is down" + peer);
             listener.deliverEvent(new InConnectionDown(host,t));
@@ -140,7 +134,7 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
             System.out.println(babelMessage.getDestProto());
              **/
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            super.send(BabelQuicChannelLogics.toInetSOcketAddress(peer),FactoryMethods.toSend(serializer,msg),toSend.length);
+            super.send(FactoryMethods.toInetSOcketAddress(peer),FactoryMethods.toSend(serializer,msg),toSend.length);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -151,9 +145,9 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
     public void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer) {
         try {
             if(error==null&&triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,message),BabelQuicChannelLogics.toBabelHost(peer));
+                listener.messageSent(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(peer));
             }else if(error!=null){
-                listener.messageFailed(FactoryMethods.unSerialize(serializer,message),BabelQuicChannelLogics.toBabelHost(peer),error);
+                listener.messageFailed(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(peer),error);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -162,11 +156,11 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
 
     @Override
     public void closeConnection(Host peer, int connection) {
-        super.closeConnection(BabelQuicChannelLogics.toInetSOcketAddress(peer));
+        super.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
     public void openConnection(Host peer) {
-        super.open(BabelQuicChannelLogics.toInetSOcketAddress(peer));
+        super.open(FactoryMethods.toInetSOcketAddress(peer));
     }
 }

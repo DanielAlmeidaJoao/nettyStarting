@@ -1,15 +1,11 @@
 package babel.appExamples.channels.udpBabelChannel;
 
 import babel.appExamples.channels.FactoryMethods;
-import babel.appExamples.channels.babelQuicChannel.utils.BabelQuicChannelLogics;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
-import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionDown;
 import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionDown;
 import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -56,7 +52,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
 
     @Override
     public void onPeerDown(InetSocketAddress peer) {
-        listener.deliverEvent(new OutConnectionDown(BabelQuicChannelLogics.toBabelHost(peer),new Throwable("PEER DISCONNECTED!")));
+        listener.deliverEvent(new OutConnectionDown(FactoryMethods.toBabelHost(peer),new Throwable("PEER DISCONNECTED!")));
     }
 
     @Override
@@ -64,7 +60,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,message),BabelQuicChannelLogics.toBabelHost(from));
+            listener.deliverMessage(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(from));
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -75,7 +71,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
     public void sendMessage(T msg, Host peer, int connection) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            super.sendMessage(toSend,BabelQuicChannelLogics.toInetSOcketAddress(peer),toSend.length);
+            super.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(peer),toSend.length);
             msgSent(toSend,peer);
         } catch (IOException e) {
             e.printStackTrace();

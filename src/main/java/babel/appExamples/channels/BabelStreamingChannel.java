@@ -1,6 +1,5 @@
 package babel.appExamples.channels;
 
-import babel.appExamples.channels.babelQuicChannel.utils.BabelQuicChannelLogics;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,7 +33,7 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     @Override
     public void sendMessage(T msg, Host peer, int connection) {
         try {
-            BabelQuicChannelLogics.toInetSOcketAddress(peer);
+            FactoryMethods.toInetSOcketAddress(peer);
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
             send(toSend,toSend.length,toInetSocketAddress(peer));
         } catch (IOException e) {
@@ -62,7 +61,7 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     @Override
     public void onChannelRead(String channelId, byte[] bytes,InetSocketAddress from) {
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes),BabelQuicChannelLogics.toBabelHost(from));
+            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes),FactoryMethods.toBabelHost(from));
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -82,7 +81,7 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     public void sendSuccess(byte[] data, InetSocketAddress peer) {
         try {
             if(triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,data),BabelQuicChannelLogics.toBabelHost(peer));
+                listener.messageSent(FactoryMethods.unSerialize(serializer,data),FactoryMethods.toBabelHost(peer));
             }
         } catch (Exception e) {
             e.printStackTrace();

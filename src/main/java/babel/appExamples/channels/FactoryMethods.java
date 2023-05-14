@@ -3,8 +3,10 @@ package babel.appExamples.channels;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import pt.unl.fct.di.novasys.network.ISerializer;
+import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 public class FactoryMethods {
 
@@ -22,5 +24,14 @@ public class FactoryMethods {
         T payload = serializer.deserialize(in);
         in.release();
         return payload;
+    }
+
+    public static Host toBabelHost(InetSocketAddress address){
+        return new Host(address.getAddress(),address.getPort());
+    }
+
+
+    public static InetSocketAddress toInetSOcketAddress(Host address){
+        return new InetSocketAddress(address.getAddress(),address.getPort());
     }
 }
