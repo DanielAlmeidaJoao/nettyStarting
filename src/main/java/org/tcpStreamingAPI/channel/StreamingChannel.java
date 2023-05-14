@@ -40,7 +40,8 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     private final StreamOutConnection client;
     private final boolean metricsOn;
     private final TCPStreamMetrics tcpStreamMetrics;
-    private Set<InetSocketAddress> connecting;
+    private final Map<InetSocketAddress,List<byte []>> connecting;
+
 
     public StreamingChannel( Properties properties, boolean singleThreaded)throws IOException{
         InetAddress addr;
@@ -60,11 +61,11 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         if(singleThreaded){
             connections = new HashMap<>();
             channelIds = new HashMap<>();
-            connecting=new HashSet<>();
+            connecting=new HashMap<>();
         }else{
             connections = new ConcurrentHashMap<>();
             channelIds = new ConcurrentHashMap<>();
-            connecting=new ConcurrentSkipListSet<>();
+            connecting=new ConcurrentHashMap<>();
         }
 
         server = new StreamInConnection(addr.getHostName(),port);
@@ -92,7 +93,6 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     public abstract void onChannelInactive(InetSocketAddress peer);
 
     public void onChannelRead(String channelId, byte[] bytes){
-        System.out.println("RECEIVED "+bytes.length);
         onChannelRead(channelId,bytes,channelIds.get(channelId));
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
@@ -124,6 +124,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
                         connections.put(listeningAddress,oldConnection);
                         channel.disconnect();
                         logger.info("{} KEEPING OLD CONNECTION {}. IN CONNECTION: {}",self,oldConnection.id().asShortText(),inConnection);
+                        sendPendingMessages(listeningAddress);
                         return;
                     }
                 }else /* if(self.hashCode()>listeningAddress.hashCode()) */ {
@@ -132,6 +133,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
                         channel.disconnect();
                         connections.put(listeningAddress,oldConnection);
                         logger.info("{} KEEPING THE OLD CONNECTION {}. IN CONNECTION: {}",self,oldConnection.id().asShortText(), inConnection);
+                        sendPendingMessages(listeningAddress);
                         return;
                     } else {
                         oldConnection.disconnect();
@@ -143,6 +145,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             if(metricsOn){
                 tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,inConnection);
             }
+            sendPendingMessages(listeningAddress);
             onChannelActive(channel,handShakeMessage,listeningAddress);
             logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){
@@ -163,17 +166,21 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     /******************************************* USER EVENTS ****************************************************/
 
     protected void openConnection(InetSocketAddress peer) {
-        if(connecting.contains(peer)){
-            logger.debug("{} ALREADY TRYING TO CONNECT TO {}",self,peer);
-            return;
-        }else{
-            connecting.add(peer);
-        }
         if(connections.containsKey(peer)){
             logger.info("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
+            if(connecting.containsKey(peer)){
+                return;
+            }else{
+                connecting.put(peer,new LinkedList<>());
+            }
             logger.info("{} CONNECTING TO {}",self,peer);
-            client.connect(peer,tcpStreamMetrics,this);
+            try {
+                client.connect(peer,tcpStreamMetrics,this);
+            }catch (Exception e){
+                e.printStackTrace();
+                onOpenConnectionFailed(peer,e.getCause());
+            }
         }
     }
     protected void closeConnection(InetSocketAddress peer) {
@@ -185,10 +192,25 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             logger.info("{} CONNECTION TO {} ALREADY CLOSED",self,peer);
         }
     }
+    private void sendPendingMessages(InetSocketAddress peer){
+        List<byte []> messages = connecting.remove(peer);
+        if(messages!=null){
+            logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self,messages.size(),peer);
+            for (byte[] message : messages) {
+                send(message,message.length,peer);
+            }
+        }
+    }
     protected void closeServerSocket(){
         server.closeServerSocket();
     }
     public void send(byte[] message, int len,InetSocketAddress peer){
+        List<byte []> pendingMessages = connecting.get(peer);
+        if( pendingMessages !=null ){
+            pendingMessages.add(message);
+            logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
+            return;
+        }
         Channel channel = connections.get(peer);
         ByteBuf byteBuf = Unpooled.buffer(message.length+4);
         byteBuf.writeInt(len);

@@ -334,7 +334,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         List<byte []> pendingMessages = connecting.get(peer);
         if( pendingMessages !=null ){
             pendingMessages.add(message);
-            logger.info("{}. MESSAGE TO {} ARCHIVED.",self,peer);
+            logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             return;
         }
         try {
