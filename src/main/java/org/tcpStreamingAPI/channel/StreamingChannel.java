@@ -214,20 +214,20 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         server.closeServerSocket();
     }
     public void send(byte[] message, int len,InetSocketAddress peer){
-        List<byte []> pendingMessages = connecting.get(peer);
-        if( pendingMessages !=null ){
-            pendingMessages.add(message);
-            logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
-            return;
-        }
         Channel channel = connections.get(peer);
-        ByteBuf byteBuf = Unpooled.buffer(message.length+4);
-        byteBuf.writeInt(len);
-        byteBuf.writeBytes(message,0,len);
         if(channel==null){
+            List<byte []> pendingMessages = connecting.get(peer);
+            if( pendingMessages !=null ){
+                pendingMessages.add(message);
+                logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
+                return;
+            }
             sendFailed(peer,new Throwable("Unknown Peer : "+peer));
             return;
         }
+        ByteBuf byteBuf = Unpooled.buffer(message.length+4);
+        byteBuf.writeInt(len);
+        byteBuf.writeBytes(message,0,len);
         ChannelFuture f =  channel.writeAndFlush(byteBuf);
         f.addListener(future -> {
             if(future.isSuccess()){
