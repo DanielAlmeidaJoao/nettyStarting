@@ -75,7 +75,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         client = new StreamOutConnection(self);
 
         try{
-            server.startListening(false,true,tcpStreamMetrics,this);
+            server.startListening(false,tcpStreamMetrics,this);
         }catch (Exception e){
             throw new IOException(e);
         }

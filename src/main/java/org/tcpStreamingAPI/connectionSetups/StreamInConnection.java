@@ -44,7 +44,7 @@ public class StreamInConnection {
      * @param sync whether to block the main thread or not
      * @throws Exception
      */
-    public void startListening(boolean sync, boolean readDelimited, TCPStreamMetrics metrics, StreamingNettyConsumer consumer)
+    public void startListening(boolean sync,TCPStreamMetrics metrics, StreamingNettyConsumer consumer)
             throws Exception{
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
