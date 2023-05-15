@@ -42,6 +42,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     private final boolean metricsOn;
     private final TCPStreamMetrics tcpStreamMetrics;
     private final Map<InetSocketAddress,List<byte []>> connecting;
+    private final boolean connectIfNotConnected;
 
 
     public StreamingChannel( Properties properties, boolean singleThreaded)throws IOException{
@@ -59,6 +60,7 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         }else{
             tcpStreamMetrics = null;
         }
+        connectIfNotConnected = properties.getProperty("connectIfNotConnected")!=null;
         if(singleThreaded){
             connections = new HashMap<>();
             channelIds = new HashMap<>();
@@ -175,22 +177,30 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
     /******************************************* USER EVENTS ****************************************************/
 
     protected void openConnection(InetSocketAddress peer) {
+        System.out.println("ENTEEEREEEEEEEED");
         if(connections.containsKey(peer)){
             logger.debug("{} ALREADY CONNECTED TO {}",self,peer);
+            System.out.println("HERE1");
         }else {
+            System.out.println("ENTER 0");
             if(connecting.containsKey(peer)){
+                System.out.println("HERE2");
                 return;
             }else{
+                System.out.println("HERE3");
                 connecting.put(peer,new LinkedList<>());
             }
             logger.debug("{} CONNECTING TO {}",self,peer);
             try {
+                System.out.println("HERE4");
                 client.connect(peer,tcpStreamMetrics,this);
             }catch (Exception e){
                 e.printStackTrace();
                 handleOpenConnectionFailed(peer,e.getCause());
             }
         }
+        System.out.println("ENTEEEREEEEEEEED OUT");
+
     }
     protected void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING CONNECTION TO {}", peer);
@@ -221,6 +231,14 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
                 pendingMessages.add(message);
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
                 return;
+            }else if(connectIfNotConnected){
+                System.out.println("GOINT TO OPEN A CONNECTION TO "+peer);
+                openConnection(peer);
+                try{
+                    connecting.get(peer).add(message);
+                }catch (Exception e){
+                    System.exit(1);
+                }
             }
             sendFailed(peer,new Throwable("Unknown Peer : "+peer));
             return;

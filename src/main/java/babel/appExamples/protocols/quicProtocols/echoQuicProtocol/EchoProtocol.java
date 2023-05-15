@@ -4,6 +4,7 @@ import babel.appExamples.channels.BabelStreamingChannel;
 import babel.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import babel.appExamples.channels.babelQuicChannel.QUICMetricsEvent;
 import babel.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
+import babel.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.channel.StreamingChannel;
@@ -19,6 +20,7 @@ import quicSupport.utils.QUICLogics;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
@@ -57,6 +59,7 @@ public class EchoProtocol extends GenericProtocol {
 
         channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
         channelProps.setProperty(StreamingChannel.PORT_KEY,port);
+        channelProps.setProperty("connectIfNotConnected","ola");
         channelId = createChannel(BabelStreamingChannel.NAME, channelProps);
 
         System.out.println(myself);
@@ -76,11 +79,18 @@ public class EchoProtocol extends GenericProtocol {
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
             registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
             if(myself.getPort()==8081){
+                dest = new Host(InetAddress.getByName("localhost"),8082);
+                registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
+                setupPeriodicTimer(new SampleTimer(),10000L,5000L);
+            }
+
+            /**
+            if(myself.getPort()==8081){
                 //Integer.parseInt(props.getProperty("nei_port")
                 dest = new Host(InetAddress.getByName("localhost"),8082);
                 openConnection(dest);
                 logger.info("OPENNING CONNECTION TO {}",dest);
-            }
+            }**/
         } catch (Exception e) {
             logger.error("Error registering message handler: " + e.getMessage());
             e.printStackTrace();
@@ -90,6 +100,11 @@ public class EchoProtocol extends GenericProtocol {
         //logger.info("OPENING CONNECTION TO {}",myself);
         //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
         //sendMessage(message,myself);
+    }
+    private void handTimer (SampleTimer time, long id ){
+        System.out.println("MESSAGE SENT!!");
+        EchoMessage message = new EchoMessage(myself,"TIME: "+ System.currentTimeMillis());
+        sendMessage(message,dest);
     }
     private void uponChannelMetrics(QUICMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");

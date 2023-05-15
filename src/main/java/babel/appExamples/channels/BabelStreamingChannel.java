@@ -51,7 +51,7 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
 
     @Override
     public void openConnection(Host peer) {
-        super.openConnection(FactoryMethods.toInetSOcketAddress(peer));
+        super.open(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override

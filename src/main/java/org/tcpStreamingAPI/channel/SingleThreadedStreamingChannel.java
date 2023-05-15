@@ -42,8 +42,7 @@ public abstract class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.onConnectionFailed(channelId,cause));
     }
 
-    @Override
-    protected void openConnection(InetSocketAddress peer) {
+    protected void open(InetSocketAddress peer) {
         executor.execute(() -> super.openConnection(peer));
     }
     @Override
