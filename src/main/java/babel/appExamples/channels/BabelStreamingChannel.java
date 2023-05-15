@@ -9,12 +9,16 @@ import pt.unl.fct.di.novasys.channel.ChannelListener;
 import pt.unl.fct.di.novasys.channel.IChannel;
 import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionDown;
 import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionUp;
+import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Properties;
+
+import static babel.appExamples.channels.FactoryMethods.toBabelHost;
+
 public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel implements IChannel<T> {
     private static final Logger logger = LogManager.getLogger(BabelStreamingChannel.class);
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
@@ -33,23 +37,21 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     @Override
     public void sendMessage(T msg, Host peer, int connection) {
         try {
-            FactoryMethods.toInetSOcketAddress(peer);
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            send(toSend,toSend.length,toInetSocketAddress(peer));
+            send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer));
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
-
     @Override
     public void closeConnection(Host peer, int connection) {
-        super.closeConnection(toInetSocketAddress(peer));
+        super.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
     public void openConnection(Host peer) {
-        super.openConnection(toInetSocketAddress(peer));
+        super.openConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
@@ -61,7 +63,7 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     @Override
     public void onChannelRead(String channelId, byte[] bytes,InetSocketAddress from) {
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes),FactoryMethods.toBabelHost(from));
+            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes), toBabelHost(from));
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -69,19 +71,23 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     }
     @Override
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer) {
-        listener.deliverEvent(new InConnectionUp(toBabelHost(peer)));
+        if(handShakeMessage==null){
+            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer)));
+        }else{
+            listener.deliverEvent(new InConnectionUp(toBabelHost(peer)));
+        }
     }
 
     @Override
     public void sendFailed(InetSocketAddress peer, Throwable reason) {
-
+        logger.error("FAILED TO SEND MESSAGE TO {}. REASON: {}",peer,reason);
     }
 
     @Override
     public void sendSuccess(byte[] data, InetSocketAddress peer) {
         try {
             if(triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,data),FactoryMethods.toBabelHost(peer));
+                listener.messageSent(FactoryMethods.unSerialize(serializer,data), toBabelHost(peer));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,11 +97,5 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     @Override
     public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
         logger.info("CONNECTION TO {} FAILED. CAUSE = {}.",peer,cause);
-    }
-    private InetSocketAddress toInetSocketAddress(Host host){
-        return new InetSocketAddress(host.getAddress().getHostAddress(),host.getPort());
-    }
-    private Host toBabelHost(InetSocketAddress address){
-        return new Host(address.getAddress(),address.getPort());
     }
 }

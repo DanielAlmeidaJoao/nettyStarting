@@ -145,6 +145,8 @@ public class QUICLogics {
     public static int compAddresses(InetSocketAddress self,InetSocketAddress other){
         String one = self.getAddress().getHostAddress()+""+self.getPort();
         String two = other.getAddress().getHostAddress()+""+other.getPort();
-        return one.compareTo(two);
+        int comp = one.compareTo(two);
+        //System.out.println(self.getPort()+" COMP "+other.getPort()+" "+comp);
+        return comp;
     }
 }

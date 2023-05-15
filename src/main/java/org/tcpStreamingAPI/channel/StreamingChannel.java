@@ -85,21 +85,31 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
         if(peer==null){
             return;
         }
+
         Channel chan = connections.remove(peer);
         if(metricsOn){
             tcpStreamMetrics.onConnectionClosed(chan.remoteAddress());
         }
         onChannelInactive(peer);
+
     }
     public abstract void onChannelInactive(InetSocketAddress peer);
 
     public void onChannelRead(String channelId, byte[] bytes){
-        onChannelRead(channelId,bytes,channelIds.get(channelId));
+        InetSocketAddress from = channelIds.get(channelId);
+        if(from==null){
+            logger.info("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
+        }else{
+            onChannelRead(channelId,bytes,from);
+        }
     }
     public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
+    private void disconnectOldConnection(Channel old){
+        channelIds.remove(old.id().asShortText());
+        old.disconnect();
+    }
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage){
-        logger.info("{} CHANNEL ACTIVATED.",self);
         try {
             boolean inConnection;
             InetSocketAddress listeningAddress;
@@ -111,36 +121,35 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
                 inConnection = true;
             }
             Channel oldConnection = connections.put(listeningAddress,channel);
-            if(oldConnection!=null&& oldConnection.isActive()){
+            if(oldConnection!=null ){
                 int comp = QUICLogics.compAddresses(self,listeningAddress);
-                if(comp==0) {
-                    connections.put(listeningAddress, oldConnection);
-                    channel.disconnect();
-                }else if(comp<0){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
+                if(comp<0){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
                     //keep the in connection
                     if(inConnection){
-                        oldConnection.disconnect();
-                        logger.info("{} KEEPING NEW CONNECTION {}. IN CONNECTION: {}",self,channel.id().asShortText(), inConnection);
+                        disconnectOldConnection(oldConnection);
+                        logger.info("{} KEEPING NEW CONNECTION {}. IN CONNECTION: {}. FROM {}",self,channel.id().asShortText(), inConnection,listeningAddress);
                     }else{
                         connections.put(listeningAddress,oldConnection);
                         channel.disconnect();
-                        logger.info("{} KEEPING OLD CONNECTION {}. IN CONNECTION: {}",self,oldConnection.id().asShortText(),inConnection);
+                        logger.info("{} KEEPING OLD CONNECTION {}. IN CONNECTION: {}. FROM {}",self,oldConnection.id().asShortText(),inConnection,listeningAddress);
                         sendPendingMessages(listeningAddress);
                         return;
                     }
-                }else /* if(self.hashCode()>listeningAddress.hashCode()) */ {
+                }else if(comp>0) /* if(self.hashCode()>listeningAddress.hashCode()) */ {
                     //keep the out connection
                     if (inConnection) {
                         channel.disconnect();
                         connections.put(listeningAddress,oldConnection);
-                        logger.info("{} KEEPING THE OLD CONNECTION {}. IN CONNECTION: {}",self,oldConnection.id().asShortText(), inConnection);
+                        logger.info("{} KEEPING THE OLD CONNECTION {}. IN CONNECTION: {}. FROM {}",self,oldConnection.id().asShortText(), inConnection,listeningAddress);
                         sendPendingMessages(listeningAddress);
                         return;
                     } else {
-                        oldConnection.disconnect();
-                        logger.info("{} KEEPING THE NEW CONNECTION {}. IN CONNECTION: {}",self,channel.id().asShortText(),inConnection);
+                        disconnectOldConnection(oldConnection);
+                        logger.info("{} KEEPING THE NEW CONNECTION {}. IN CONNECTION: {}. FROM {}",self,channel.id().asShortText(),inConnection,listeningAddress);
                     }
                 }
+            }else{
+                logger.debug("CONNECTION TO {} ACTIVATED.",listeningAddress);
             }
             channelIds.put(channel.id().asShortText(),listeningAddress);
             if(metricsOn){
@@ -148,7 +157,6 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             }
             sendPendingMessages(listeningAddress);
             onChannelActive(channel,handShakeMessage,listeningAddress);
-            logger.info("CONNECTION TO {} ACTIVATED.",listeningAddress);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();
@@ -168,14 +176,14 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
 
     protected void openConnection(InetSocketAddress peer) {
         if(connections.containsKey(peer)){
-            logger.info("{} ALREADY CONNECTED TO {}",self,peer);
+            logger.debug("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
             if(connecting.containsKey(peer)){
                 return;
             }else{
                 connecting.put(peer,new LinkedList<>());
             }
-            logger.info("{} CONNECTING TO {}",self,peer);
+            logger.debug("{} CONNECTING TO {}",self,peer);
             try {
                 client.connect(peer,tcpStreamMetrics,this);
             }catch (Exception e){
@@ -234,13 +242,6 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             }
         });
     }
-    /**
-     * ByteBuf buf = ...
-     * buf.writeInt(dataLength);
-     * but.writeBytes(data)
-     * sendDelimited(buf,promise)
-     * @param byteBuf
-     */
 
     /******************************************* USER EVENTS ****************************************************/
 
