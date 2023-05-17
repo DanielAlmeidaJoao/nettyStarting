@@ -1,5 +1,6 @@
-package babel.appExamples.channels;
+package babel.appExamples.channels.streamingChannel;
 
+import babel.appExamples.channels.FactoryMethods;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

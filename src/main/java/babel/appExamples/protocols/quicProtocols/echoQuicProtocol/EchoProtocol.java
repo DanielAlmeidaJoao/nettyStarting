@@ -1,7 +1,6 @@
 package babel.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import babel.appExamples.channels.BabelStreamingChannel;
-import babel.appExamples.channels.babelQuicChannel.BabelQuicChannel;
+import babel.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import babel.appExamples.channels.babelQuicChannel.QUICMetricsEvent;
 import babel.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import babel.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
@@ -9,9 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.channel.StreamingChannel;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import pt.unl.fct.di.novasys.babel.internal.InternalEvent;
-import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
 import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionUp;
 import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.network.data.Host;
@@ -19,10 +15,7 @@ import quicSupport.utils.QUICLogics;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.sql.Timestamp;
 import java.util.Properties;
-import java.util.concurrent.BlockingQueue;
 
 public class EchoProtocol extends GenericProtocol {
 

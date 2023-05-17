@@ -1,7 +1,6 @@
 package babel.appExamples.channels.initializers;
 
-import babel.appExamples.channels.BabelStreamingChannel;
-import lombok.SneakyThrows;
+import babel.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import pt.unl.fct.di.novasys.babel.initializers.ChannelInitializer;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.channel.ChannelListener;

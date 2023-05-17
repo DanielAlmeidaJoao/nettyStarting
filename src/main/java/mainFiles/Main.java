@@ -1,12 +1,11 @@
 package mainFiles;
 
-import babel.appExamples.channels.BabelStreamingChannel;
+import babel.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import babel.appExamples.channels.initializers.BabelStreamInitializer;
 import babel.appExamples.protocols.ReceiveFileProtocol;
 import babel.appExamples.protocols.SendFileProtocol;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 
-import java.io.IOException;
 import java.util.Properties;
 
 public class Main {
