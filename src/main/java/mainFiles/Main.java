@@ -17,7 +17,7 @@ public class Main {
         System.out.println("Hello world 2!");
 
 
-        //Get the (singleton) babel instance
+        //Get the (singleton) pt.unl.fct.di.novasys.babel instance
         Babel babel = Babel.getInstance();
         babel.registerChannelInitializer(BabelStreamingChannel.NAME,new BabelStreamInitializer());
 
@@ -39,7 +39,7 @@ public class Main {
             babel.registerProtocol(receiveFileProtocol);
             receiveFileProtocol.init(props);
         }
-        //Start babel and protocol threads
+        //Start pt.unl.fct.di.novasys.babel and protocol threads
         babel.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
