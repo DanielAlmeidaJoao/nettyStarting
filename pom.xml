@@ -120,7 +120,7 @@
                     <target>11</target>
                     <!--
                     <excludes>
-                        <exclude>babel.appExamples.channels.**</exclude>
+                        <exclude>appExamples2.appExamples.channels.**</exclude>
                         <exclude>org.tcpStreamingAPI.**</exclude>
                     </excludes> -->
                 </configuration>

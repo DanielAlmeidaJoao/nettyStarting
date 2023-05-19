@@ -1,10 +1,10 @@
 package mainFiles;
 
-import babel.appExamples.channels.streamingChannel.BabelStreamingChannel;
-import babel.appExamples.channels.babelQuicChannel.BabelQuicChannel;
-import babel.appExamples.channels.babelQuicChannel.BabelQuicInitializer;
-import babel.appExamples.channels.initializers.BabelStreamInitializer;
-import babel.appExamples.protocols.quicProtocols.echoQuicProtocol.EchoProtocol;
+import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
+import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
+import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicInitializer;
+import appExamples2.appExamples.channels.initializers.BabelStreamInitializer;
+import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.EchoProtocol;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 
 import java.util.Properties;
