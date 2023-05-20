@@ -26,8 +26,9 @@ public class CustomConnection {
 
     private InetSocketAddress remote;
     private boolean canSendHeartBeat;
+    private static long heartBeatTimeout;
 
-    public CustomConnection(QuicStreamChannel quicStreamChannel,InetSocketAddress remote, boolean inComing){
+    public CustomConnection(QuicStreamChannel quicStreamChannel,InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout){
         defaultStream = quicStreamChannel;
         connection = defaultStream.parent();
         this.inComing = inComing;
@@ -36,7 +37,10 @@ public class CustomConnection {
         addStream(defaultStream);
         scheduledFuture = null;
         canSendHeartBeat = inComing;
-        serverStartScheduling();
+        this.heartBeatTimeout = heartBeatTimeout;
+        if(inComing&&withHeartBeat){
+            serverStartScheduling();
+        }
         //logger.info("CONNECTION TO {} ON. DEFAULT STREAM: {} .",remote,defaultStream.id().asShortText());
     }
     public void addStream(QuicStreamChannel streamChannel){
@@ -59,12 +63,14 @@ public class CustomConnection {
         connection.disconnect();
         connection.close();
     }
+
     private void serverStartScheduling(){
         if(inComing){
             scheduleSendHeartBeat_KeepAlive();
             canSendHeartBeat=false;
         }
     }
+
     public void scheduleSendHeartBeat_KeepAlive(){
             if(scheduledFuture!=null){
                 scheduledFuture.cancel(true);
@@ -72,7 +78,7 @@ public class CustomConnection {
             scheduledFuture = defaultStream.eventLoop().schedule(() -> {
                 //logger.debug("HEART BEAT SENT TO {}",remote);
                 defaultStream.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(), QUICLogics.KEEP_ALIVE));
-            }, (long) (QUICLogics.maxIdleTimeoutInSeconds*0.75), TimeUnit.SECONDS);
+            }, (long) (heartBeatTimeout*0.75), TimeUnit.SECONDS);
     }
     public boolean connectionDown(){
         return connection.isTimedOut();

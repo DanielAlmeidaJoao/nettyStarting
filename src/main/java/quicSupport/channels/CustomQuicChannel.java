@@ -23,8 +23,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static quicSupport.utils.QUICLogics.QUIC_METRICS;
-import static quicSupport.utils.QUICLogics.gson;
+import static quicSupport.utils.QUICLogics.*;
 
 public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
@@ -39,7 +38,9 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private final Map<InetSocketAddress,List<byte []>> connecting;
     private QuicClientExample client;
     private final Properties properties;
+    private final boolean withHeartBeat;
     private QuicChannelMetrics metrics;
+    private static long heartBeatTimeout;
     public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole)throws IOException {
         this.properties=properties;
         InetAddress addr;
@@ -51,6 +52,8 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         int port = Integer.parseInt(properties.getProperty(QUICLogics.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
         enableMetrics = properties.containsKey(QUICLogics.QUIC_METRICS);
+        withHeartBeat = properties.get(QUICLogics.WITH_HEART_BEAT)!=null;
+        heartBeatTimeout = Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+""));
         if(enableMetrics){
             metrics=new QuicChannelMetrics(self,singleThreaded);
         }
@@ -165,7 +168,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 inConnection=true;
             }
 
-            CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection);
+            CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout);
             CustomConnection old = connections.put(listeningAddress,current);
             if(old!=null){
                 int comp = QUICLogics.compAddresses(self,listeningAddress);
@@ -236,10 +239,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             }
         }catch (Exception e){
             logger.debug(e.getLocalizedMessage());
-        }
-        String connected = " - ";
-        for (InetSocketAddress inetSocketAddress : connections.keySet()) {
-            connected += inetSocketAddress+" - ";
         }
     }
     public abstract void onConnectionDown(InetSocketAddress peer, boolean incoming);

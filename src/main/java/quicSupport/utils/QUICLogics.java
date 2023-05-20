@@ -28,6 +28,7 @@ public class QUICLogics {
     public final static String ADDRESS_KEY = "QUIC_ADDRESS";
     public final static String PORT_KEY = "QUIC_PORT";
     public final static String QUIC_METRICS="QUIC_METRICS";
+    public final static String WITH_HEART_BEAT="TRUE";
     public static final String MAX_IDLE_TIMEOUT_IN_SECONDS = "QUIC_maxIdleTimeoutInSeconds";
     public static final String INITIAL_MAX_DATA = "QUIC_initialMaxData";
     public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL = "QUIC_initialMaxStreamDataBidirectionalLocal";
@@ -46,15 +47,15 @@ public class QUICLogics {
 
     public static final Gson gson = new Gson();
 
-    public static final long maxIdleTimeoutInSeconds=300;
-    private static final long initialMaxData=10000000;
+    public static final long maxIdleTimeoutInSeconds=180;
+    private static final String initialMaxData="10000000";
                                            //1035368729
-    private static final long initialMaxStreamDataBidirectionalLocal=1000000;
-    private static final long initialMaxStreamDataBidirectionalRemote=1000000;
-    private static final long initialMaxStreamsBidirectional=200;
-    private static final long initialMaxStreamsUnidirectional=200;
+    private static final String initialMaxStreamDataBidirectionalLocal="1000000";
+    private static final String initialMaxStreamDataBidirectionalRemote="1000000";
+    private static final String initialMaxStreamsBidirectional="200";
+    private static final String initialMaxStreamsUnidirectional="200";
 
-    private static final long maxAckDelay = 100;
+    private static final String maxAckDelay = "100";
 
     public static final String SERVER_KEYSTORE_FILE_KEY = "QUIC_S_KEYSTORE_FILE";
     public static final String SERVER_KEYSTORE_PASSWORD_KEY = "QUIC_S_KEYSTORE_PASSWORD";
@@ -94,13 +95,13 @@ public class QUICLogics {
     }
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
         return codecBuilder
-                .maxIdleTimeout((Long) properties.getOrDefault(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds), TimeUnit.SECONDS)
-                .initialMaxData((Long) properties.getOrDefault(INITIAL_MAX_DATA,initialMaxData))
-                .initialMaxStreamDataBidirectionalLocal((Long) properties.getOrDefault(INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL,initialMaxStreamDataBidirectionalLocal))
-                .initialMaxStreamDataBidirectionalRemote((Long) properties.getOrDefault(INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE,initialMaxStreamDataBidirectionalRemote))
-                .initialMaxStreamsBidirectional((Long) properties.getOrDefault(INITIAL_MAX_STREAMS_BIDIRECTIONAL,initialMaxStreamsBidirectional))
-                .initialMaxStreamsUnidirectional((Long) properties.getOrDefault(INITIAL_MAX_STREAMS_UNIDIRECTIONAL,initialMaxStreamsUnidirectional))
-                .maxAckDelay((Long) properties.getOrDefault(MAX_ACK_DELAY,maxAckDelay), TimeUnit.MILLISECONDS)
+                .maxIdleTimeout(Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+"")) , TimeUnit.SECONDS)
+                .initialMaxData(Long.parseLong(properties.getProperty(INITIAL_MAX_DATA,initialMaxData)))
+                .initialMaxStreamDataBidirectionalLocal(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL,initialMaxStreamDataBidirectionalLocal)) )
+                .initialMaxStreamDataBidirectionalRemote(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE,initialMaxStreamDataBidirectionalRemote)))
+                .initialMaxStreamsBidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_BIDIRECTIONAL,initialMaxStreamsBidirectional)))
+                .initialMaxStreamsUnidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_UNIDIRECTIONAL,initialMaxStreamsUnidirectional)))
+                .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MILLISECONDS)
                 .activeMigration(true)
                 .maxRecvUdpPayloadSize(1024*1024).maxSendUdpPayloadSize(1024*1024);
     }

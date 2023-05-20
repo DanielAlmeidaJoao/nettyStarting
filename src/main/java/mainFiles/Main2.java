@@ -34,6 +34,8 @@ public class Main2 {
         properties.setProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
         properties.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
         properties.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
+        properties.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"30");
+        //properties.setProperty(QUICLogics.WITH_HEART_BEAT,"TRUE");
 
         TestQuicChannel testQuicChannel = new TestQuicChannel(properties);
 
@@ -59,9 +61,11 @@ public class Main2 {
         }
         testQuicChannel.open(socketAddress);
         **/
+        /**
         if(!port.equals("8081")){
             testQuicChannel.open( new InetSocketAddress("localhost",8081));
         }
+         **/
         Scanner scanner = new Scanner(System.in);
 
 
