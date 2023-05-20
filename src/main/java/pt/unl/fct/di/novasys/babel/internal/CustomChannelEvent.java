@@ -1,7 +1,7 @@
 package pt.unl.fct.di.novasys.babel.internal;
 
+import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import pt.unl.fct.di.novasys.channel.ChannelEvent;
 
 /**
  * An abstract class that represents a protocol message

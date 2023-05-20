@@ -1,9 +1,9 @@
 package org.tcpStreamingAPI.fileStreamingApp;
 
 import io.netty.channel.Channel;
-import org.tcpStreamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.tcpStreamingAPI.connectionSetups.StreamInConnection;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
+import org.tcpStreamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 
 import java.io.FileOutputStream;
 import java.util.HashMap;

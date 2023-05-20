@@ -1,7 +1,7 @@
 package mainFiles;
 
-import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import appExamples2.appExamples.channels.initializers.BabelStreamInitializer;
+import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import appExamples2.appExamples.protocols.ReceiveFileProtocol;
 import appExamples2.appExamples.protocols.SendFileProtocol;
 import pt.unl.fct.di.novasys.babel.core.Babel;

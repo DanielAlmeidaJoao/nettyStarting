@@ -4,12 +4,12 @@ import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.channel.ChannelListener;
-import pt.unl.fct.di.novasys.channel.IChannel;
-import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionDown;
-import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
-import pt.unl.fct.di.novasys.network.ISerializer;
-import pt.unl.fct.di.novasys.network.data.Host;
+import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
+import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
+import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
+import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.metrics.ChannelStats;
 
@@ -18,7 +18,7 @@ import java.net.InetSocketAddress;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements IChannel<T> {
+public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements NewIChannel<T> {
     private static final Logger logger = LogManager.getLogger(BabelUDPChannel.class);
     public final boolean metrics;
     public final static String NAME = "BABEL_UDP_CHANNEL";
@@ -68,7 +68,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
     }
 
     @Override
-    public void sendMessage(T msg, Host peer, int connection) {
+    public void sendMessage(T msg, Host peer, short connection) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
             super.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(peer),toSend.length);
@@ -95,15 +95,20 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements ICha
     }
 
     @Override
-    public void closeConnection(Host peer, int connection) {
+    public void closeConnection(Host peer, short connection) {
         logger.debug("CLOSE CONNECTION. UNSUPPORTED OPERATION ON UDP");
         //Throwable t = new Throwable("PEER DISCONNECTED!");
         listener.deliverEvent(new OutConnectionDown(peer,null));
     }
 
     @Override
-    public void openConnection(Host peer) {
+    public void openConnection(Host peer,short proto) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         listener.deliverEvent(new OutConnectionUp(peer));
+    }
+
+    @Override
+    public void registerChannelInterest(short protoId) {
+
     }
 }

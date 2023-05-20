@@ -2,8 +2,8 @@ package org.tcpStreamingAPI.fileStreamingApp;
 
 import io.netty.channel.Channel;
 import org.tcpStreamingAPI.connectionSetups.StreamOutConnection;
-import org.tcpStreamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
+import org.tcpStreamingAPI.handlerFunctions.receiver.ChannelFuncHandlers;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

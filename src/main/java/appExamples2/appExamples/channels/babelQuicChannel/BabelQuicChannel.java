@@ -4,11 +4,14 @@ import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.channel.ChannelListener;
-import pt.unl.fct.di.novasys.channel.IChannel;
-import pt.unl.fct.di.novasys.channel.tcp.events.*;
-import pt.unl.fct.di.novasys.network.ISerializer;
-import pt.unl.fct.di.novasys.network.data.Host;
+import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
+import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
+import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
+import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
+import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
+import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
@@ -19,7 +22,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IChannel<T> {
+public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements NewIChannel<T> {
     private static final Logger logger = LogManager.getLogger(BabelQuicChannel.class);
     public final boolean metrics;
     public final static String NAME = "BabelQuicChannel";
@@ -126,7 +129,7 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
     }
 
     @Override
-    public void sendMessage(T msg, Host peer, int connection) {
+    public void sendMessage(T msg, Host peer, short proto) {
         try {
             /**
             BabelMessage babelMessage = (BabelMessage) msg;
@@ -155,12 +158,17 @@ public class BabelQuicChannel<T> extends SingleThreadedQuicChannel implements IC
     }
 
     @Override
-    public void closeConnection(Host peer, int connection) {
+    public void closeConnection(Host peer, short proto) {
         super.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
-    public void openConnection(Host peer) {
+    public void openConnection(Host peer, short proto) {
         super.open(FactoryMethods.toInetSOcketAddress(peer));
+    }
+
+    @Override
+    public void registerChannelInterest(short protoId) {
+
     }
 }

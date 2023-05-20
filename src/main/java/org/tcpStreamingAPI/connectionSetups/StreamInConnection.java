@@ -11,8 +11,8 @@ import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.pipeline.CustomHandshakeHandler;
-import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.tcpStreamingAPI.pipeline.StreamReceiverHandler;
+import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageEncoder;
 
 import java.net.InetSocketAddress;

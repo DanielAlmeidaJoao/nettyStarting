@@ -3,7 +3,7 @@ package pt.unl.fct.di.novasys.babel.generic.signed;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-import pt.unl.fct.di.novasys.network.ISerializer;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 
 import java.io.IOException;
 

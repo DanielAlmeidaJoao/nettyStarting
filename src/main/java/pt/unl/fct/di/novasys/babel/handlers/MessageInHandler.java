@@ -1,7 +1,7 @@
 package pt.unl.fct.di.novasys.babel.handlers;
 
+import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
-import pt.unl.fct.di.novasys.network.data.Host;
 
 /**
  * Represents an operation that accepts a single input argument and returns no

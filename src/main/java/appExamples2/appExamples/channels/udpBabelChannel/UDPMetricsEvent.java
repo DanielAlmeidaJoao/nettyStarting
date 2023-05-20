@@ -1,7 +1,7 @@
 package appExamples2.appExamples.channels.udpBabelChannel;
 
 import lombok.Getter;
-import pt.unl.fct.di.novasys.channel.ChannelEvent;
+import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
 import udpSupport.metrics.ChannelStats;
 
 @Getter

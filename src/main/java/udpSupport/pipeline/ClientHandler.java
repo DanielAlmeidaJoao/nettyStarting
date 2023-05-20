@@ -6,8 +6,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import udpSupport.channels.UDPChannelConsumer;
 
-import java.nio.charset.StandardCharsets;
-
 public class ClientHandler extends SimpleChannelInboundHandler {
     private UDPChannelConsumer consumer;
 

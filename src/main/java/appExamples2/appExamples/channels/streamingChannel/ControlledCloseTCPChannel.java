@@ -1,9 +1,9 @@
 package appExamples2.appExamples.channels.streamingChannel;
 
+import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
-import pt.unl.fct.di.novasys.channel.ChannelListener;
-import pt.unl.fct.di.novasys.network.ISerializer;
-import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
 import java.util.*;
@@ -16,7 +16,7 @@ public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
     }
 
     @Override
-    public void sendMessage(Object msg, Host peer, int connection) {
+    public void sendMessage(Object msg, Host peer, short connection) {
         BabelMessage message = (BabelMessage) msg;
         Set<Short> shorts = protocolsUsingTheChannel.get(peer);
         if(shorts==null){
@@ -28,8 +28,8 @@ public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
     }
 
     @Override
-    public void closeConnection(Host peer, int connection) {
+    public void closeConnection(Host peer, short proto) {
 
-        super.closeConnection(peer, connection);
+        super.closeConnection(peer, proto);
     }
 }

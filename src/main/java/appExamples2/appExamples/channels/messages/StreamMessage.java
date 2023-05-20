@@ -2,8 +2,8 @@ package appExamples2.appExamples.channels.messages;
 
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
-import pt.unl.fct.di.novasys.network.ISerializer;
 
 @Getter
 public class StreamMessage extends ProtoMessage {

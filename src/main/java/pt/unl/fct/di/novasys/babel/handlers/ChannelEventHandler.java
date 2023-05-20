@@ -1,6 +1,7 @@
 package pt.unl.fct.di.novasys.babel.handlers;
 
-import pt.unl.fct.di.novasys.channel.ChannelEvent;
+
+import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
 
 /**
  * Represents an operation that accepts a single input argument and returns no

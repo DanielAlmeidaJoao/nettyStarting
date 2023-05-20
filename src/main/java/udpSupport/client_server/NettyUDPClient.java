@@ -1,19 +1,12 @@
 package udpSupport.client_server;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
-import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.handler.codec.DatagramPacketEncoder;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.pipeline.ClientHandler;
-import udpSupport.pipeline.UDPMessageEncoder;
-
-import java.net.InetSocketAddress;
-import java.util.Scanner;
 
 import static udpSupport.client_server.NettyUDPServer.BUFFER_SIZE;
 

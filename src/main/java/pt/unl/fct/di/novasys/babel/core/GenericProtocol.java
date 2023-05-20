@@ -1,8 +1,10 @@
 package pt.unl.fct.di.novasys.babel.core;
 
-import pt.unl.fct.di.novasys.babel.internal.InternalEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import pt.unl.fct.di.novasys.babel.exceptions.NoSuchProtocolException;
 import pt.unl.fct.di.novasys.babel.generic.*;
@@ -10,9 +12,6 @@ import pt.unl.fct.di.novasys.babel.handlers.*;
 import pt.unl.fct.di.novasys.babel.internal.*;
 import pt.unl.fct.di.novasys.babel.metrics.Metric;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
-import pt.unl.fct.di.novasys.channel.ChannelEvent;
-import pt.unl.fct.di.novasys.network.ISerializer;
-import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -418,7 +417,7 @@ public abstract class GenericProtocol {
         if (logger.isDebugEnabled())
             logger.debug("Sending: " + msg + " to " + destination + " proto " + destProto +
                     " channel " + channelId);
-        babel.sendMessage(channelId, connection, new BabelMessage(msg, this.protoId, destProto), destination);
+        babel.sendMessage(channelId, this.protoId, new BabelMessage(msg, this.protoId, destProto), destination);
     }
 
     /**
@@ -439,7 +438,7 @@ public abstract class GenericProtocol {
      * @param channelId the channel to create the connection in
      */
     protected final void openConnection(Host peer, int channelId) {
-        babel.openConnection(channelId, peer);
+        babel.openConnection(channelId, peer, protoId);
     }
 
     /**
@@ -472,7 +471,7 @@ public abstract class GenericProtocol {
      * @param connection the channel-specific connection to close
      */
     protected final void closeConnection(Host peer, int channelId, int connection) {
-        babel.closeConnection(channelId, peer, connection);
+        babel.closeConnection(channelId, peer, protoId);
     }
 
     /* ------------------ IPC BABEL PROXY -------------------------------------------------*/

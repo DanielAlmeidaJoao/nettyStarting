@@ -2,10 +2,10 @@ package pt.unl.fct.di.novasys.babel.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
+import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.internal.*;
-import pt.unl.fct.di.novasys.channel.ChannelEvent;
-import pt.unl.fct.di.novasys.channel.ChannelListener;
-import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

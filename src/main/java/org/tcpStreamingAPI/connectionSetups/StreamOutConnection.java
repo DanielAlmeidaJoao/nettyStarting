@@ -1,16 +1,19 @@
 package org.tcpStreamingAPI.connectionSetups;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
+import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.pipeline.StreamSenderHandler;
 import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageEncoder;
-import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
+
 import java.net.InetSocketAddress;
 public class StreamOutConnection {
 

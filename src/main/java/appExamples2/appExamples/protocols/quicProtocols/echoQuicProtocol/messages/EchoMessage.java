@@ -3,9 +3,9 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messag
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.facctoryMethods.BusinessUtils;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
-import pt.unl.fct.di.novasys.network.ISerializer;
-import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
 

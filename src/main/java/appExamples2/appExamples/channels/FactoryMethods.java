@@ -2,8 +2,8 @@ package appExamples2.appExamples.channels;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import pt.unl.fct.di.novasys.network.ISerializer;
-import pt.unl.fct.di.novasys.network.data.Host;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

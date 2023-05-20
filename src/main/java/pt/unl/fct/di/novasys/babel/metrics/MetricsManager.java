@@ -1,8 +1,8 @@
 package pt.unl.fct.di.novasys.babel.metrics;
 
-import pt.unl.fct.di.novasys.babel.core.Babel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.core.Babel;
 
 import java.util.Iterator;
 import java.util.LinkedList;

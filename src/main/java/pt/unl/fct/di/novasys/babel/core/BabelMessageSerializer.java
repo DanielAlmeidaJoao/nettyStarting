@@ -1,9 +1,9 @@
 package pt.unl.fct.di.novasys.babel.core;
 
 import io.netty.buffer.ByteBuf;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
-import pt.unl.fct.di.novasys.network.ISerializer;
 
 import java.io.IOException;
 import java.util.Map;

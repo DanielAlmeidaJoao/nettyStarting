@@ -6,12 +6,12 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.tcpStreamingAPI.connectionSetups.StreamInConnection;
 import org.tcpStreamingAPI.connectionSetups.StreamOutConnection;
+import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import org.tcpStreamingAPI.connectionSetups.StreamInConnection;
-import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.utils.FactoryMethods;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
 import quicSupport.utils.QUICLogics;
@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public abstract class StreamingChannel implements StreamingNettyConsumer{
     private static final Logger logger = LogManager.getLogger(StreamingChannel.class);

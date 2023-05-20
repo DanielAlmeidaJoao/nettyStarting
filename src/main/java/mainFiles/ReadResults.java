@@ -3,7 +3,10 @@ package mainFiles;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class ReadResults {
     Map<String, SortedMap<String,Float>> results;

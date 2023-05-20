@@ -6,13 +6,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
-import pt.unl.fct.di.novasys.channel.ChannelListener;
-import pt.unl.fct.di.novasys.channel.IChannel;
-import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionDown;
-import pt.unl.fct.di.novasys.channel.tcp.events.InConnectionUp;
-import pt.unl.fct.di.novasys.channel.tcp.events.OutConnectionUp;
-import pt.unl.fct.di.novasys.network.ISerializer;
-import pt.unl.fct.di.novasys.network.data.Host;
+import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
+import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
+import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
+import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
+import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -20,7 +20,7 @@ import java.util.Properties;
 
 import static appExamples2.appExamples.channels.FactoryMethods.toBabelHost;
 
-public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel implements IChannel<T> {
+public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel implements NewIChannel<T> {
     private static final Logger logger = LogManager.getLogger(BabelStreamingChannel.class);
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
 
@@ -36,7 +36,7 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     }
 
     @Override
-    public void sendMessage(T msg, Host peer, int connection) {
+    public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
             send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer));
@@ -46,12 +46,12 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
         }
     }
     @Override
-    public void closeConnection(Host peer, int connection) {
+    public void closeConnection(Host peer, short connection) {
         super.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
-    public void openConnection(Host peer) {
+    public void openConnection(Host peer,short proto) {
         super.open(FactoryMethods.toInetSOcketAddress(peer));
     }
 
@@ -98,5 +98,12 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     @Override
     public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
         logger.info("CONNECTION TO {} FAILED. CAUSE = {}.",peer,cause);
+    }
+
+
+
+    @Override
+    public void registerChannelInterest(short protoId) {
+
     }
 }

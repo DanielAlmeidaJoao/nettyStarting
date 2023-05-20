@@ -1,24 +1,20 @@
 package pt.unl.fct.di.novasys.babel.core;
 
 import org.apache.commons.lang3.tuple.Triple;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.ISerializer;
+import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.exceptions.InvalidParameterException;
 import pt.unl.fct.di.novasys.babel.exceptions.NoSuchProtocolException;
 import pt.unl.fct.di.novasys.babel.exceptions.ProtocolAlreadyExistsException;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.generic.ProtoTimer;
-import pt.unl.fct.di.novasys.babel.initializers.*;
+import pt.unl.fct.di.novasys.babel.initializers.ChannelInitializer;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.babel.internal.IPCEvent;
 import pt.unl.fct.di.novasys.babel.internal.NotificationEvent;
 import pt.unl.fct.di.novasys.babel.internal.TimerEvent;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
-import pt.unl.fct.di.novasys.channel.IChannel;
-import pt.unl.fct.di.novasys.channel.accrual.AccrualChannel;
-import pt.unl.fct.di.novasys.channel.simpleclientserver.SimpleClientChannel;
-import pt.unl.fct.di.novasys.channel.simpleclientserver.SimpleServerChannel;
-import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
-import pt.unl.fct.di.novasys.network.ISerializer;
-import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -91,10 +87,10 @@ public class Babel {
     private final AtomicLong timersCounter;
 
     //Channels
-    private final Map<String, ChannelInitializer<? extends IChannel<BabelMessage>>> initializers;
+    private final Map<String, ChannelInitializer<? extends NewIChannel<BabelMessage>>> initializers;
 
     private final Map<Integer,
-            Triple<IChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer>> channelMap;
+            Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer>> channelMap;
     private final AtomicInteger channelIdGenerator;
 
     private long startTime;
@@ -117,10 +113,6 @@ public class Babel {
         channelIdGenerator = new AtomicInteger(0);
         this.initializers = new ConcurrentHashMap<>();
 
-        registerChannelInitializer(SimpleClientChannel.NAME, new SimpleClientChannelInitializer());
-        registerChannelInitializer(SimpleServerChannel.NAME, new SimpleServerChannelInitializer());
-        registerChannelInitializer(TCPChannel.NAME, new TCPChannelInitializer());
-        registerChannelInitializer(AccrualChannel.NAME, new AccrualChannelInitializer());
 
         //registerChannelInitializer("Ackos", new AckosChannelInitializer());
         //registerChannelInitializer(MultithreadedTCPChannel.NAME, new MultithreadedTCPChannelInitializer());
@@ -190,8 +182,8 @@ public class Babel {
      * @param initializer the channel initializer
      */
     public void registerChannelInitializer(String name,
-                                           ChannelInitializer<? extends IChannel<BabelMessage>> initializer) {
-        ChannelInitializer<? extends IChannel<BabelMessage>> old = initializers.putIfAbsent(name, initializer);
+                                           ChannelInitializer<? extends NewIChannel<BabelMessage>> initializer) {
+        ChannelInitializer<? extends NewIChannel<BabelMessage>> old = initializers.putIfAbsent(name, initializer);
         if (old != null) {
             throw new IllegalArgumentException("Initializer for channel with name " + name +
                     " already registered: " + old);
@@ -210,14 +202,14 @@ public class Babel {
      */
     int createChannel(String channelName, short protoId, Properties props)
             throws IOException {
-        ChannelInitializer<? extends IChannel<?>> initializer = initializers.get(channelName);
+        ChannelInitializer<? extends NewIChannel<?>> initializer = initializers.get(channelName);
         if (initializer == null)
             throw new IllegalArgumentException("Channel initializer not registered: " + channelName);
 
         int channelId = channelIdGenerator.incrementAndGet();
         BabelMessageSerializer serializer = new BabelMessageSerializer(new ConcurrentHashMap<>());
         ChannelToProtoForwarder forwarder = new ChannelToProtoForwarder(channelId);
-        IChannel<BabelMessage> newChannel = initializer.initialize(serializer, forwarder, props, protoId);
+        NewIChannel<BabelMessage> newChannel = initializer.initialize(serializer, forwarder, props, protoId);
         channelMap.put(channelId, Triple.of(newChannel, forwarder, serializer));
         return channelId;
     }
@@ -237,36 +229,36 @@ public class Babel {
      * Sends a message to a peer using the given channel and connection.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
-    void sendMessage(int channelId, int connection, BabelMessage msg, Host target) {
-        Triple<IChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+    void sendMessage(int channelId, short protoId, BabelMessage msg, Host target) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendMessage(msg, target, connection);
+        channelEntry.getLeft().sendMessage(msg, target, protoId);
     }
 
     /**
      * Closes a connection to a peer in a given channel.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
-    void closeConnection(int channelId, Host target, int connection) {
-        Triple<IChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+    void closeConnection(int channelId, Host target, short protoId) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Closing connection in non-existing channelId " + channelId);
-        channelEntry.getLeft().closeConnection(target, connection);
+        channelEntry.getLeft().closeConnection(target, protoId);
     }
 
     /**
      * Opens a connection to a peer in the given channel.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
-    void openConnection(int channelId, Host target) {
-        Triple<IChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+    void openConnection(int channelId, Host target, short proto) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Opening connection in non-existing channelId " + channelId);
-        channelEntry.getLeft().openConnection(target);
+        channelEntry.getLeft().openConnection(target,proto);
     }
 
     /**
@@ -274,7 +266,7 @@ public class Babel {
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
     void registerSerializer(int channelId, short msgCode, ISerializer<? extends ProtoMessage> serializer) {
-        Triple<IChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Registering serializer in non-existing channelId " + channelId);
