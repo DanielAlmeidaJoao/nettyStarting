@@ -1,12 +1,11 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
+import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import appExamples2.appExamples.channels.babelQuicChannel.QUICMetricsEvent;
-import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.tcpStreamingAPI.channel.StreamingChannel;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
@@ -22,7 +21,7 @@ public class EchoProtocol extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(EchoProtocol.class);
     public static final short PROTOCOL_ID = 200;
-    private int channelId;
+    public int channelId;
     private final Host myself; //My own address/port
     private Host dest;
     private Properties properties;
@@ -33,8 +32,8 @@ public class EchoProtocol extends GenericProtocol {
         logger.info("Receiver on {}:{}", address, port);
         this.myself = new Host(InetAddress.getByName(address), Integer.parseInt(port));
         Properties channelProps = new Properties();
-        /**
-        channelProps.setProperty("metrics_interval","2000");
+
+        //channelProps.setProperty("metrics_interval","2000");
 
         channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
         channelProps.setProperty(QUICLogics.PORT_KEY,port);
@@ -48,12 +47,14 @@ public class EchoProtocol extends GenericProtocol {
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
         channelId = createChannel(BabelQuicChannel.NAME, channelProps);
-        **/
 
+
+        /**
         channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
         channelProps.setProperty(StreamingChannel.PORT_KEY,port);
         channelProps.setProperty("connectIfNotConnected","ola");
         channelId = createChannel(BabelStreamingChannel.NAME, channelProps);
+         **/
 
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
@@ -73,8 +74,9 @@ public class EchoProtocol extends GenericProtocol {
             registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
+                openConnection(dest);
                 registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
-                setupPeriodicTimer(new SampleTimer(),10000L,5000L);
+                setupPeriodicTimer(new SampleTimer(),8000L,5000L);
             }
 
             /**
@@ -94,10 +96,18 @@ public class EchoProtocol extends GenericProtocol {
         //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
         //sendMessage(message,myself);
     }
+    int hh = 0 ;
     private void handTimer (SampleTimer time, long id ){
-        System.out.println("MESSAGE SENT!!");
-        EchoMessage message = new EchoMessage(myself,"TIME: "+ System.currentTimeMillis());
-        sendMessage(message,dest);
+        hh++;
+        System.out.println("MESSAGE SENT!! ++ "+hh);
+        if(hh<8){
+            EchoMessage message = new EchoMessage(myself,"TIME: "+ System.currentTimeMillis());
+            sendMessage(message,dest);
+        }else {
+            closeConnection(dest);
+            cancelTimer(id);
+        }
+
     }
     private void uponChannelMetrics(QUICMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");

@@ -5,6 +5,7 @@ import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicInitializer;
 import appExamples2.appExamples.channels.initializers.BabelStreamInitializer;
 import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.EchoProtocol;
+import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.EchoProtocol2;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 
 import java.util.Properties;
@@ -31,8 +32,11 @@ public class Main3 {
         //If you pass an interface name in the properties (either file or arguments), this wil get the
         // IP of that interface and create a property "address=ip" to be used later by the channels.
         EchoProtocol echoProtocol = new EchoProtocol(props);
+        EchoProtocol2 echoProtocol2 = new EchoProtocol2(props);
         babel.registerProtocol(echoProtocol);
+        babel.registerProtocol(echoProtocol2);
         echoProtocol.init(props);
+        echoProtocol2.addChan(echoProtocol.channelId);
 
         //Start pt.unl.fct.di.novasys.babel and protocol threads
         babel.start();

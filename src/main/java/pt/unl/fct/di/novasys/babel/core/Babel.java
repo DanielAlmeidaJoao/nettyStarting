@@ -221,8 +221,10 @@ public class Babel {
      *                      Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
     void registerChannelInterest(int channelId, short protoId, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumerProto) {
-        ChannelToProtoForwarder forwarder = channelMap.get(channelId).getMiddle();
-        forwarder.addConsumer(protoId, consumerProto);
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        channelEntry.getMiddle().addConsumer(protoId, consumerProto);
+        channelEntry.getLeft().registerChannelInterest(protoId);
     }
 
     /**
