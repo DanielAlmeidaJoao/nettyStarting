@@ -7,17 +7,18 @@ import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
+import quicSupport.utils.NetworkRole;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public abstract class SingleThreadedStreamingChannel extends StreamingChannel{
+public class SingleThreadedStreamingChannel extends StreamingChannel{
     private static final Logger logger = LogManager.getLogger(SingleThreadedStreamingChannel.class);
 
     private final DefaultEventExecutor executor;
-    public SingleThreadedStreamingChannel(Properties properties) throws IOException {
-        super(properties,true);
+    public SingleThreadedStreamingChannel(Properties properties, TCPChannelHandlerMethods chm, NetworkRole role) throws IOException {
+        super(properties,true,chm,role);
         executor = new DefaultEventExecutor();
     }
 
@@ -41,11 +42,11 @@ public abstract class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.onConnectionFailed(channelId,cause));
     }
 
-    protected void open(InetSocketAddress peer) {
+    public void openConnection(InetSocketAddress peer) {
         executor.execute(() -> super.openConnection(peer));
     }
     @Override
-    protected void closeConnection(InetSocketAddress peer) {
+    public void closeConnection(InetSocketAddress peer) {
         executor.execute(() -> super.closeConnection(peer));
     }
     @Override

@@ -7,7 +7,7 @@ import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import org.tcpStreamingAPI.utils.FactoryMethods;
+import org.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.net.UnknownHostException;
 
@@ -24,7 +24,7 @@ public class StreamSenderHandler extends CustomChannelHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws UnknownHostException {
-        byte [] data = FactoryMethods.g.toJson(handshakeData).getBytes();
+        byte [] data = TCPStreamUtils.g.toJson(handshakeData).getBytes();
         ByteBuf tmp = Unpooled.buffer(data.length+4);
         tmp.writeInt(data.length);
         tmp.writeBytes(data);

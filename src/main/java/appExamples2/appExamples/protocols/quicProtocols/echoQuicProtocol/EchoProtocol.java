@@ -2,10 +2,13 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import appExamples2.appExamples.channels.babelQuicChannel.QUICMetricsEvent;
+import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.tcpStreamingAPI.channel.StreamingChannel;
+import org.tcpStreamingAPI.utils.TCPStreamUtils;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
@@ -31,37 +34,41 @@ public class EchoProtocol extends GenericProtocol {
         String port = properties.getProperty("port");
         logger.info("Receiver on {}:{}", address, port);
         this.myself = new Host(InetAddress.getByName(address), Integer.parseInt(port));
-        Properties channelProps = new Properties();
 
         //channelProps.setProperty("metrics_interval","2000");
 
-        channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
-        channelProps.setProperty(QUICLogics.PORT_KEY,port);
-        //channelProps.setProperty(QUICLogics.QUIC_METRICS,"true");
 
-        channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
-        channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
-        channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
-
-        channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
-        channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
-        channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
-        channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
-        channelId = createChannel(BabelQuicChannel.NAME, channelProps);
-
-
-        /**
-        channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
-        channelProps.setProperty(StreamingChannel.PORT_KEY,port);
-        channelProps.setProperty("connectIfNotConnected","ola");
-        channelId = createChannel(BabelStreamingChannel.NAME, channelProps);
-         **/
-
+        channelId = makeChan("tcp",address,port);
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
     }
+    private int makeChan(String channelName,String address, String port) throws IOException {
+        Properties channelProps = new Properties();
+        if(channelName.equalsIgnoreCase("quic")){
 
+            //channelProps.setProperty("metrics_interval","2000");
+
+            channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
+            channelProps.setProperty(QUICLogics.PORT_KEY,port);
+            //channelProps.setProperty(QUICLogics.QUIC_METRICS,"true");
+
+            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
+            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
+            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
+
+            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
+            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
+            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
+            channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
+            return createChannel(BabelQuicChannel.NAME, channelProps);
+        }else{
+            channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
+            channelProps.setProperty(StreamingChannel.PORT_KEY,port);
+            channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
+            return createChannel(BabelStreamingChannel.NAME, channelProps);
+        }
+    }
     @Override
     public void init(Properties props) {
         //Nothing to do here, we just wait for event from the membership or the application

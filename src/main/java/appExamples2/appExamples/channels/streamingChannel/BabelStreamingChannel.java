@@ -5,6 +5,9 @@ import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
+import org.tcpStreamingAPI.channel.StreamingChannel;
+import org.tcpStreamingAPI.channel.TCPChannelHandlerMethods;
+import org.tcpStreamingAPI.channel.TCPChannelInterface;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
@@ -13,6 +16,7 @@ import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
+import quicSupport.utils.NetworkRole;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -20,26 +24,35 @@ import java.util.Properties;
 
 import static appExamples2.appExamples.channels.FactoryMethods.toBabelHost;
 
-public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel implements NewIChannel<T> {
+public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandlerMethods {
     private static final Logger logger = LogManager.getLogger(BabelStreamingChannel.class);
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
+    public final static String NAME = "STREAMING_CHANNEL";
 
     private final ISerializer<T> serializer;
     private final ChannelListener<T> listener;
     private final boolean triggerSent;
+    private final TCPChannelInterface tcpChannelInterface;
 
     public BabelStreamingChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
-        super(properties);
+
         this.serializer = serializer;
         this.listener = list;
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
+        if(properties.getProperty("SINLGE_TRHEADED")!=null){
+            tcpChannelInterface = new SingleThreadedStreamingChannel(properties,this, NetworkRole.CHANNEL);
+            System.out.println("SINGLE THREADED CHANNEL");
+        }else {
+            tcpChannelInterface = new StreamingChannel(properties,false,this,NetworkRole.CHANNEL);
+            System.out.println("MULTI THREADED CHANNEL");
+        }
     }
 
     @Override
     public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer));
+            tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer));
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -47,12 +60,12 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     }
     @Override
     public void closeConnection(Host peer, short connection) {
-        super.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
+        tcpChannelInterface.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
     public void openConnection(Host peer,short proto) {
-        super.open(FactoryMethods.toInetSOcketAddress(peer));
+        tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
@@ -99,8 +112,6 @@ public class BabelStreamingChannel<T> extends SingleThreadedStreamingChannel imp
     public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
         logger.info("CONNECTION TO {} FAILED. CAUSE = {}.",peer,cause);
     }
-
-
 
     @Override
     public void registerChannelInterest(short protoId) {

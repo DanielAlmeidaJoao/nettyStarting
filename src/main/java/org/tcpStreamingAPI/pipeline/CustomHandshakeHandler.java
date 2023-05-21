@@ -7,7 +7,7 @@ import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import org.tcpStreamingAPI.utils.FactoryMethods;
+import org.tcpStreamingAPI.utils.TCPStreamUtils;
 
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
@@ -36,7 +36,7 @@ public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
         byte [] controlData = new byte[len];
         in.readBytes(controlData,0,len);
         String gg = new String(controlData);
-        HandShakeMessage handShakeMessage = FactoryMethods.g.fromJson(gg, HandShakeMessage.class);
+        HandShakeMessage handShakeMessage = TCPStreamUtils.g.fromJson(gg, HandShakeMessage.class);
         consumer.onChannelActive(ctx.channel(),handShakeMessage);
         if(metrics!=null){
             TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
