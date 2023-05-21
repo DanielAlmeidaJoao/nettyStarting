@@ -76,7 +76,7 @@ public class CustomConnection {
                 scheduledFuture.cancel(true);
             }
             scheduledFuture = defaultStream.eventLoop().schedule(() -> {
-                //logger.debug("HEART BEAT SENT TO {}",remote);
+                logger.info("HEART BEAT SENT TO {}",remote);
                 defaultStream.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(), QUICLogics.KEEP_ALIVE));
             }, (long) (heartBeatTimeout*0.75), TimeUnit.SECONDS);
     }

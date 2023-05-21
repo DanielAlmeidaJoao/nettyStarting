@@ -129,7 +129,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         if(remote==null){return;}
         CustomConnection connection = connections.get(remote);
         if(connection!=null){
-            connection.scheduleSendHeartBeat_KeepAlive();
+            if(withHeartBeat){connection.scheduleSendHeartBeat_KeepAlive();}
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
             overridenMethods.onChannelRead(streamId,bytes,remote);
         }
@@ -137,10 +137,10 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     }
     public void onKeepAliveMessage(String parentId){
         InetSocketAddress host = channelIds.get(parentId);
-        //logger.debug("SELF:{} -- HEART BEAT RECEIVED -- {}",self,host);
+        logger.info("SELF:{} -- HEART BEAT RECEIVED -- {}",self,host);
         if(host!=null){
             CustomConnection connection = connections.get(host);
-            if(connection!=null){
+            if(connection!=null&&withHeartBeat){
                 connection.scheduleSendHeartBeat_KeepAlive();
             }
         }
