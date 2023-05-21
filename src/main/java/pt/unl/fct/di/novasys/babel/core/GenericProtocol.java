@@ -223,6 +223,16 @@ public abstract class GenericProtocol {
         if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
 
+    protected final <V extends ProtoMessage> void registerQUICMessageHandler(int cId, short msgId,
+                                                                         QUICMessageInHandler<V> inHandler,
+                                                                         MessageSentHandler<V> sentHandler,
+                                                                         MessageFailedHandler<V> failHandler)
+            throws HandlerRegistrationException {
+        registerHandler(msgId, inHandler, getChannelOrThrow(cId).quicMessageInHandlerMap);
+        if (sentHandler != null) registerHandler(msgId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
+        if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+    }
+
     /**
      * Register an handler to process a channel-specific event
      *
@@ -419,7 +429,34 @@ public abstract class GenericProtocol {
                     " channel " + channelId);
         babel.sendMessage(channelId, this.protoId, new BabelMessage(msg, this.protoId, destProto), destination);
     }
-
+    protected final void sendMessage(ProtoMessage msg, String streamId) {
+        sendMessage(defaultChannel,msg,this.protoId,streamId);
+    }
+    protected final void sendMessage(int channelId, ProtoMessage msg, short destProto, String streamId) {
+        getChannelOrThrow(channelId);
+        if (logger.isDebugEnabled())
+            logger.debug("Sending: " + msg + " to " + streamId + " proto " + destProto +
+                    " channel " + channelId);
+        babel.sendMessage(channelId, this.protoId, new BabelMessage(msg, this.protoId, destProto), streamId);
+    }
+    protected final void createStream(Host dest) {
+        createStream(defaultChannel,this.protoId,dest);
+    }
+    protected final void createStream(int channelId,short proto,Host dest) {
+        getChannelOrThrow(channelId);
+        if (logger.isDebugEnabled())
+            logger.debug("CREATING A STREAM TO {} IN CHANNEL {}",dest,channelId);
+        babel.createStream(channelId,proto,dest);
+    }
+    protected final void closeStream(String streamId) {
+        closeStream(defaultChannel,this.protoId,streamId);
+    }
+    protected final void closeStream(int channelId,short proto, String streamId) {
+        getChannelOrThrow(channelId);
+        if (logger.isDebugEnabled())
+            logger.debug("CLOSING STREAM {} IN CHANNEL {}",streamId,channelId);
+        babel.closeStream(channelId,proto,streamId);
+    }
     /**
      * Open a connection to the given peer using the default channel.
      * Depending on the channel, this method may be unnecessary/forbidden.
@@ -582,7 +619,9 @@ public abstract class GenericProtocol {
     final protected void deliverMessageIn(MessageInEvent msgIn) {
         queue.add(msgIn);
     }
-
+    final protected void deliverQuicMessageIn(QUICMessageInEvent msgIn) {
+        queue.add(msgIn);
+    }
     /**
      * Used by pt.unl.fct.di.novasys.babel to deliver channel message sent events to protocols. Do not evoke directly.
      */
@@ -628,6 +667,10 @@ public abstract class GenericProtocol {
                 if (logger.isDebugEnabled())
                     logger.debug("Handling event: " + pe);
                 switch (pe.getType()) {
+                    case QUIC_MESSAGE_IN_EVENT:
+                        metrics.messagesInCount++;
+                        this.handleQuicMessageIn((QUICMessageInEvent) pe);
+                        break;
                     case MESSAGE_IN_EVENT:
                         metrics.messagesInCount++;
                         this.handleMessageIn((MessageInEvent) pe);
@@ -687,6 +730,14 @@ public abstract class GenericProtocol {
         else
             logger.warn("Discarding unexpected message (id " + msg.getMessage().getId() + "): " + m);
     }
+    private void handleQuicMessageIn(QUICMessageInEvent m) {
+        BabelMessage msg = m.getMsg();
+        QUICMessageInHandler h = getChannelOrThrow(m.getChannelId()).quicMessageInHandlerMap.get(msg.getMessage().getId());
+        if (h != null)
+            h.receive(msg.getMessage(), m.getFrom(), msg.getSourceProto(), m.getChannelId(),m.streamId);
+        else
+            logger.warn("Discarding unexpected QUIC message (id " + msg.getMessage().getId() + "): " + m);
+    }
 
     private void handleMessageFailed(MessageFailedEvent e) {
         BabelMessage msg = e.getMsg();
@@ -745,12 +796,14 @@ public abstract class GenericProtocol {
     }
 
     private static class ChannelHandlers {
+        private final Map<Short, QUICMessageInHandler<? extends ProtoMessage>> quicMessageInHandlerMap;
         private final Map<Short, MessageInHandler<? extends ProtoMessage>> messageInHandlers;
         private final Map<Short, MessageSentHandler<? extends ProtoMessage>> messageSentHandlers;
         private final Map<Short, MessageFailedHandler<? extends ProtoMessage>> messageFailedHandlers;
         private final Map<Short, ChannelEventHandler<? extends ChannelEvent>> channelEventHandlers;
 
         public ChannelHandlers() {
+            quicMessageInHandlerMap = new HashMap<>();
             this.messageInHandlers = new HashMap<>();
             this.messageSentHandlers = new HashMap<>();
             this.messageFailedHandlers = new HashMap<>();

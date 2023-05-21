@@ -89,7 +89,7 @@ public class TestQuicChannel implements ChannelHandlerMethods {
     FileOutputStream fos = new FileOutputStream("TESTQUIC33.MP4");
     int total = 0;
     @Override
-    public void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelRead(String streamId, byte[] bytes, InetSocketAddress from) {
         logger.info("READ "+bytes.length);
         total += bytes.length;
         try{

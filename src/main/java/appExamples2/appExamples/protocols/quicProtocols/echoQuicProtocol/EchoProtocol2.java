@@ -1,6 +1,6 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.babelQuicChannel.QUICMetricsEvent;
+import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage2;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer2;
 import org.apache.logging.log4j.LogManager;

@@ -238,7 +238,27 @@ public class Babel {
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
         channelEntry.getLeft().sendMessage(msg, target, protoId);
     }
-
+    void sendMessage(int channelId, short protoId, BabelMessage msg, String streamId) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Sending message to non-existing channelId " + channelId);
+        channelEntry.getLeft().sendMessage(streamId,msg,protoId);
+    }
+    void createStream(int channelId, short protoId,Host peer) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Creating stream message to non-existing channelId " + channelId);
+        channelEntry.getLeft().createStream(peer);
+    }
+    void closeStream(int channelId, short protoId,String streamId) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Creating stream message to non-existing channelId " + channelId);
+        channelEntry.getLeft().closeStream(streamId);
+    }
     /**
      * Closes a connection to a peer in a given channel.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.

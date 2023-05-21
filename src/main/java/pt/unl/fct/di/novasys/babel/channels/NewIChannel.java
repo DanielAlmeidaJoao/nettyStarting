@@ -8,4 +8,11 @@ public interface NewIChannel<T> {
     void openConnection(Host var1, short protoId);
 
     void registerChannelInterest(short protoId);
+
+    //exclusivelly for QUIC
+    void sendMessage(String streamId, T msg, short proto);
+
+    void createStream(Host peer);
+
+    void closeStream(String streamId);
 }

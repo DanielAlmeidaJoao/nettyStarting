@@ -28,7 +28,7 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
     }
 
     @Override
-    public void deliverMessage(BabelMessage message, Host host) {
+    public void deliverMessage(BabelMessage message, Host host, String quicStreamId) {
         GenericProtocol channelConsumer;
         if (message.getDestProto() == -1 && consumers.size() == 1)
             channelConsumer = consumers.values().iterator().next();
@@ -41,7 +41,11 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
             throw new AssertionError("Channel " + channelId + " received message to protoId " +
                     message.getDestProto() + " which is not registered in channel");
         }
-        channelConsumer.deliverMessageIn(new MessageInEvent(message, host, channelId));
+        if(quicStreamId==null){
+            channelConsumer.deliverMessageIn(new MessageInEvent(message, host, channelId));
+        }else{
+            channelConsumer.deliverQuicMessageIn(new QUICMessageInEvent(message, host, channelId,quicStreamId));
+        }
     }
 
     @Override

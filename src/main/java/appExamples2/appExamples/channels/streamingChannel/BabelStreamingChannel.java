@@ -77,7 +77,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void onChannelRead(String channelId, byte[] bytes,InetSocketAddress from) {
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes), toBabelHost(from));
+            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes), toBabelHost(from),null);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -116,5 +116,23 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void registerChannelInterest(short protoId) {
 
+    }
+
+    @Override
+    public void sendMessage(String streamId, T msg, short proto) {
+        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
+        throwable.printStackTrace();
+    }
+
+    @Override
+    public void createStream(Host peer) {
+        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
+        throwable.printStackTrace();
+    }
+
+    @Override
+    public void closeStream(String streamId) {
+        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
+        throwable.printStackTrace();
     }
 }

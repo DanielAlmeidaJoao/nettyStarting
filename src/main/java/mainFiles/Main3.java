@@ -5,10 +5,10 @@ import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicInitializer;
 import appExamples2.appExamples.channels.initializers.BabelStreamInitializer;
 import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.EchoProtocol;
-import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.EchoProtocol2;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 
 import java.util.Properties;
+import java.util.Scanner;
 
 public class Main3 {
     static {
@@ -32,11 +32,11 @@ public class Main3 {
         //If you pass an interface name in the properties (either file or arguments), this wil get the
         // IP of that interface and create a property "address=ip" to be used later by the channels.
         EchoProtocol echoProtocol = new EchoProtocol(props);
-        EchoProtocol2 echoProtocol2 = new EchoProtocol2(props);
+        //EchoProtocol2 echoProtocol2 = new EchoProtocol2(props);
         babel.registerProtocol(echoProtocol);
-        babel.registerProtocol(echoProtocol2);
+        //babel.registerProtocol(echoProtocol2);
         echoProtocol.init(props);
-        echoProtocol2.addChan(echoProtocol.channelId);
+        //echoProtocol2.addChan(echoProtocol.channelId);
 
         //Start pt.unl.fct.di.novasys.babel and protocol threads
         babel.start();
@@ -45,6 +45,33 @@ public class Main3 {
             System.out.println("APP ENEDED!!");
         }));
         System.out.println("APP STARTED!!");
+        Scanner scanner = new Scanner(System.in);
+
+        String input = "";
+        while (!input.equalsIgnoreCase("quit")){
+            System.out.print("COMMAND: ");
+            input = scanner.nextLine();
+
+            if(input.equalsIgnoreCase("s")){
+                System.out.printf("MESSAGE TO SEND:");
+                String message = scanner.nextLine();
+                System.out.printf("STREAM:");
+                String stream = scanner.nextLine();
+                echoProtocol.sendMessage(message,stream);
+            }else if(input.equalsIgnoreCase("cs")){
+                echoProtocol.createStream();
+            }else if(input.equalsIgnoreCase("sh")){
+                System.out.printf("MESSAGE TO SEND:");
+                String message = scanner.nextLine();
+                echoProtocol.sendMessage(message);
+            }else if(input.equalsIgnoreCase("cls")){
+                System.out.printf("STREAM:");
+                String stream = scanner.nextLine();
+                echoProtocol.closeStreamM(stream);
+            }else{
+                System.out.println("UNKNOWN COMMAND: "+input);
+            }
+        }
         /**
         int sleep = Integer.parseInt(props.getProperty("SD"));
         Thread.sleep(sleep*1000);

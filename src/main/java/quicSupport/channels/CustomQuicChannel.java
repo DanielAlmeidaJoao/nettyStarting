@@ -114,7 +114,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
 
     public void streamCreatedHandler(QuicStreamChannel channel) {
         InetSocketAddress peer = channelIds.get(channel.parent().id().asShortText());
-        if(peer!=null){//THE SERVER HAS NOT RECEIVED THE CLIENT'S LISTENING ADDRESS YET
+        if(peer!=null){//THE FIRST STREAM IS DEFAULT. NOT NOTIFIED TO THE CLIENT
             String streamId = channel.id().asShortText();
             streamHostMapping.put(streamId,peer);
             logger.info("{}. STREAM CREATED {}",self,streamId);
@@ -366,6 +366,16 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                         overridenMethods.onMessageSent(message,len,future.cause(),peer);
                     }
                 });
+    }
+    public boolean isConnected(InetSocketAddress peer){
+        return connections.containsKey(peer);
+    }
+    public List<InetSocketAddress> connectedPeers(){
+        List<InetSocketAddress> peers = new LinkedList<>();
+        for (InetSocketAddress inetSocketAddress : connections.keySet()) {
+            peers.add(inetSocketAddress);
+        }
+        return peers;
     }
 
     /*********************************** User Actions **************************************/

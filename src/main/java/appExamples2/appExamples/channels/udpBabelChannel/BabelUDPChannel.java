@@ -69,7 +69,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(from));
+            listener.deliverMessage(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(from),null);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -119,5 +119,23 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     @Override
     public void registerChannelInterest(short protoId) {
 
+    }
+
+    @Override
+    public void sendMessage(String streamId, T msg, short proto) {
+        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
+        throwable.printStackTrace();
+    }
+
+    @Override
+    public void createStream(Host peer) {
+        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
+        throwable.printStackTrace();
+    }
+
+    @Override
+    public void closeStream(String streamId) {
+        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
+        throwable.printStackTrace();
     }
 }

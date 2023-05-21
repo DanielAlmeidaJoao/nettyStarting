@@ -1,4 +1,4 @@
-package appExamples2.appExamples.channels.babelQuicChannel;
+package appExamples2.appExamples.channels.babelQuicChannel.events;
 
 import lombok.Getter;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;

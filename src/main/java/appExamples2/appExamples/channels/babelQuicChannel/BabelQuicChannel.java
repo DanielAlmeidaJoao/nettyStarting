@@ -1,6 +1,9 @@
 package appExamples2.appExamples.channels.babelQuicChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
+import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
+import appExamples2.appExamples.channels.babelQuicChannel.events.StreamClosedEvent;
+import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEvent;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,9 +15,9 @@ import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
+import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelInterface;
-import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
@@ -69,11 +72,6 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     @Override
     public void sendMessage(T msg, Host peer, short proto) {
         try {
-            /**
-            BabelMessage babelMessage = (BabelMessage) msg;
-            System.out.println(babelMessage.getSourceProto());
-            System.out.println(babelMessage.getDestProto());
-             **/
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
             customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),FactoryMethods.toSend(serializer,msg),toSend.length);
         } catch (IOException e) {
@@ -92,24 +90,42 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer));
     }
 
+    public void createStream(Host peer){
+        customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer));
+    }
+
+    public void closeStream(String streamId){
+        customQuicChannel.closeStream(streamId);
+    }
+
+    public void sendMessage(String streamId, T msg, short proto){
+        try {
+            byte [] toSend = FactoryMethods.toSend(serializer,msg);
+            customQuicChannel.send(streamId,toSend,toSend.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
     @Override
     public void registerChannelInterest(short protoId) {
-
+        //TODO
     }
     /******************************** CHANNEL HANDLER METHODS *************************************/
     public void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId) {
-        logger.info("ERROR ON STREAM {} BELONG TO CONNECTION {}. REASON: {}",streamId,peer,error.getLocalizedMessage());
+        logger.info("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getLocalizedMessage());
     }
 
     public void onStreamCreatedHandler(InetSocketAddress peer, String streamId) {
-        logger.debug("STREAM {} CREATED FOR {} CONNECTION",streamId,peer);
+        logger.info("STREAM {} CREATED FOR {} CONNECTION",streamId,peer);
+        listener.deliverEvent(new StreamCreatedEvent(streamId,FactoryMethods.toBabelHost(peer)));
     }
 
-    public void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelRead(String streamId, byte[] bytes, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes),FactoryMethods.toBabelHost(from));
+            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes),FactoryMethods.toBabelHost(from),streamId);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -156,14 +172,20 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     public void onStreamClosedHandler(InetSocketAddress peer, String streamId) {
-        logger.info("STREAM {} OF {} CONNECTION {} CLOSED.",streamId,peer);
+        logger.info("STREAM {} OF {} CONNECTION CLOSED.",streamId,peer);
+        listener.deliverEvent(new StreamClosedEvent(streamId,FactoryMethods.toBabelHost(peer)));
+
     }
     public void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer) {
         try {
             if(error==null&&triggerSent){
                 listener.messageSent(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(peer));
             }else if(error!=null){
-                listener.messageFailed(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(peer),error);
+                Host dest=null;
+                if(peer!=null){
+                    dest = FactoryMethods.toBabelHost(peer);
+                }
+                listener.messageFailed(FactoryMethods.unSerialize(serializer,message),dest,error);
             }
         } catch (Exception e) {
             e.printStackTrace();
