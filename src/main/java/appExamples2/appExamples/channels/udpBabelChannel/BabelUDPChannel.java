@@ -11,6 +11,9 @@ import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import udpSupport.channels.SingleThreadedUDPChannel;
+import udpSupport.channels.UDPChannel;
+import udpSupport.channels.UDPChannelHandlerMethods;
+import udpSupport.channels.UDPChannelInterface;
 import udpSupport.metrics.ChannelStats;
 
 import java.io.IOException;
@@ -18,7 +21,7 @@ import java.net.InetSocketAddress;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements NewIChannel<T> {
+public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMethods {
     private static final Logger logger = LogManager.getLogger(BabelUDPChannel.class);
     public final boolean metrics;
     public final static String NAME = "BABEL_UDP_CHANNEL";
@@ -31,12 +34,18 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements NewI
 
     private final ISerializer<T> serializer;
     private final ChannelListener<T> listener;
+    private final UDPChannelInterface udpChannelInterface;
 
     public BabelUDPChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
-        super(properties);
+        //super(properties);
         this.serializer = serializer;
         this.listener = list;
-        metrics = super.metricsEnabled();
+        if(properties.getProperty("SINLGE_TRHEADED")!=null){
+            udpChannelInterface = new SingleThreadedUDPChannel(properties,this);
+        }else {
+            udpChannelInterface = new UDPChannel(properties,false,this);
+        }
+        metrics = udpChannelInterface.metricsEnabled();
         if(metrics){
             int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY, DEFAULT_METRICS_INTERVAL));
             new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.MILLISECONDS);
@@ -47,7 +56,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements NewI
         listener.deliverEvent(new UDPMetricsEvent(stats));
     }
     void triggerMetricsEvent() {
-        readMetrics(this::readMetricsMethod);
+        udpChannelInterface.readMetrics(this::readMetricsMethod);
     }
 
     @Override
@@ -71,7 +80,7 @@ public class BabelUDPChannel<T> extends SingleThreadedUDPChannel implements NewI
     public void sendMessage(T msg, Host peer, short connection) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            super.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(peer),toSend.length);
+            udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(peer),toSend.length);
             msgSent(toSend,peer);
         } catch (IOException e) {
             e.printStackTrace();

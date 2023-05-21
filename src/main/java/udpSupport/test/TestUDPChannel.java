@@ -5,6 +5,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.utils.QUICLogics;
 import udpSupport.channels.SingleThreadedUDPChannel;
+import udpSupport.channels.UDPChannel;
+import udpSupport.channels.UDPChannelHandlerMethods;
+import udpSupport.channels.UDPChannelInterface;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStats;
 import udpSupport.metrics.NetworkStatsWrapper;
@@ -20,13 +23,19 @@ import java.util.Scanner;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public class TestUDPChannel extends SingleThreadedUDPChannel {
+public class TestUDPChannel implements UDPChannelHandlerMethods {
     private static final Logger logger = LogManager.getLogger(TestUDPChannel.class);
 
     private FileOutputStream fos;
+    private UDPChannelInterface udpChannelInterface;
     public TestUDPChannel(Properties properties) throws Exception {
-        super(properties);
+        if(properties.getProperty("SINLGE_TRHEADED")!=null){
+            udpChannelInterface = new SingleThreadedUDPChannel(properties,this);
+        }else {
+            udpChannelInterface = new UDPChannel(properties,false,this);
+        }
         fos = new FileOutputStream("UDP_MOVIE_FILE.MP4");
+
 
     }
 
@@ -60,7 +69,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
                 //fos.close();
                 System.out.println("FILE CLOSEDDDDDDDDDDDD "+total);
                 sumHashes(receivedHashes);
-                readMetrics(this::onReadMetrics);
+                udpChannelInterface.readMetrics(this::onReadMetrics);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -107,7 +116,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
                 }else {
                     System.out.println("EXPECTED ONCE!!! "+read);
                 }
-                sendMessage(bytes,peer,read);
+                udpChannelInterface.sendMessage(bytes,peer,read);
                 cc++;
                 //Thread.sleep(1000);
                 bytes = new byte[bufferSize];
@@ -115,7 +124,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             System.out.println("TOTAL SENT "+totalSent+" COUNT -- "+cc);
             sumHashes(sentHashes);
             Thread.sleep(10000);
-            readMetrics(this::onReadMetrics);
+            udpChannelInterface.readMetrics(this::onReadMetrics);
             System.out.println("METRICS OUT ?");
         }catch (Exception e){
             e.printStackTrace();
@@ -128,7 +137,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
             System.out.println("ENTER SOMETHING COMMAND:");
             input = scanner.nextLine();
             if("m".equalsIgnoreCase(input)){
-                readMetrics(this::onReadMetrics);
+                udpChannelInterface.readMetrics(this::onReadMetrics);
             } else if ("send".equalsIgnoreCase(input)) {
                 System.out.println("Enter data:");
                 input = scanner.nextLine();
@@ -138,7 +147,7 @@ public class TestUDPChannel extends SingleThreadedUDPChannel {
                 int p = scanner.nextInt();
                 scanner.nextLine();
                 InetSocketAddress address = new InetSocketAddress(host, p);
-                sendMessage(input.getBytes(),address,input.length());
+                udpChannelInterface.sendMessage(input.getBytes(),address,input.length());
                 System.out.println("SENT "+input);
             }
         }

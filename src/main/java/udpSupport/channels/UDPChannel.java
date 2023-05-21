@@ -12,7 +12,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public abstract class UDPChannel implements UDPChannelConsumer{
+public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     private static final Logger logger = LogManager.getLogger(UDPChannel.class);
     public final static String NAME = "UDP_CHANNEL";
 
@@ -24,8 +24,9 @@ public abstract class UDPChannel implements UDPChannelConsumer{
     private NettyUDPServer udpServer;
     private ChannelStats metrics;
     private final InetSocketAddress self;
+    private final UDPChannelHandlerMethods channelHandlerMethods;
 
-    public UDPChannel(Properties properties, boolean singleThreaded) throws IOException {
+    public UDPChannel(Properties properties, boolean singleThreaded, UDPChannelHandlerMethods consumer) throws IOException {
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
@@ -39,6 +40,7 @@ public abstract class UDPChannel implements UDPChannelConsumer{
             metrics = new ChannelStats(singleThreaded);
         }
         udpServer=new NettyUDPServer(this,metrics,self,properties);
+        channelHandlerMethods = consumer;
     }
     public boolean metricsEnabled(){
         return metrics!=null;
@@ -50,21 +52,18 @@ public abstract class UDPChannel implements UDPChannelConsumer{
         return self;
     }
     public void peerDown(InetSocketAddress peer){
-        onPeerDown(peer);
+        channelHandlerMethods.onPeerDown(peer);
     }
 
-    public abstract void onPeerDown(InetSocketAddress peer);
 
     @Override
     public void deliverMessage(byte[] message, InetSocketAddress from){
-        onDeliverMessage(message,from);
+        channelHandlerMethods.onDeliverMessage(message,from);
     }
-    public abstract void onDeliverMessage(byte[] message, InetSocketAddress from);
     @Override
     public void messageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
-        onMessageSentHandler(success,error,message,dest);
+        channelHandlerMethods.onMessageSentHandler(success,error,message,dest);
     }
-    public abstract void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest);
 
     public void readMetrics(OnReadMetricsFunc onReadMetricsFunc){
         System.out.println("SUPPER METRICS CALLED "+metrics.getStatsMap().size());
@@ -74,5 +73,6 @@ public abstract class UDPChannel implements UDPChannelConsumer{
             logger.info("METRICS NOT ENABLED. ADD PROPERTY 'metrics=true'");
         }
     }
+
 
 }

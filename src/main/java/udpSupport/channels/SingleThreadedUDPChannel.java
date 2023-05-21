@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public abstract class SingleThreadedUDPChannel extends UDPChannel {
+public class SingleThreadedUDPChannel extends UDPChannel {
     private final DefaultEventExecutor executor;
 
-    public SingleThreadedUDPChannel(Properties properties) throws IOException {
-        super(properties, true);
+    public SingleThreadedUDPChannel(Properties properties, UDPChannelHandlerMethods udpChannelHandlerMethods) throws IOException {
+        super(properties, true,udpChannelHandlerMethods);
         executor = new DefaultEventExecutor();
     }
 
