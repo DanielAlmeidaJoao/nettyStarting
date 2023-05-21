@@ -46,6 +46,7 @@ public class EchoProtocol extends GenericProtocol {
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
+        channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
         channelId = createChannel(BabelQuicChannel.NAME, channelProps);
 
 
@@ -72,9 +73,10 @@ public class EchoProtocol extends GenericProtocol {
 
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
             registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
+
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                openConnection(dest);
+                //openConnection(dest);
                 registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
                 setupPeriodicTimer(new SampleTimer(),8000L,5000L);
             }
@@ -116,21 +118,23 @@ public class EchoProtocol extends GenericProtocol {
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
+        /**
         if(dest!=null){
-
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
             sendMessage(message,dest);
             logger.info("{} MESSAGE SENT!!! TO {} ",myself,dest);
         }
+        **/
     }
     private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
+        /**
         if(dest!=null){
-
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
             sendMessage(message,dest);
             logger.info("{} MESSAGE SENT!!! TO {} ",myself,dest);
         }
+         **/
     }
     private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
         logger.info("Received {} from {}", msg.getMessage(), from);

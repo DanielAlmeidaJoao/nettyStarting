@@ -41,6 +41,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private final boolean withHeartBeat;
     private QuicChannelMetrics metrics;
     private static long heartBeatTimeout;
+    private final boolean connectIfNotConnected;
     public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole)throws IOException {
         this.properties=properties;
         InetAddress addr;
@@ -78,8 +79,12 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             }
         }
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.CLIENT==networkRole){
+            if(NetworkRole.CLIENT==networkRole){
+                properties.remove(CONNECT_ON_SEND);
+            }
             client = new QuicClientExample(self,this,new NioEventLoopGroup(1), metrics);
         }
+        connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
     }
     public InetSocketAddress getSelf(){
         return self;
@@ -95,7 +100,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         InetSocketAddress peer = channelIds.get(channel.parent().id().asShortText());
         onStreamErrorHandler(peer,throwable,streamId);
     }
-    public abstract void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId);
 
     public void streamClosedHandler(QuicStreamChannel channel) {
         String streamId = channel.id().asShortText();
@@ -116,7 +120,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             onStreamCreatedHandler(peer,streamId);
         }
     }
-    public abstract void onStreamCreatedHandler(InetSocketAddress peer, String streamId);
 
 
     public void streamReader(String streamId, byte[] bytes){
@@ -140,7 +143,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             }
         }
     }
-    public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
 
     private void sendPendingMessages(InetSocketAddress peer){
         List<byte []> messages = connecting.remove(peer);
@@ -226,7 +228,6 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         streamHostMapping.remove(streamChannel.id().asShortText());
         streamChannel.parent().close();
     }
-    public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
 
     public  void channelInactive(String channelId){
         try{
@@ -241,13 +242,15 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             logger.debug(e.getLocalizedMessage());
         }
     }
-    public abstract void onConnectionDown(InetSocketAddress peer, boolean incoming);
 
     /*********************************** Channel Handlers **********************************/
 
     /*********************************** User Actions **************************************/
 
     public void open(InetSocketAddress peer) {
+        openLogics(peer);
+    }
+    private void openLogics(InetSocketAddress peer){
         if(connections.containsKey(peer)){
             logger.debug("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
@@ -336,18 +339,20 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         }
     }
     public void send(InetSocketAddress peer, byte[] message, int len){
-        List<byte []> pendingMessages = connecting.get(peer);
-        if( pendingMessages !=null ){
-            pendingMessages.add(message);
-            logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
-            return;
-        }
-        try {
-            sendMessage(getOrThrow(peer).getDefaultStream(),message,len,peer);
-        } catch (Exception e) {
-            //e.printStackTrace();
-            //logger.info(e.getMessage());
-            onMessageSent(message,len,e,peer);
+        CustomConnection connection = connections.get(peer);
+        if(connection==null){
+            List<byte []> pendingMessages = connecting.get(peer);
+            if( pendingMessages !=null ){
+                pendingMessages.add(message);
+                logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
+            }else if (connectIfNotConnected){
+                openLogics(peer);
+                connecting.get(peer).add(message);
+            }else{
+                onMessageSent(message,len,new Throwable("UNKNOWN CONNECTION TO "+peer),peer);
+            }
+        }else{
+            sendMessage(connection.getDefaultStream(),message,len,peer);
         }
     }
     private void sendMessage(QuicStreamChannel streamChannel, byte[] message, int len, InetSocketAddress peer){
@@ -388,6 +393,8 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         connecting.remove(peer);
         onOpenConnectionFailed(peer,cause);
     }
+    public abstract void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId);
+
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
     public abstract void failedToCloseStream(String streamId, Throwable reason);
     public abstract void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer);
@@ -397,4 +404,11 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
 
     public abstract void onStreamClosedHandler(InetSocketAddress peer, String streamId);
 
+    public abstract void onStreamCreatedHandler(InetSocketAddress peer, String streamId);
+
+    public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
+
+    public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
+
+    public abstract void onConnectionDown(InetSocketAddress peer, boolean incoming);
 }

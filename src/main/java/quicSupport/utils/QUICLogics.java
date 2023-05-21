@@ -35,6 +35,8 @@ public class QUICLogics {
     public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE = "QUIC_initialMaxStreamDataBidirectionalRemote";
     public static final String INITIAL_MAX_STREAMS_BIDIRECTIONAL = "QUIC_initialMaxStreamsBidirectional";
     public static final String INITIAL_MAX_STREAMS_UNIDIRECTIONAL = "QUIC_initialMaxStreamsUnidirectional";
+
+    public static final String CONNECT_ON_SEND = "AUTO_CONNECT";
     public static final String MAX_ACK_DELAY = "QUIC_maxAckDelay";
 
 

@@ -221,30 +221,31 @@ public abstract class StreamingChannel implements StreamingNettyConsumer{
             if( pendingMessages !=null ){
                 pendingMessages.add(message);
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
-                return;
             }else if(connectIfNotConnected){
                 openConnection(peer);
                 connecting.get(peer).add(message);
+            }else{
+                sendFailed(peer,new Throwable("Unknown Peer : "+peer));
             }
-            sendFailed(peer,new Throwable("Unknown Peer : "+peer));
-            return;
-        }
-        ByteBuf byteBuf = Unpooled.buffer(message.length+4);
-        byteBuf.writeInt(len);
-        byteBuf.writeBytes(message,0,len);
-        ChannelFuture f =  channel.writeAndFlush(byteBuf);
-        f.addListener(future -> {
-            if(future.isSuccess()){
-                if(metricsOn){
-                    TCPStreamConnectionMetrics metrics1 = tcpStreamMetrics.getConnectionMetrics(f.channel().remoteAddress());
-                    metrics1.setSentAppBytes(metrics1.getSentAppBytes()+message.length);
-                    metrics1.setSentAppMessages(metrics1.getSentAppMessages()+1);
+        }else{
+            ByteBuf byteBuf = Unpooled.buffer(message.length+4);
+            byteBuf.writeInt(len);
+            byteBuf.writeBytes(message,0,len);
+            ChannelFuture f =  channel.writeAndFlush(byteBuf);
+            f.addListener(future -> {
+                if(future.isSuccess()){
+                    if(metricsOn){
+                        TCPStreamConnectionMetrics metrics1 = tcpStreamMetrics.getConnectionMetrics(f.channel().remoteAddress());
+                        metrics1.setSentAppBytes(metrics1.getSentAppBytes()+message.length);
+                        metrics1.setSentAppMessages(metrics1.getSentAppMessages()+1);
+                    }
+                    sendSuccess(message,peer);
+                }else {
+                    sendFailed(peer,future.cause());
                 }
-                sendSuccess(message,peer);
-            }else {
-                sendFailed(peer,future.cause());
-            }
-        });
+            });
+        }
+
     }
 
     /******************************************* USER EVENTS ****************************************************/
