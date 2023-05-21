@@ -10,17 +10,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public abstract class SingleThreadedQuicChannel extends CustomQuicChannel {
+public class SingleThreadedQuicChannel extends CustomQuicChannel {
     private DefaultEventExecutor executor;
 
-    public SingleThreadedQuicChannel(Properties properties, NetworkRole role) throws IOException {
-        super(properties,true,role);
+    public SingleThreadedQuicChannel(Properties properties, NetworkRole role, ChannelHandlerMethods mom) throws IOException {
+        super(properties,true,role,mom);
         executor = new DefaultEventExecutor();
-        /*
-        executor.shutdownGracefully().addListener(future -> {
-            System.out.println("FINISHED "+executor.isTerminated());
-            //executor = new DefaultEventExecutor();
-        });*/
         executor.terminationFuture().addListener(future -> {
            System.out.println("TERMINATED WHY ??? "+future.isSuccess()+" cause: "+future.cause());
         });

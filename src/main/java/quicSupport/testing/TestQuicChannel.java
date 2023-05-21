@@ -2,7 +2,12 @@ package quicSupport.testing;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.channels.CustomQuicChannel;
+import quicSupport.channels.CustomQuicChannelInterface;
+import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.SingleThreadedQuicChannel;
+import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
+import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -15,17 +20,21 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
-public class TestQuicChannel extends SingleThreadedQuicChannel {
+public class TestQuicChannel implements ChannelHandlerMethods {
 
     private static final Logger logger = LogManager.getLogger(TestQuicChannel.class);
     //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(TestQuicChannel.class);
+    private final CustomQuicChannelInterface customQuicChannel;
 
 
     public TestQuicChannel(Properties properties) throws IOException {
-        super(properties, NetworkRole.CHANNEL);
+        if(properties.getProperty("SINLGE_TRHEADED")!=null){
+            customQuicChannel = new SingleThreadedQuicChannel(properties, NetworkRole.CHANNEL,this);
+        }else {
+            customQuicChannel = new CustomQuicChannel(properties,false,NetworkRole.CHANNEL,this);
+        }
     }
 
-    @Override
     public void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId) {
 
     }
@@ -40,7 +49,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
         System.out.println(metrics);
     }
     public void getStats(InetSocketAddress peer){
-        super.getStats(peer,this::readStats);
+        customQuicChannel.getStats(peer,this::readStats);
     }
     public void readOldMetrics(List<QuicConnectionMetrics> old){
         //TODO
@@ -126,7 +135,7 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
             int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-                send(peer,bytes,read);
+                customQuicChannel.send(peer,bytes,read);
                 cc++;
                 if(cc>100){
                     cc=0;
@@ -153,6 +162,42 @@ public class TestQuicChannel extends SingleThreadedQuicChannel {
             InetSocketAddress remote = new InetSocketAddress("localhost",8082);
             testQuicChannel.open(remote);
         }
+    }
+
+    public void open(InetSocketAddress remote) {
+        customQuicChannel.open(remote);
+    }
+
+    public void closeConnection(InetSocketAddress peer) {
+        customQuicChannel.closeConnection(peer);
+    }
+
+    public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler) {
+        customQuicChannel.getStats(peer,handler);
+    }
+
+    public void createStream(InetSocketAddress peer) {
+        customQuicChannel.createStream(peer);
+    }
+
+    public void closeStream(String streamId) {
+        customQuicChannel.closeStream(streamId);
+    }
+
+    public void readMetrics(QuicReadMetricsHandler handler) {
+        customQuicChannel.readMetrics(handler);
+    }
+
+    public void send(String streamId, byte[] message, int len) {
+        customQuicChannel.send(streamId,message,len);
+    }
+
+    public void send(InetSocketAddress peer, byte[] message, int len) {
+        customQuicChannel.send(peer,message,len);
+    }
+
+    public boolean enabledMetrics() {
+        return false;
     }
 
 }

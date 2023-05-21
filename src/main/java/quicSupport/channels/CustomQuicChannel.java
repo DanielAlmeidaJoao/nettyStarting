@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static quicSupport.utils.QUICLogics.*;
 
-public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
+public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicChannelInterface {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
 
     private final InetSocketAddress self;
@@ -42,8 +42,10 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     private QuicChannelMetrics metrics;
     private static long heartBeatTimeout;
     private final boolean connectIfNotConnected;
-    public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole)throws IOException {
+    private final ChannelHandlerMethods overridenMethods;
+    public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom)throws IOException {
         this.properties=properties;
+        this.overridenMethods = mom;
         InetAddress addr;
         if (properties.containsKey(QUICLogics.ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(QUICLogics.ADDRESS_KEY));
@@ -98,7 +100,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         String streamId = channel.id().asShortText();
         logger.info("{} STREAM {} ERROR: {}",self,streamId,throwable);
         InetSocketAddress peer = channelIds.get(channel.parent().id().asShortText());
-        onStreamErrorHandler(peer,throwable,streamId);
+        overridenMethods.onStreamErrorHandler(peer,throwable,streamId);
     }
 
     public void streamClosedHandler(QuicStreamChannel channel) {
@@ -106,7 +108,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         logger.info("{}. STREAM {} CLOSED",self,streamId);
         InetSocketAddress peer = streamHostMapping.remove(streamId);
         if(peer!=null){
-            onStreamClosedHandler(peer,streamId);
+            overridenMethods.onStreamClosedHandler(peer,streamId);
         }
     }
 
@@ -117,7 +119,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             streamHostMapping.put(streamId,peer);
             logger.info("{}. STREAM CREATED {}",self,streamId);
             connections.get(peer).addStream(channel);
-            onStreamCreatedHandler(peer,streamId);
+            overridenMethods.onStreamCreatedHandler(peer,streamId);
         }
     }
 
@@ -129,7 +131,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         if(connection!=null){
             connection.scheduleSendHeartBeat_KeepAlive();
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
-            onChannelRead(streamId,bytes,remote);
+            overridenMethods.onChannelRead(streamId,bytes,remote);
         }
 
     }
@@ -208,10 +210,10 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
             streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
             sendPendingMessages(listeningAddress);
-            onConnectionUp(inConnection,listeningAddress);
             if(enableMetrics){
                 metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
             }
+            overridenMethods.onConnectionUp(inConnection,listeningAddress);
         }catch (Exception e){
             e.printStackTrace();
             streamChannel.disconnect();
@@ -236,7 +238,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 CustomConnection connection = connections.remove(host);
                 logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
                 connection.close();
-                onConnectionDown(host,connection.isInComing());
+                overridenMethods.onConnectionDown(host,connection.isInComing());
             }
         }catch (Exception e){
             logger.debug(e.getLocalizedMessage());
@@ -281,7 +283,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         if(!enableMetrics){
             Exception e = new Exception("METRICS IS NOT ENABLED!");
             e.printStackTrace();
-            failedToGetMetrics(e.getCause());
+            overridenMethods.failedToGetMetrics(e.getCause());
         }
         return enableMetrics;
     }
@@ -292,7 +294,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 QuicChannel connection = getOrThrow(peer).getConnection();
                 handler.handle(peer,metrics.getConnectionMetrics(connection.remoteAddress()));
             } catch (Exception e) {
-                failedToGetMetrics(e.getCause());
+                overridenMethods.failedToGetMetrics(e.getCause());
             }
         }
     }
@@ -308,7 +310,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
             CustomConnection customConnection = getOrThrow(peer);
             QUICLogics.createStream(customConnection.getConnection(),this,metrics,customConnection.isInComing());
         }catch (Exception e){
-            failedToCreateStream(peer,e.getCause());
+            overridenMethods.failedToCreateStream(peer,e.getCause());
         }
     }
     public void closeStream(String streamId){
@@ -321,7 +323,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 connection.closeStream(streamId);
             }
         }catch (Exception e){
-            failedToCloseStream(streamId,e.getCause());
+            overridenMethods.failedToCloseStream(streamId,e.getCause());
         }
     }
 
@@ -329,13 +331,13 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         InetSocketAddress host = streamHostMapping.get(streamId);
         try{
             if(host==null){
-                onMessageSent(message,len,new Throwable("UNKNOWN STREAM ID: "+streamId),host);
+                overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN STREAM ID: "+streamId),host);
             }else {
                 sendMessage(getOrThrow(host).getStream(streamId),message,len,host);
             }
         }catch (UnknownElement e){
             logger.debug(e.getMessage());
-            onMessageSent(message,len,e,host);
+            overridenMethods.onMessageSent(message,len,e,host);
         }
     }
     public void send(InetSocketAddress peer, byte[] message, int len){
@@ -349,7 +351,7 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
                 openLogics(peer);
                 connecting.get(peer).add(message);
             }else{
-                onMessageSent(message,len,new Throwable("UNKNOWN CONNECTION TO "+peer),peer);
+                overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN CONNECTION TO "+peer),peer);
             }
         }else{
             sendMessage(connection.getDefaultStream(),message,len,peer);
@@ -359,9 +361,9 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
         streamChannel.writeAndFlush(QUICLogics.writeBytes(len,message, QUICLogics.APP_DATA))
                 .addListener(future -> {
                     if(future.isSuccess()){
-                        onMessageSent(message,len,null,peer);
+                        overridenMethods.onMessageSent(message,len,null,peer);
                     }else{
-                        onMessageSent(message,len,future.cause(),peer);
+                        overridenMethods.onMessageSent(message,len,future.cause(),peer);
                     }
                 });
     }
@@ -391,8 +393,9 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     /************************************ FAILURE HANDLERS ************************************************************/
     public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
         connecting.remove(peer);
-        onOpenConnectionFailed(peer,cause);
+        overridenMethods.onOpenConnectionFailed(peer,cause);
     }
+    /**
     public abstract void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId);
 
     public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
@@ -411,4 +414,5 @@ public abstract class CustomQuicChannel implements CustomQuicChannelConsumer {
     public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
 
     public abstract void onConnectionDown(InetSocketAddress peer, boolean incoming);
+     **/
 }
