@@ -86,6 +86,26 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
+    public boolean isConnected(Host peer) {
+        return customQuicChannel.isConnected(FactoryMethods.toInetSOcketAddress(peer));
+    }
+
+    @Override
+    public String[] getStreams() {
+        return customQuicChannel.getStreams();
+    }
+
+    @Override
+    public InetSocketAddress[] getConnections() {
+        return customQuicChannel.getConnections();
+    }
+
+    @Override
+    public int connectedPeers() {
+        return customQuicChannel.connectedPeers();
+    }
+
+    @Override
     public void openConnection(Host peer, short proto) {
         customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer));
     }
@@ -94,11 +114,11 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer));
     }
 
-    public void closeStream(String streamId){
+    public void closeStream(String streamId, short proto){
         customQuicChannel.closeStream(streamId);
     }
 
-    public void sendMessage(String streamId, T msg, short proto){
+    public void sendMessage(T msg,String streamId,short proto){
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
             customQuicChannel.send(streamId,toSend,toSend.length);
@@ -190,5 +210,8 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    public void addMessageFailedSent(T msg, Host host, Throwable error){
+        listener.messageFailed(msg,host,error);
     }
 }

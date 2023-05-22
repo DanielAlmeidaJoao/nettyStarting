@@ -18,6 +18,7 @@ import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -243,7 +244,7 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendMessage(streamId,msg,protoId);
+        channelEntry.getLeft().sendMessage(msg,streamId,protoId);
     }
     void createStream(int channelId, short protoId,Host peer) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
@@ -257,7 +258,7 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Creating stream message to non-existing channelId " + channelId);
-        channelEntry.getLeft().closeStream(streamId);
+        channelEntry.getLeft().closeStream(streamId,protoId);
     }
     /**
      * Closes a connection to a peer in a given channel.
@@ -269,6 +270,34 @@ public class Babel {
         if (channelEntry == null)
             throw new AssertionError("Closing connection in non-existing channelId " + channelId);
         channelEntry.getLeft().closeConnection(target, protoId);
+    }
+    boolean isConnected(int channelId,Host peer){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("isConnected in non-existing channelId " + channelId);
+        return channelEntry.getLeft().isConnected(peer);
+    }
+    String [] getStreams(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getStreams in non-existing channelId " + channelId);
+        return channelEntry.getLeft().getStreams();
+    }
+    InetSocketAddress[] getConnections(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getConnections in non-existing channelId " + channelId);
+        return channelEntry.getLeft().getConnections();
+    }
+    int connectedPeers(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getConnections in non-existing channelId " + channelId);
+        return channelEntry.getLeft().connectedPeers();
     }
 
     /**

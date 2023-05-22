@@ -370,14 +370,15 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     public boolean isConnected(InetSocketAddress peer){
         return connections.containsKey(peer);
     }
-    public List<InetSocketAddress> connectedPeers(){
-        List<InetSocketAddress> peers = new LinkedList<>();
-        for (InetSocketAddress inetSocketAddress : connections.keySet()) {
-            peers.add(inetSocketAddress);
-        }
-        return peers;
+    public final String [] getStreams(){
+        return streamHostMapping.keySet().toArray(new String[streamHostMapping.size()]);
     }
-
+    public final InetSocketAddress [] getConnections(){
+        return connections.keySet().toArray(new InetSocketAddress[connections.size()]);
+    }
+    public final int connectedPeers(){
+        return connections.size();
+    }
     /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/
@@ -405,24 +406,6 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         connecting.remove(peer);
         overridenMethods.onOpenConnectionFailed(peer,cause);
     }
-    /**
-    public abstract void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId);
 
-    public abstract void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
-    public abstract void failedToCloseStream(String streamId, Throwable reason);
-    public abstract void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer);
 
-    public abstract void failedToCreateStream(InetSocketAddress peer, Throwable error);
-    public abstract void failedToGetMetrics(Throwable cause);
-
-    public abstract void onStreamClosedHandler(InetSocketAddress peer, String streamId);
-
-    public abstract void onStreamCreatedHandler(InetSocketAddress peer, String streamId);
-
-    public abstract void onChannelRead(String channelId, byte[] bytes, InetSocketAddress from);
-
-    public abstract void onConnectionUp(boolean incoming, InetSocketAddress peer);
-
-    public abstract void onConnectionDown(InetSocketAddress peer, boolean incoming);
-     **/
 }

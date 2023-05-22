@@ -8,4 +8,8 @@ public interface TCPChannelInterface {
     void closeConnection(InetSocketAddress peer);
     void closeServerSocket();
     void send(byte[] message, int len,InetSocketAddress peer);
+
+    boolean isConnected(InetSocketAddress peer);
+    InetSocketAddress [] getConnections();
+    int connectedPeers();
 }

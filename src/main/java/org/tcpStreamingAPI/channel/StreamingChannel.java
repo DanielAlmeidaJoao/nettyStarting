@@ -101,7 +101,6 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         if(peer==null){
             return;
         }
-
         Channel chan = connections.remove(peer);
         if(metricsOn){
             tcpStreamMetrics.onConnectionClosed(chan.remoteAddress());
@@ -258,6 +257,21 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             });
         }
 
+    }
+
+    @Override
+    public boolean isConnected(InetSocketAddress peer) {
+        return connections.containsKey(peer);
+    }
+
+    @Override
+    public InetSocketAddress[] getConnections() {
+        return connections.keySet().toArray(new InetSocketAddress[connections.size()]);
+    }
+
+    @Override
+    public int connectedPeers() {
+        return connections.size();
     }
 
     /******************************************* USER EVENTS END ****************************************************/

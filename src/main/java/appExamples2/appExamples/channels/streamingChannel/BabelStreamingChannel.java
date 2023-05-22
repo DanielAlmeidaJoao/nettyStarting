@@ -64,6 +64,26 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
+    public boolean isConnected(Host peer) {
+        return tcpChannelInterface.isConnected(FactoryMethods.toInetSOcketAddress(peer));
+    }
+
+    @Override
+    public String[] getStreams() {
+        return new String[0];
+    }
+
+    @Override
+    public InetSocketAddress[] getConnections() {
+        return tcpChannelInterface.getConnections();
+    }
+
+    @Override
+    public int connectedPeers() {
+        return tcpChannelInterface.connectedPeers();
+    }
+
+    @Override
     public void openConnection(Host peer,short proto) {
         tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
@@ -119,7 +139,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void sendMessage(String streamId, T msg, short proto) {
+    public void sendMessage(T msg,String streamId,short proto) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }
@@ -131,7 +151,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void closeStream(String streamId) {
+    public void closeStream(String streamId, short proto) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }

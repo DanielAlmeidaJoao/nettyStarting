@@ -36,11 +36,12 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private final ChannelListener<T> listener;
     private final UDPChannelInterface udpChannelInterface;
 
+
     public BabelUDPChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
         //super(properties);
         this.serializer = serializer;
         this.listener = list;
-        if(properties.getProperty("SINLGE_TRHEADED")!=null){
+        if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
             udpChannelInterface = new SingleThreadedUDPChannel(properties,this);
         }else {
             udpChannelInterface = new UDPChannel(properties,false,this);
@@ -111,6 +112,26 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
+    public boolean isConnected(Host peer) {
+        return true;
+    }
+
+    @Override
+    public String[] getStreams() {
+        return new String[0];
+    }
+
+    @Override
+    public InetSocketAddress[] getConnections() {
+        return new InetSocketAddress[0];
+    }
+
+    @Override
+    public int connectedPeers() {
+        return -1;
+    }
+
+    @Override
     public void openConnection(Host peer,short proto) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         listener.deliverEvent(new OutConnectionUp(peer));
@@ -122,7 +143,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void sendMessage(String streamId, T msg, short proto) {
+    public void sendMessage(T msg,String streamId,short proto) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }
@@ -134,7 +155,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void closeStream(String streamId) {
+    public void closeStream(String streamId, short protoId) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }

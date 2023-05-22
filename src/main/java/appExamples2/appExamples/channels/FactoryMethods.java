@@ -10,6 +10,8 @@ import java.net.InetSocketAddress;
 
 public class FactoryMethods {
 
+    public final static String SINGLE_THREADED_PROP="SINGLE_THREADED";
+
     public static <T> byte [] toSend(ISerializer<T> serializer, T msg) throws IOException {
         ByteBuf out = Unpooled.buffer();
         serializer.serialize(msg, out);

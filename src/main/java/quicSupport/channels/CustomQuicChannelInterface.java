@@ -25,4 +25,9 @@ public interface CustomQuicChannelInterface {
 
     boolean enabledMetrics();
 
+    boolean isConnected(InetSocketAddress peer);
+    String [] getStreams();
+    InetSocketAddress [] getConnections();
+    int connectedPeers();
+
 }
