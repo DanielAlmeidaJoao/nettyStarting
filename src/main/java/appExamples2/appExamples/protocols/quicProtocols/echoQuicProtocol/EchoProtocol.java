@@ -149,6 +149,9 @@ public class EchoProtocol extends GenericProtocolExtension {
             System.out.println("STREAM: "+string);
         }
     }
+    public void shutDown(){
+        shutDownChannel(channelId,getProtoId());
+    }
     int hh = 0 ;
     private void handTimer (SampleTimer time, long id ){
         hh++;

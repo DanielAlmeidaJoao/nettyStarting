@@ -274,6 +274,16 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         return connections.size();
     }
 
+    @Override
+    public void shutDown() {
+        if(server!=null){
+            server.closeServerSocket();
+        }
+        if(client!=null){
+            client.shutDown();
+        }
+    }
+
     /******************************************* USER EVENTS END ****************************************************/
 
     public void onServerSocketBind(boolean success, Throwable cause) {

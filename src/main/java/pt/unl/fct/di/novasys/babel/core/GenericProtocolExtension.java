@@ -64,4 +64,11 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
         getChannelOrThrow(channelId);
         return babel.connectedPeers(channelId);
     }
+
+    protected void shutDownChannel(int channelId, short protoId){
+        getChannelOrThrow(channelId);
+        if(babel.closeChannel(channelId,protoId)){
+            channels.remove(channelId);
+        }
+    }
 }

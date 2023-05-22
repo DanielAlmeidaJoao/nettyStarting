@@ -106,6 +106,12 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
+    public boolean shutDownChannel(short protoId) {
+        customQuicChannel.shutDown();
+        return true;
+    }
+
+    @Override
     public void openConnection(Host peer, short proto) {
         customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer));
     }

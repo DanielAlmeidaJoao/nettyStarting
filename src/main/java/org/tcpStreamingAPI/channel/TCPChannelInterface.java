@@ -12,4 +12,6 @@ public interface TCPChannelInterface {
     boolean isConnected(InetSocketAddress peer);
     InetSocketAddress [] getConnections();
     int connectedPeers();
+
+    void shutDown();
 }

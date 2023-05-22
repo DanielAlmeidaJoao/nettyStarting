@@ -36,6 +36,13 @@ public class SingleThreadedUDPChannel extends UDPChannel {
     }
 
     @Override
+    public void shutDownServerClient(){
+        executor.execute(() -> {
+            super.shutDownServerClient();
+            executor.shutdownGracefully().getNow();
+        });
+    }
+    @Override
     public void peerDown(InetSocketAddress peer) {
         executor.execute(() -> super.peerDown(peer));
     }

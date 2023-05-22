@@ -134,5 +134,12 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
     public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
         executor.submit(() -> super.handleOpenConnectionFailed(peer,cause));
     }
+    @Override
+    public void shutDown() {
+        executor.submit(() -> {
+            super.shutDown();
+            executor.shutdownGracefully().getNow();
+        });
+    }
 }
 

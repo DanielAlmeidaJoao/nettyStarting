@@ -36,4 +36,5 @@ public interface NewIChannel<T> {
     String [] getStreams();
     InetSocketAddress [] getConnections();
     int connectedPeers();
+    boolean shutDownChannel(short protoId);
 }

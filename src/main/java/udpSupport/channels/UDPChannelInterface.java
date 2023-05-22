@@ -7,6 +7,8 @@ import java.net.InetSocketAddress;
 public interface UDPChannelInterface {
 
 
+    void shutDownServerClient();
+
     boolean metricsEnabled();
 
     void sendMessage(byte[] message, InetSocketAddress dest, int len);

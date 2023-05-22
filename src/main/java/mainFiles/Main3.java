@@ -75,7 +75,9 @@ public class Main3 {
                 echoProtocol.numberConnected();
             }else if(input.equalsIgnoreCase("avstreams")){
                 echoProtocol.streamsAvailable();
-            }else{
+            }else if(input.equalsIgnoreCase("shutdown")){
+                echoProtocol.shutDown();
+            } else{
                 System.out.println("UNKNOWN COMMAND: "+input);
             }
         }

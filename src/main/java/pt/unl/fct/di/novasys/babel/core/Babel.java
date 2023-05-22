@@ -299,7 +299,17 @@ public class Babel {
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
         return channelEntry.getLeft().connectedPeers();
     }
-
+    public boolean closeChannel(int channelId, short protoId) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("closeChannel in non-existing channelId " + channelId);
+        if(channelEntry.getLeft().shutDownChannel(protoId)){
+            channelMap.remove(channelId);
+            return true;
+        }
+        return false;
+    }
     /**
      * Opens a connection to a peer in the given channel.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
@@ -478,5 +488,6 @@ public class Babel {
     public long getMillisSinceStart() {
         return started ? System.currentTimeMillis() - startTime : 0;
     }
+
 
 }

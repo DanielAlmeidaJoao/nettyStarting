@@ -132,6 +132,12 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
+    public boolean shutDownChannel(short protoId) {
+        udpChannelInterface.shutDownServerClient();
+        return true;
+    }
+
+    @Override
     public void openConnection(Host peer,short proto) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         listener.deliverEvent(new OutConnectionUp(peer));

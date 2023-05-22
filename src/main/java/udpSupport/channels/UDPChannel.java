@@ -21,7 +21,7 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
 
     public final static String DEFAULT_PORT = "8578";
     public static final String UDP_METRICS = "UDP_metrics";
-    private NettyUDPServer udpServer;
+    private final NettyUDPServer udpServer;
     private ChannelStats metrics;
     private final InetSocketAddress self;
     private final UDPChannelHandlerMethods channelHandlerMethods;
@@ -42,6 +42,12 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
         udpServer=new NettyUDPServer(this,metrics,self,properties);
         channelHandlerMethods = consumer;
     }
+
+    @Override
+    public void shutDownServerClient() {
+        udpServer.shutDownServerClient();
+    }
+
     public boolean metricsEnabled(){
         return metrics!=null;
     }

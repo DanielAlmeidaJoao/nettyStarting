@@ -75,13 +75,16 @@ public class StreamInConnection {
 
         // Wait for the server channel to close. Blocks.
         f.addListener(future -> {
-            parentGroup.shutdownGracefully().sync();
-            childGroup.shutdownGracefully().sync();
+            System.out.println("SHUTTING SERVER");
+            parentGroup.shutdownGracefully().getNow();
+            childGroup.shutdownGracefully().getNow();
             logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
+            System.out.println("SERVER DOWN!!!");
         });
     }
     public void closeServerSocket(){
         serverChannel.close();
+        serverChannel.disconnect();
     }
 
     public <T> void updateConfiguration(ChannelOption<T> option, T value) {

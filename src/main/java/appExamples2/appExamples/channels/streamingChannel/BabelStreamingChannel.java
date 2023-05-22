@@ -84,6 +84,12 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
+    public boolean shutDownChannel(short protoId) {
+        tcpChannelInterface.shutDown();
+        return true;
+    }
+
+    @Override
     public void openConnection(Host peer,short proto) {
         tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer));
     }

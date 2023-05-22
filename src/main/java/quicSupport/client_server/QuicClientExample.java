@@ -122,4 +122,8 @@ public final class QuicClientExample {
     public void send(long streamId, ByteBuf buf){
         getOrThrow(streamId).writeAndFlush(buf);
     }
+
+    public void closeClient(){
+        group.shutdownGracefully();
+    }
 }

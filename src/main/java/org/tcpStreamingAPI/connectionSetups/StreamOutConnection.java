@@ -70,5 +70,12 @@ public class StreamOutConnection {
         }**/
         return NioSocketChannel.class;
     }
+    public void shutDown(){
+        if(group!=null){
+            group.shutdownGracefully().addListener(future -> {
+                System.out.println("SHUTDOWN "+future.isSuccess());
+            });
+        }
+    }
 
 }

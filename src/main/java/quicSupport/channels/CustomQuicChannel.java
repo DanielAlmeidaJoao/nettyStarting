@@ -37,6 +37,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     private final Map<String,InetSocketAddress> streamHostMapping;
     private final Map<InetSocketAddress,List<byte []>> connecting;
     private QuicClientExample client;
+    private QuicServerExample server;
     private final Properties properties;
     private final boolean withHeartBeat;
     private QuicChannelMetrics metrics;
@@ -74,8 +75,8 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
 
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
             try{
-                new QuicServerExample(addr.getHostName(), port, this,metrics,properties)
-                        .start(this::onServerSocketBind);
+                server = new QuicServerExample(addr.getHostName(), port, this,metrics,properties);
+                        server.start(this::onServerSocketBind);
             }catch (Exception e){
                 throw new IOException(e);
             }
@@ -383,6 +384,16 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     }
     public final int connectedPeers(){
         return connections.size();
+    }
+
+    @Override
+    public void shutDown() {
+        if(server!=null){
+            server.closeServer();
+        }
+        if(client!=null){
+            client.closeClient();
+        }
     }
     /*********************************** User Actions **************************************/
 

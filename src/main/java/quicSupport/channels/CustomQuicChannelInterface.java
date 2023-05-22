@@ -30,4 +30,6 @@ public interface CustomQuicChannelInterface {
     InetSocketAddress [] getConnections();
     int connectedPeers();
 
+    void shutDown();
+
 }

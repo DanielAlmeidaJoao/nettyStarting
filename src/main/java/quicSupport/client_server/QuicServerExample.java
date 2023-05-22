@@ -46,6 +46,8 @@ public final class QuicServerExample {
     private final InetSocketAddress self;
     private final Properties properties;
     private QuicChannelMetrics metrics;
+
+    private Channel quicChannel;
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
@@ -55,6 +57,7 @@ public final class QuicServerExample {
         this.metrics = metrics;
         started = false;
         this.properties=properties;
+        quicChannel =null;
     }
     private TrustManagerFactory clientTrustManager() throws Exception {
         String keystoreFilename = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY);
@@ -101,7 +104,7 @@ public final class QuicServerExample {
         try {
             Bootstrap bs = new Bootstrap();
 
-            Channel channel = bs.group(group)
+            quicChannel = bs.group(group)
                     .channel(NioDatagramChannel.class)
                     /*
                     Allocates a new receive buffer whose capacity is probably large enough to read all inbound data
@@ -116,13 +119,20 @@ public final class QuicServerExample {
                     .channel();
             started=true;
 
-            channel.closeFuture().addListener(future -> {
-                group.shutdownGracefully();
+            quicChannel.closeFuture().addListener(future -> {
+                System.out.println("QUIC SERVER DOWN");
+                group.shutdownGracefully().getNow();
                 logger.info("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
             });
             logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",self.getHostName(),self.getPort());
         }catch (Exception e){
             e.printStackTrace();
+        }
+    }
+    public void closeServer(){
+        if(quicChannel !=null){
+            quicChannel.close();
+            quicChannel.disconnect();
         }
     }
 }
