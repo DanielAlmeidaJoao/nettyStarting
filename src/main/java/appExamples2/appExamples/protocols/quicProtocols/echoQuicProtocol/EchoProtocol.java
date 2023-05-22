@@ -41,7 +41,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         //channelProps.setProperty("metrics_interval","2000");
 
 
-        channelId = makeChan("quic",address,port);
+        channelId = makeChan("tcp",address,port);
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
@@ -80,8 +80,8 @@ public class EchoProtocol extends GenericProtocolExtension {
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            //registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
-            registerQUICMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC,null,this::uponMsgFail);
+            registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
+            //registerQUICMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC,null,this::uponMsgFail);
 
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
             registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);

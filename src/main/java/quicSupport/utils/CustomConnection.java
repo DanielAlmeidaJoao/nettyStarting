@@ -15,9 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 @Getter
 public class CustomConnection {
-
     private static final Logger logger = LogManager.getLogger(CustomConnection.class);
-
     private final QuicChannel connection;
     private final QuicStreamChannel defaultStream;
     private final boolean  inComing;
@@ -27,8 +25,10 @@ public class CustomConnection {
     private InetSocketAddress remote;
     private boolean canSendHeartBeat;
     private static long heartBeatTimeout;
+    private final long creationTime;
 
     public CustomConnection(QuicStreamChannel quicStreamChannel,InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout){
+        creationTime = System.currentTimeMillis();
         defaultStream = quicStreamChannel;
         connection = defaultStream.parent();
         this.inComing = inComing;
@@ -42,6 +42,9 @@ public class CustomConnection {
             serverStartScheduling();
         }
         //logger.info("CONNECTION TO {} ON. DEFAULT STREAM: {} .",remote,defaultStream.id().asShortText());
+    }
+    public boolean hasPassedOneSec(){
+        return (System.currentTimeMillis()-creationTime)>2000;
     }
     public void addStream(QuicStreamChannel streamChannel){
         streams.put(streamChannel.id().asShortText(),streamChannel);

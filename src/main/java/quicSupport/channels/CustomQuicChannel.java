@@ -179,33 +179,38 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 if(comp==0){//CONNECTING TO ITSELF
                     connections.put(listeningAddress,old);
                     old.addStream(current.getDefaultStream());
-                }else if(comp<0){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
-                    //keep the in connection
-                    if(inConnection){
+                }else {
+                    if(old.hasPassedOneSec()){
                         silentlyCloseCon(old.getDefaultStream());
                         logger.info("KEPT NEW STREAM {}. IN CONNECTION: {} FROM {}",streamChannel.id().asShortText(),inConnection,listeningAddress);
                     }else{
-                        keepOldSilently(streamChannel, listeningAddress, old);
-                        logger.info("KEPT OLD STREAM {}. IN CONNECTION: {} FROM {}",old.getDefaultStream().id().asShortText(),inConnection,listeningAddress);
-                        sendPendingMessages(listeningAddress);
-                        return;
+                        if(comp<0){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
+                            //keep the in connection
+                            if(inConnection){
+                                silentlyCloseCon(old.getDefaultStream());
+                                logger.info("KEPT NEW STREAM {}. IN CONNECTION: {} FROM {}",streamChannel.id().asShortText(),inConnection,listeningAddress);
+                            }else{
+                                keepOldSilently(streamChannel, listeningAddress, old);
+                                logger.info("KEPT OLD STREAM {}. IN CONNECTION: {} FROM {}",old.getDefaultStream().id().asShortText(),inConnection,listeningAddress);
+                                sendPendingMessages(listeningAddress);
+                                return;
+                            }
+                        }else if(comp>0){
+                            //keep the out connection
+                            if(inConnection){
+                                keepOldSilently(streamChannel, listeningAddress, old);
+                                logger.info("KEPT OLD STREAM {}. IN CONNECTION: {} FROM {}",streamChannel.id().asShortText(),inConnection,listeningAddress);
+                                sendPendingMessages(listeningAddress);
+                                return;
+                            }else{
+                                silentlyCloseCon(old.getDefaultStream());
+                                logger.info("KEPT NEW STREAM {}. IN CONNECTION: {} FROM {}",streamChannel.id().asShortText(),inConnection,listeningAddress);
+                            }
+                        }else{
+                            throw new RuntimeException("THE HASHES CANNOT BE THE SAME: "+self+" VS "+listeningAddress);
+                        }
                     }
-                }else if(comp>0){
-                    //keep the out connection
-                    if(inConnection){
-                        keepOldSilently(streamChannel, listeningAddress, old);
-                        logger.info("KEPT OLD STREAM {}. IN CONNECTION: {} FROM {}",streamChannel.id().asShortText(),inConnection,listeningAddress);
-                        sendPendingMessages(listeningAddress);
-                        return;
-                    }else{
-                        silentlyCloseCon(old.getDefaultStream());
-                        logger.info("KEPT NEW STREAM {}. IN CONNECTION: {} FROM {}",streamChannel.id().asShortText(),inConnection,listeningAddress);
-                    }
-                }else{
-                    throw new RuntimeException("THE HASHES CANNOT BE THE SAME: "+self+" VS "+listeningAddress);
                 }
-            }else{
-                logger.info("{}. CHANNEL {} TO {} ACTIVATED. INCOMING ? {}. DEFAULT STREAM: {}",self,streamChannel.parent().id().asShortText(),listeningAddress,inConnection,streamChannel.id().asShortText());
             }
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
             streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
