@@ -9,10 +9,7 @@ import org.tcpStreamingAPI.channel.StreamingChannel;
 import org.tcpStreamingAPI.channel.TCPChannelHandlerMethods;
 import org.tcpStreamingAPI.channel.TCPChannelInterface;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
-import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
-import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.ISerializer;
-import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
+import pt.unl.fct.di.novasys.babel.channels.*;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
@@ -30,7 +27,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     public final static String NAME = "STREAMING_CHANNEL";
 
     private final ISerializer<T> serializer;
-    private final ChannelListener<T> listener;
+    private ChannelListener<T> listener;
     private final boolean triggerSent;
     private final TCPChannelInterface tcpChannelInterface;
 
@@ -39,7 +36,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
         this.serializer = serializer;
         this.listener = list;
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
-        if(properties.getProperty("SINLGE_TRHEADED")!=null){
+        if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
             tcpChannelInterface = new SingleThreadedStreamingChannel(properties,this, NetworkRole.CHANNEL);
             System.out.println("SINGLE THREADED CHANNEL");
         }else {
@@ -86,6 +83,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public boolean shutDownChannel(short protoId) {
         tcpChannelInterface.shutDown();
+        listener = new DummyChannelToProtoForwarder<>();
         return true;
     }
 

@@ -1,5 +1,6 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
 import appExamples2.appExamples.channels.babelQuicChannel.events.StreamClosedEvent;
@@ -70,6 +71,8 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
             channelProps.setProperty(StreamingChannel.PORT_KEY,port);
             channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
+            channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
+
             return createChannel(BabelStreamingChannel.NAME, channelProps);
         }
     }

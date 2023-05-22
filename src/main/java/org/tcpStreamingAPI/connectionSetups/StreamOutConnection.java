@@ -72,9 +72,7 @@ public class StreamOutConnection {
     }
     public void shutDown(){
         if(group!=null){
-            group.shutdownGracefully().addListener(future -> {
-                System.out.println("SHUTDOWN "+future.isSuccess());
-            });
+            group.shutdownGracefully();
         }
     }
 

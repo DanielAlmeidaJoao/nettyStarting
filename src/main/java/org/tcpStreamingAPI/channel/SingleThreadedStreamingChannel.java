@@ -77,7 +77,6 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.submit(() -> {
             super.shutDown();
             executor.shutdownGracefully().getNow();
-            System.out.println("EXECUTER DOWN "+executor.isTerminated());
         });
     }
 }
