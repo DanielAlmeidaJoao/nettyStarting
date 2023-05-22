@@ -34,20 +34,20 @@ public abstract class GenericProtocol {
 
     //TODO split in GenericConnectionlessProtocol and GenericConnectionProtocol?
 
-    private final BlockingQueue<InternalEvent> queue;
-    private final Thread executionThread;
-    private final String protoName;
-    private final short protoId;
+    final BlockingQueue<InternalEvent> queue;
+    final Thread executionThread;
+    final String protoName;
+    final short protoId;
 
-    private int defaultChannel;
+    int defaultChannel;
 
-    private final Map<Integer, ChannelHandlers> channels;
-    private final Map<Short, TimerHandler<? extends ProtoTimer>> timerHandlers;
-    private final Map<Short, RequestHandler<? extends ProtoRequest>> requestHandlers;
-    private final Map<Short, ReplyHandler<? extends ProtoReply>> replyHandlers;
-    private final Map<Short, NotificationHandler<? extends ProtoNotification>> notificationHandlers;
+    final Map<Integer, ChannelHandlers> channels;
+    final Map<Short, TimerHandler<? extends ProtoTimer>> timerHandlers;
+    final Map<Short, RequestHandler<? extends ProtoRequest>> requestHandlers;
+    final Map<Short, ReplyHandler<? extends ProtoReply>> replyHandlers;
+    final Map<Short, NotificationHandler<? extends ProtoNotification>> notificationHandlers;
 
-    private static final Babel babel = Babel.getInstance();
+    static final Babel babel = Babel.getInstance();
 
     //Debug
     ProtocolMetrics metrics = new ProtocolMetrics();
@@ -287,7 +287,7 @@ public abstract class GenericProtocol {
 
     /* ------------------------- NETWORK/CHANNELS ---------------------- */
 
-    private ChannelHandlers getChannelOrThrow(int channelId) {
+    ChannelHandlers getChannelOrThrow(int channelId) {
         ChannelHandlers handlers = channels.get(channelId);
         if (handlers == null)
             throw new AssertionError("Channel does not exist: " + channelId);
@@ -429,34 +429,7 @@ public abstract class GenericProtocol {
                     " channel " + channelId);
         babel.sendMessage(channelId, this.protoId, new BabelMessage(msg, this.protoId, destProto), destination);
     }
-    protected final void sendMessage(ProtoMessage msg, String streamId) {
-        sendMessage(defaultChannel,msg,this.protoId,streamId);
-    }
-    protected final void sendMessage(int channelId, ProtoMessage msg, short destProto, String streamId) {
-        getChannelOrThrow(channelId);
-        if (logger.isDebugEnabled())
-            logger.debug("Sending: " + msg + " to " + streamId + " proto " + destProto +
-                    " channel " + channelId);
-        babel.sendMessage(channelId, this.protoId, new BabelMessage(msg, this.protoId, destProto), streamId);
-    }
-    protected final void createStream(Host dest) {
-        createStream(defaultChannel,this.protoId,dest);
-    }
-    protected final void createStream(int channelId,short proto,Host dest) {
-        getChannelOrThrow(channelId);
-        if (logger.isDebugEnabled())
-            logger.debug("CREATING A STREAM TO {} IN CHANNEL {}",dest,channelId);
-        babel.createStream(channelId,proto,dest);
-    }
-    protected final void closeStream(String streamId) {
-        closeStream(defaultChannel,this.protoId,streamId);
-    }
-    protected final void closeStream(int channelId,short proto, String streamId) {
-        getChannelOrThrow(channelId);
-        if (logger.isDebugEnabled())
-            logger.debug("CLOSING STREAM {} IN CHANNEL {}",streamId,channelId);
-        babel.closeStream(channelId,proto,streamId);
-    }
+
     /**
      * Open a connection to the given peer using the default channel.
      * Depending on the channel, this method may be unnecessary/forbidden.

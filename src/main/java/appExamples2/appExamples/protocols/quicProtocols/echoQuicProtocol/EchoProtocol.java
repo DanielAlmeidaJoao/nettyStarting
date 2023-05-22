@@ -14,14 +14,15 @@ import org.tcpStreamingAPI.utils.TCPStreamUtils;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
-import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
+import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class EchoProtocol extends GenericProtocol {
+public class EchoProtocol extends GenericProtocolExtension {
 
 
     private static final Logger logger = LogManager.getLogger(EchoProtocol.class);
@@ -126,6 +127,27 @@ public class EchoProtocol extends GenericProtocol {
 
     public void closeStreamM(String stream){
         super.closeStream(stream);
+    }
+
+    public void isConnected(){
+        System.out.println("IS CONNECTED: "+isConnected(channelId,dest));
+    }
+    public void connections(){
+        InetSocketAddress [] cons = getConnections(channelId);
+        System.out.println("CONS: "+cons.length);
+        for (InetSocketAddress con : cons) {
+            System.out.println(con);
+        }
+    }
+    public void numberConnected(){
+        System.out.println("NUMBER CONNECTED: "+numConnectedPeers(channelId));
+    }
+    public void streamsAvailable(){
+        String [] strings = getStreams(channelId);
+        System.out.println("STREAMS: "+strings.length);
+        for (String string : strings) {
+            System.out.println("STREAM: "+string);
+        }
     }
     int hh = 0 ;
     private void handTimer (SampleTimer time, long id ){

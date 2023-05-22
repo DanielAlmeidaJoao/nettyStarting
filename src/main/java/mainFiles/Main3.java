@@ -51,23 +51,30 @@ public class Main3 {
         while (!input.equalsIgnoreCase("quit")){
             System.out.print("COMMAND: ");
             input = scanner.nextLine();
-
-            if(input.equalsIgnoreCase("s")){
+            if(input.equalsIgnoreCase("stream")){
                 System.out.printf("MESSAGE TO SEND:");
                 String message = scanner.nextLine();
                 System.out.printf("STREAM:");
                 String stream = scanner.nextLine();
                 echoProtocol.sendMessage(message,stream);
-            }else if(input.equalsIgnoreCase("cs")){
+            }else if(input.equalsIgnoreCase("createstream")){
                 echoProtocol.createStream();
-            }else if(input.equalsIgnoreCase("sh")){
+            }else if(input.equalsIgnoreCase("send")){
                 System.out.printf("MESSAGE TO SEND:");
                 String message = scanner.nextLine();
                 echoProtocol.sendMessage(message);
-            }else if(input.equalsIgnoreCase("cls")){
+            }else if(input.equalsIgnoreCase("closestream")){
                 System.out.printf("STREAM:");
                 String stream = scanner.nextLine();
                 echoProtocol.closeStreamM(stream);
+            }else if(input.equalsIgnoreCase("connected")){
+                echoProtocol.isConnected();
+            }else if(input.equalsIgnoreCase("connections")){
+                echoProtocol.connections();
+            }else if(input.equalsIgnoreCase("numbercons")){
+                echoProtocol.numberConnected();
+            }else if(input.equalsIgnoreCase("avstreams")){
+                echoProtocol.streamsAvailable();
             }else{
                 System.out.println("UNKNOWN COMMAND: "+input);
             }
