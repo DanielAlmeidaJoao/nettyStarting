@@ -9,4 +9,6 @@ public interface ChannelListener<T> {
     void messageFailed(T msg, Host to, Throwable cause);
 
     void deliverEvent(ChannelEvent evt);
+
+    void deliverMessage(byte [] message, Host host, String quicStreamId, short sourceProto, short destProto);
 }

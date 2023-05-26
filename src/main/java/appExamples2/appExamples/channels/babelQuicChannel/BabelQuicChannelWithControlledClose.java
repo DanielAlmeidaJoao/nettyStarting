@@ -3,9 +3,9 @@ package appExamples2.appExamples.channels.babelQuicChannel;
 import appExamples2.appExamples.channels.FactoryMethods;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -19,7 +19,7 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
     private Map<String, Set<Short>> streamChannelsMap;
     private Set<Short> registeredProtos;
 
-    public BabelQuicChannelWithControlledClose(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
+    public BabelQuicChannelWithControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
         super(serializer,list,properties);
         initMaps(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null);
     }

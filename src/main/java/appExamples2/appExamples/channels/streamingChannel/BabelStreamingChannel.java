@@ -26,12 +26,12 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
     public final static String NAME = "STREAMING_CHANNEL";
 
-    private final ISerializer<T> serializer;
+    private final BabelMessageSerializerInterface<T> serializer;
     private ChannelListener<T> listener;
     private final boolean triggerSent;
     private final TCPChannelInterface tcpChannelInterface;
 
-    public BabelStreamingChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
+    public BabelStreamingChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
 
         this.serializer = serializer;
         this.listener = list;
@@ -54,6 +54,11 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+    @Override
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto) {
+        byte [] toSend = FactoryMethods.serialize(sourceProto,destProto,data,dataLen);
+        tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest));
     }
     @Override
     public void closeConnection(Host peer, short connection) {
@@ -101,7 +106,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void onChannelRead(String channelId, byte[] bytes,InetSocketAddress from) {
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes), toBabelHost(from),null);
+            FactoryMethods.deserialize(bytes,serializer,listener,from,null);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -144,6 +149,12 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
     @Override
     public void sendMessage(T msg,String streamId,short proto) {
+        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
+        throwable.printStackTrace();
+    }
+
+    @Override
+    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }

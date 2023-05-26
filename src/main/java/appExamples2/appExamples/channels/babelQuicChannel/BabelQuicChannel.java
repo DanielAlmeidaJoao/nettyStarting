@@ -7,9 +7,9 @@ import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEv
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
@@ -37,11 +37,11 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
 
     private final boolean triggerSent;
-    private final ISerializer<T> serializer;
+    private final BabelMessageSerializerInterface<T> serializer;
     private final ChannelListener<T> listener;
     private final CustomQuicChannelInterface customQuicChannel;
 
-    public BabelQuicChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
+    public BabelQuicChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
         this.serializer = serializer;
         this.listener = list;
         if(properties.getProperty("SINLGE_TRHEADED")!=null){
@@ -73,11 +73,18 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),FactoryMethods.toSend(serializer,msg),toSend.length);
+            customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),toSend,toSend.length);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto) {
+        byte [] toSend = FactoryMethods.serialize(sourceProto,destProto,data,dataLen);
+        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),
+                toSend,toSend.length);
     }
 
     @Override
@@ -134,6 +141,12 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         }
     }
     @Override
+    public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto) {
+        byte [] toSend = FactoryMethods.serialize(sourceProto,destProto,data,dataLen);
+        customQuicChannel.send(streamId,
+                toSend,toSend.length);
+    }
+    @Override
     public void registerChannelInterest(short protoId) {
         //TODO
     }
@@ -151,7 +164,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,bytes),FactoryMethods.toBabelHost(from),streamId);
+            FactoryMethods.deserialize(bytes,serializer,listener,from,streamId);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);

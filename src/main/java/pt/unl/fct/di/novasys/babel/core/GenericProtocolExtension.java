@@ -27,6 +27,18 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
         babel.sendMessage(channelId, this.protoId, new BabelMessage(msg, this.protoId, destProto), streamId);
     }
 
+    protected void sendMessage(int channelId,byte[] data,int dataLen, Host dest, short sourceProto, short destProto){
+        if (logger.isDebugEnabled())
+            logger.debug("Sending: bytes to " + dest + " proto " + destProto +
+                    " channel " + channelId);
+        babel.sendMessage(channelId,data,dataLen, dest, sourceProto, destProto);
+    }
+    protected void sendMessage(int channelId,byte[] data,int dataLen, String streamId, short sourceProto, short destProto){
+        if (logger.isDebugEnabled())
+            logger.debug("Sending: bytes to " + streamId + " proto " + destProto +
+                    " channel " + channelId);
+        babel.sendMessage(channelId,data,dataLen,streamId,sourceProto,destProto);
+    }
     protected final void createStream(Host dest) {
         createStream(defaultChannel, this.protoId, dest);
     }

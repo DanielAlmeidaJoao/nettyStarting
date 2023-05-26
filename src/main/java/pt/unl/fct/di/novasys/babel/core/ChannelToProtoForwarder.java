@@ -29,25 +29,32 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
 
     @Override
     public void deliverMessage(BabelMessage message, Host host, String quicStreamId) {
-        GenericProtocol channelConsumer;
-        if (message.getDestProto() == -1 && consumers.size() == 1)
-            channelConsumer = consumers.values().iterator().next();
-        else
-            channelConsumer = consumers.get(message.getDestProto());
-
-        if (channelConsumer == null) {
-            logger.error("Channel " + channelId + " received message to protoId " +
-                    message.getDestProto() + " which is not registered in channel");
-            throw new AssertionError("Channel " + channelId + " received message to protoId " +
-                    message.getDestProto() + " which is not registered in channel");
-        }
+        GenericProtocol channelConsumer = getConsumer(message.getDestProto());
         if(quicStreamId==null){
             channelConsumer.deliverMessageIn(new MessageInEvent(message, host, channelId));
         }else{
             channelConsumer.deliverQuicMessageIn(new QUICMessageInEvent(message, host, channelId,quicStreamId));
         }
     }
-
+    @Override
+    public void deliverMessage(byte [] message, Host host, String quicStreamId, short sourceProto, short destProto) {
+        GenericProtocol channelConsumer = getConsumer(destProto);
+        channelConsumer.deliverBytesIn(new BytesMessageInEvent(message,host,channelId,quicStreamId,sourceProto,destProto));
+    }
+    private GenericProtocol getConsumer(short protoId){
+        GenericProtocol channelConsumer;
+        if (protoId == -1 && consumers.size() == 1)
+            channelConsumer = consumers.values().iterator().next();
+        else
+            channelConsumer = consumers.get(protoId);
+        if (channelConsumer == null) {
+            logger.error("Channel " + channelId + " received message to protoId " +
+                    protoId + " which is not registered in channel");
+            throw new AssertionError("Channel " + channelId + " received message to protoId " +
+                    protoId + " which is not registered in channel");
+        }
+        return channelConsumer;
+    }
     @Override
     public void messageSent(BabelMessage addressedMessage, Host host) {
         consumers.values().forEach(c -> c.deliverMessageSent(new MessageSentEvent(addressedMessage, host, channelId)));

@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 public interface NewIChannel<T> {
     void sendMessage(T var1, Host var2, short protoId);
 
+    void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto);
 
 
     void openConnection(Host var1, short protoId);
@@ -13,6 +14,8 @@ public interface NewIChannel<T> {
 
     //exclusivelly for QUIC
     void sendMessage(T msg,String streamId,short proto);
+    void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto);
+
 
     void createStream(Host peer);
 

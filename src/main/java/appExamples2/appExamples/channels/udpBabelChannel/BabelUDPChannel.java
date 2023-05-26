@@ -4,10 +4,7 @@ import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
-import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.ISerializer;
-import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
+import pt.unl.fct.di.novasys.babel.channels.*;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import udpSupport.channels.SingleThreadedUDPChannel;
@@ -32,12 +29,12 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private final boolean triggerSent;
 
 
-    private final ISerializer<T> serializer;
+    private final BabelMessageSerializerInterface<T> serializer;
     private final ChannelListener<T> listener;
     private final UDPChannelInterface udpChannelInterface;
 
 
-    public BabelUDPChannel(ISerializer<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
+    public BabelUDPChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
         //super(properties);
         this.serializer = serializer;
         this.listener = list;
@@ -70,8 +67,8 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
-            listener.deliverMessage(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(from),null);
-        } catch (Exception e) {
+            FactoryMethods.deserialize(message,serializer,listener,from,null);
+        } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -89,6 +86,11 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         }
     }
 
+    @Override
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto) {
+        byte [] toSend = FactoryMethods.serialize(sourceProto,destProto,data,dataLen);
+        udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(dest),toSend.length);
+    }
 
     @Override
     public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
@@ -150,6 +152,12 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void sendMessage(T msg,String streamId,short proto) {
+        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
+        throwable.printStackTrace();
+    }
+
+    @Override
+    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }

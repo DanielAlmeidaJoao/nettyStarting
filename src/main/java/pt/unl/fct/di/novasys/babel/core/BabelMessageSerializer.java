@@ -1,6 +1,7 @@
 package pt.unl.fct.di.novasys.babel.core;
 
 import io.netty.buffer.ByteBuf;
+import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
@@ -8,10 +9,13 @@ import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import java.io.IOException;
 import java.util.Map;
 
-public class BabelMessageSerializer implements ISerializer<BabelMessage> {
+public class BabelMessageSerializer implements BabelMessageSerializerInterface<BabelMessage> {
 
     Map<Short, ISerializer<? extends ProtoMessage>> serializers;
 
+    public ISerializer<? extends  ProtoMessage> getSerializer(short serializerId){
+        return serializers.get(serializerId);
+    }
     public BabelMessageSerializer(Map<Short, ISerializer<? extends ProtoMessage>> serializers) {
         this.serializers = serializers;
     }

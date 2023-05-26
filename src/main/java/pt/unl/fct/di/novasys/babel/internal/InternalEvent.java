@@ -14,6 +14,7 @@ public abstract class InternalEvent {
      * Possible event types that can be represented
      */
     public enum EventType {
+        BYTE_MESSAGE_IN,
         QUIC_MESSAGE_IN_EVENT,
         MESSAGE_IN_EVENT,
         TIMER_EVENT,

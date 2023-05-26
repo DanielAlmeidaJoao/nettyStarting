@@ -232,6 +232,16 @@ public abstract class GenericProtocol {
         if (sentHandler != null) registerHandler(msgId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
+    protected final <V extends ProtoMessage> void registerBytesMessageHandler(int cId,
+                                                                               BytesMessageInHandler<V> inHandler,
+                                                                               MessageSentHandler<V> sentHandler,
+                                                                               MessageFailedHandler<V> failHandler)
+            throws HandlerRegistrationException {
+        registerHandler(getProtoId(), inHandler, getChannelOrThrow(cId).bytesMessageInHandlerMap);
+        if (sentHandler != null) registerHandler(getProtoId(), sentHandler, getChannelOrThrow(cId).messageSentHandlers);
+        if (failHandler != null) registerHandler(getProtoId(), failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+    }
+
 
     /**
      * Register an handler to process a channel-specific event
@@ -595,6 +605,10 @@ public abstract class GenericProtocol {
     final protected void deliverQuicMessageIn(QUICMessageInEvent msgIn) {
         queue.add(msgIn);
     }
+    final protected void deliverBytesIn(BytesMessageInEvent msgIn) {
+        queue.add(msgIn);
+    }
+
     /**
      * Used by pt.unl.fct.di.novasys.babel to deliver channel message sent events to protocols. Do not evoke directly.
      */
@@ -647,6 +661,10 @@ public abstract class GenericProtocol {
                     case MESSAGE_IN_EVENT:
                         metrics.messagesInCount++;
                         this.handleMessageIn((MessageInEvent) pe);
+                        break;
+                    case BYTE_MESSAGE_IN:
+                        metrics.messagesInCount++;
+                        this.handleBytesMessageIn((BytesMessageInEvent) pe);
                         break;
                     case MESSAGE_FAILED_EVENT:
                         metrics.messagesFailedCount++;
@@ -712,6 +730,15 @@ public abstract class GenericProtocol {
             logger.warn("Discarding unexpected QUIC message (id " + msg.getMessage().getId() + "): " + m);
     }
 
+    private void handleBytesMessageIn(BytesMessageInEvent m) {
+        byte [] msg = m.getMsg();
+        BytesMessageInHandler h = getChannelOrThrow(m.getChannelId()).bytesMessageInHandlerMap.get(m.destProto);
+        if (h != null)
+            h.receive(msg, m.getFrom(),m.sourceProto, m.getChannelId(),m.streamId);
+        else
+            logger.warn("Discarding unexpected Bytes message (id " + m.destProto + "): number of bytes = " + m.getMsg().length);
+    }
+
     private void handleMessageFailed(MessageFailedEvent e) {
         BabelMessage msg = e.getMsg();
         MessageFailedHandler h = getChannelOrThrow(e.getChannelId()).messageFailedHandlers.get(msg.getMessage().getId());
@@ -770,13 +797,15 @@ public abstract class GenericProtocol {
 
     private static class ChannelHandlers {
         private final Map<Short, QUICMessageInHandler<? extends ProtoMessage>> quicMessageInHandlerMap;
+        private final Map<Short, BytesMessageInHandler<? extends ProtoMessage>> bytesMessageInHandlerMap;
         private final Map<Short, MessageInHandler<? extends ProtoMessage>> messageInHandlers;
         private final Map<Short, MessageSentHandler<? extends ProtoMessage>> messageSentHandlers;
         private final Map<Short, MessageFailedHandler<? extends ProtoMessage>> messageFailedHandlers;
         private final Map<Short, ChannelEventHandler<? extends ChannelEvent>> channelEventHandlers;
 
         public ChannelHandlers() {
-            quicMessageInHandlerMap = new HashMap<>();
+            this.quicMessageInHandlerMap = new HashMap<>();
+            this.bytesMessageInHandlerMap = new HashMap<>();
             this.messageInHandlers = new HashMap<>();
             this.messageSentHandlers = new HashMap<>();
             this.messageFailedHandlers = new HashMap<>();

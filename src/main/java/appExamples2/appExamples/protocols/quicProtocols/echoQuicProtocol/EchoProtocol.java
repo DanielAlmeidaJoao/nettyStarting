@@ -18,21 +18,18 @@ import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
 public class EchoProtocol extends GenericProtocolExtension {
-
-
     private static final Logger logger = LogManager.getLogger(EchoProtocol.class);
     public static final short PROTOCOL_ID = 200;
     public int channelId;
     private final Host myself; //My own address/port
     private Host dest;
     private Properties properties;
-    public EchoProtocol(Properties properties) throws IOException {
+    public EchoProtocol(Properties properties) throws Exception {
         super(EchoProtocol.class.getName(),PROTOCOL_ID);
         String address = properties.getProperty("address");
         String port = properties.getProperty("port");
@@ -42,15 +39,15 @@ public class EchoProtocol extends GenericProtocolExtension {
         //channelProps.setProperty("metrics_interval","2000");
 
 
-        channelId = makeChan("tcp",address,port);
+        channelId = makeChan("QUIC",address,port);
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
     }
-    private int makeChan(String channelName,String address, String port) throws IOException {
+    private int makeChan(String channelName,String address, String port) throws Exception {
         Properties channelProps = new Properties();
         if(channelName.equalsIgnoreCase("quic")){
-
+            System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
 
             channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
@@ -66,15 +63,23 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
             channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
             channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"300");
-            return createChannel(BabelQuicChannel.NAME, channelProps);
+            channelId = createChannel(BabelQuicChannel.NAME, channelProps);
+            registerQUICMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC,null,this::uponMsgFail);
+
         }else{
+            System.out.println("TCP ON");
             channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
             channelProps.setProperty(StreamingChannel.PORT_KEY,port);
             channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
 
-            return createChannel(BabelStreamingChannel.NAME, channelProps);
+            channelId = createChannel(BabelStreamingChannel.NAME, channelProps);
+
+            registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
+
         }
+
+        return channelId;
     }
     @Override
     public void init(Properties props) {
@@ -83,8 +88,8 @@ public class EchoProtocol extends GenericProtocolExtension {
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
-            //registerQUICMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC,null,this::uponMsgFail);
+            registerBytesMessageHandler(channelId,this::uponBytesMessage,null, this::uponMsgFail);
+
 
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
             registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
@@ -116,13 +121,24 @@ public class EchoProtocol extends GenericProtocolExtension {
         //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
         //sendMessage(message,myself);
     }
+    boolean sendByte = true;
     public void sendMessage(String message, String stream){
-        EchoMessage echoMessage = new EchoMessage(myself,message);
-        super.sendMessage(echoMessage,stream);
+        if(sendByte){
+            super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId());
+        }else {
+            EchoMessage echoMessage = new EchoMessage(myself,message);
+            super.sendMessage(echoMessage,stream);
+        }
+        sendByte =!sendByte;
     }
     public void sendMessage(String message){
-        EchoMessage echoMessage = new EchoMessage(myself,message);
-        sendMessage(echoMessage,dest);
+        if(sendByte){
+            super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId());
+        }else{
+            EchoMessage echoMessage = new EchoMessage(myself,message);
+            sendMessage(echoMessage,dest);
+        }
+        sendByte =!sendByte;
     }
     public void createStream(){
         super.createStream(dest);
@@ -166,7 +182,6 @@ public class EchoProtocol extends GenericProtocolExtension {
             closeConnection(dest);
             cancelTimer(id);
         }
-
     }
     private void uponChannelMetrics(QUICMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");
@@ -204,6 +219,9 @@ public class EchoProtocol extends GenericProtocolExtension {
             logger.info("{} MESSAGE SENT!!! TO {} ",myself,dest);
         }
          **/
+    }
+    private void uponBytesMessage(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
+        logger.info("Received bytes: {} from {}", new String(msg), from);
     }
     private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
         logger.info("Received {} from {}", msg.getMessage(), from);

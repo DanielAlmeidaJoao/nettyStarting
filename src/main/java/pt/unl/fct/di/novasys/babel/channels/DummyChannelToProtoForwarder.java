@@ -20,4 +20,9 @@ public class DummyChannelToProtoForwarder<T> implements ChannelListener<T>{
     public void deliverEvent(ChannelEvent evt) {
 
     }
+
+    @Override
+    public void deliverMessage(byte[] message, Host host, String quicStreamId, short sourceProto, short destProto) {
+
+    }
 }
