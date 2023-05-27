@@ -22,7 +22,7 @@ public class DummyChannelToProtoForwarder<T> implements ChannelListener<T>{
     }
 
     @Override
-    public void deliverMessage(byte[] message, Host host, String quicStreamId, short sourceProto, short destProto) {
+    public void deliverMessage(byte[] message, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId) {
 
     }
 }

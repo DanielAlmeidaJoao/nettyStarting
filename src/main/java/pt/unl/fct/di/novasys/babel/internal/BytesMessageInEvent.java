@@ -17,10 +17,11 @@ public class BytesMessageInEvent extends InternalEvent {
     public final String streamId;
     public final short sourceProto;
     public final short destProto;
+    public final short handlerId;
     /**
      * Create a protocol message event with the provided numeric identifier
      */
-    public BytesMessageInEvent(byte [] msg, Host from, int channelId, String streamId,short sourceProto, short destProto) {
+    public BytesMessageInEvent(byte [] msg, Host from, int channelId, String streamId,short sourceProto, short destProto,short handlerId) {
         super(EventType.BYTE_MESSAGE_IN);
         this.from = from;
         this.deliverMessageInMsg = msg;
@@ -28,6 +29,7 @@ public class BytesMessageInEvent extends InternalEvent {
         this.streamId =streamId;
         this.sourceProto = sourceProto;
         this.destProto=destProto;
+        this.handlerId=handlerId;
     }
 
     @Override

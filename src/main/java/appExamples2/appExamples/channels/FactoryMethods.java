@@ -41,11 +41,12 @@ public class FactoryMethods {
     public static InetSocketAddress toInetSOcketAddress(Host address){
         return new InetSocketAddress(address.getAddress(),address.getPort());
     }
-    public static byte [] serialize(short sourceProto, short destProto, byte [] data, int dataLen){
-        ByteBuf byteBuf = Unpooled.buffer(6+dataLen);
+    public static byte [] serializeWhenSendingBytes(short sourceProto, short destProto,short handlerId, byte [] data, int dataLen){
+        ByteBuf byteBuf = Unpooled.buffer(8+dataLen);
         byteBuf.writeShort(sourceProto);
         byteBuf.writeShort(destProto);
         byteBuf.writeShort(BYTE_MESSAGE_ID);
+        byteBuf.writeShort(handlerId);
         byteBuf.writeBytes(data,0,dataLen);
         byte [] outPut = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(outPut);
@@ -59,10 +60,10 @@ public class FactoryMethods {
         short destProto = byteBuf.readShort();
         short msgId = byteBuf.readShort();
         if(msgId==BYTE_MESSAGE_ID){
+            short handlerId = byteBuf.readShort();
             data = new byte [byteBuf.readableBytes()];
             byteBuf.readBytes(data);
-            System.out.println("THIS CALLED INSTEAD");
-            listener.deliverMessage(data,FactoryMethods.toBabelHost(from),streamId,sourceProto,destProto);
+            listener.deliverMessage(data,FactoryMethods.toBabelHost(from),streamId,sourceProto,destProto,handlerId);
         }else{
             ISerializer<? extends ProtoMessage> iSerializer = serializer.getSerializer(msgId);
             if(iSerializer == null){

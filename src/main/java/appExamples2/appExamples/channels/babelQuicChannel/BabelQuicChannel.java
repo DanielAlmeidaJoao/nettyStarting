@@ -81,10 +81,9 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
-    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto) {
-        byte [] toSend = FactoryMethods.serialize(sourceProto,destProto,data,dataLen);
-        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),
-                toSend,toSend.length);
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
+        byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
+        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),toSend,toSend.length);
     }
 
     @Override
@@ -141,8 +140,8 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         }
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto) {
-        byte [] toSend = FactoryMethods.serialize(sourceProto,destProto,data,dataLen);
+    public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
+        byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
         customQuicChannel.send(streamId,
                 toSend,toSend.length);
     }

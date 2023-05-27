@@ -2,6 +2,7 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
+import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
 import appExamples2.appExamples.channels.babelQuicChannel.events.StreamClosedEvent;
 import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEvent;
@@ -88,7 +89,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerBytesMessageHandler(channelId,this::uponBytesMessage,null, this::uponMsgFail);
+            registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail2);
 
 
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
@@ -122,9 +123,10 @@ public class EchoProtocol extends GenericProtocolExtension {
         //sendMessage(message,myself);
     }
     boolean sendByte = true;
+    public static final short HANDLER_ID = 2;
     public void sendMessage(String message, String stream){
         if(sendByte){
-            super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId());
+            super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId(),HANDLER_ID);
         }else {
             EchoMessage echoMessage = new EchoMessage(myself,message);
             super.sendMessage(echoMessage,stream);
@@ -133,7 +135,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     public void sendMessage(String message){
         if(sendByte){
-            super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId());
+            super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId(),HANDLER_ID);
         }else{
             EchoMessage echoMessage = new EchoMessage(myself,message);
             sendMessage(echoMessage,dest);
@@ -230,6 +232,11 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("Received QUIC {} from {} {}", msg.getMessage(), from, streamId);
     }
     private void uponMsgFail(EchoMessage msg, Host host, short destProto,
+                             Throwable throwable, int channelId) {
+        //If a message fails to be sent, for whatever reason, log the message and the reason
+        logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+    }
+    private void uponMsgFail2(BytesMessageSentOrFail msg, Host host, short destProto,
                              Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);

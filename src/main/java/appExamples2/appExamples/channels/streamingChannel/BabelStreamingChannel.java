@@ -56,8 +56,8 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
         }
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto) {
-        byte [] toSend = FactoryMethods.serialize(sourceProto,destProto,data,dataLen);
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
+        byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
         tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest));
     }
     @Override
@@ -154,7 +154,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto) {
+    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }

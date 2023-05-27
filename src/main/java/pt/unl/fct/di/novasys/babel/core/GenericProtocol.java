@@ -232,14 +232,14 @@ public abstract class GenericProtocol {
         if (sentHandler != null) registerHandler(msgId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
-    protected final <V extends ProtoMessage> void registerBytesMessageHandler(int cId,
+    protected final <V extends ProtoMessage> void registerBytesMessageHandler(int cId,short msgHandlerId,
                                                                                BytesMessageInHandler<V> inHandler,
                                                                                MessageSentHandler<V> sentHandler,
                                                                                MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerHandler(getProtoId(), inHandler, getChannelOrThrow(cId).bytesMessageInHandlerMap);
-        if (sentHandler != null) registerHandler(getProtoId(), sentHandler, getChannelOrThrow(cId).messageSentHandlers);
-        if (failHandler != null) registerHandler(getProtoId(), failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+        registerHandler(msgHandlerId, inHandler, getChannelOrThrow(cId).bytesMessageInHandlerMap);
+        if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
+        if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
 
 
@@ -732,11 +732,11 @@ public abstract class GenericProtocol {
 
     private void handleBytesMessageIn(BytesMessageInEvent m) {
         byte [] msg = m.getMsg();
-        BytesMessageInHandler h = getChannelOrThrow(m.getChannelId()).bytesMessageInHandlerMap.get(m.destProto);
+        BytesMessageInHandler h = getChannelOrThrow(m.getChannelId()).bytesMessageInHandlerMap.get(m.handlerId);
         if (h != null)
             h.receive(msg, m.getFrom(),m.sourceProto, m.getChannelId(),m.streamId);
         else
-            logger.warn("Discarding unexpected Bytes message (id " + m.destProto + "): number of bytes = " + m.getMsg().length);
+            logger.warn("Discarding unexpected Bytes message (handler id " + m.handlerId + "): number of bytes = " + m.getMsg().length);
     }
 
     private void handleMessageFailed(MessageFailedEvent e) {

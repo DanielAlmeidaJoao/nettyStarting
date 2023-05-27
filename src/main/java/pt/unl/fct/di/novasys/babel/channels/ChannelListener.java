@@ -10,5 +10,5 @@ public interface ChannelListener<T> {
 
     void deliverEvent(ChannelEvent evt);
 
-    void deliverMessage(byte [] message, Host host, String quicStreamId, short sourceProto, short destProto);
+    void deliverMessage(byte [] message, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId);
 }

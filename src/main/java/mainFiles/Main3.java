@@ -18,7 +18,6 @@ public class Main3 {
     public static void main(String[] args) throws Exception {
         System.out.println("Hello world 2!");
 
-
         //Get the (singleton) pt.unl.fct.di.novasys.babel instance
         Babel babel = Babel.getInstance();
         babel.registerChannelInitializer(BabelQuicChannel.NAME,new BabelQuicInitializer());

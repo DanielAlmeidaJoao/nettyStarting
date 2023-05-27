@@ -1,5 +1,7 @@
 package pt.unl.fct.di.novasys.babel.core;
 
+import appExamples2.appExamples.channels.FactoryMethods;
+import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ISerializer;
@@ -43,7 +45,13 @@ public class BabelMessageSerializer implements BabelMessageSerializerInterface<B
         short dest = byteBuf.readShort();
         short id = byteBuf.readShort();
         ISerializer<? extends ProtoMessage> iSerializer = serializers.get(id);
-        if(iSerializer == null){
+        if(iSerializer == null ){
+            if(id == FactoryMethods.BYTE_MESSAGE_ID){
+                short handlerId = byteBuf.readShort();
+                byte [] data = new byte[byteBuf.readableBytes()];
+                byteBuf.readBytes(data);
+                return new BabelMessage(new BytesMessageSentOrFail(handlerId,data,data.length), source, dest);
+            }
             throw new AssertionError("No deserializer found for message id " + id);
         }
         ProtoMessage deserialize = iSerializer.deserialize(byteBuf);
