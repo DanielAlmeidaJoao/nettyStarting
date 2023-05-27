@@ -4,7 +4,8 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
-import quicSupport.utils.NetworkRole;
+import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -44,9 +45,15 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void streamReader(String streamId, byte[] bytes){
+    public void onReceivedDelimitedMessage(String streamId, byte[] bytes){
         executor.submit(() -> {
-            super.streamReader(streamId, bytes);
+            super.onReceivedDelimitedMessage(streamId, bytes);
+        });
+    }
+    @Override
+    public void onReceivedStream(String streamId, byte [] bytes) {
+        executor.submit(() -> {
+            super.onReceivedStream(streamId, bytes);
         });
     }
     @Override
@@ -75,9 +82,9 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
     /*********************************** Channel Handlers **********************************/
 
     /*********************************** User Actions **************************************/
-    public void open(InetSocketAddress peer) {
+    public void open(InetSocketAddress peer, ConnectionOrStreamType type) {
         executor.submit(() -> {
-            super.open(peer);
+            super.open(peer,type);
         });
     }
     @Override

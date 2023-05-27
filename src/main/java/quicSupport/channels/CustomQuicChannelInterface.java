@@ -2,12 +2,13 @@ package quicSupport.channels;
 
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.net.InetSocketAddress;
 
 public interface CustomQuicChannelInterface {
 
-    void open(InetSocketAddress peer);
+    void open(InetSocketAddress peer, ConnectionOrStreamType type);
 
     void closeConnection(InetSocketAddress peer);
 

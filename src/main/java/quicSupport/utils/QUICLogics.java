@@ -79,8 +79,6 @@ public class QUICLogics {
                 })
                 .sync()
                 .getNow();
-        QuicStreamChannelConfig config = streamChannel.config();
-        config.setAllowHalfClosure(false);
         return streamChannel;
     }
     public static MessageToByteEncoderParameter writeBytes(int len, byte [] data, byte msgType){

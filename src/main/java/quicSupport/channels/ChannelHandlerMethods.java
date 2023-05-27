@@ -20,7 +20,8 @@ public interface ChannelHandlerMethods {
 
     void onStreamCreatedHandler(InetSocketAddress peer, String streamId);
 
-    void onChannelRead(String streamId, byte[] bytes, InetSocketAddress from);
+    void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
+    void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from);
 
     void onConnectionUp(boolean incoming, InetSocketAddress peer);
 

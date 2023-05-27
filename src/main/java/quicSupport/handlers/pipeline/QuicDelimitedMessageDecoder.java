@@ -16,7 +16,7 @@ import java.util.List;
 
 public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
-
+    public static final String HANDLER_NAME="QuicDelimitedMessageDecoder";
     private final boolean incoming;
     private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
@@ -45,7 +45,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         msg.discardSomeReadBytes();
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(QUICLogics.APP_DATA==msgType){
-            consumer.streamReader(ch.id().asShortText(),data);
+            consumer.onReceivedDelimitedMessage(ch.id().asShortText(),data);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedAppMessages(q.getReceivedAppMessages()+1);

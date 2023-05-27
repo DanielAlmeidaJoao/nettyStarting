@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.*;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.channels.UDPChannel;
 import udpSupport.channels.UDPChannelHandlerMethods;
@@ -140,7 +141,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void openConnection(Host peer,short proto) {
+    public void openConnection(Host peer, short proto, ConnectionOrStreamType streamType) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         listener.deliverEvent(new OutConnectionUp(peer));
     }
@@ -160,6 +161,16 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
+    }
+
+    @Override
+    public void sendStream(byte[] stream,int len,String streamId, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC CHANNELS").printStackTrace();
+    }
+
+    @Override
+    public void sendStream(byte[] msg,int len,Host host, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
     }
 
     @Override

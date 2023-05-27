@@ -15,7 +15,9 @@ public interface CustomQuicChannelConsumer {
 
     void streamCreatedHandler(QuicStreamChannel channel);
 
-    void streamReader(String streamId, byte[] bytes);
+    void onReceivedDelimitedMessage(String streamId, byte[] bytes);
+
+    void onReceivedStream(String streamId, byte [] bytes);
 
     void streamClosedHandler(QuicStreamChannel channel);
 

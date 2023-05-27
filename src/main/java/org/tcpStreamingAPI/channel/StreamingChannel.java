@@ -14,7 +14,7 @@ import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.utils.TCPStreamUtils;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
-import quicSupport.utils.NetworkRole;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.QUICLogics;
 
 import java.io.IOException;

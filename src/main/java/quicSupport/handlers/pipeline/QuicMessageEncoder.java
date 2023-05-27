@@ -9,6 +9,7 @@ import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncoderParameter> {
+    public static final String HANDLER_NAME="QuicMessageEncoder";
 
     private final QuicChannelMetrics metrics;
 
@@ -26,8 +27,8 @@ public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncode
         byteBuf.writeBytes(message.getData(),0, message.getDataLen());
         //byteBuf.markReaderIndex();
 
-        int bytes = message.getDataLen();// byteBuf.readInt(); //TODO MAKES NO SENSE ...
-        byte msgType = message.getMsgCode(); // byteBuf.readByte();
+        int bytes = message.getDataLen();
+        byte msgType = message.getMsgCode();
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             switch (msgType){
@@ -46,7 +47,6 @@ public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncode
                     throw new AssertionError("Unknown msg code in encoder: " + msgType);
             }
         }
-        //byteBuf.resetReaderIndex();
     }
 
 }

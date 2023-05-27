@@ -13,7 +13,8 @@ import pt.unl.fct.di.novasys.babel.channels.*;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
-import quicSupport.utils.NetworkRole;
+import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -93,7 +94,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void openConnection(Host peer,short proto) {
+    public void openConnection(Host peer, short proto, ConnectionOrStreamType type) {
         tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
@@ -157,6 +158,16 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
+    }
+
+    @Override
+    public void sendStream(byte[] stream,int len, String streamId, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel").printStackTrace();
+    }
+
+    @Override
+    public void sendStream(byte[] msg,int len, Host host, short proto) {
+
     }
 
     @Override

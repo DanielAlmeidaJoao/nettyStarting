@@ -142,6 +142,9 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
         sendByte =!sendByte;
     }
+    public void sendStream(String message){
+        super.sendStream(channelId,message.getBytes(),message.length(),dest);
+    }
     public void createStream(){
         super.createStream(dest);
     }

@@ -19,7 +19,8 @@ import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelInterface;
 import quicSupport.channels.SingleThreadedQuicChannel;
-import quicSupport.utils.NetworkRole;
+import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.IOException;
@@ -118,8 +119,8 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
-    public void openConnection(Host peer, short proto) {
-        customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer));
+    public void openConnection(Host peer, short proto, ConnectionOrStreamType type) {
+        customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
     public void createStream(Host peer){
@@ -145,6 +146,17 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         customQuicChannel.send(streamId,
                 toSend,toSend.length);
     }
+
+    @Override
+    public void sendStream(byte[] stream,int len, String streamId, short proto) {
+        customQuicChannel.send(streamId, stream,len);
+    }
+
+    @Override
+    public void sendStream(byte[] stream,int len, Host host, short proto) {
+        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(host),stream,len);
+    }
+
     @Override
     public void registerChannelInterest(short protoId) {
         //TODO
@@ -159,7 +171,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         listener.deliverEvent(new StreamCreatedEvent(streamId,FactoryMethods.toBabelHost(peer)));
     }
 
-    public void onChannelRead(String streamId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
@@ -168,6 +180,11 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from) {
+        System.out.println("READ STREAM");
     }
 
     public void onConnectionUp(boolean incoming, InetSocketAddress peer) {

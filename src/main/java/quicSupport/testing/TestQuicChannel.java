@@ -8,7 +8,8 @@ import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
-import quicSupport.utils.NetworkRole;
+import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.FileInputStream;
@@ -20,7 +21,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
-public class TestQuicChannel implements ChannelHandlerMethods {
+    public class TestQuicChannel implements ChannelHandlerMethods {
 
     private static final Logger logger = LogManager.getLogger(TestQuicChannel.class);
     //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(TestQuicChannel.class);
@@ -89,7 +90,7 @@ public class TestQuicChannel implements ChannelHandlerMethods {
     FileOutputStream fos = new FileOutputStream("TESTQUIC33.MP4");
     int total = 0;
     @Override
-    public void onChannelRead(String streamId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from) {
         logger.info("READ "+bytes.length);
         total += bytes.length;
         try{
@@ -99,6 +100,12 @@ public class TestQuicChannel implements ChannelHandlerMethods {
             e.printStackTrace();
         }
         //System.out.println(new String(bytes));
+    }
+
+    @Override
+    public void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from) {
+        //TODO
+        System.out.println("READ STREAAAAAAAM");
     }
 
     @Override
@@ -165,7 +172,7 @@ public class TestQuicChannel implements ChannelHandlerMethods {
     }
 
     public void open(InetSocketAddress remote) {
-        customQuicChannel.open(remote);
+        customQuicChannel.open(remote,ConnectionOrStreamType.STRUCTURED_MESSAGE);
     }
 
     public void closeConnection(InetSocketAddress peer) {

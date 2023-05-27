@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
-import quicSupport.utils.NetworkRole;
+import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

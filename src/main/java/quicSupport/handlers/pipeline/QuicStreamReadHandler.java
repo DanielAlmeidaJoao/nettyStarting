@@ -5,7 +5,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import io.netty.incubator.codec.quic.QuicStreamChannelConfig;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
@@ -28,8 +27,6 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        QuicStreamChannelConfig config = ch.config();
-        config.setAllowHalfClosure(false);
         if(metrics!=null){
             QuicConnectionMetrics m = metrics.getConnectionMetrics(ch.parent().remoteAddress());
             m.setStreamCount(m.getStreamCount()+1);
@@ -42,10 +39,8 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         cause.printStackTrace();
-        consumer.streamErrorHandler(ch,cause);
-        cause.printStackTrace();
+        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause);
     }
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {

@@ -31,6 +31,7 @@ import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import javax.net.ssl.TrustManagerFactory;
@@ -89,7 +90,7 @@ public final class QuicClientExample {
         clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
     }
-    public void connect(InetSocketAddress remote, Properties properties) throws Exception{
+    public void connect(InetSocketAddress remote, Properties properties, ConnectionOrStreamType connectionOrStreamType) throws Exception{
         Bootstrap bs = new Bootstrap();
 
         Channel channel = bs.group(group)
@@ -98,7 +99,7 @@ public final class QuicClientExample {
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
-                .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics))
+                .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics,connectionOrStreamType))
                 .streamHandler(new ServerChannelInitializer(consumer,metrics, QUICLogics.OUTGOING_CONNECTION))
                 .remoteAddress(remote)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))

@@ -76,7 +76,11 @@ public class Main3 {
                 echoProtocol.streamsAvailable();
             }else if(input.equalsIgnoreCase("shutdown")){
                 echoProtocol.shutDown();
-            } else{
+            }else if(input.equalsIgnoreCase("sendstream")){
+                System.out.printf("MESSAGE TO SEND:");
+                String message = scanner.nextLine();
+                echoProtocol.sendStream(message.repeat(1000*1000));
+            }else {
                 System.out.println("UNKNOWN COMMAND: "+input);
             }
         }

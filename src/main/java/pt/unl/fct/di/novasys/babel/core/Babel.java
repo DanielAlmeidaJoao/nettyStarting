@@ -15,6 +15,7 @@ import pt.unl.fct.di.novasys.babel.internal.IPCEvent;
 import pt.unl.fct.di.novasys.babel.internal.NotificationEvent;
 import pt.unl.fct.di.novasys.babel.internal.TimerEvent;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -260,6 +261,20 @@ public class Babel {
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
         channelEntry.getLeft().sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
     }
+    protected void sendStream(int channelId,byte[] stream,int dataLen, String streamId,short proto){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Sending stream bytes to non-existing channelId " + channelId);
+        channelEntry.getLeft().sendStream(stream,dataLen,streamId,proto);
+    }
+    protected void sendStream(int channelId,byte[] stream,int dataLen, Host dest, short sourceProto){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Sending message to non-existing channelId " + channelId);
+        channelEntry.getLeft().sendStream(stream,dataLen,dest,sourceProto);
+    }
     void createStream(int channelId, short protoId,Host peer) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
@@ -333,7 +348,7 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Opening connection in non-existing channelId " + channelId);
-        channelEntry.getLeft().openConnection(target,proto);
+        channelEntry.getLeft().openConnection(target,proto, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
     }
 
     /**

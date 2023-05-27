@@ -2,7 +2,6 @@ package quicSupport.handlers.pipeline;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.incubator.codec.quic.QuicChannelOption;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
@@ -21,7 +20,6 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        ctx.channel().config().setOption(QuicChannelOption.SO_RCVBUF,1024*1024);
         if(metrics!=null){
             metrics.initConnectionMetrics(ctx.channel().remoteAddress());
         }
