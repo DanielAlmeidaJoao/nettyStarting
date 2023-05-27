@@ -18,6 +18,7 @@ import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -146,8 +147,12 @@ public class EchoProtocol extends GenericProtocolExtension {
         System.out.println("SENDING "+message.length());
         super.sendStream(channelId,message.getBytes(),message.length(),dest);
     }
+    public void sendStream(String message, String streamId){
+        System.out.println("SENDING "+message.length());
+        super.sendStream(channelId,message.getBytes(),message.length(),streamId);
+    }
     public void createStream(){
-        super.createStream(dest);
+        super.createStream(dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
     }
 
     public void closeStreamM(String stream){

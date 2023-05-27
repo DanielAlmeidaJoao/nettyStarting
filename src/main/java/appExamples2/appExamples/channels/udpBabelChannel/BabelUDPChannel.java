@@ -174,7 +174,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void createStream(Host peer) {
+    public void createStream(Host peer, ConnectionOrStreamType type) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }

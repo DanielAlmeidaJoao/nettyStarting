@@ -123,8 +123,8 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
-    public void createStream(Host peer){
-        customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer));
+    public void createStream(Host peer,ConnectionOrStreamType type){
+        customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
     public void closeStream(String streamId, short proto){
@@ -185,7 +185,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     @Override
     public void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from) {
         read += bytes.length;
-        System.out.println("READ STREAM. TOTAL -> "+read);
+        System.out.println(streamId+" READ STREAM. TOTAL -> "+read);
     }
 
     public void onConnectionUp(boolean incoming, InetSocketAddress peer) {

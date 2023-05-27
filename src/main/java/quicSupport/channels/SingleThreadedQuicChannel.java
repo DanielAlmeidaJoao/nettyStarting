@@ -101,9 +101,9 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void createStream(InetSocketAddress peer) {
+    public void createStream(InetSocketAddress peer,ConnectionOrStreamType type) {
         executor.submit(() -> {
-            super.createStream(peer);
+            super.createStream(peer,type);
         });
     }
     @Override

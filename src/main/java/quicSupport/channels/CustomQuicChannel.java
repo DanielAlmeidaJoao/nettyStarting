@@ -328,10 +328,26 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
         return quicConnection;
     }
-    public void createStream(InetSocketAddress peer) {
+    public void createStream(InetSocketAddress peer,ConnectionOrStreamType type) {
         try{
             CustomConnection customConnection = getOrThrow(peer);
-            QUICLogics.createStream(customConnection.getConnection(),this,metrics,customConnection.isInComing());
+            QuicStreamChannel quicStreamChannel = QUICLogics.createStream(customConnection.getConnection(),this,metrics,customConnection.isInComing());
+            String msg = type.toString();
+            quicStreamChannel.writeAndFlush(QUICLogics.writeBytes(msg.length(),msg.getBytes(),STREAM_CREATED,ConnectionOrStreamType.STRUCTURED_MESSAGE))
+                    .addListener(future -> {
+                        if(future.isSuccess()){
+                            if(ConnectionOrStreamType.UNSTRUCTURED_STREAM == type){
+                                quicStreamChannel.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
+                                quicStreamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,false));
+                            }
+                        }else{
+                            future.cause().printStackTrace();
+                            quicStreamChannel.close();
+                            quicStreamChannel.disconnect();
+                            quicStreamChannel.shutdown();
+                        }
+
+                    });
         }catch (Exception e){
             overridenMethods.failedToCreateStream(peer,e.getCause());
         }

@@ -58,6 +58,18 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedKeepAliveMessages(1+q.getReceivedKeepAliveMessages());
             }
+        }else if(QUICLogics.STREAM_CREATED==msgType){
+            ConnectionOrStreamType type = ConnectionOrStreamType.valueOf(new String(data));
+            System.out.println("TYPPEEE "+type);
+            if(ConnectionOrStreamType.UNSTRUCTURED_STREAM == type){
+                ch.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
+                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
+            }
+            if(metrics!=null){
+                QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
+                q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
+                q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
+            }
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
             consumer.channelActive(ch,data,null, ConnectionOrStreamType.STRUCTURED_MESSAGE);
             if(metrics!=null){

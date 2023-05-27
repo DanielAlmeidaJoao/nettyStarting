@@ -14,7 +14,7 @@ public interface CustomQuicChannelInterface {
 
     void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler);
 
-    void createStream(InetSocketAddress peer);
+    void createStream(InetSocketAddress peer,ConnectionOrStreamType type);
 
     void closeStream(String streamId);
 

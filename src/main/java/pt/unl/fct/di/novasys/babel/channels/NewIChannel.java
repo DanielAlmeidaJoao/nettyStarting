@@ -20,7 +20,7 @@ public interface NewIChannel<T> {
 
 
 
-    void createStream(Host peer);
+    void createStream(Host peer, ConnectionOrStreamType type);
 
     /**
      * removes 'proto' from the set of the protocols using this streamId.

@@ -17,12 +17,10 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
     private static final Logger logger = LogManager.getLogger(QUICRawStreamDecoder.class);
 
     public static final String HANDLER_NAME = "QUICRawStreamDecoder";
-    private final boolean incoming;
     private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
 
     public QUICRawStreamDecoder(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics, boolean incoming){
-        this.incoming=incoming;
         this.consumer=streamListenerExecutor;
         this.metrics=metrics;
         System.out.println("OPENED UNSTRUCTERED IN "+HANDLER_NAME);

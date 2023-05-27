@@ -80,7 +80,13 @@ public class Main3 {
                 System.out.printf("MESSAGE TO SEND:");
                 String message = scanner.nextLine();
                 echoProtocol.sendStream(message.repeat(1000*1000));
-            }else {
+            }else if(input.equalsIgnoreCase("streamstream")){
+                    System.out.printf("MESSAGE TO SEND:");
+                    String message = scanner.nextLine();
+                    System.out.printf("STREAM:");
+                    String stream = scanner.nextLine();
+                    echoProtocol.sendStream(message.repeat(1000*1000),stream);
+            } else {
                 System.out.println("UNKNOWN COMMAND: "+input);
             }
         }
