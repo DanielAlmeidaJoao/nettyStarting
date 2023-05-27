@@ -16,6 +16,7 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
 
     public SingleThreadedQuicChannel(Properties properties, NetworkRole role, ChannelHandlerMethods mom) throws IOException {
         super(properties,true,role,mom);
+        System.out.println("SINGLE THREADED CHANNEL");
         executor = new DefaultEventExecutor();
         executor.terminationFuture().addListener(future -> {
            System.out.println("TERMINATED WHY ??? "+future.isSuccess()+" cause: "+future.cause());
@@ -67,9 +68,9 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
 
     /*********************************** Channel Handlers **********************************/
     @Override
-    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData,InetSocketAddress remotePeer){
+    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData,InetSocketAddress remotePeer,ConnectionOrStreamType type){
         executor.submit(() -> {
-            super.channelActive(streamChannel,controlData,remotePeer);
+            super.channelActive(streamChannel,controlData,remotePeer,type);
         });
     }
     @Override
@@ -118,15 +119,15 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void send(String streamId, byte[] message, int len) {
+    public void send(String streamId, byte[] message, int len,ConnectionOrStreamType type) {
         executor.submit(() -> {
-            super.send(streamId,message,len);
+            super.send(streamId,message,len,type);
         });
     }
     @Override
-    public void send(InetSocketAddress peer, byte[] message, int len) {
+    public void send(InetSocketAddress peer, byte[] message, int len, ConnectionOrStreamType type) {
         executor.submit(() -> {
-            super.send(peer,message,len);
+            super.send(peer,message,len,type);
         });
     }
     /*********************************** User Actions **************************************/

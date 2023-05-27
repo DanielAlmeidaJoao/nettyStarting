@@ -2,11 +2,13 @@ package quicSupport.utils.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 @AllArgsConstructor
 @Getter
 public class MessageToByteEncoderParameter {
-    private final byte msgCode;
-    private final byte [] data;
-    private final int dataLen;
+    public final byte msgCode;
+    public final byte [] data;
+    public final int dataLen;
+    public final ConnectionOrStreamType connectionOrStreamType;
 }

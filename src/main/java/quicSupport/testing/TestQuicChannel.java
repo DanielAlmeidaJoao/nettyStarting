@@ -142,7 +142,7 @@ import java.util.Properties;
             int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-                customQuicChannel.send(peer,bytes,read);
+                customQuicChannel.send(peer,bytes,read,ConnectionOrStreamType.STRUCTURED_MESSAGE);
                 cc++;
                 if(cc>100){
                     cc=0;
@@ -196,11 +196,11 @@ import java.util.Properties;
     }
 
     public void send(String streamId, byte[] message, int len) {
-        customQuicChannel.send(streamId,message,len);
+        customQuicChannel.send(streamId,message,len,ConnectionOrStreamType.STRUCTURED_MESSAGE);
     }
 
     public void send(InetSocketAddress peer, byte[] message, int len) {
-        customQuicChannel.send(peer,message,len);
+        customQuicChannel.send(peer,message,len,ConnectionOrStreamType.STRUCTURED_MESSAGE);
     }
 
     public boolean enabledMetrics() {

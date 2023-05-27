@@ -20,9 +20,9 @@ public interface CustomQuicChannelInterface {
 
     void readMetrics(QuicReadMetricsHandler handler);
 
-    void send(String streamId, byte[] message, int len);
+    void send(String streamId, byte[] message, int len,ConnectionOrStreamType type);
 
-    void send(InetSocketAddress peer, byte[] message, int len);
+    void send(InetSocketAddress peer, byte[] message, int len,ConnectionOrStreamType type);
 
     boolean enabledMetrics();
 

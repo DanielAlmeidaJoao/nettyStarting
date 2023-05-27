@@ -1,6 +1,5 @@
 package quicSupport.handlers.pipeline;
 
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicChannel;
@@ -14,7 +13,6 @@ import quicSupport.utils.enums.ConnectionOrStreamType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
-import java.util.Map;
 
 public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(QuicClientChannelConHandler.class);
@@ -42,20 +40,12 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         QuicStreamChannel streamChannel = QUICLogics.createStream(out,consumer,metrics,false);
         QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(),connectionOrStreamType);
         byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
-        streamChannel.writeAndFlush(QUICLogics.writeBytes(hs.length,hs, QUICLogics.HANDSHAKE_MESSAGE))
+        streamChannel.writeAndFlush(QUICLogics.writeBytes(hs.length,hs,QUICLogics.HANDSHAKE_MESSAGE,ConnectionOrStreamType.STRUCTURED_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
-                        consumer.channelActive(streamChannel,null,remote);
-                        System.out.println("BEFORE");
-                        for (Map.Entry<String, ChannelHandler> stringChannelHandlerEntry : streamChannel.pipeline()) {
-                            System.out.println(stringChannelHandlerEntry.getKey()+" "+stringChannelHandlerEntry.getValue());
-                        }
+                        consumer.channelActive(streamChannel,null,remote,connectionOrStreamType);
                         streamChannel.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                         streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
-                        System.out.println("AFTER");
-                        for (Map.Entry<String, ChannelHandler> stringChannelHandlerEntry : streamChannel.pipeline()) {
-                            System.out.println(stringChannelHandlerEntry.getKey()+" "+stringChannelHandlerEntry.getValue());
-                        }
                     }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
                         consumer.streamErrorHandler(streamChannel,future.cause());

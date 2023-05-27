@@ -5,23 +5,25 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncoderParameter> {
     public static final String HANDLER_NAME="QuicMessageEncoder";
+    public final ConnectionOrStreamType type;
 
     private final QuicChannelMetrics metrics;
 
     public QuicMessageEncoder(QuicChannelMetrics metrics){
         this.metrics = metrics;
+        type = ConnectionOrStreamType.STRUCTURED_MESSAGE;
     }
     @Override
-    protected void encode(ChannelHandlerContext ctx, MessageToByteEncoderParameter message, ByteBuf byteBuf) throws Exception {
-        /**
-        if(metrics==null){
-            return;
-        }**/
+    protected void encode(ChannelHandlerContext ctx, MessageToByteEncoderParameter message, ByteBuf byteBuf) {
+        if(type!=message.connectionOrStreamType){
+            throw new RuntimeException("SENDING STREAM DATA TO A MESSAGE DATA CONNECTION");
+        }
         byteBuf.writeInt(message.getDataLen());
         byteBuf.writeByte(message.getMsgCode());
         byteBuf.writeBytes(message.getData(),0, message.getDataLen());

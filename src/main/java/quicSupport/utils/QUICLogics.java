@@ -6,6 +6,7 @@ import org.apache.commons.codec.binary.Hex;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -81,8 +82,8 @@ public class QUICLogics {
                 .getNow();
         return streamChannel;
     }
-    public static MessageToByteEncoderParameter writeBytes(int len, byte [] data, byte msgType){
-        return new MessageToByteEncoderParameter(msgType,data,len);
+    public static MessageToByteEncoderParameter writeBytes(int len, byte [] data, byte msgType, ConnectionOrStreamType type){
+        return new MessageToByteEncoderParameter(msgType,data,len,type);
         /**
         ByteBuf buf = Unpooled.buffer(len+WRT_OFFSET);
         buf.writeInt(len);

@@ -1,6 +1,5 @@
 package quicSupport.channels;
 
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -142,7 +141,6 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
     }
     public void onReceivedStream(String streamId, byte [] bytes){
-        System.out.println("RECEIVED STREAMID BYTES:"+bytes.length);
         InetSocketAddress remote = streamHostMapping.get(streamId);
         if(remote==null){return;}
         CustomConnection connection = connections.get(remote);
@@ -162,12 +160,12 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
     }
 
-    private void sendPendingMessages(InetSocketAddress peer){
+    private void sendPendingMessages(InetSocketAddress peer,ConnectionOrStreamType type){
         List<byte []> messages = connecting.remove(peer);
         if(messages!=null){
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",getSelf(),messages.size(),peer);
             for (byte[] message : messages) {
-                send(peer,message,message.length);
+                send(peer,message,message.length,type);
             }
         }
     }
@@ -175,7 +173,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     /********************************** Stream Handlers **********************************/
 
     /*********************************** Channel Handlers **********************************/
-    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData,InetSocketAddress remotePeer){
+    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData,InetSocketAddress remotePeer,ConnectionOrStreamType type){
         boolean inConnection = false;
         try {
             InetSocketAddress listeningAddress;
@@ -185,22 +183,14 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             }else{//is InComing
                 handShakeMessage = gson.fromJson(new String(controlData),QuicHandShakeMessage.class);
                 listeningAddress = handShakeMessage.getAddress();
-                System.out.println("BEFORE");
-                for (Map.Entry<String, ChannelHandler> stringChannelHandlerEntry : streamChannel.pipeline()) {
-                    System.out.println(stringChannelHandlerEntry.getKey()+" "+stringChannelHandlerEntry.getValue());
-                }
-                if(handShakeMessage.connectionOrStreamType== ConnectionOrStreamType.UNSTRUCTURED_STREAM){
+                if(handShakeMessage.connectionOrStreamType==ConnectionOrStreamType.UNSTRUCTURED_STREAM){
                     streamChannel.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                     streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,true));
                 }
-                System.out.println("AFTER");
-                for (Map.Entry<String, ChannelHandler> stringChannelHandlerEntry : streamChannel.pipeline()) {
-                    System.out.println(stringChannelHandlerEntry.getKey()+" "+stringChannelHandlerEntry.getValue());
-                }
+                type = handShakeMessage.connectionOrStreamType;
                 inConnection=true;
             }
-
-            CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout);
+            CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
             CustomConnection old = connections.put(listeningAddress,current);
             if(old!=null){
                 int comp = QUICLogics.compAddresses(self,listeningAddress);
@@ -220,7 +210,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                             }else{
                                 keepOldSilently(streamChannel, listeningAddress, old);
                                 logger.info("KEPT OLD STREAM {}. IN CONNECTION: {} FROM {}",old.getDefaultStream().id().asShortText(),inConnection,listeningAddress);
-                                sendPendingMessages(listeningAddress);
+                                sendPendingMessages(listeningAddress,type);
                                 return;
                             }
                         }else if(comp>0){
@@ -228,7 +218,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                             if(inConnection){
                                 keepOldSilently(streamChannel, listeningAddress, old);
                                 logger.info("KEPT OLD STREAM {}. IN CONNECTION: {} FROM {}",streamChannel.id().asShortText(),inConnection,listeningAddress);
-                                sendPendingMessages(listeningAddress);
+                                sendPendingMessages(listeningAddress,type);
                                 return;
                             }else{
                                 silentlyCloseCon(old.getDefaultStream());
@@ -242,7 +232,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             }
             channelIds.put(streamChannel.parent().id().asShortText(),listeningAddress);
             streamHostMapping.put(streamChannel.id().asShortText(),listeningAddress);
-            sendPendingMessages(listeningAddress);
+            sendPendingMessages(listeningAddress,type);
             if(enableMetrics){
                 metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
             }
@@ -360,20 +350,20 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
     }
 
-    public void send(String streamId, byte[] message, int len) {
+    public void send(String streamId, byte[] message, int len,ConnectionOrStreamType type) {
         InetSocketAddress host = streamHostMapping.get(streamId);
         try{
             if(host==null){
                 overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN STREAM ID: "+streamId),host);
             }else {
-                sendMessage(getOrThrow(host).getStream(streamId),message,len,host);
+                sendMessage(getOrThrow(host).getStream(streamId),message,len,host,type);
             }
         }catch (UnknownElement e){
             logger.debug(e.getMessage());
             overridenMethods.onMessageSent(message,len,e,host);
         }
     }
-    public void send(InetSocketAddress peer, byte[] message, int len){
+    public void send(InetSocketAddress peer, byte[] message, int len,ConnectionOrStreamType type){
         CustomConnection connection = connections.get(peer);
         if(connection==null){
             List<byte []> pendingMessages = connecting.get(peer);
@@ -381,21 +371,22 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 pendingMessages.add(message);
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             }else if (connectIfNotConnected){
-                openLogics(peer,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+                openLogics(peer,type);
                 connecting.get(peer).add(message);
             }else{
                 overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN CONNECTION TO "+peer),peer);
             }
         }else{
-            sendMessage(connection.getDefaultStream(),message,len,peer);
+            sendMessage(connection.getDefaultStream(),message,len,peer,type);
         }
     }
-    private void sendMessage(QuicStreamChannel streamChannel, byte[] message, int len, InetSocketAddress peer){
-        streamChannel.writeAndFlush(QUICLogics.writeBytes(len,message, QUICLogics.APP_DATA))
+    private void sendMessage(QuicStreamChannel streamChannel, byte[] message, int len, InetSocketAddress peer, ConnectionOrStreamType type){
+        streamChannel.writeAndFlush(QUICLogics.writeBytes(len,message, QUICLogics.APP_DATA,type))
                 .addListener(future -> {
                     if(future.isSuccess()){
                         overridenMethods.onMessageSent(message,len,null,peer);
                     }else{
+                        future.cause().printStackTrace();
                         overridenMethods.onMessageSent(message,len,future.cause(),peer);
                     }
                 });

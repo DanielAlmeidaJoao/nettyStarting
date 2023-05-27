@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -57,13 +58,15 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedKeepAliveMessages(1+q.getReceivedKeepAliveMessages());
             }
-        }else{
-            consumer.channelActive(ch,data,null);
+        }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
+            consumer.channelActive(ch,data,null, ConnectionOrStreamType.STRUCTURED_MESSAGE);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
             }
+        }else{
+            throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
         }
     }    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
