@@ -9,13 +9,14 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.client_server.QuicServerExample;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(QuicServerExample.class);
-    public final static byte HANDSHAKE_MESSAGE = 'A';
-    public final static byte APP_DATA = 'B';
+    public static final String HANDLER_NAME="QuicStreamReadHandler";
+
     private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
 
@@ -24,14 +25,12 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         this.metrics = metrics;
     }
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
+    public void notifyApp(QuicStreamChannel quicStreamChannel,ConnectionOrStreamType type){
         if(metrics!=null){
-            QuicConnectionMetrics m = metrics.getConnectionMetrics(ch.parent().remoteAddress());
+            QuicConnectionMetrics m = metrics.getConnectionMetrics(quicStreamChannel.parent().remoteAddress());
             m.setStreamCount(m.getStreamCount()+1);
         }
-        consumer.streamCreatedHandler(ch);
+        consumer.streamCreatedHandler(quicStreamChannel,type);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {

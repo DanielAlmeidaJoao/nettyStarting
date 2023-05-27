@@ -10,10 +10,7 @@ import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
-import quicSupport.handlers.pipeline.QUICRawStreamDecoder;
-import quicSupport.handlers.pipeline.QuicDelimitedMessageDecoder;
-import quicSupport.handlers.pipeline.QuicMessageEncoder;
-import quicSupport.handlers.pipeline.QuicUnstructuredStreamEncoder;
+import quicSupport.handlers.pipeline.*;
 import quicSupport.utils.CustomConnection;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
@@ -118,14 +115,14 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
     }
 
-    public void streamCreatedHandler(QuicStreamChannel channel) {
+    public void streamCreatedHandler(QuicStreamChannel channel, ConnectionOrStreamType type) {
         InetSocketAddress peer = channelIds.get(channel.parent().id().asShortText());
         if(peer!=null){//THE FIRST STREAM IS DEFAULT. NOT NOTIFIED TO THE CLIENT
             String streamId = channel.id().asShortText();
             streamHostMapping.put(streamId,peer);
             logger.info("{}. STREAM CREATED {}",self,streamId);
             connections.get(peer).addStream(channel);
-            overridenMethods.onStreamCreatedHandler(peer,streamId);
+            overridenMethods.onStreamCreatedHandler(peer,streamId,type);
         }
     }
 
@@ -340,13 +337,13 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                                 quicStreamChannel.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                                 quicStreamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,false));
                             }
+                            ((QuicStreamReadHandler) quicStreamChannel.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyApp(quicStreamChannel,type);
                         }else{
                             future.cause().printStackTrace();
                             quicStreamChannel.close();
                             quicStreamChannel.disconnect();
                             quicStreamChannel.shutdown();
                         }
-
                     });
         }catch (Exception e){
             overridenMethods.failedToCreateStream(peer,e.getCause());

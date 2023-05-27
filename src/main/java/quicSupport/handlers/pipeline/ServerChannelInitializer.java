@@ -27,7 +27,7 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
         } **/
         cp.addLast(QuicMessageEncoder.HANDLER_NAME,new QuicMessageEncoder(quicChannelMetrics));
         cp.addLast(QuicDelimitedMessageDecoder.HANDLER_NAME,new QuicDelimitedMessageDecoder(consumer,quicChannelMetrics,incoming));
-        cp.addLast(new QuicStreamReadHandler(consumer,quicChannelMetrics));
+        cp.addLast(QuicStreamReadHandler.HANDLER_NAME,new QuicStreamReadHandler(consumer,quicChannelMetrics));
     }
 
     @Override

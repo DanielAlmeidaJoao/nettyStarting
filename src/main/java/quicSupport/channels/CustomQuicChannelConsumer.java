@@ -14,7 +14,7 @@ public interface CustomQuicChannelConsumer {
 
     void onKeepAliveMessage(String parentId);
 
-    void streamCreatedHandler(QuicStreamChannel channel);
+    void streamCreatedHandler(QuicStreamChannel channel, ConnectionOrStreamType type);
 
     void onReceivedDelimitedMessage(String streamId, byte[] bytes);
 

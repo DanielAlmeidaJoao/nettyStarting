@@ -1,5 +1,7 @@
 package quicSupport.channels;
 
+import quicSupport.utils.enums.ConnectionOrStreamType;
+
 import java.net.InetSocketAddress;
 
 public interface ChannelHandlerMethods {
@@ -18,7 +20,7 @@ public interface ChannelHandlerMethods {
 
     void onStreamClosedHandler(InetSocketAddress peer, String streamId);
 
-    void onStreamCreatedHandler(InetSocketAddress peer, String streamId);
+    void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type);
 
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
     void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from);

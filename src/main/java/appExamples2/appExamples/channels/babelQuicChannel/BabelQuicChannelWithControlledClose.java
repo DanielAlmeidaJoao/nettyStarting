@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -96,9 +97,9 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         }
     }
     @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId) {
+    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type) {
         streamChannelsMap.put(streamId,new HashSet<>());
-        super.onStreamCreatedHandler(peer,streamId);
+        super.onStreamCreatedHandler(peer,streamId, type);
     }
     @Override
     public void onStreamClosedHandler(InetSocketAddress peer, String streamId) {

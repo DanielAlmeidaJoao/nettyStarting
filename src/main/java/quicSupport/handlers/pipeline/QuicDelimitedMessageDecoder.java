@@ -60,11 +60,11 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }
         }else if(QUICLogics.STREAM_CREATED==msgType){
             ConnectionOrStreamType type = ConnectionOrStreamType.valueOf(new String(data));
-            System.out.println("TYPPEEE "+type);
             if(ConnectionOrStreamType.UNSTRUCTURED_STREAM == type){
                 ch.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
             }
+            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyApp(ch,type);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);

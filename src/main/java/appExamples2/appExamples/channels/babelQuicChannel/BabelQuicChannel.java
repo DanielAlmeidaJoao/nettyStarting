@@ -166,9 +166,9 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         logger.info("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getLocalizedMessage());
     }
 
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId) {
+    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type) {
         logger.info("STREAM {} CREATED FOR {} CONNECTION",streamId,peer);
-        listener.deliverEvent(new StreamCreatedEvent(streamId,FactoryMethods.toBabelHost(peer)));
+        listener.deliverEvent(new StreamCreatedEvent(streamId,FactoryMethods.toBabelHost(peer),type));
     }
 
     public void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from) {

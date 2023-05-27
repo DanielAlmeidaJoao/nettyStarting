@@ -57,7 +57,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId) {
+    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type) {
     }
 
     @Override

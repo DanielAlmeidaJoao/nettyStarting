@@ -152,7 +152,13 @@ public class EchoProtocol extends GenericProtocolExtension {
         super.sendStream(channelId,message.getBytes(),message.length(),streamId);
     }
     public void createStream(){
-        super.createStream(dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+        if(sendByte){
+            super.createStream(dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+        }else{
+            super.createStream(dest, ConnectionOrStreamType.STRUCTURED_MESSAGE);
+        }
+        sendByte =!sendByte;
+
     }
 
     public void closeStreamM(String stream){
@@ -200,7 +206,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
     }
     private void uponStreamCreated(StreamCreatedEvent event, int channelId) {
-        logger.info("STREAM {}::{} IS UP.",event.streamId,event.host);
+        logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.connectionOrStreamType);
     }
     private void uponStreamClosed(StreamClosedEvent event, int channelId) {
         logger.info("STREAM {}[::]{} IS DOWN.",event.streamId,event.host);

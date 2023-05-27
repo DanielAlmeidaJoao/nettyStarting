@@ -39,10 +39,10 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void streamCreatedHandler(QuicStreamChannel channel) {
+    public void streamCreatedHandler(QuicStreamChannel channel, ConnectionOrStreamType type) {
         executor.submit(() ->
         {
-            super.streamCreatedHandler(channel);
+            super.streamCreatedHandler(channel, type);
         });
     }
     @Override
