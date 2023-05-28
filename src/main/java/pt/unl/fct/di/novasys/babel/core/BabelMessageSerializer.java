@@ -50,6 +50,7 @@ public class BabelMessageSerializer implements BabelMessageSerializerInterface<B
                 short handlerId = byteBuf.readShort();
                 byte [] data = new byte[byteBuf.readableBytes()];
                 byteBuf.readBytes(data);
+
                 return new BabelMessage(new BytesMessageSentOrFail(handlerId,data,data.length), source, dest);
             }
             throw new AssertionError("No deserializer found for message id " + id);

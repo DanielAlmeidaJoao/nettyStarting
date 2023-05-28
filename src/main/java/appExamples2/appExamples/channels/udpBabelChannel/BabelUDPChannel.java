@@ -33,9 +33,9 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private final BabelMessageSerializerInterface<T> serializer;
     private final ChannelListener<T> listener;
     private final UDPChannelInterface udpChannelInterface;
+    public short ownerProto;
 
-
-    public BabelUDPChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
+    public BabelUDPChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short ownerProto) throws IOException {
         //super(properties);
         this.serializer = serializer;
         this.listener = list;
@@ -50,6 +50,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
             new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.MILLISECONDS);
         }
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
+        this.ownerProto = ownerProto;
     }
     void readMetricsMethod(ChannelStats stats){
         listener.deliverEvent(new UDPMetricsEvent(stats));
@@ -100,7 +101,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private void msgSent(byte[] message, Host host){
         try {
             if(triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,message),host);
+                listener.messageSent(FactoryMethods.unSerialize(serializer,message, ConnectionOrStreamType.STRUCTURED_MESSAGE,ownerProto),host, ConnectionOrStreamType.STRUCTURED_MESSAGE);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,9 +142,14 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
+    public short getChannelProto() {
+        return ownerProto;
+    }
+
+    @Override
     public void openConnection(Host peer, short proto, ConnectionOrStreamType streamType) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
-        listener.deliverEvent(new OutConnectionUp(peer));
+        listener.deliverEvent(new OutConnectionUp(peer, ConnectionOrStreamType.STRUCTURED_MESSAGE));
     }
 
     @Override

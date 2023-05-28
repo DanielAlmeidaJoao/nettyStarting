@@ -254,6 +254,7 @@ public class Babel {
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
         channelEntry.getLeft().sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
     }
+
     protected void sendMessage(int channelId,byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
@@ -288,6 +289,13 @@ public class Babel {
         if (channelEntry == null)
             throw new AssertionError("Creating stream message to non-existing channelId " + channelId);
         channelEntry.getLeft().closeStream(streamId,protoId);
+    }
+    protected short protoToReceiveStreamData(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Unknown channelId " + channelId);
+        return channelEntry.getLeft().getChannelProto();
     }
     /**
      * Closes a connection to a peer in a given channel.

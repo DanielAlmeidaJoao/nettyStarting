@@ -43,4 +43,6 @@ public interface NewIChannel<T> {
     InetSocketAddress [] getConnections();
     int connectedPeers();
     boolean shutDownChannel(short protoId);
+
+    short getChannelProto();
 }

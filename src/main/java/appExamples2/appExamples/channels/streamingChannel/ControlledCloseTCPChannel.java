@@ -10,8 +10,8 @@ import java.util.*;
 
 public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
     private Map<Host,Set<Short>> protocolsUsingTheChannel;
-    public ControlledCloseTCPChannel(BabelMessageSerializerInterface serializer, ChannelListener list, Properties properties) throws IOException {
-        super(serializer, list, properties);
+    public ControlledCloseTCPChannel(BabelMessageSerializerInterface serializer, ChannelListener list, Properties properties,short proto) throws IOException {
+        super(serializer, list, properties,proto);
         protocolsUsingTheChannel = new HashMap<>();
     }
 

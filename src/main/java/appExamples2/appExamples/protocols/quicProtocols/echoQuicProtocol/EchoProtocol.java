@@ -91,7 +91,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         try {
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail2);
-
+            registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
             registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
@@ -212,7 +212,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("STREAM {}[::]{} IS DOWN.",event.streamId,event.host);
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
-        logger.info("CONNECTION TO {} IS UP.",event.getNode());
+        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
         if(dest==null){
             dest = event.getNode();
         }
@@ -225,7 +225,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         **/
     }
     private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
-        logger.info("CONNECTION TO {} IS UP.",event.getNode());
+        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}",event.getNode(),event.type);
         if(dest==null){
             dest = event.getNode();
         }
@@ -239,6 +239,9 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     private void uponBytesMessage(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received bytes: {} from {}", new String(msg), from);
+    }
+    private void uponStreamBytes(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
+        logger.info("Received bytes: {} from {}",msg.length, from);
     }
     private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
         logger.info("Received {} from {}", msg.getMessage(), from);

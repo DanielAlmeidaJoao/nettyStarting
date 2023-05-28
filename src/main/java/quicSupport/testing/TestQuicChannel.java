@@ -109,7 +109,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type) {
 
     }
 
@@ -118,7 +118,7 @@ import java.util.Properties;
 
     }
     @Override
-    public void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer) {
+    public void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, ConnectionOrStreamType type) {
         if(error==null){
             return;
         }

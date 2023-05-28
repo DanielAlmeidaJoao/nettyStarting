@@ -41,8 +41,9 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     private final BabelMessageSerializerInterface<T> serializer;
     private final ChannelListener<T> listener;
     private final CustomQuicChannelInterface customQuicChannel;
+    public final short protoToReceiveStreamData;
 
-    public BabelQuicChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
+    public BabelQuicChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId) throws IOException {
         this.serializer = serializer;
         this.listener = list;
         if(properties.getProperty("SINLGE_TRHEADED")!=null){
@@ -59,7 +60,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
             new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.MILLISECONDS);
         }
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
-
+        this.protoToReceiveStreamData = protoId;
     }
     void readMetricsMethod(List<QuicConnectionMetrics> current, List<QuicConnectionMetrics> old){
         QUICMetricsEvent quicMetricsEvent = new QUICMetricsEvent(current,old);
@@ -116,6 +117,11 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     public boolean shutDownChannel(short protoId) {
         customQuicChannel.shutDown();
         return true;
+    }
+
+    @Override
+    public short getChannelProto() {
+        return protoToReceiveStreamData;
     }
 
     @Override
@@ -181,21 +187,20 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
             throw new RuntimeException(e);
         }
     }
-    int read = 0;
     @Override
     public void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from) {
-        read += bytes.length;
-        System.out.println(streamId+" READ STREAM. TOTAL -> "+read);
+        listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),streamId,
+                protoToReceiveStreamData, protoToReceiveStreamData, protoToReceiveStreamData);
     }
 
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type) {
         Host host = FactoryMethods.toBabelHost(peer);
         if(incoming){
             logger.debug("InboundConnectionUp " + peer);
-            listener.deliverEvent(new InConnectionUp(host));
+            listener.deliverEvent(new InConnectionUp(host,type));
         }else{
             logger.debug("OutboundConnectionUp " + host);
-            listener.deliverEvent(new OutConnectionUp(host));
+            listener.deliverEvent(new OutConnectionUp(host,type));
         }
     }
 
@@ -232,22 +237,22 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         listener.deliverEvent(new StreamClosedEvent(streamId,FactoryMethods.toBabelHost(peer)));
 
     }
-    public void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer) {
+    public void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, ConnectionOrStreamType type) {
         try {
             if(error==null&&triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,message),FactoryMethods.toBabelHost(peer));
+                listener.messageSent(FactoryMethods.unSerialize(serializer,message,type,protoToReceiveStreamData),FactoryMethods.toBabelHost(peer),type);
             }else if(error!=null){
                 Host dest=null;
                 if(peer!=null){
                     dest = FactoryMethods.toBabelHost(peer);
                 }
-                listener.messageFailed(FactoryMethods.unSerialize(serializer,message),dest,error);
+                listener.messageFailed(FactoryMethods.unSerialize(serializer,message,type,protoToReceiveStreamData),dest,error,type);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
     public void addMessageFailedSent(T msg, Host host, Throwable error){
-        listener.messageFailed(msg,host,error);
+        listener.messageFailed(msg,host,error, ConnectionOrStreamType.STRUCTURED_MESSAGE);
     }
 }

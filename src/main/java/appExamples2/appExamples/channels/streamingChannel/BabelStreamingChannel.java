@@ -31,8 +31,9 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     private ChannelListener<T> listener;
     private final boolean triggerSent;
     private final TCPChannelInterface tcpChannelInterface;
+    public final short protoToReceiveStreamData;
 
-    public BabelStreamingChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
+    public BabelStreamingChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties,short proto) throws IOException {
 
         this.serializer = serializer;
         this.listener = list;
@@ -44,6 +45,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
             tcpChannelInterface = new StreamingChannel(properties,false,this,NetworkRole.CHANNEL);
             System.out.println("MULTI THREADED CHANNEL");
         }
+        protoToReceiveStreamData=proto;
     }
 
     @Override
@@ -94,6 +96,11 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
+    public short getChannelProto() {
+        return protoToReceiveStreamData;
+    }
+
+    @Override
     public void openConnection(Host peer, short proto, ConnectionOrStreamType type) {
         tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
@@ -115,10 +122,11 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
     @Override
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage,InetSocketAddress peer) {
+        new Exception("MAKE SUPPORT CONNECTION TYPE").printStackTrace();
         if(handShakeMessage==null){
-            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer)));
+            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer), null));
         }else{
-            listener.deliverEvent(new InConnectionUp(toBabelHost(peer)));
+            listener.deliverEvent(new InConnectionUp(toBabelHost(peer), null));
         }
     }
 
@@ -130,8 +138,9 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void sendSuccess(byte[] data, InetSocketAddress peer) {
         try {
+            ConnectionOrStreamType type = ConnectionOrStreamType.valueOf("FAIL FAIL");
             if(triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,data), toBabelHost(peer));
+                listener.messageSent(FactoryMethods.unSerialize(serializer,data,type,protoToReceiveStreamData), toBabelHost(peer), type);
             }
         } catch (Exception e) {
             e.printStackTrace();

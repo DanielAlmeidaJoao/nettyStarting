@@ -241,7 +241,15 @@ public abstract class GenericProtocol {
         if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
-
+    protected final <V extends ProtoMessage> void registerStreamDataHandler(int cId,BytesMessageInHandler<V> inHandler,
+                                                                              MessageSentHandler<V> sentHandler,
+                                                                              MessageFailedHandler<V> failHandler)
+            throws HandlerRegistrationException {
+        short msgHandlerId = babel.protoToReceiveStreamData(cId);
+        registerHandler(msgHandlerId, inHandler, getChannelOrThrow(cId).bytesMessageInHandlerMap);
+        if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
+        if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+    }
 
     /**
      * Register an handler to process a channel-specific event

@@ -13,6 +13,6 @@ import java.util.Properties;
 public class BabelStreamInitializer implements ChannelInitializer<NewIChannel<BabelMessage>> {
     @Override
     public NewIChannel<BabelMessage> initialize(BabelMessageSerializerInterface<BabelMessage> serializer, ChannelListener<BabelMessage> list, Properties properties, short protoId) throws IOException {
-        return new BabelStreamingChannel<>(serializer, list, properties);
+        return new BabelStreamingChannel<>(serializer, list, properties,protoId);
     }
 }

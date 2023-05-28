@@ -6,6 +6,7 @@ import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.internal.*;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,6 +42,12 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
         GenericProtocol channelConsumer = getConsumer(destProto);
         channelConsumer.deliverBytesIn(new BytesMessageInEvent(message,host,channelId,quicStreamId,sourceProto,destProto,handlerId));
     }
+
+    @Override
+    public int getChannelId() {
+        return channelId;
+    }
+
     private GenericProtocol getConsumer(short protoId){
         GenericProtocol channelConsumer;
         if (protoId == -1 && consumers.size() == 1)
@@ -56,12 +63,12 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
         return channelConsumer;
     }
     @Override
-    public void messageSent(BabelMessage addressedMessage, Host host) {
+    public void messageSent(BabelMessage addressedMessage, Host host, ConnectionOrStreamType type) {
         consumers.values().forEach(c -> c.deliverMessageSent(new MessageSentEvent(addressedMessage, host, channelId)));
     }
 
     @Override
-    public void messageFailed(BabelMessage addressedMessage, Host host, Throwable throwable) {
+    public void messageFailed(BabelMessage addressedMessage, Host host, Throwable throwable, ConnectionOrStreamType type) {
         consumers.values().forEach(c ->
                 c.deliverMessageFailed(new MessageFailedEvent(addressedMessage, host, throwable, channelId)));
     }

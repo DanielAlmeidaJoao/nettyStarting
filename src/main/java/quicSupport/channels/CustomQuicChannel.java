@@ -233,7 +233,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             if(enableMetrics){
                 metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
             }
-            overridenMethods.onConnectionUp(inConnection,listeningAddress);
+            overridenMethods.onConnectionUp(inConnection,listeningAddress,type);
         }catch (Exception e){
             e.printStackTrace();
             streamChannel.disconnect();
@@ -325,6 +325,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
         return quicConnection;
     }
+
     public void createStream(InetSocketAddress peer,ConnectionOrStreamType type) {
         try{
             CustomConnection customConnection = getOrThrow(peer);
@@ -339,7 +340,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                             }
                             ((QuicStreamReadHandler) quicStreamChannel.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyApp(quicStreamChannel,type);
                         }else{
-                            future.cause().printStackTrace();
+                            //future.cause().printStackTrace();
                             quicStreamChannel.close();
                             quicStreamChannel.disconnect();
                             quicStreamChannel.shutdown();
@@ -367,13 +368,13 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         InetSocketAddress host = streamHostMapping.get(streamId);
         try{
             if(host==null){
-                overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN STREAM ID: "+streamId),host);
+                overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN STREAM ID: "+streamId),host, type);
             }else {
                 sendMessage(getOrThrow(host).getStream(streamId),message,len,host,type);
             }
         }catch (UnknownElement e){
             logger.debug(e.getMessage());
-            overridenMethods.onMessageSent(message,len,e,host);
+            overridenMethods.onMessageSent(message,len,e,host, type);
         }
     }
     public void send(InetSocketAddress peer, byte[] message, int len,ConnectionOrStreamType type){
@@ -387,7 +388,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 openLogics(peer,type);
                 connecting.get(peer).add(message);
             }else{
-                overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN CONNECTION TO "+peer),peer);
+                overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN CONNECTION TO "+peer),peer, type);
             }
         }else{
             sendMessage(connection.getDefaultStream(),message,len,peer,type);
@@ -397,10 +398,10 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         streamChannel.writeAndFlush(QUICLogics.writeBytes(len,message, QUICLogics.APP_DATA,type))
                 .addListener(future -> {
                     if(future.isSuccess()){
-                        overridenMethods.onMessageSent(message,len,null,peer);
+                        overridenMethods.onMessageSent(message,len,null,peer,type);
                     }else{
-                        future.cause().printStackTrace();
-                        overridenMethods.onMessageSent(message,len,future.cause(),peer);
+                        //future.cause().printStackTrace();
+                        overridenMethods.onMessageSent(message,len,future.cause(),peer,type);
                     }
                 });
     }

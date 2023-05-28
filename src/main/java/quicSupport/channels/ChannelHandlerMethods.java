@@ -12,7 +12,7 @@ public interface ChannelHandlerMethods {
 
     void failedToCloseStream(String streamId, Throwable reason);
 
-    void onMessageSent(byte[] message, int len, Throwable error,InetSocketAddress peer);
+    void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, ConnectionOrStreamType type);
 
     void failedToCreateStream(InetSocketAddress peer, Throwable error);
 
@@ -25,7 +25,7 @@ public interface ChannelHandlerMethods {
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
     void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from);
 
-    void onConnectionUp(boolean incoming, InetSocketAddress peer);
+    void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type);
 
     void onConnectionDown(InetSocketAddress peer, boolean incoming);
 

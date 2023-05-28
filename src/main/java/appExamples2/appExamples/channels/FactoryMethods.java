@@ -1,5 +1,6 @@
 package appExamples2.appExamples.channels;
 
+import appExamples2.appExamples.channels.babelQuicChannel.UnstructuredSreamSent;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
@@ -8,6 +9,7 @@ import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -26,11 +28,16 @@ public class FactoryMethods {
         return toSend;
     }
 
-    public static <T> T unSerialize(ISerializer<T> serializer, byte[] bytes) throws IOException {
-        ByteBuf in = Unpooled.copiedBuffer(bytes);
-        T payload = serializer.deserialize(in);
-        in.release();
-        return payload;
+    public static <T> T unSerialize(ISerializer<T> serializer, byte[] bytes,ConnectionOrStreamType type,short protoToReceiveStreamData) throws IOException {
+        if(ConnectionOrStreamType.UNSTRUCTURED_STREAM==type){
+            UnstructuredSreamSent u = new UnstructuredSreamSent(bytes);
+            return (T) new BabelMessage( u,protoToReceiveStreamData,protoToReceiveStreamData);
+        }else {
+            ByteBuf in = Unpooled.copiedBuffer(bytes);
+            T payload = serializer.deserialize(in);
+            in.release();
+            return payload;
+        }
     }
 
     public static Host toBabelHost(InetSocketAddress address){

@@ -20,8 +20,8 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
     private Map<String, Set<Short>> streamChannelsMap;
     private Set<Short> registeredProtos;
 
-    public BabelQuicChannelWithControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties) throws IOException {
-        super(serializer,list,properties);
+    public BabelQuicChannelWithControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties,short protoId) throws IOException {
+        super(serializer,list,properties,protoId);
         initMaps(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null);
     }
     private void initMaps(boolean singleThreaded){
@@ -55,9 +55,9 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         super.sendMessage(msg,streamId,proto);
     }
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer){
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type){
         hostChannelsMap.put(FactoryMethods.toBabelHost(peer),new HashSet<>(registeredProtos));
-        super.onConnectionUp(incoming,peer);
+        super.onConnectionUp(incoming,peer, type);
     }
     @Override
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
