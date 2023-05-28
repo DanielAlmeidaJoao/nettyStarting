@@ -21,7 +21,6 @@ public class StreamMessageDecoder extends ByteToMessageDecoder {
         this.metrics = metrics;
         this.consumer = consumer;
         type = ConnectionOrStreamType.UNSTRUCTURED_STREAM;
-        System.out.println(NAME);
     }
 
     @Override

@@ -53,7 +53,6 @@ public class StreamSenderHandler extends CustomChannelHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
-        System.out.println("TRIGGER AN ERROR!!!");
         cause.printStackTrace();
         ctx.close();
     }

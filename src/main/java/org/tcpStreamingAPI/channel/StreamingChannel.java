@@ -259,7 +259,6 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         }else{
             channelHandlerMethods.onMessageSent(message,peer,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND RECEIVED "+type+" DATA TYPE"), type);
         }
-        System.out.println("SENT "+type+" CONNECTION TYPE "+connection.type);
     }
 
     @Override
