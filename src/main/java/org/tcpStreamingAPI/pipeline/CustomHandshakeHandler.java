@@ -7,7 +7,10 @@ import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
+import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
+import org.tcpStreamingAPI.pipeline.encodings.StreamMessageDecoder;
 import org.tcpStreamingAPI.utils.TCPStreamUtils;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
@@ -33,16 +36,20 @@ public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
             in.resetReaderIndex();
             return;
         }
-        byte [] controlData = new byte[len];
-        in.readBytes(controlData,0,len);
-        String gg = new String(controlData);
-        HandShakeMessage handShakeMessage = TCPStreamUtils.g.fromJson(gg, HandShakeMessage.class);
-        consumer.onChannelActive(ctx.channel(),handShakeMessage);
+
         if(metrics!=null){
             TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
             metrics1.setReceivedControlBytes(metrics1.getReceivedControlBytes()+len);
             metrics1.setReceivedControlMessages(metrics1.getReceivedControlMessages()+1);
         }
+        byte [] controlData = new byte[len];
+        in.readBytes(controlData,0,len);
+        String gg = new String(controlData);
+        HandShakeMessage handShakeMessage = TCPStreamUtils.g.fromJson(gg, HandShakeMessage.class);
+        if(ConnectionOrStreamType.UNSTRUCTURED_STREAM == handShakeMessage.type){
+            ctx.channel().pipeline().replace(DelimitedMessageDecoder.NAME, StreamMessageDecoder.NAME,new StreamMessageDecoder(metrics, consumer));
+        }
+        consumer.onChannelActive(ctx.channel(),handShakeMessage, handShakeMessage.type);
         ctx.fireChannelRead(msg);
         ctx.channel().pipeline().remove(CustomHandshakeHandler.NAME);
     }

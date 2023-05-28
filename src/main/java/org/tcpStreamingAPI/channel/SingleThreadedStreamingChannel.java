@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
@@ -23,13 +24,13 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     }
 
     @Override
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage) {
-        executor.execute(() -> super.onChannelActive(channel,handShakeMessage));
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, ConnectionOrStreamType type) {
+        executor.execute(() -> super.onChannelActive(channel,handShakeMessage, type));
     }
 
     @Override
-    public void onChannelRead(String channelId, byte[] bytes) {
-        executor.execute(() -> super.onChannelRead(channelId,bytes));
+    public void onChannelRead(String channelId, byte[] bytes, ConnectionOrStreamType type) {
+        executor.execute(() -> super.onChannelRead(channelId,bytes, type));
     }
 
     @Override
@@ -42,16 +43,16 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.onConnectionFailed(channelId,cause));
     }
 
-    public void openConnection(InetSocketAddress peer) {
-        executor.execute(() -> super.openConnection(peer));
+    public void openConnection(InetSocketAddress peer, ConnectionOrStreamType type) {
+        executor.execute(() -> super.openConnection(peer, type));
     }
     @Override
     public void closeConnection(InetSocketAddress peer) {
         executor.execute(() -> super.closeConnection(peer));
     }
     @Override
-    public void send(byte[] message, int len,InetSocketAddress host){
-        executor.execute(() -> super.send(message,len,host));
+    public void send(byte[] message, int len, InetSocketAddress host, ConnectionOrStreamType structuredMessage){
+        executor.execute(() -> super.send(message,len,host, structuredMessage));
     }
 
     @Override

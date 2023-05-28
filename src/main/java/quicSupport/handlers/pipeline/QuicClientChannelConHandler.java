@@ -44,9 +44,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
                 .addListener(future -> {
                     if(future.isSuccess()){
                         consumer.channelActive(streamChannel,null,remote,connectionOrStreamType);
-                        streamChannel.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
-                        streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
-                    }else{
+                        }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
                         consumer.streamErrorHandler(streamChannel,future.cause());
                         future.cause().printStackTrace();

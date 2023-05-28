@@ -23,7 +23,6 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
     public QUICRawStreamDecoder(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics, boolean incoming){
         this.consumer=streamListenerExecutor;
         this.metrics=metrics;
-        System.out.println("OPENED UNSTRUCTERED IN "+HANDLER_NAME);
     }
 
     @Override

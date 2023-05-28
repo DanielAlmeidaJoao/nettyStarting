@@ -356,7 +356,7 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Opening connection in non-existing channelId " + channelId);
-        channelEntry.getLeft().openConnection(target,proto, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+        channelEntry.getLeft().openConnection(target,proto, ConnectionOrStreamType.STRUCTURED_MESSAGE);
     }
 
     /**

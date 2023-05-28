@@ -11,17 +11,12 @@ import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 public abstract class CustomChannelHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = LogManager.getLogger(CustomChannelHandler.class);
-
     @Getter
     private final StreamingNettyConsumer consumer;
-
     public CustomChannelHandler(StreamingNettyConsumer consumer){
         this.consumer = consumer;
     }
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        getConsumer().onChannelRead(ctx.channel().id().asShortText(), (byte []) msg);
-    }
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx){
         consumer.onChannelInactive(ctx.channel().id().asShortText());
@@ -32,6 +27,6 @@ public abstract class CustomChannelHandler extends ChannelInboundHandlerAdapter 
         consumer.onConnectionFailed(ctx.channel().id().asShortText(),cause);
         cause.printStackTrace();
         ctx.close();
+        logger.error(cause.getLocalizedMessage());
     }
-
 }

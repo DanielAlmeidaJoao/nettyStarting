@@ -180,12 +180,12 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             }else{//is InComing
                 handShakeMessage = gson.fromJson(new String(controlData),QuicHandShakeMessage.class);
                 listeningAddress = handShakeMessage.getAddress();
-                if(handShakeMessage.connectionOrStreamType==ConnectionOrStreamType.UNSTRUCTURED_STREAM){
-                    streamChannel.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
-                    streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,true));
-                }
                 type = handShakeMessage.connectionOrStreamType;
                 inConnection=true;
+            }
+            if(ConnectionOrStreamType.UNSTRUCTURED_STREAM==type){
+                streamChannel.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
+                streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,inConnection));
             }
             CustomConnection current =  new CustomConnection(streamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
             CustomConnection old = connections.put(listeningAddress,current);
@@ -400,7 +400,6 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                     if(future.isSuccess()){
                         overridenMethods.onMessageSent(message,len,null,peer,type);
                     }else{
-                        //future.cause().printStackTrace();
                         overridenMethods.onMessageSent(message,len,future.cause(),peer,type);
                     }
                 });

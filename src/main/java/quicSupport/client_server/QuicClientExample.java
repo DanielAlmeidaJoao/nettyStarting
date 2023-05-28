@@ -100,7 +100,7 @@ public final class QuicClientExample {
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics,connectionOrStreamType))
-                .streamHandler(new ServerChannelInitializer(consumer,metrics, QUICLogics.OUTGOING_CONNECTION))
+                .streamHandler(new ServerChannelInitializer(consumer,metrics,QUICLogics.OUTGOING_CONNECTION))
                 .remoteAddress(remote)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
                 .connect().addListener(future -> {

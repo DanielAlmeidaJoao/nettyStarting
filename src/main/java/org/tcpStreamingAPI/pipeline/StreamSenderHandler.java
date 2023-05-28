@@ -8,6 +8,7 @@ import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.utils.TCPStreamUtils;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.net.UnknownHostException;
 
@@ -15,11 +16,13 @@ import java.net.UnknownHostException;
 public class StreamSenderHandler extends CustomChannelHandler {
     private HandShakeMessage handshakeData;
     private final TCPStreamMetrics metrics;
+    private final ConnectionOrStreamType type;
 
-    public StreamSenderHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics){
+    public StreamSenderHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics, ConnectionOrStreamType type){
         super(consumer);
         this.handshakeData = handshakeData;
         this.metrics = metrics;
+        this.type = type;
     }
 
     @Override
@@ -43,7 +46,7 @@ public class StreamSenderHandler extends CustomChannelHandler {
                 ctx.channel().close();
             }
         });
-        getConsumer().onChannelActive(ctx.channel(),null);
+        getConsumer().onChannelActive(ctx.channel(),null,type);
         handshakeData=null;
     }
 

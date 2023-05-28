@@ -1,6 +1,6 @@
 package appExamples2.appExamples.channels;
 
-import appExamples2.appExamples.channels.babelQuicChannel.UnstructuredSreamSent;
+import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
@@ -30,8 +30,8 @@ public class FactoryMethods {
 
     public static <T> T unSerialize(ISerializer<T> serializer, byte[] bytes,ConnectionOrStreamType type,short protoToReceiveStreamData) throws IOException {
         if(ConnectionOrStreamType.UNSTRUCTURED_STREAM==type){
-            UnstructuredSreamSent u = new UnstructuredSreamSent(bytes);
-            return (T) new BabelMessage( u,protoToReceiveStreamData,protoToReceiveStreamData);
+            return (T) new BabelMessage(new BytesMessageSentOrFail(protoToReceiveStreamData,bytes,bytes.length)
+                    ,protoToReceiveStreamData,protoToReceiveStreamData);
         }else {
             ByteBuf in = Unpooled.copiedBuffer(bytes);
             T payload = serializer.deserialize(in);

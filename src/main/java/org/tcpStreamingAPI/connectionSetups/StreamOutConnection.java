@@ -12,21 +12,22 @@ import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.pipeline.StreamSenderHandler;
 import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
-import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageEncoder;
+import org.tcpStreamingAPI.pipeline.encodings.StreamMessageDecoder;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.net.InetSocketAddress;
 public class StreamOutConnection {
 
 
-    private HandShakeMessage handShakeMessage;
     private EventLoopGroup group;
+    public InetSocketAddress self;
 
     public StreamOutConnection(InetSocketAddress host) {
         group = createNewWorkerGroup(1);
-        handShakeMessage = new HandShakeMessage(host);
+        this.self = host;
     }
 
-    public void connect(InetSocketAddress peer,TCPStreamMetrics metrics, StreamingNettyConsumer consumer){
+    public void connect(InetSocketAddress peer, TCPStreamMetrics metrics, StreamingNettyConsumer consumer, ConnectionOrStreamType type){
         try {
             Bootstrap b = new Bootstrap();
 
@@ -37,9 +38,12 @@ public class StreamOutConnection {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                            ch.pipeline().addLast(new DelimitedMessageEncoder());
-                            ch.pipeline().addLast(new DelimitedMessageDecoder(metrics));
-                            ch.pipeline().addLast( new StreamSenderHandler(handShakeMessage,consumer,metrics));
+                            if(ConnectionOrStreamType.STRUCTURED_MESSAGE==type){
+                                ch.pipeline().addLast(new DelimitedMessageDecoder(metrics, consumer));
+                            }else{
+                                ch.pipeline().addLast(new StreamMessageDecoder(metrics,consumer));
+                            }
+                            ch.pipeline().addLast( new StreamSenderHandler(new HandShakeMessage(self,type),consumer,metrics,type));
                     }
                     });
 

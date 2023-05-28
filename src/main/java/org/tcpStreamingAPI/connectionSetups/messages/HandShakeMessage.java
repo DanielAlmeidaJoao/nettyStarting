@@ -1,6 +1,7 @@
 package org.tcpStreamingAPI.connectionSetups.messages;
 
 import lombok.Getter;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -14,16 +15,19 @@ public class HandShakeMessage {
     private String hostName;
     private int port;
     private final Map<String,Object> properties;
+    public final ConnectionOrStreamType type;
 
-    public HandShakeMessage(String hostName,int port) {
+    public HandShakeMessage(String hostName,int port,ConnectionOrStreamType type) {
         this.properties = new HashMap<>();
         this.hostName=hostName;
         this.port=port;
+        this.type=type;
     }
-    public HandShakeMessage(InetSocketAddress host) {
+    public HandShakeMessage(InetSocketAddress host,ConnectionOrStreamType type) {
         this.properties = new HashMap<>();
         this.hostName=host.getHostName();
         this.port=host.getPort();
+        this.type=type;
     }
 
     public InetSocketAddress getAddress() throws UnknownHostException {
