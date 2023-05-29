@@ -36,22 +36,49 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
             streamChannelsMap = new ConcurrentHashMap<>();
         }
     }
-    @Override
-    public void sendMessage(T msg, Host peer, short proto) {
+    private void addProtoOnSend(Host peer,short proto){
         Set<Short> protosUsingThisConnection = hostChannelsMap.get(peer);
         if(protosUsingThisConnection!=null){
             protosUsingThisConnection.add(proto);
         }
-        super.sendMessage(msg,peer,proto);
     }
-    @Override
-    public void sendMessage(T msg,String streamId,short proto) {
+    private void addProtoOnSend(String streamId,short proto){
         Set<Short> protosUsingThisStream = streamChannelsMap.get(streamId);
         if(protosUsingThisStream!=null){
             protosUsingThisStream.add(proto);
         }
+    }
+    @Override
+    public void sendMessage(T msg, Host peer, short proto) {
+        addProtoOnSend(peer,proto);
+        super.sendMessage(msg,peer,proto);
+    }
+    @Override
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId){
+        addProtoOnSend(dest,sourceProto);
+        super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
+    }
+    @Override
+    public void sendStream(byte [] stream,int len,Host host,short proto){
+        addProtoOnSend(host,proto);
+        super.sendStream(stream,len,host,proto);
+    }
+
+    @Override
+    public void sendMessage(T msg,String streamId,short proto) {
+        addProtoOnSend(streamId,proto);
         super.sendMessage(msg,streamId,proto);
     }
+    @Override
+    public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId){
+        addProtoOnSend(streamId,sourceProto);
+        super.sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
+    }
+    public void sendStream(byte [] stream,int len,String streamId,short proto){
+        addProtoOnSend(streamId,proto);
+        super.sendStream(stream,len,streamId,proto);
+    }
+    //////
     @Override
     public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type, String defaultStream){
         hostChannelsMap.put(FactoryMethods.toBabelHost(peer),new HashSet<>(registeredProtos));
@@ -69,7 +96,8 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         }else{
             Set<Short> protosUsingThisConnection = hostChannelsMap.get(peer);
             if (protosUsingThisConnection!=null){
-                if(protosUsingThisConnection.remove(proto) && protosUsingThisConnection.isEmpty()){
+                protosUsingThisConnection.remove(proto);
+                if(protosUsingThisConnection.isEmpty()){
                     super.closeConnection(peer,proto);
                     hostChannelsMap.remove(proto);
                 }
@@ -85,7 +113,8 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         }else{
             Set<Short> protosUsingThisStream = streamChannelsMap.get(streamId);
             if (protosUsingThisStream!=null){
-                if(protosUsingThisStream.remove(proto) && protosUsingThisStream.isEmpty()){
+                protosUsingThisStream.remove(proto);
+                if(protosUsingThisStream.isEmpty()){
                     super.closeStream(streamId,proto);
                     hostChannelsMap.remove(proto);
                 }
