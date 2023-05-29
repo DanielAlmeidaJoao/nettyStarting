@@ -12,6 +12,7 @@ import pt.unl.fct.di.novasys.babel.handlers.*;
 import pt.unl.fct.di.novasys.babel.internal.*;
 import pt.unl.fct.di.novasys.babel.metrics.Metric;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
+import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -250,6 +251,14 @@ public abstract class GenericProtocol {
         if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
+    protected final <V extends ProtoMessage> void registerStreamDataHandler(int cId,short msgHandlerId,BytesMessageInHandler<V> inHandler,
+                                                                            MessageSentHandler<V> sentHandler,
+                                                                            MessageFailedHandler<V> failHandler)
+            throws HandlerRegistrationException {
+        registerHandler(msgHandlerId, inHandler, getChannelOrThrow(cId).bytesMessageInHandlerMap);
+        if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
+        if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+    }
 
     /**
      * Register an handler to process a channel-specific event
@@ -466,7 +475,10 @@ public abstract class GenericProtocol {
      * @param channelId the channel to create the connection in
      */
     protected final void openConnection(Host peer, int channelId) {
-        babel.openConnection(channelId, peer, protoId);
+        babel.openConnection(channelId, peer, protoId, ConnectionOrStreamType.STRUCTURED_MESSAGE);
+    }
+    protected final void openStreamConnection(Host peer, int channelId) {
+        babel.openConnection(channelId, peer, protoId, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
     }
 
     /**

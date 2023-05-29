@@ -186,7 +186,8 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
 
     @Override
-    public void createStream(Host peer,ConnectionOrStreamType type) {
+    public void createStream(Host peer, ConnectionOrStreamType type, short sourceProto, short destProto, short handlerId)
+    {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }

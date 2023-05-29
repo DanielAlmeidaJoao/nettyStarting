@@ -41,7 +41,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         //channelProps.setProperty("metrics_interval","2000");
 
 
-        channelId = makeChan("TCP",address,port);
+        channelId = makeChan("QUIC",address,port);
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
@@ -90,8 +90,9 @@ public class EchoProtocol extends GenericProtocolExtension {
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail);
+            registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail3);
             registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
+            registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
             registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
@@ -125,6 +126,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     boolean sendByte = true;
     public static final short HANDLER_ID = 2;
+    public static final short HANDLER_ID2 = 3;
     public void sendMessage(String message, String stream){
         if(sendByte){
             super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId(),HANDLER_ID);
@@ -154,12 +156,11 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     public void createStream(){
         if(sendByte){
-            super.createStream(dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
         }else{
-            super.createStream(dest, ConnectionOrStreamType.STRUCTURED_MESSAGE);
+            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, ConnectionOrStreamType.STRUCTURED_MESSAGE);
         }
         sendByte =!sendByte;
-
     }
 
     public void closeStreamM(String stream){
@@ -244,6 +245,9 @@ public class EchoProtocol extends GenericProtocolExtension {
     private void uponStreamBytes(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received bytes: {} from {}",msg.length, from);
     }
+    private void uponStreamBytes2(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
+        logger.info("Received 2bytes2: {} from {}",msg.length, from);
+    }
     private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
         logger.info("Received {} from {}", msg.getMessage(), from);
     }
@@ -251,6 +255,11 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("Received QUIC {} from {} {}", msg.getMessage(), from, streamId);
     }
     private void uponMsgFail(EchoMessage msg, Host host, short destProto,
+                             Throwable throwable, int channelId) {
+        //If a message fails to be sent, for whatever reason, log the message and the reason
+        logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+    }
+    private void uponMsgFail3(BytesMessageSentOrFail msg, Host host, short destProto,
                              Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);

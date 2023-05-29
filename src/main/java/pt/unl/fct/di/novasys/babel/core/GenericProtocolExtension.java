@@ -50,15 +50,13 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
         if (logger.isDebugEnabled())
             logger.debug("Sending: stream bytes to " + dest +" channel " + channelId);
     }
-    protected final void createStream(Host dest,ConnectionOrStreamType type) {
-        createStream(defaultChannel, this.protoId, dest,type);
-    }
 
-    protected final void createStream(int channelId, short proto, Host dest, ConnectionOrStreamType type) {
+
+    protected final void createStream(int channelId, short proto,short destProto,short handlerId,Host dest, ConnectionOrStreamType type) {
         getChannelOrThrow(channelId);
         if (logger.isDebugEnabled())
             logger.debug("CREATING A STREAM TO {} IN CHANNEL {}", dest, channelId);
-        babel.createStream(channelId, proto, dest,type);
+        babel.createStream(channelId, proto,destProto,handlerId,dest,type);
     }
 
     protected final void closeStream(String streamId) {

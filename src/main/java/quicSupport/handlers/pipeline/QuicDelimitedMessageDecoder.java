@@ -1,9 +1,11 @@
 package quicSupport.handlers.pipeline;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannel;
@@ -59,17 +61,28 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 q.setReceivedKeepAliveMessages(1+q.getReceivedKeepAliveMessages());
             }
         }else if(QUICLogics.STREAM_CREATED==msgType){
-            ConnectionOrStreamType type = ConnectionOrStreamType.valueOf(new String(data));
-            if(ConnectionOrStreamType.UNSTRUCTURED_STREAM == type){
+            msg = Unpooled.copiedBuffer(data);
+            int ordinal = msg.readInt();
+            ConnectionOrStreamType type;
+            Triple triple = null;
+            if(ConnectionOrStreamType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
+                type = ConnectionOrStreamType.UNSTRUCTURED_STREAM;
                 ch.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
+                short sourceProto = msg.readShort();
+                short destProto = msg.readShort();
+                short handlerId = msg.readShort();
+                msg.release();
+                triple = Triple.of(sourceProto,destProto,handlerId);
+            }else{
+                type = ConnectionOrStreamType.STRUCTURED_MESSAGE;
             }
-            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyApp(ch,type);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
             }
+            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,triple);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
             consumer.channelActive(ch,data,null, ConnectionOrStreamType.STRUCTURED_MESSAGE);
             if(metrics!=null){

@@ -1,6 +1,7 @@
 package appExamples2.appExamples.channels.babelQuicChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
@@ -48,16 +49,13 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         Set<Short> protosUsingThisStream = streamChannelsMap.get(streamId);
         if(protosUsingThisStream!=null){
             protosUsingThisStream.add(proto);
-        }else{
-            addMessageFailedSent(msg,null,new Throwable("UNKNOWN STREAM ID : "+streamId));
-            return;
         }
         super.sendMessage(msg,streamId,proto);
     }
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type){
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type, String defaultStream){
         hostChannelsMap.put(FactoryMethods.toBabelHost(peer),new HashSet<>(registeredProtos));
-        super.onConnectionUp(incoming,peer, type);
+        super.onConnectionUp(incoming,peer, type, defaultStream);
     }
     @Override
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
@@ -97,9 +95,9 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         }
     }
     @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type) {
+    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type, Triple<Short,Short,Short> args) {
         streamChannelsMap.put(streamId,new HashSet<>());
-        super.onStreamCreatedHandler(peer,streamId, type);
+        super.onStreamCreatedHandler(peer,streamId, type,args);
     }
     @Override
     public void onStreamClosedHandler(InetSocketAddress peer, String streamId) {

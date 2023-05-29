@@ -20,7 +20,8 @@ public interface NewIChannel<T> {
 
 
 
-    void createStream(Host peer, ConnectionOrStreamType type);
+    void createStream(Host peer, ConnectionOrStreamType type, short sourceProto, short destProto, short handlerId);
+
 
     /**
      * removes 'proto' from the set of the protocols using this streamId.
@@ -45,4 +46,5 @@ public interface NewIChannel<T> {
     boolean shutDownChannel(short protoId);
 
     short getChannelProto();
+
 }

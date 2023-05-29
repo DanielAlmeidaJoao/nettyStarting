@@ -1,5 +1,6 @@
 package quicSupport.testing;
 
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannel;
@@ -57,7 +58,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type) {
+    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type, Triple<Short,Short,Short> args) {
     }
 
     @Override
@@ -109,7 +110,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type, String defaultStream) {
 
     }
 
@@ -184,7 +185,7 @@ import java.util.Properties;
     }
 
     public void createStream(InetSocketAddress peer) {
-        customQuicChannel.createStream(peer,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+        customQuicChannel.createStream(peer,ConnectionOrStreamType.STRUCTURED_MESSAGE,null);
     }
 
     public void closeStream(String streamId) {

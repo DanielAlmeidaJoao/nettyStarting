@@ -2,6 +2,7 @@ package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.ConnectionOrStreamType;
@@ -39,10 +40,10 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void streamCreatedHandler(QuicStreamChannel channel, ConnectionOrStreamType type) {
+    public void streamCreatedHandler(QuicStreamChannel channel, ConnectionOrStreamType type, Triple<Short,Short,Short> triple) {
         executor.submit(() ->
         {
-            super.streamCreatedHandler(channel, type);
+            super.streamCreatedHandler(channel, type,triple);
         });
     }
     @Override
@@ -101,9 +102,9 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void createStream(InetSocketAddress peer,ConnectionOrStreamType type) {
+    public void createStream(InetSocketAddress peer, ConnectionOrStreamType type,Triple<Short,Short,Short> args) {
         executor.submit(() -> {
-            super.createStream(peer,type);
+            super.createStream(peer,type,args);
         });
     }
     @Override
