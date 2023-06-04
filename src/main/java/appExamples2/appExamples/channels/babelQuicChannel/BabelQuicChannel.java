@@ -26,10 +26,7 @@ import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethods {
@@ -133,6 +130,16 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     @Override
     public void openConnection(Host peer, short proto, ConnectionOrStreamType type) {
         customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),type);
+    }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(Host host) throws NoSuchElementException {
+        return customQuicChannel.getConnectionType(FactoryMethods.toInetSOcketAddress(host));
+    }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(String streamId) {
+        return customQuicChannel.getConnectionType(streamId);
     }
 
     public void createStream(Host peer, ConnectionOrStreamType type, short sourceProto, short destProto, short handlerId)

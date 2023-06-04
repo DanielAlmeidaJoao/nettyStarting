@@ -3,6 +3,7 @@ package org.tcpStreamingAPI.channel;
 import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.net.InetSocketAddress;
+import java.util.NoSuchElementException;
 
 public interface TCPChannelInterface {
 
@@ -16,4 +17,6 @@ public interface TCPChannelInterface {
     int connectedPeers();
 
     void shutDown();
+
+    ConnectionOrStreamType getConnectionType(InetSocketAddress toInetSOcketAddress) throws NoSuchElementException;
 }

@@ -3,6 +3,7 @@ package pt.unl.fct.di.novasys.babel.channels;
 import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.net.InetSocketAddress;
+import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
     void sendMessage(T var1, Host var2, short protoId);
@@ -15,6 +16,12 @@ public interface NewIChannel<T> {
 
 
     void openConnection(Host var1, short protoId, ConnectionOrStreamType type);
+
+    ConnectionOrStreamType getConnectionType(Host host)  throws NoSuchElementException;
+
+    ConnectionOrStreamType getConnectionType(String streamId)  throws NoSuchElementException;
+
+
 
     void registerChannelInterest(short protoId);
 

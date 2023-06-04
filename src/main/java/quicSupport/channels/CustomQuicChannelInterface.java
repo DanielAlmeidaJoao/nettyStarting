@@ -34,4 +34,7 @@ public interface CustomQuicChannelInterface {
 
     void shutDown();
 
+    ConnectionOrStreamType getConnectionType(InetSocketAddress toInetSOcketAddress);
+
+    ConnectionOrStreamType getConnectionType(String streamId);
 }

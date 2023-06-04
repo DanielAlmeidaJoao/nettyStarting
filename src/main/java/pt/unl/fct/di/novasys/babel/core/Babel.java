@@ -336,6 +336,20 @@ public class Babel {
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
         return channelEntry.getLeft().connectedPeers();
     }
+    ConnectionOrStreamType getConnectionType(int channelId, String streamId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getConnections in non-existing channelId " + channelId);
+        return channelEntry.getLeft().getConnectionType(streamId);
+    }
+    ConnectionOrStreamType getConnectionType(int channelId, Host host){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getConnections in non-existing channelId " + channelId);
+        return channelEntry.getLeft().getConnectionType(host);
+    }
     public boolean closeChannel(int channelId, short protoId) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);

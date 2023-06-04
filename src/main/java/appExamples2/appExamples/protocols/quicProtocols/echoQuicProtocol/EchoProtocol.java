@@ -209,15 +209,19 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     private void uponStreamCreated(StreamCreatedEvent event, int channelId) {
         logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.connectionOrStreamType);
+        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
     }
     private void uponStreamClosed(StreamClosedEvent event, int channelId) {
         logger.info("STREAM {}[::]{} IS DOWN.",event.streamId,event.host);
+        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
+
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
         if(dest==null){
             dest = event.getNode();
         }
+        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
         /**
         if(dest!=null){
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
@@ -231,6 +235,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         if(dest==null){
             dest = event.getNode();
         }
+        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
         /**
         if(dest!=null){
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");

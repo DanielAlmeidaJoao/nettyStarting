@@ -8,6 +8,7 @@ import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.ConnectionOrStreamType;
 
 import java.net.InetSocketAddress;
+import java.util.NoSuchElementException;
 
 public abstract class GenericProtocolExtension extends GenericProtocol {
     private static final Logger logger = LogManager.getLogger(GenericProtocolExtension.class);
@@ -85,7 +86,12 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
         getChannelOrThrow(channelId);
         return babel.connectedPeers(channelId);
     }
-
+    protected ConnectionOrStreamType getConnectionType(int channelId, String streamId) throws NoSuchElementException {
+        return babel.getConnectionType(channelId,streamId);
+    }
+    protected ConnectionOrStreamType getConnectionType(int channelId, Host host) throws NoSuchElementException {
+        return babel.getConnectionType(channelId,host);
+    }
     protected void shutDownChannel(int channelId, short protoId){
         getChannelOrThrow(channelId);
         if(babel.closeChannel(channelId,protoId)){

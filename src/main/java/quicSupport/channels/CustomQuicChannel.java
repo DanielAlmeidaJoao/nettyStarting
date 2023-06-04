@@ -440,6 +440,31 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             client.closeClient();
         }
     }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(InetSocketAddress peer) {
+        CustomConnection connection = connections.get(peer);
+        if(connection==null){
+            throw new NoSuchElementException("UNKNOWN ELEMENT "+peer);
+        }
+        return connection.connectionOrStreamType;
+    }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(String streamId) {
+        try{
+            InetSocketAddress peer = streamHostMapping.get(streamId);
+            CustomConnection connection = connections.get(peer);
+            QuicStreamChannel channel = connection.getStream(streamId);
+            if(channel.pipeline().get(QuicUnstructuredStreamEncoder.HANDLER_NAME)==null){
+                return ConnectionOrStreamType.STRUCTURED_MESSAGE;
+            }else{
+                return ConnectionOrStreamType.UNSTRUCTURED_STREAM;
+            }
+        }catch (Exception e){
+            throw new NoSuchElementException("UNKNOWN STREAM "+streamId);
+        }
+    }
     /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/

@@ -17,6 +17,7 @@ import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import static appExamples2.appExamples.channels.FactoryMethods.toBabelHost;
@@ -106,6 +107,17 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void openConnection(Host peer, short proto, ConnectionOrStreamType type) {
         tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer),type);
+    }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(Host host)  throws NoSuchElementException {
+        return tcpChannelInterface.getConnectionType(FactoryMethods.toInetSOcketAddress(host)) ;
+    }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(String streamId)  throws NoSuchElementException{
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel").printStackTrace();
+        return ConnectionOrStreamType.STRUCTURED_MESSAGE;
     }
 
     @Override

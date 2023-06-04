@@ -16,6 +16,7 @@ import udpSupport.metrics.ChannelStats;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -150,6 +151,18 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     public void openConnection(Host peer, short proto, ConnectionOrStreamType streamType) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         listener.deliverEvent(new OutConnectionUp(peer, ConnectionOrStreamType.STRUCTURED_MESSAGE));
+    }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(Host host) throws NoSuchElementException {
+        logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
+        return ConnectionOrStreamType.STRUCTURED_MESSAGE;
+    }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(String streamId) throws NoSuchElementException {
+        logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
+        return ConnectionOrStreamType.STRUCTURED_MESSAGE;
     }
 
     @Override

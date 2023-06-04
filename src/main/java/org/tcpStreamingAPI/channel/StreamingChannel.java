@@ -12,11 +12,11 @@ import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import org.tcpStreamingAPI.utils.TCPStreamUtils;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
+import org.tcpStreamingAPI.utils.TCPStreamUtils;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.ConnectionOrStreamType;
 import quicSupport.utils.enums.NetworkRole;
-import quicSupport.utils.QUICLogics;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -283,6 +283,16 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         }
         if(client!=null){
             client.shutDown();
+        }
+    }
+
+    @Override
+    public ConnectionOrStreamType getConnectionType(InetSocketAddress peer) throws NoSuchElementException{
+        CustomTCPConnection connection = connections.get(peer);
+        if(connection==null){
+            throw new NoSuchElementException("UNKNOWN PEER "+peer);
+        }else{
+            return connection.type;
         }
     }
 
