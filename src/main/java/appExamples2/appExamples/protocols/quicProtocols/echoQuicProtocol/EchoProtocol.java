@@ -91,7 +91,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         try {
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail3);
-            registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
+            registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
             registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
