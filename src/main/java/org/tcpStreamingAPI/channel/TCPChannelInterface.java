@@ -10,7 +10,7 @@ public interface TCPChannelInterface {
     void openConnection(InetSocketAddress peer, ConnectionOrStreamType type);
     void closeConnection(InetSocketAddress peer);
     void closeServerSocket();
-    void send(byte[] message, int len, InetSocketAddress peer, ConnectionOrStreamType structuredMessage);
+    void send(byte[] message, int len, InetSocketAddress peer, ConnectionOrStreamType unstructured);
 
     boolean isConnected(InetSocketAddress peer);
     InetSocketAddress [] getConnections();

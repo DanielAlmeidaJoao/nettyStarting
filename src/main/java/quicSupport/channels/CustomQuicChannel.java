@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,7 +41,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     private final Map<InetSocketAddress, CustomConnection> connections;
     private final Map<String,InetSocketAddress> channelIds; //streamParentID, peer
     private final Map<String,InetSocketAddress> streamHostMapping;
-    private final Map<InetSocketAddress,List<byte []>> connecting;
+    private final Map<InetSocketAddress,List<Pair<byte [],Integer>>> connecting;
     private QuicClientExample client;
     private QuicServerExample server;
     private final Properties properties;
@@ -163,11 +164,11 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     }
 
     private void sendPendingMessages(InetSocketAddress peer,ConnectionOrStreamType type){
-        List<byte []> messages = connecting.remove(peer);
+        List<Pair<byte [],Integer>> messages = connecting.remove(peer);
         if(messages!=null){
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",getSelf(),messages.size(),peer);
-            for (byte[] message : messages) {
-                send(peer,message,message.length,type);
+            for (Pair<byte[],Integer> message : messages) {
+                send(peer,message.getLeft(),message.getRight(),type);
             }
         }
     }
@@ -394,13 +395,13 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     public void send(InetSocketAddress peer, byte[] message, int len,ConnectionOrStreamType type){
         CustomConnection connection = connections.get(peer);
         if(connection==null){
-            List<byte []> pendingMessages = connecting.get(peer);
+            List<Pair<byte [],Integer>> pendingMessages = connecting.get(peer);
             if( pendingMessages !=null ){
-                pendingMessages.add(message);
+                pendingMessages.add(Pair.of(message,len));
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             }else if (connectIfNotConnected){
                 openLogics(peer,type);
-                connecting.get(peer).add(message);
+                connecting.get(peer).add(Pair.of(message,len));
             }else{
                 overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN CONNECTION TO "+peer),peer, type);
             }

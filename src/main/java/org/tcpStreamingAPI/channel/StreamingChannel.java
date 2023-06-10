@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.connectionSetups.StreamInConnection;
@@ -43,7 +44,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     private final StreamOutConnection client;
     private final boolean metricsOn;
     private final TCPStreamMetrics tcpStreamMetrics;
-    private final Map<InetSocketAddress,List<byte []>> connecting;
+    private final Map<InetSocketAddress,List<Pair<byte [],Integer>>> connecting;
     private final boolean connectIfNotConnected;
     private final TCPChannelHandlerMethods channelHandlerMethods;
 
@@ -148,7 +149,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                         connections.put(listeningAddress,oldConnection);
                         channel.disconnect();
                         logger.info("{} KEEPING OLD CONNECTION {}. IN CONNECTION: {}. FROM {}",self,oldConnection.channel.id().asShortText(),inConnection,listeningAddress);
-                        sendPendingMessages(listeningAddress);
+                        sendPendingMessages(listeningAddress,type);
                         return;
                     }
                 }else if(comp>0) /* if(self.hashCode()>listeningAddress.hashCode()) */ {
@@ -157,7 +158,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                         channel.disconnect();
                         connections.put(listeningAddress,oldConnection);
                         logger.info("{} KEEPING THE OLD CONNECTION {}. IN CONNECTION: {}. FROM {}",self,oldConnection.channel.id().asShortText(), inConnection,listeningAddress);
-                        sendPendingMessages(listeningAddress);
+                        sendPendingMessages(listeningAddress,type);
                         return;
                     } else {
                         disconnectOldConnection(oldConnection.channel);
@@ -171,7 +172,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             if(metricsOn){
                 tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,inConnection);
             }
-            sendPendingMessages(listeningAddress);
+            sendPendingMessages(listeningAddress,type);
             channelHandlerMethods.onChannelActive(channel,inConnection,listeningAddress,type);
         }catch (Exception e){
             e.printStackTrace();
@@ -216,12 +217,12 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             logger.info("{} CONNECTION TO {} ALREADY CLOSED",self,peer);
         }
     }
-    private void sendPendingMessages(InetSocketAddress peer){
-        List<byte []> messages = connecting.remove(peer);
+    private void sendPendingMessages(InetSocketAddress peer, ConnectionOrStreamType type){
+        List<Pair<byte [],Integer>> messages = connecting.remove(peer);
         if(messages!=null){
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self,messages.size(),peer);
-            for (byte[] message : messages) {
-                send(message,message.length,peer, ConnectionOrStreamType.STRUCTURED_MESSAGE);
+            for (Pair<byte[],Integer> message : messages) {
+                send(message.getLeft(),message.getRight(),peer,type);
             }
         }
     }
@@ -230,20 +231,26 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     }
     public void send(byte[] message, int len, InetSocketAddress peer, ConnectionOrStreamType type){
         CustomTCPConnection connection = connections.get(peer);
-        if(connection.channel==null){
-            List<byte []> pendingMessages = connecting.get(peer);
+        if(connection==null){
+
+            List<Pair<byte[],Integer>> pendingMessages = connecting.get(peer);
             if( pendingMessages !=null ){
-                pendingMessages.add(message);
+                pendingMessages.add(Pair.of(message,len));
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             }else if(connectIfNotConnected){
                 openConnection(peer, type);
-                connecting.get(peer).add(message);
+                connecting.get(peer).add(Pair.of(message,len));
             }else{
                 channelHandlerMethods.onMessageSent(message,peer,new Throwable("Unknown Peer : "+peer),type);
             }
         }else if(connection.type==type){
-            ByteBuf byteBuf = Unpooled.buffer(message.length+4);
-            byteBuf.writeInt(len);
+            ByteBuf byteBuf;
+            if(ConnectionOrStreamType.UNSTRUCTURED_STREAM==type){
+                byteBuf = Unpooled.buffer(len);
+            }else{
+                byteBuf = Unpooled.buffer(len+4);
+                byteBuf.writeInt(len);
+            }
             byteBuf.writeBytes(message,0,len);
             ChannelFuture f = connection.channel.writeAndFlush(byteBuf);
             f.addListener(future -> {
