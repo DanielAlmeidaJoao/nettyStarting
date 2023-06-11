@@ -16,7 +16,6 @@ public class StreamMessageDecoder extends ByteToMessageDecoder {
     public static final String NAME="StreamMessageDecoder";
     public final StreamingNettyConsumer consumer;
     public final ConnectionOrStreamType type;
-    long received = 0 ;
 
     public StreamMessageDecoder(TCPStreamMetrics metrics, StreamingNettyConsumer consumer) {
         this.metrics = metrics;
@@ -27,13 +26,12 @@ public class StreamMessageDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out){
         byte[] bytes = new byte[in.readableBytes()];
-        in.readBytes(bytes);
         if(metrics!=null){
             TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
             metrics1.setReceivedAppMessages(metrics1.getReceivedAppMessages()+1);
             metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+bytes.length);
         }
-        received += bytes.length;
+        in.readBytes(bytes);
         consumer.onChannelRead(ctx.channel().id().asShortText(),bytes,type);
     }
 }

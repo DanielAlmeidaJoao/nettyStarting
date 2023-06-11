@@ -9,6 +9,8 @@ import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEv
 import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -248,21 +250,35 @@ public class StreamFileProtocol extends GenericProtocolExtension {
     }
     long received = 0;
     FileOutputStream fos;
-
+    ByteBuf buf = Unpooled.buffer();
     private void uponStreamBytes(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
         received += msg.length;
         try {
             if(received>=813782079){
                 fos.close();
                 logger.info("ENDED "+received);
+                buf.writeBytes(msg);
+                byte [] m = new byte[buf.readableBytes()];
+                buf.readBytes(m);
+                buf.release();
+                //System.out.println(buf.readableBytes()+" "+Hex.encodeHexString(QUICLogics.hash(m)));
+                receivedHashes.add(Hex.encodeHexString(QUICLogics.hash(m)));
+                sumHashes(receivedHashes);
             }else{
                 fos.write(msg);
+                buf.writeBytes(msg);
+                if(buf.readableBytes()>=bufferSize){
+                    byte [] m = new byte[bufferSize];
+                    buf.readBytes(m);
+                    buf.discardReadBytes();
+                    receivedHashes.add(Hex.encodeHexString(QUICLogics.hash(m)));
+                    //System.out.println(Hex.encodeHexString(QUICLogics.hash(m)));
+                }
             }
         }catch (Exception e){
             e.printStackTrace();
         }
-        receivedHashes.add(Hex.encodeHexString(QUICLogics.hash(msg)));
-        logger.info("Received bytes2: {} from {}",msg.length, from);
+        //logger.info("Received bytes2: {} from {}",msg.length, from);
     }
     private void uponStreamBytes2(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received 2bytes2: {} from {}",msg.length, from);
@@ -310,10 +326,11 @@ public class StreamFileProtocol extends GenericProtocolExtension {
                 }else {
                     byte [] n = new byte[read];
                     System.arraycopy(bytes,0,n,0,read);
+                    bytes = n;
                     sentHahes.add(Hex.encodeHexString(QUICLogics.hash(n)));
-                    System.out.println("LAST READ "+read);
                 }
                 sendStream(channelId,bytes,read,dest);
+                //System.out.println("LAST READ "+read+" "+Hex.encodeHexString(QUICLogics.hash(bytes)));
                 cc++;
                 //Thread.sleep(1000);
                 bytes = new byte[bufferSize];
