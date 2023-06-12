@@ -3,12 +3,10 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
-import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
 import appExamples2.appExamples.channels.babelQuicChannel.events.StreamClosedEvent;
 import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEvent;
 import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
-import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.apache.commons.codec.binary.Hex;
@@ -26,7 +24,6 @@ import quicSupport.utils.enums.ConnectionOrStreamType;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
@@ -34,7 +31,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class StreamFileProtocol extends GenericProtocolExtension {
-    private static final Logger logger = LogManager.getLogger(EchoProtocol.class);
+    private static final Logger logger = LogManager.getLogger(StreamFileProtocol.class);
     public static final short PROTOCOL_ID = 202;
     public int channelId;
     private final Host myself; //My own address/port
@@ -55,12 +52,12 @@ public class StreamFileProtocol extends GenericProtocolExtension {
         //channelProps.setProperty("metrics_interval","2000");
 
 
-        channelId = makeChan("TCP",address,port);
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
         NETWORK_PROTO = properties.getProperty("NETWORK_PROTO");
-        fos = new FileOutputStream(NETWORK_PROTO+"STREAM_MOVIE_FILE.MP4");
+        channelId = makeChan(NETWORK_PROTO,address,port);
+        System.out.println("PROTO "+NETWORK_PROTO);
     }
     private int makeChan(String channelName,String address, String port) throws Exception {
         Properties channelProps = new Properties();
@@ -113,7 +110,7 @@ public class StreamFileProtocol extends GenericProtocolExtension {
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
                 openStreamConnection(dest,channelId);
-                startStreaming();
+                //startStreaming();
             }
         } catch (Exception e) {
             logger.error("Error registering message handler: " + e.getMessage());
@@ -127,7 +124,7 @@ public class StreamFileProtocol extends GenericProtocolExtension {
     }
     boolean sendByte = true;
     public static final short HANDLER_ID = 2;
-    public static final short HANDLER_ID2 = 3;
+    public static final short HANDLER_ID2 = 43;
     public void sendMessage(String message, String stream){
         if(sendByte){
             super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId(),HANDLER_ID);
@@ -147,68 +144,15 @@ public class StreamFileProtocol extends GenericProtocolExtension {
         }
         sendByte =!sendByte;
     }
-    public void sendStream(String message){
-        System.out.println("SENDING "+message.length());
-        super.sendStream(channelId,message.getBytes(),message.length(),dest);
-    }
-    public void sendStream(String message, String streamId){
-        System.out.println("SENDING "+message.length());
-        super.sendStream(channelId,message.getBytes(),message.length(),streamId);
-    }
-    public void createStream(){
-        if(sendByte){
-            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
-        }else{
-            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, ConnectionOrStreamType.STRUCTURED_MESSAGE);
-        }
-        sendByte =!sendByte;
-    }
 
-    public void closeStreamM(String stream){
-        super.closeStream(stream);
-    }
-
-    public void isConnected(){
-        System.out.println("IS CONNECTED: "+isConnected(channelId,dest));
-    }
-    public void connections(){
-        InetSocketAddress[] cons = getConnections(channelId);
-        System.out.println("CONS: "+cons.length);
-        for (InetSocketAddress con : cons) {
-            System.out.println(con);
-        }
-    }
-    public void numberConnected(){
-        System.out.println("NUMBER CONNECTED: "+numConnectedPeers(channelId));
-    }
-    public void streamsAvailable(){
-        String [] strings = getStreams(channelId);
-        System.out.println("STREAMS: "+strings.length);
-        for (String string : strings) {
-            System.out.println("STREAM: "+string);
-        }
-    }
-    public void shutDown(){
-        shutDownChannel(channelId,getProtoId());
-    }
-    int hh = 0 ;
-    private void handTimer (SampleTimer time, long id ){
-        hh++;
-        System.out.println("MESSAGE SENT!! ++ "+hh);
-        if(hh<8){
-            EchoMessage message = new EchoMessage(myself,"TIME: "+ System.currentTimeMillis());
-            sendMessage(message,dest);
-        }else {
-            closeConnection(dest);
-            cancelTimer(id);
-        }
-    }
-    private void uponChannelMetrics(QUICMetricsEvent event, int channelId) {
-        System.out.println("METRICS TRIGGERED!!!");
-        System.out.println("CURRENT: "+QUICLogics.gson.toJson(event.getCurrent()));
-        System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
-    }
     private void uponStreamCreated(StreamCreatedEvent event, int channelId) {
+        streamId = event.streamId;
+        if(myself.getPort()==8081){
+            startStreaming();
+        }
+        if(myself.getPort()==8082){
+            System.out.println("PORRAS "+streamId);
+        }
         logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.connectionOrStreamType);
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
     }
@@ -219,42 +163,50 @@ public class StreamFileProtocol extends GenericProtocolExtension {
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
+        /**
         if(dest==null){
             dest = event.getNode();
         }
+        **/
+        try{
+            fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.MP4");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
-        /**
-         if(dest!=null){
-         EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
-         sendMessage(message,dest);
-         logger.info("{} MESSAGE SENT!!! TO {} ",myself,dest);
-         }
-         **/
+
     }
+    String streamId;
     private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}",event.getNode(),event.type);
         if(dest==null){
             dest = event.getNode();
         }
+        try{
+            fos2 = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_copy.mp4");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
-        /**
-         if(dest!=null){
-         EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
-         sendMessage(message,dest);
-         logger.info("{} MESSAGE SENT!!! TO {} ",myself,dest);
-         }
-         **/
     }
     private void uponBytesMessage(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received bytes: {} from {}", new String(msg), from);
     }
     long received = 0;
-    FileOutputStream fos;
+    FileOutputStream fos, fos2;
     ByteBuf buf = Unpooled.buffer();
     private void uponStreamBytes(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
+        if(myself.getPort()==8081){
+            System.out.println("CANNOT RECEIVED HERE");
+            System.exit(1);
+        }
         received += msg.length;
+        sendStream(channelId,msg,msg.length,this.streamId);
         try {
             if(received>=813782079){
+                fos.write(msg);
                 fos.close();
                 logger.info("ENDED "+received);
                 buf.writeBytes(msg);
@@ -280,8 +232,19 @@ public class StreamFileProtocol extends GenericProtocolExtension {
         }
         //logger.info("Received bytes2: {} from {}",msg.length, from);
     }
+    int gg = 0;
     private void uponStreamBytes2(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received 2bytes2: {} from {}",msg.length, from);
+        gg += msg.length;
+        try{
+            fos2.write(msg);
+            if(gg >= 813782079){
+                fos2.close();
+                System.out.println("CLOSEDD "+gg);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        //logger.info("Received 2bytes2: {} from {}",msg.length, from);
     }
     private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
         logger.info("Received {} from {}", msg.getMessage(), from);
