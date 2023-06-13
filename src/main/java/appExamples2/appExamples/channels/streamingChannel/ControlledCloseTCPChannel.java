@@ -5,7 +5,7 @@ import io.netty.channel.Channel;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -61,7 +61,7 @@ public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
         protocolsUsingTheChannel.remove(peer);
     }
     @Override
-    public void onChannelActive(Channel channel, boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type){
+    public void onChannelActive(Channel channel, boolean incoming, InetSocketAddress peer, TransmissionType type){
         protocolsUsingTheChannel.put(FactoryMethods.toBabelHost(peer),new HashSet<>());
         super.onChannelActive(channel,incoming,peer,type);
     }

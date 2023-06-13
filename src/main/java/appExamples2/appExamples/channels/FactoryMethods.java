@@ -9,7 +9,7 @@ import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -28,8 +28,8 @@ public class FactoryMethods {
         return toSend;
     }
 
-    public static <T> T unSerialize(ISerializer<T> serializer, byte[] bytes,ConnectionOrStreamType type,short protoToReceiveStreamData) throws IOException {
-        if(ConnectionOrStreamType.UNSTRUCTURED_STREAM==type){
+    public static <T> T unSerialize(ISerializer<T> serializer, byte[] bytes, TransmissionType type, short protoToReceiveStreamData) throws IOException {
+        if(TransmissionType.UNSTRUCTURED_STREAM==type){
             return (T) new BabelMessage(new BytesMessageSentOrFail(protoToReceiveStreamData,bytes,bytes.length)
                     ,protoToReceiveStreamData,protoToReceiveStreamData);
         }else {

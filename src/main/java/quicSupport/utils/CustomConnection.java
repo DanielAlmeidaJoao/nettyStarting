@@ -6,7 +6,7 @@ import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.Exceptions.UnclosableStreamException;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -22,14 +22,14 @@ public class CustomConnection {
     private final boolean  inComing;
     private Map<String,QuicStreamChannel> streams;
     private ScheduledFuture scheduledFuture;
-    public ConnectionOrStreamType connectionOrStreamType;
+    public TransmissionType transmissionType;
 
     private InetSocketAddress remote;
     private boolean canSendHeartBeat;
     private static long heartBeatTimeout;
     private final long creationTime;
 
-    public CustomConnection(QuicStreamChannel quicStreamChannel,InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout, ConnectionOrStreamType type){
+    public CustomConnection(QuicStreamChannel quicStreamChannel,InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout, TransmissionType type){
         creationTime = System.currentTimeMillis();
         defaultStream = quicStreamChannel;
         connection = defaultStream.parent();
@@ -40,7 +40,7 @@ public class CustomConnection {
         scheduledFuture = null;
         canSendHeartBeat = inComing;
         this.heartBeatTimeout = heartBeatTimeout;
-        connectionOrStreamType = type;
+        transmissionType = type;
         if(inComing&&withHeartBeat){
             serverStartScheduling();
         }
@@ -83,7 +83,7 @@ public class CustomConnection {
             }
             scheduledFuture = defaultStream.eventLoop().schedule(() -> {
                 logger.info("HEART BEAT SENT TO {}",remote);
-                defaultStream.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(), QUICLogics.KEEP_ALIVE,connectionOrStreamType));
+                defaultStream.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(), QUICLogics.KEEP_ALIVE, transmissionType));
             }, (long) (heartBeatTimeout*0.75), TimeUnit.SECONDS);
     }
     public boolean connectionDown(){

@@ -6,7 +6,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.util.List;
 
@@ -15,12 +15,12 @@ public class StreamMessageDecoder extends ByteToMessageDecoder {
     private final TCPStreamMetrics metrics;
     public static final String NAME="StreamMessageDecoder";
     public final StreamingNettyConsumer consumer;
-    public final ConnectionOrStreamType type;
+    public final TransmissionType type;
 
     public StreamMessageDecoder(TCPStreamMetrics metrics, StreamingNettyConsumer consumer) {
         this.metrics = metrics;
         this.consumer = consumer;
-        type = ConnectionOrStreamType.UNSTRUCTURED_STREAM;
+        type = TransmissionType.UNSTRUCTURED_STREAM;
     }
 
     @Override

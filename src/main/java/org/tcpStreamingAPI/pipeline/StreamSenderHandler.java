@@ -8,7 +8,7 @@ import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.utils.TCPStreamUtils;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.UnknownHostException;
 
@@ -16,9 +16,9 @@ import java.net.UnknownHostException;
 public class StreamSenderHandler extends CustomChannelHandler {
     private HandShakeMessage handshakeData;
     private final TCPStreamMetrics metrics;
-    private final ConnectionOrStreamType type;
+    private final TransmissionType type;
 
-    public StreamSenderHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics, ConnectionOrStreamType type){
+    public StreamSenderHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics, TransmissionType type){
         super(consumer);
         this.handshakeData = handshakeData;
         this.metrics = metrics;

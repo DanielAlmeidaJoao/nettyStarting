@@ -20,7 +20,8 @@ import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelInterface;
 import quicSupport.channels.SingleThreadedQuicChannel;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -78,7 +79,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),toSend,toSend.length,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+            customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -88,7 +89,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),toSend,toSend.length,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
@@ -128,21 +129,26 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
-    public void openConnection(Host peer, short proto, ConnectionOrStreamType type) {
+    public NetworkProtocol getNetWorkProtocol() {
+        return NetworkProtocol.QUIC;
+    }
+
+    @Override
+    public void openConnection(Host peer, short proto, TransmissionType type) {
         customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
     @Override
-    public ConnectionOrStreamType getConnectionType(Host host) throws NoSuchElementException {
+    public TransmissionType getConnectionTransmissionType(Host host) throws NoSuchElementException {
         return customQuicChannel.getConnectionType(FactoryMethods.toInetSOcketAddress(host));
     }
 
     @Override
-    public ConnectionOrStreamType getConnectionType(String streamId) {
+    public TransmissionType getConnectionStreamTransmissionType(String streamId) {
         return customQuicChannel.getConnectionType(streamId);
     }
 
-    public void createStream(Host peer, ConnectionOrStreamType type, short sourceProto, short destProto, short handlerId)
+    public void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
     {
         customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer),type,Triple.of(sourceProto,destProto,handlerId));
     }
@@ -154,7 +160,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     public void sendMessage(T msg,String streamId,short proto){
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            customQuicChannel.send(streamId,toSend,toSend.length,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+            customQuicChannel.send(streamId,toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -164,17 +170,17 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
         customQuicChannel.send(streamId,
-                toSend,toSend.length,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+                toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
     public void sendStream(byte[] stream,int len, String streamId, short proto) {
-        customQuicChannel.send(streamId, stream,len,ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+        customQuicChannel.send(streamId, stream,len, TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override
     public void sendStream(byte[] stream,int len, Host host, short proto) {
-        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(host),stream,len,ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(host),stream,len, TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override
@@ -190,9 +196,9 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         logger.info("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getLocalizedMessage());
     }
 
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type, Triple<Short,Short,Short>args) {
+    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short>args) {
         logger.info("STREAM {} CREATED FOR {} CONNECTION",streamId,peer);
-        if(ConnectionOrStreamType.UNSTRUCTURED_STREAM==type){
+        if(TransmissionType.UNSTRUCTURED_STREAM==type){
             unstructuredStreamHandlers.put(streamId,args);
         }
         listener.deliverEvent(new StreamCreatedEvent(streamId,FactoryMethods.toBabelHost(peer),type));
@@ -215,9 +221,9 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
                 triple.getLeft(),triple.getMiddle(),triple.getRight());
     }
 
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type, String defaultStream) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream) {
         Host host = FactoryMethods.toBabelHost(peer);
-        if(ConnectionOrStreamType.UNSTRUCTURED_STREAM==type){
+        if(TransmissionType.UNSTRUCTURED_STREAM==type){
             unstructuredStreamHandlers.put(defaultStream,Triple.of(protoToReceiveStreamData,protoToReceiveStreamData,protoToReceiveStreamData));
         }
         if(incoming){
@@ -263,7 +269,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         listener.deliverEvent(new StreamClosedEvent(streamId,FactoryMethods.toBabelHost(peer)));
 
     }
-    public void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, ConnectionOrStreamType type) {
+    public void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, TransmissionType type) {
         try {
             if(error==null&&triggerSent){
                 listener.messageSent(FactoryMethods.unSerialize(serializer,message,type,protoToReceiveStreamData),FactoryMethods.toBabelHost(peer),type);

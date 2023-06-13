@@ -16,7 +16,7 @@ import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
 import org.tcpStreamingAPI.utils.TCPStreamUtils;
 import quicSupport.utils.QUICLogics;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
@@ -111,11 +111,11 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     }
 
-    public void onChannelRead(String channelId, byte[] bytes, ConnectionOrStreamType type){
+    public void onChannelRead(String channelId, byte[] bytes, TransmissionType type){
         InetSocketAddress from = channelIds.get(channelId);
         if(from==null){
             logger.info("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
-        }else if(ConnectionOrStreamType.STRUCTURED_MESSAGE==type){
+        }else if(TransmissionType.STRUCTURED_MESSAGE==type){
             channelHandlerMethods.onChannelMessageRead(channelId,bytes,from);
         }else{
             channelHandlerMethods.onChannelStreamRead(channelId,bytes,from);
@@ -126,7 +126,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         channelIds.remove(old.id().asShortText());
         old.disconnect();
     }
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, ConnectionOrStreamType type){
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type){
         try {
             boolean inConnection;
             InetSocketAddress listeningAddress;
@@ -190,7 +190,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     /******************************************* USER EVENTS ****************************************************/
 
-    public void openConnection(InetSocketAddress peer, ConnectionOrStreamType type) {
+    public void openConnection(InetSocketAddress peer, TransmissionType type) {
         if(connections.containsKey(peer)){
             logger.debug("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
@@ -217,7 +217,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             logger.info("{} CONNECTION TO {} ALREADY CLOSED",self,peer);
         }
     }
-    private void sendPendingMessages(InetSocketAddress peer, ConnectionOrStreamType type){
+    private void sendPendingMessages(InetSocketAddress peer, TransmissionType type){
         List<Pair<byte [],Integer>> messages = connecting.remove(peer);
         if(messages!=null){
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self,messages.size(),peer);
@@ -229,7 +229,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     public void closeServerSocket(){
         server.closeServerSocket();
     }
-    public void send(byte[] message, int len, InetSocketAddress peer, ConnectionOrStreamType type){
+    public void send(byte[] message, int len, InetSocketAddress peer, TransmissionType type){
         CustomTCPConnection connection = connections.get(peer);
         if(connection==null){
 
@@ -245,7 +245,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             }
         }else if(connection.type==type){
             ByteBuf byteBuf;
-            if(ConnectionOrStreamType.UNSTRUCTURED_STREAM==type){
+            if(TransmissionType.UNSTRUCTURED_STREAM==type){
                 byteBuf = Unpooled.buffer(len);
             }else{
                 byteBuf = Unpooled.buffer(len+4);
@@ -294,7 +294,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     }
 
     @Override
-    public ConnectionOrStreamType getConnectionType(InetSocketAddress peer) throws NoSuchElementException{
+    public TransmissionType getConnectionType(InetSocketAddress peer) throws NoSuchElementException{
         CustomTCPConnection connection = connections.get(peer);
         if(connection==null){
             throw new NoSuchElementException("UNKNOWN PEER "+peer);

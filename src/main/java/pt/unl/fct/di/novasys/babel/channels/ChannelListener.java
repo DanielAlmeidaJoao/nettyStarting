@@ -1,14 +1,14 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 public interface ChannelListener<T> {
 
     void deliverMessage(T msg, Host from, String quicStreamId);
 
-    void messageSent(T msg, Host to, ConnectionOrStreamType type);
+    void messageSent(T msg, Host to, TransmissionType type);
 
-    void messageFailed(T msg, Host to, Throwable cause, ConnectionOrStreamType type);
+    void messageFailed(T msg, Host to, Throwable cause, TransmissionType type);
 
     void deliverEvent(ChannelEvent evt);
 

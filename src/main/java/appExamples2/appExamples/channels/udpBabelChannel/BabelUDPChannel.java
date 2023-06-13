@@ -7,7 +7,8 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.*;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.TransmissionType;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.channels.UDPChannel;
 import udpSupport.channels.UDPChannelHandlerMethods;
@@ -102,7 +103,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private void msgSent(byte[] message, Host host){
         try {
             if(triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,message, ConnectionOrStreamType.STRUCTURED_MESSAGE,ownerProto),host, ConnectionOrStreamType.STRUCTURED_MESSAGE);
+                listener.messageSent(FactoryMethods.unSerialize(serializer,message, TransmissionType.STRUCTURED_MESSAGE,ownerProto),host, TransmissionType.STRUCTURED_MESSAGE);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -148,21 +149,26 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void openConnection(Host peer, short proto, ConnectionOrStreamType streamType) {
-        logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
-        listener.deliverEvent(new OutConnectionUp(peer, ConnectionOrStreamType.STRUCTURED_MESSAGE));
+    public NetworkProtocol getNetWorkProtocol() {
+        return NetworkProtocol.UDP;
     }
 
     @Override
-    public ConnectionOrStreamType getConnectionType(Host host) throws NoSuchElementException {
+    public void openConnection(Host peer, short proto, TransmissionType streamType) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
-        return ConnectionOrStreamType.STRUCTURED_MESSAGE;
+        listener.deliverEvent(new OutConnectionUp(peer, TransmissionType.STRUCTURED_MESSAGE));
     }
 
     @Override
-    public ConnectionOrStreamType getConnectionType(String streamId) throws NoSuchElementException {
+    public TransmissionType getConnectionTransmissionType(Host host) throws NoSuchElementException {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
-        return ConnectionOrStreamType.STRUCTURED_MESSAGE;
+        return TransmissionType.STRUCTURED_MESSAGE;
+    }
+
+    @Override
+    public TransmissionType getConnectionStreamTransmissionType(String streamId) throws NoSuchElementException {
+        logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
+        return TransmissionType.STRUCTURED_MESSAGE;
     }
 
     @Override
@@ -193,7 +199,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void createStream(Host peer, ConnectionOrStreamType type, short sourceProto, short destProto, short handlerId)
+    public void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
     {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();

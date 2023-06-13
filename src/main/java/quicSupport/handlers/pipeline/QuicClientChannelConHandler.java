@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import java.net.InetSocketAddress;
@@ -20,14 +20,14 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     private final InetSocketAddress remote;
     private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
-    private final ConnectionOrStreamType connectionOrStreamType;
+    private final TransmissionType transmissionType;
 
-    public QuicClientChannelConHandler(InetSocketAddress self, InetSocketAddress remote, CustomQuicChannelConsumer consumer, QuicChannelMetrics  metrics, ConnectionOrStreamType connectionOrStreamType) {
+    public QuicClientChannelConHandler(InetSocketAddress self, InetSocketAddress remote, CustomQuicChannelConsumer consumer, QuicChannelMetrics  metrics, TransmissionType transmissionType) {
         this.self = self;
         this.remote = remote;
         this.consumer = consumer;
         this.metrics = metrics;
-        this.connectionOrStreamType = connectionOrStreamType;
+        this.transmissionType = transmissionType;
     }
 
     @Override
@@ -38,12 +38,12 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
             metrics.initConnectionMetrics(out.remoteAddress());
         }
         QuicStreamChannel streamChannel = QUICLogics.createStream(out,consumer,metrics,false);
-        QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(),connectionOrStreamType);
+        QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(), transmissionType);
         byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
-        streamChannel.writeAndFlush(QUICLogics.writeBytes(hs.length,hs,QUICLogics.HANDSHAKE_MESSAGE,ConnectionOrStreamType.STRUCTURED_MESSAGE))
+        streamChannel.writeAndFlush(QUICLogics.writeBytes(hs.length,hs,QUICLogics.HANDSHAKE_MESSAGE, TransmissionType.STRUCTURED_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
-                        consumer.channelActive(streamChannel,null,remote,connectionOrStreamType);
+                        consumer.channelActive(streamChannel,null,remote, transmissionType);
                         }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
                         consumer.streamErrorHandler(streamChannel,future.cause());

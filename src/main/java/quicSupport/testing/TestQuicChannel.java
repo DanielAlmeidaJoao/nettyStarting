@@ -9,7 +9,7 @@ import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -58,7 +58,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type, Triple<Short,Short,Short> args) {
+    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> args) {
     }
 
     @Override
@@ -110,7 +110,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type, String defaultStream) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream) {
 
     }
 
@@ -119,7 +119,7 @@ import java.util.Properties;
 
     }
     @Override
-    public void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, ConnectionOrStreamType type) {
+    public void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, TransmissionType type) {
         if(error==null){
             return;
         }
@@ -143,7 +143,7 @@ import java.util.Properties;
             int cc = 0;
             while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
                 totalSent += read;
-                customQuicChannel.send(peer,bytes,read,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+                customQuicChannel.send(peer,bytes,read, TransmissionType.STRUCTURED_MESSAGE);
                 cc++;
                 if(cc>100){
                     cc=0;
@@ -173,7 +173,7 @@ import java.util.Properties;
     }
 
     public void open(InetSocketAddress remote) {
-        customQuicChannel.open(remote,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+        customQuicChannel.open(remote, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     public void closeConnection(InetSocketAddress peer) {
@@ -185,7 +185,7 @@ import java.util.Properties;
     }
 
     public void createStream(InetSocketAddress peer) {
-        customQuicChannel.createStream(peer,ConnectionOrStreamType.STRUCTURED_MESSAGE,null);
+        customQuicChannel.createStream(peer, TransmissionType.STRUCTURED_MESSAGE,null);
     }
 
     public void closeStream(String streamId) {
@@ -197,11 +197,11 @@ import java.util.Properties;
     }
 
     public void send(String streamId, byte[] message, int len) {
-        customQuicChannel.send(streamId,message,len,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+        customQuicChannel.send(streamId,message,len, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     public void send(InetSocketAddress peer, byte[] message, int len) {
-        customQuicChannel.send(peer,message,len,ConnectionOrStreamType.STRUCTURED_MESSAGE);
+        customQuicChannel.send(peer,message,len, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     public boolean enabledMetrics() {

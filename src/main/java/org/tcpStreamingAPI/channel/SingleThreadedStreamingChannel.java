@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
@@ -24,12 +24,12 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     }
 
     @Override
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, ConnectionOrStreamType type) {
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type) {
         executor.execute(() -> super.onChannelActive(channel,handShakeMessage, type));
     }
 
     @Override
-    public void onChannelRead(String channelId, byte[] bytes, ConnectionOrStreamType type) {
+    public void onChannelRead(String channelId, byte[] bytes, TransmissionType type) {
         executor.execute(() -> super.onChannelRead(channelId,bytes, type));
     }
 
@@ -43,7 +43,7 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.onConnectionFailed(channelId,cause));
     }
 
-    public void openConnection(InetSocketAddress peer, ConnectionOrStreamType type) {
+    public void openConnection(InetSocketAddress peer, TransmissionType type) {
         executor.execute(() -> super.openConnection(peer, type));
     }
     @Override
@@ -51,7 +51,7 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.closeConnection(peer));
     }
     @Override
-    public void send(byte[] message, int len, InetSocketAddress host, ConnectionOrStreamType structuredMessage){
+    public void send(byte[] message, int len, InetSocketAddress host, TransmissionType structuredMessage){
         executor.execute(() -> super.send(message,len,host, structuredMessage));
     }
 

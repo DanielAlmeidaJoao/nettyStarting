@@ -1,7 +1,7 @@
 package org.tcpStreamingAPI.connectionSetups.messages;
 
 import lombok.Getter;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -15,15 +15,15 @@ public class HandShakeMessage {
     private String hostName;
     private int port;
     private final Map<String,Object> properties;
-    public final ConnectionOrStreamType type;
+    public final TransmissionType type;
 
-    public HandShakeMessage(String hostName,int port,ConnectionOrStreamType type) {
+    public HandShakeMessage(String hostName, int port, TransmissionType type) {
         this.properties = new HashMap<>();
         this.hostName=hostName;
         this.port=port;
         this.type=type;
     }
-    public HandShakeMessage(InetSocketAddress host,ConnectionOrStreamType type) {
+    public HandShakeMessage(InetSocketAddress host, TransmissionType type) {
         this.properties = new HashMap<>();
         this.hostName=host.getHostName();
         this.port=host.getPort();

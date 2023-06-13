@@ -12,7 +12,7 @@ import pt.unl.fct.di.novasys.babel.handlers.*;
 import pt.unl.fct.di.novasys.babel.internal.*;
 import pt.unl.fct.di.novasys.babel.metrics.Metric;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -475,10 +475,10 @@ public abstract class GenericProtocol {
      * @param channelId the channel to create the connection in
      */
     protected final void openConnection(Host peer, int channelId) {
-        babel.openConnection(channelId, peer, protoId, ConnectionOrStreamType.STRUCTURED_MESSAGE);
+        babel.openConnection(channelId, peer, protoId, TransmissionType.STRUCTURED_MESSAGE);
     }
     protected final void openStreamConnection(Host peer, int channelId) {
-        babel.openConnection(channelId, peer, protoId, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+        babel.openConnection(channelId, peer, protoId, TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     /**

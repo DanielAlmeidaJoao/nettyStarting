@@ -5,7 +5,7 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void streamCreatedHandler(QuicStreamChannel channel, ConnectionOrStreamType type, Triple<Short,Short,Short> triple) {
+    public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, Triple<Short,Short,Short> triple) {
         executor.submit(() ->
         {
             super.streamCreatedHandler(channel, type,triple);
@@ -69,7 +69,7 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
 
     /*********************************** Channel Handlers **********************************/
     @Override
-    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData,InetSocketAddress remotePeer,ConnectionOrStreamType type){
+    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData, InetSocketAddress remotePeer, TransmissionType type){
         executor.submit(() -> {
             super.channelActive(streamChannel,controlData,remotePeer,type);
         });
@@ -84,7 +84,7 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
     /*********************************** Channel Handlers **********************************/
 
     /*********************************** User Actions **************************************/
-    public void open(InetSocketAddress peer, ConnectionOrStreamType type) {
+    public void open(InetSocketAddress peer, TransmissionType type) {
         executor.submit(() -> {
             super.open(peer,type);
         });
@@ -102,7 +102,7 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void createStream(InetSocketAddress peer, ConnectionOrStreamType type,Triple<Short,Short,Short> args) {
+    public void createStream(InetSocketAddress peer, TransmissionType type, Triple<Short,Short,Short> args) {
         executor.submit(() -> {
             super.createStream(peer,type,args);
         });
@@ -120,13 +120,13 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void send(String streamId, byte[] message, int len,ConnectionOrStreamType type) {
+    public void send(String streamId, byte[] message, int len, TransmissionType type) {
         executor.submit(() -> {
             super.send(streamId,message,len,type);
         });
     }
     @Override
-    public void send(InetSocketAddress peer, byte[] message, int len, ConnectionOrStreamType type) {
+    public void send(InetSocketAddress peer, byte[] message, int len, TransmissionType type) {
         executor.submit(() -> {
             super.send(peer,message,len,type);
         });

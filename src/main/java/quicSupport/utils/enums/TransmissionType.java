@@ -1,5 +1,5 @@
 package quicSupport.utils.enums;
 
-public enum ConnectionOrStreamType {
+public enum TransmissionType {
     STRUCTURED_MESSAGE, UNSTRUCTURED_STREAM;
 }

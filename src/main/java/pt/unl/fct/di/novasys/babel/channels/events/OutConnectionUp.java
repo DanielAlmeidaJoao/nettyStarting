@@ -2,7 +2,7 @@ package pt.unl.fct.di.novasys.babel.channels.events;
 
 
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 /**
  * Triggered when a new outbound connection is established.
@@ -10,7 +10,7 @@ import quicSupport.utils.enums.ConnectionOrStreamType;
 public class OutConnectionUp extends TCPEvent {
 
     public static final short EVENT_ID = 5;
-    public ConnectionOrStreamType type;
+    public TransmissionType type;
     private final Host node;
 
     @Override
@@ -20,7 +20,7 @@ public class OutConnectionUp extends TCPEvent {
                 '}';
     }
 
-    public OutConnectionUp(Host node, ConnectionOrStreamType type) {
+    public OutConnectionUp(Host node, TransmissionType type) {
         super(EVENT_ID);
         this.node = node;
         this.type=type;

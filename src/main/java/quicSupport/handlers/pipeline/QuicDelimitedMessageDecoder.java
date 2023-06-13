@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -63,10 +63,10 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         }else if(QUICLogics.STREAM_CREATED==msgType){
             msg = Unpooled.copiedBuffer(data);
             int ordinal = msg.readInt();
-            ConnectionOrStreamType type;
+            TransmissionType type;
             Triple triple = null;
-            if(ConnectionOrStreamType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
-                type = ConnectionOrStreamType.UNSTRUCTURED_STREAM;
+            if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
+                type = TransmissionType.UNSTRUCTURED_STREAM;
                 ch.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
                 short sourceProto = msg.readShort();
@@ -75,7 +75,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 msg.release();
                 triple = Triple.of(sourceProto,destProto,handlerId);
             }else{
-                type = ConnectionOrStreamType.STRUCTURED_MESSAGE;
+                type = TransmissionType.STRUCTURED_MESSAGE;
             }
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
@@ -84,7 +84,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }
             ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,triple);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
-            consumer.channelActive(ch,data,null, ConnectionOrStreamType.STRUCTURED_MESSAGE);
+            consumer.channelActive(ch,data,null, TransmissionType.STRUCTURED_MESSAGE);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);

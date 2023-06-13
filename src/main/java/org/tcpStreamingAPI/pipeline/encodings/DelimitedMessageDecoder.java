@@ -6,20 +6,20 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.util.List;
 
 public class DelimitedMessageDecoder extends ByteToMessageDecoder {
     private final TCPStreamMetrics metrics;
     public final StreamingNettyConsumer consumer;
-    public final ConnectionOrStreamType type;
+    public final TransmissionType type;
     public static final String NAME = "DelimitedMessageDecoder";
 
     public DelimitedMessageDecoder(TCPStreamMetrics metrics, StreamingNettyConsumer consumer) {
         this.metrics = metrics;
         this.consumer=consumer;
-        type = ConnectionOrStreamType.STRUCTURED_MESSAGE;
+        type = TransmissionType.STRUCTURED_MESSAGE;
     }
 
     @Override

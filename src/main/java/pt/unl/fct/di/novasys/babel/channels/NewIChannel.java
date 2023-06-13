@@ -1,6 +1,7 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
@@ -13,23 +14,14 @@ public interface NewIChannel<T> {
     void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
     void sendStream(byte [] stream,int len,String streamId,short proto);
     void sendStream(byte [] stream,int len,Host host,short proto);
+    void openConnection(Host var1, short protoId, TransmissionType type);
 
-
-    void openConnection(Host var1, short protoId, ConnectionOrStreamType type);
-
-    ConnectionOrStreamType getConnectionType(Host host)  throws NoSuchElementException;
-
-    ConnectionOrStreamType getConnectionType(String streamId)  throws NoSuchElementException;
-
-
+    TransmissionType getConnectionTransmissionType(Host host)  throws NoSuchElementException;
+    TransmissionType getConnectionStreamTransmissionType(String streamId)  throws NoSuchElementException;
 
     void registerChannelInterest(short protoId);
 
-
-
-    void createStream(Host peer, ConnectionOrStreamType type, short sourceProto, short destProto, short handlerId);
-
-
+    void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId);
     /**
      * removes 'proto' from the set of the protocols using this streamId.
      * The stream is closed if the set becomes empty or if proto is a negative number
@@ -51,7 +43,6 @@ public interface NewIChannel<T> {
     InetSocketAddress [] getConnections();
     int connectedPeers();
     boolean shutDownChannel(short protoId);
-
     short getChannelProto();
-
+    NetworkProtocol getNetWorkProtocol();
 }

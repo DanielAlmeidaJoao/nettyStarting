@@ -1,6 +1,6 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 public class DummyChannelToProtoForwarder<T> implements ChannelListener<T>{
     @Override
@@ -9,12 +9,12 @@ public class DummyChannelToProtoForwarder<T> implements ChannelListener<T>{
     }
 
     @Override
-    public void messageSent(T msg, Host to, ConnectionOrStreamType type) {
+    public void messageSent(T msg, Host to, TransmissionType type) {
 
     }
 
     @Override
-    public void messageFailed(T msg, Host to, Throwable cause, ConnectionOrStreamType type) {
+    public void messageFailed(T msg, Host to, Throwable cause, TransmissionType type) {
 
     }
 

@@ -15,7 +15,7 @@ import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -119,7 +119,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         if(myself.getPort()==8082){
             System.out.println("PORRAS "+streamId);
         }
-        logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.connectionOrStreamType);
+        logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.transmissionType);
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
     }
     private void uponStreamClosed(StreamClosedEvent event, int channelId) {
@@ -145,7 +145,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }catch (Exception e){
             e.printStackTrace();
         }
-        super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+        super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, TransmissionType.UNSTRUCTURED_STREAM);
 
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
     }

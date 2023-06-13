@@ -18,7 +18,7 @@ import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -156,9 +156,9 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     public void createStream(){
         if(sendByte){
-            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, TransmissionType.UNSTRUCTURED_STREAM);
         }else{
-            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, ConnectionOrStreamType.STRUCTURED_MESSAGE);
+            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, TransmissionType.STRUCTURED_MESSAGE);
         }
         sendByte =!sendByte;
     }
@@ -208,7 +208,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
     }
     private void uponStreamCreated(StreamCreatedEvent event, int channelId) {
-        logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.connectionOrStreamType);
+        logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.transmissionType);
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
     }
     private void uponStreamClosed(StreamClosedEvent event, int channelId) {

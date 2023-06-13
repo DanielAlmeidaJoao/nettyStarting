@@ -6,7 +6,7 @@ import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.internal.*;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,12 +63,12 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
         return channelConsumer;
     }
     @Override
-    public void messageSent(BabelMessage addressedMessage, Host host, ConnectionOrStreamType type) {
+    public void messageSent(BabelMessage addressedMessage, Host host, TransmissionType type) {
         consumers.values().forEach(c -> c.deliverMessageSent(new MessageSentEvent(addressedMessage, host, channelId)));
     }
 
     @Override
-    public void messageFailed(BabelMessage addressedMessage, Host host, Throwable throwable, ConnectionOrStreamType type) {
+    public void messageFailed(BabelMessage addressedMessage, Host host, Throwable throwable, TransmissionType type) {
         consumers.values().forEach(c ->
                 c.deliverMessageFailed(new MessageFailedEvent(addressedMessage, host, throwable, channelId)));
     }

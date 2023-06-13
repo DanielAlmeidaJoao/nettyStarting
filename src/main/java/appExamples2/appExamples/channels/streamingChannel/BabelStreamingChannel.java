@@ -12,7 +12,8 @@ import pt.unl.fct.di.novasys.babel.channels.*;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer),ConnectionOrStreamType.STRUCTURED_MESSAGE);
+            tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer), TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -61,11 +62,11 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest), ConnectionOrStreamType.STRUCTURED_MESSAGE);
+        tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest), TransmissionType.STRUCTURED_MESSAGE);
     }
     @Override
     public void sendStream(byte[] msg,int len, Host host, short proto) {
-        tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host),ConnectionOrStreamType.UNSTRUCTURED_STREAM);
+        tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
     }
     @Override
     public void closeConnection(Host peer, short connection) {
@@ -105,19 +106,24 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void openConnection(Host peer, short proto, ConnectionOrStreamType type) {
+    public NetworkProtocol getNetWorkProtocol() {
+        return NetworkProtocol.TCP;
+    }
+
+    @Override
+    public void openConnection(Host peer, short proto, TransmissionType type) {
         tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
     @Override
-    public ConnectionOrStreamType getConnectionType(Host host)  throws NoSuchElementException {
+    public TransmissionType getConnectionTransmissionType(Host host)  throws NoSuchElementException {
         return tcpChannelInterface.getConnectionType(FactoryMethods.toInetSOcketAddress(host)) ;
     }
 
     @Override
-    public ConnectionOrStreamType getConnectionType(String streamId)  throws NoSuchElementException{
+    public TransmissionType getConnectionStreamTransmissionType(String streamId)  throws NoSuchElementException{
         new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel").printStackTrace();
-        return ConnectionOrStreamType.STRUCTURED_MESSAGE;
+        return TransmissionType.STRUCTURED_MESSAGE;
     }
 
     @Override
@@ -143,7 +149,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void onChannelActive(Channel channel, boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type) {
+    public void onChannelActive(Channel channel, boolean incoming, InetSocketAddress peer, TransmissionType type) {
         if(incoming){
             listener.deliverEvent(new InConnectionUp(toBabelHost(peer), type));
         }else{
@@ -152,7 +158,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void onMessageSent(byte[] data, InetSocketAddress peer, Throwable cause, ConnectionOrStreamType type) {
+    public void onMessageSent(byte[] data, InetSocketAddress peer, Throwable cause, TransmissionType type) {
         try {
             if(cause==null && triggerSent){
                 listener.messageSent(FactoryMethods.unSerialize(serializer,data,type,protoToReceiveStreamData), toBabelHost(peer), type);
@@ -198,7 +204,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
 
     @Override
-    public void createStream(Host peer, ConnectionOrStreamType type, short sourceProto, short destProto, short handlerId)
+    public void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
     {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();

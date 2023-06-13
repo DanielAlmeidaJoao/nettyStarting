@@ -1,16 +1,16 @@
 package org.tcpStreamingAPI.channel;
 
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
 public interface TCPChannelInterface {
 
-    void openConnection(InetSocketAddress peer, ConnectionOrStreamType type);
+    void openConnection(InetSocketAddress peer, TransmissionType type);
     void closeConnection(InetSocketAddress peer);
     void closeServerSocket();
-    void send(byte[] message, int len, InetSocketAddress peer, ConnectionOrStreamType unstructured);
+    void send(byte[] message, int len, InetSocketAddress peer, TransmissionType unstructured);
 
     boolean isConnected(InetSocketAddress peer);
     InetSocketAddress [] getConnections();
@@ -18,5 +18,5 @@ public interface TCPChannelInterface {
 
     void shutDown();
 
-    ConnectionOrStreamType getConnectionType(InetSocketAddress toInetSOcketAddress) throws NoSuchElementException;
+    TransmissionType getConnectionType(InetSocketAddress toInetSOcketAddress) throws NoSuchElementException;
 }

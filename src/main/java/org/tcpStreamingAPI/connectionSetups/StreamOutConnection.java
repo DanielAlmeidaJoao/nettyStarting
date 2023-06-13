@@ -13,7 +13,7 @@ import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.pipeline.StreamSenderHandler;
 import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.tcpStreamingAPI.pipeline.encodings.StreamMessageDecoder;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 public class StreamOutConnection {
@@ -27,7 +27,7 @@ public class StreamOutConnection {
         this.self = host;
     }
 
-    public void connect(InetSocketAddress peer, TCPStreamMetrics metrics, StreamingNettyConsumer consumer, ConnectionOrStreamType type){
+    public void connect(InetSocketAddress peer, TCPStreamMetrics metrics, StreamingNettyConsumer consumer, TransmissionType type){
         try {
             Bootstrap b = new Bootstrap();
 
@@ -38,7 +38,7 @@ public class StreamOutConnection {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                            if(ConnectionOrStreamType.STRUCTURED_MESSAGE==type){
+                            if(TransmissionType.STRUCTURED_MESSAGE==type){
                                 ch.pipeline().addLast(new DelimitedMessageDecoder(metrics, consumer));
                             }else{
                                 ch.pipeline().addLast(new StreamMessageDecoder(metrics,consumer));

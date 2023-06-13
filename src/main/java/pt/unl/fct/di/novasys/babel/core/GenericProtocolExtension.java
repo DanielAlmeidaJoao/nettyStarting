@@ -5,7 +5,8 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
@@ -53,7 +54,7 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
     }
 
 
-    protected final void createStream(int channelId, short proto,short destProto,short handlerId,Host dest, ConnectionOrStreamType type) {
+    protected final void createStream(int channelId, short proto,short destProto,short handlerId,Host dest, TransmissionType type) {
         getChannelOrThrow(channelId);
         if (logger.isDebugEnabled())
             logger.debug("CREATING A STREAM TO {} IN CHANNEL {}", dest, channelId);
@@ -86,11 +87,14 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
         getChannelOrThrow(channelId);
         return babel.connectedPeers(channelId);
     }
-    protected ConnectionOrStreamType getConnectionType(int channelId, String streamId) throws NoSuchElementException {
+    protected TransmissionType getConnectionType(int channelId, String streamId) throws NoSuchElementException {
         return babel.getConnectionType(channelId,streamId);
     }
-    protected ConnectionOrStreamType getConnectionType(int channelId, Host host) throws NoSuchElementException {
+    protected TransmissionType getConnectionType(int channelId, Host host) throws NoSuchElementException {
         return babel.getConnectionType(channelId,host);
+    }
+    protected NetworkProtocol getNetworkProtocol(int channelId){
+        return babel.getNetworkProtocol(channelId);
     }
     protected void shutDownChannel(int channelId, short protoId){
         getChannelOrThrow(channelId);

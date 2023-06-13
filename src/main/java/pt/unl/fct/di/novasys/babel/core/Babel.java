@@ -15,7 +15,8 @@ import pt.unl.fct.di.novasys.babel.internal.IPCEvent;
 import pt.unl.fct.di.novasys.babel.internal.NotificationEvent;
 import pt.unl.fct.di.novasys.babel.internal.TimerEvent;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -276,7 +277,7 @@ public class Babel {
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
         channelEntry.getLeft().sendStream(stream,dataLen,dest,sourceProto);
     }
-    void createStream(int channelId,short sourceProto,short destProto,short handlerId,Host peer,ConnectionOrStreamType type) {
+    void createStream(int channelId, short sourceProto, short destProto, short handlerId, Host peer, TransmissionType type) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
@@ -336,19 +337,26 @@ public class Babel {
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
         return channelEntry.getLeft().connectedPeers();
     }
-    ConnectionOrStreamType getConnectionType(int channelId, String streamId){
+    TransmissionType getConnectionType(int channelId, String streamId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
-        return channelEntry.getLeft().getConnectionType(streamId);
+        return channelEntry.getLeft().getConnectionStreamTransmissionType(streamId);
     }
-    ConnectionOrStreamType getConnectionType(int channelId, Host host){
+    TransmissionType getConnectionType(int channelId, Host host){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
-        return channelEntry.getLeft().getConnectionType(host);
+        return channelEntry.getLeft().getConnectionTransmissionType(host);
+    }
+    NetworkProtocol getNetworkProtocol(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getConnections in non-existing channelId " + channelId);
+        return channelEntry.getLeft().getNetWorkProtocol();
     }
     public boolean closeChannel(int channelId, short protoId) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
@@ -365,12 +373,12 @@ public class Babel {
      * Opens a connection to a peer in the given channel.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
-    void openConnection(int channelId, Host target, short proto, ConnectionOrStreamType connectionOrStreamType) {
+    void openConnection(int channelId, Host target, short proto, TransmissionType transmissionType) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Opening connection in non-existing channelId " + channelId);
-        channelEntry.getLeft().openConnection(target,proto,connectionOrStreamType);
+        channelEntry.getLeft().openConnection(target,proto, transmissionType);
     }
 
     /**

@@ -1,7 +1,7 @@
 package quicSupport.channels;
 
 import org.apache.commons.lang3.tuple.Triple;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 
@@ -13,7 +13,7 @@ public interface ChannelHandlerMethods {
 
     void failedToCloseStream(String streamId, Throwable reason);
 
-    void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, ConnectionOrStreamType type);
+    void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, TransmissionType type);
 
     void failedToCreateStream(InetSocketAddress peer, Throwable error);
 
@@ -21,12 +21,12 @@ public interface ChannelHandlerMethods {
 
     void onStreamClosedHandler(InetSocketAddress peer, String streamId);
 
-    void onStreamCreatedHandler(InetSocketAddress peer, String streamId, ConnectionOrStreamType type, Triple<Short,Short,Short> triple);
+    void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> triple);
 
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
     void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from);
 
-    void onConnectionUp(boolean incoming, InetSocketAddress peer, ConnectionOrStreamType type, String defaultStream);
+    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream);
 
     void onConnectionDown(InetSocketAddress peer, boolean incoming);
 

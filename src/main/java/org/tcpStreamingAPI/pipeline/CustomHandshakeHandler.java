@@ -10,7 +10,7 @@ import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 import org.tcpStreamingAPI.pipeline.encodings.StreamMessageDecoder;
 import org.tcpStreamingAPI.utils.TCPStreamUtils;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 //@ChannelHandler.Sharable
 public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
@@ -46,7 +46,7 @@ public class CustomHandshakeHandler extends ChannelInboundHandlerAdapter {
         in.readBytes(controlData,0,len);
         String gg = new String(controlData);
         HandShakeMessage handShakeMessage = TCPStreamUtils.g.fromJson(gg, HandShakeMessage.class);
-        if(ConnectionOrStreamType.UNSTRUCTURED_STREAM == handShakeMessage.type){
+        if(TransmissionType.UNSTRUCTURED_STREAM == handShakeMessage.type){
             ctx.channel().pipeline().replace(DelimitedMessageDecoder.NAME, StreamMessageDecoder.NAME,new StreamMessageDecoder(metrics, consumer));
         }
         consumer.onChannelActive(ctx.channel(),handShakeMessage, handShakeMessage.type);

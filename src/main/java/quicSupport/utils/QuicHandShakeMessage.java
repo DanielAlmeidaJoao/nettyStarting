@@ -1,7 +1,7 @@
 package quicSupport.utils;
 
 import lombok.Getter;
-import quicSupport.utils.enums.ConnectionOrStreamType;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -13,15 +13,15 @@ public class QuicHandShakeMessage {
     public String hostName;
     public int port;
     public String streamId;
-    public final ConnectionOrStreamType connectionOrStreamType;
+    public final TransmissionType transmissionType;
     //private final Map<String,Object> properties;
 
-    public QuicHandShakeMessage(String hostName, int port, String streamId, ConnectionOrStreamType connectionOrStreamType) {
+    public QuicHandShakeMessage(String hostName, int port, String streamId, TransmissionType transmissionType) {
         //this.properties = new HashMap<>();
         this.hostName=hostName;
         this.port=port;
         this.streamId=streamId;
-        this.connectionOrStreamType = connectionOrStreamType;
+        this.transmissionType = transmissionType;
     }
 
 
