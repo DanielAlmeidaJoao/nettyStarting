@@ -6,7 +6,6 @@ import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail
 import appExamples2.appExamples.channels.babelQuicChannel.events.StreamClosedEvent;
 import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEvent;
 import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
-import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.channel.StreamingChannel;
@@ -26,8 +25,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
-public class StreamFileProtocol extends GenericProtocolExtension {
-    private static final Logger logger = LogManager.getLogger(StreamFileProtocol.class);
+public class StreamFileWithQUIC extends GenericProtocolExtension {
+    private static final Logger logger = LogManager.getLogger(StreamFileWithQUIC.class);
     public static final short PROTOCOL_ID = 202;
     public int channelId;
     private final Host myself; //My own address/port
@@ -35,7 +34,7 @@ public class StreamFileProtocol extends GenericProtocolExtension {
     private Properties properties;
     public final String NETWORK_PROTO;
 
-    public StreamFileProtocol(Properties properties) throws Exception {
+    public StreamFileWithQUIC(Properties properties) throws Exception {
 
         super(EchoProtocol.class.getName(),PROTOCOL_ID);
         String address = properties.getProperty("address");
@@ -77,7 +76,6 @@ public class StreamFileProtocol extends GenericProtocolExtension {
             channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
             channelId = createChannel(BabelStreamingChannel.NAME, channelProps);
         }
-
         return channelId;
     }
     @Override
@@ -114,7 +112,9 @@ public class StreamFileProtocol extends GenericProtocolExtension {
     private void uponStreamCreated(StreamCreatedEvent event, int channelId) {
         streamId = event.streamId;
         if(myself.getPort()==8081){
-            startStreaming();
+            new Thread(() -> {
+                startStreaming();
+            }).start();
         }
         if(myself.getPort()==8082){
             System.out.println("PORRAS "+streamId);
@@ -124,8 +124,6 @@ public class StreamFileProtocol extends GenericProtocolExtension {
     }
     private void uponStreamClosed(StreamClosedEvent event, int channelId) {
         logger.info("STREAM {}[::]{} IS DOWN.",event.streamId,event.host);
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
-
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
@@ -184,17 +182,7 @@ public class StreamFileProtocol extends GenericProtocolExtension {
         }
         //logger.info("Received 2bytes2: {} from {}",msg.length, from);
     }
-    private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
-        logger.info("Received {} from {}", msg.getMessage(), from);
-    }
-    private void uponFloodMessageQUIC(EchoMessage msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received QUIC {} from {} {}", msg.getMessage(), from, streamId);
-    }
-    private void uponMsgFail(EchoMessage msg, Host host, short destProto,
-                             Throwable throwable, int channelId) {
-        //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
-    }
+
     private void uponMsgFail3(BytesMessageSentOrFail msg, Host host, short destProto,
                               Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason

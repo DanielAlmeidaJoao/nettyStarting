@@ -66,4 +66,17 @@ public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
         super.onChannelActive(channel,incoming,peer,type);
     }
 
+    @Override
+    public boolean shutDownChannel(short protoId) {
+        if(protoId<0){
+            return super.shutDownChannel(protoId);
+        }else{
+            protocolsUsingTheChannel.remove(protoId);
+            if(protocolsUsingTheChannel.isEmpty()){
+                return super.shutDownChannel(protoId);
+            }
+        }
+        return false;
+    }
+
 }

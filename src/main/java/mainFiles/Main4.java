@@ -4,7 +4,7 @@ import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicInitializer;
 import appExamples2.appExamples.channels.initializers.BabelStreamInitializer;
 import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
-import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.StreamFileProtocol;
+import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.StreamFileWithQUIC;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 
 import java.util.Properties;
@@ -29,7 +29,7 @@ public class Main4 {
 
         //If you pass an interface name in the properties (either file or arguments), this wil get the
         // IP of that interface and create a property "address=ip" to be used later by the channels.
-        StreamFileProtocol streamFileProtocol = new StreamFileProtocol(props);
+        StreamFileWithQUIC streamFileProtocol = new StreamFileWithQUIC(props);
         //EchoProtocol2 echoProtocol2 = new EchoProtocol2(props);
         babel.registerProtocol(streamFileProtocol);
         //babel.registerProtocol(echoProtocol2);

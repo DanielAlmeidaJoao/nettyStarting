@@ -137,4 +137,17 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
     public void registerChannelInterest(short protoId) {
         registeredProtos.add(protoId);
     }
+
+    @Override
+    public boolean shutDownChannel(short protoId) {
+        if(protoId<0){
+            return super.shutDownChannel(protoId);
+        }else{
+            registeredProtos.remove(protoId);
+            if(registeredProtos.isEmpty()){
+                return super.shutDownChannel(protoId);
+            }
+        }
+        return false;
+    }
 }
