@@ -7,6 +7,8 @@ import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
+    void openConnection(Host var1, short protoId, TransmissionType type);
+    void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId);
     void sendMessage(T var1, Host var2, short protoId);
     void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId);
     //exclusivelly for QUIC
@@ -14,14 +16,9 @@ public interface NewIChannel<T> {
     void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
     void sendStream(byte [] stream,int len,String streamId,short proto);
     void sendStream(byte [] stream,int len,Host host,short proto);
-    void openConnection(Host var1, short protoId, TransmissionType type);
-
     TransmissionType getConnectionTransmissionType(Host host)  throws NoSuchElementException;
     TransmissionType getConnectionStreamTransmissionType(String streamId)  throws NoSuchElementException;
-
     void registerChannelInterest(short protoId);
-
-    void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId);
     /**
      * removes 'proto' from the set of the protocols using this streamId.
      * The stream is closed if the set becomes empty or if proto is a negative number
@@ -29,7 +26,6 @@ public interface NewIChannel<T> {
      * @param proto
      */
     void closeStream(String streamId, short proto);
-
     /**
      * removes 'protoId' from the set of the protocols using the connection 'peer'.
      * The connection is closed if the set becomes empty or if protoId is a negative number
@@ -37,7 +33,6 @@ public interface NewIChannel<T> {
      * @param protoId
      */
     void closeConnection(Host peer, short protoId);
-
     boolean isConnected(Host peer);
     String [] getStreams();
     InetSocketAddress [] getConnections();
