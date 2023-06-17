@@ -11,8 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.pipeline.CustomHandshakeHandler;
-import org.tcpStreamingAPI.pipeline.StreamReceiverHandler;
-import org.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
 
 import java.net.InetSocketAddress;
 
@@ -56,9 +54,11 @@ public class StreamInConnection {
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(metrics,consumer));
-                        ch.pipeline().addLast(DelimitedMessageDecoder.NAME,new DelimitedMessageDecoder(metrics,consumer));
-                        ch.pipeline().addLast(new StreamReceiverHandler(metrics,consumer));
+                        System.out.println("MUST BE CALLED FOR EACH INCOMMING CONNECTION");
+                        String connectionId = consumer.nextId();
+                        ch.pipeline().addLast(CustomHandshakeHandler.NAME,new CustomHandshakeHandler(metrics,consumer,connectionId));
+                        //ch.pipeline().addLast(DelimitedMessageDecoder.NAME,new DelimitedMessageDecoder(metrics,consumer,connectionId));
+                        //ch.pipeline().addLast(new StreamReceiverHandler(metrics,consumer,connectionId));
                     }
                 });
         ChannelFuture f = b.bind().sync().addListener(future ->

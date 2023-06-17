@@ -7,6 +7,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.apache.commons.lang3.tuple.Pair;
 import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
@@ -27,7 +28,7 @@ public class StreamOutConnection {
         this.self = host;
     }
 
-    public void connect(InetSocketAddress peer, TCPStreamMetrics metrics, StreamingNettyConsumer consumer, TransmissionType type){
+    public void connect(InetSocketAddress peer, TCPStreamMetrics metrics, StreamingNettyConsumer consumer, TransmissionType type, String connectionId){
         try {
             Bootstrap b = new Bootstrap();
 
@@ -38,12 +39,13 @@ public class StreamOutConnection {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
+                            Pair identification = Pair.of(peer,connectionId);
                             if(TransmissionType.STRUCTURED_MESSAGE==type){
-                                ch.pipeline().addLast(new DelimitedMessageDecoder(metrics, consumer));
+                                ch.pipeline().addLast(new DelimitedMessageDecoder(metrics,consumer,identification));
                             }else{
-                                ch.pipeline().addLast(new StreamMessageDecoder(metrics,consumer));
+                                ch.pipeline().addLast(new StreamMessageDecoder(metrics,consumer,identification));
                             }
-                            ch.pipeline().addLast( new StreamSenderHandler(new HandShakeMessage(self,type),consumer,metrics,type));
+                            ch.pipeline().addLast( new StreamSenderHandler(new HandShakeMessage(self,type),consumer,metrics,type,identification));
                     }
                     });
 

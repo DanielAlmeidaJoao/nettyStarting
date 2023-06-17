@@ -15,7 +15,6 @@ import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.utils.MetricsDisabledException;
 import org.tcpStreamingAPI.utils.TCPStreamUtils;
-import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
@@ -25,6 +24,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInterface{
@@ -38,15 +38,19 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     public final static String DEFAULT_PORT = "8574";
     private final Map<InetSocketAddress, CustomTCPConnection> connections;
-    private final Map<String,InetSocketAddress> channelIds;
+    private final Map<InetSocketAddress,Pair<String,List<Pair<byte [],Integer>>>> connecting;
+
+    private final Map<String,CustomTCPConnection> links;
+
 
     private final StreamInConnection server;
     private final StreamOutConnection client;
     private final boolean metricsOn;
     private final TCPStreamMetrics tcpStreamMetrics;
-    private final Map<InetSocketAddress,List<Pair<byte [],Integer>>> connecting;
     private final boolean connectIfNotConnected;
     private final TCPChannelHandlerMethods channelHandlerMethods;
+
+    private final AtomicInteger idCounterGenerator;
 
 
     public StreamingChannel(Properties properties, boolean singleThreaded, TCPChannelHandlerMethods chm, NetworkRole networkRole)throws IOException{
@@ -66,12 +70,12 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         }
         if(singleThreaded){
             connections = new HashMap<>();
-            channelIds = new HashMap<>();
             connecting=new HashMap<>();
+            links = new HashMap<>();
         }else{
             connections = new ConcurrentHashMap<>();
-            channelIds = new ConcurrentHashMap<>();
-            connecting=new ConcurrentHashMap<>();
+            connecting= new ConcurrentHashMap<>();
+            links = new ConcurrentHashMap<>();
         }
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
             server = new StreamInConnection(addr.getHostName(),port);
@@ -95,38 +99,31 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         connectIfNotConnected = properties.getProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
 
         this.channelHandlerMethods = chm;
+        idCounterGenerator = new AtomicInteger();
     }
 
     /******************************************* CHANNEL EVENTS ****************************************************/
-    public  void onChannelInactive(String channelId){
-        InetSocketAddress peer = channelIds.remove(channelId);
-        if(peer==null){
-            return;
-        }
-        CustomTCPConnection chan = connections.remove(peer);
+    public String nextId(){
+        return String.format("tcp_link_",idCounterGenerator.getAndIncrement());
+    }
+    public  void onChannelInactive(Pair<InetSocketAddress, String> connectionId){
+        CustomTCPConnection chan = links.remove(connectionId.getRight());
         if(metricsOn){
             tcpStreamMetrics.onConnectionClosed(chan.channel.remoteAddress());
         }
-        channelHandlerMethods.onChannelInactive(peer);
+        channelHandlerMethods.onChannelInactive(connectionId.getKey());
 
     }
 
-    public void onChannelRead(String channelId, byte[] bytes, TransmissionType type){
-        InetSocketAddress from = channelIds.get(channelId);
-        if(from==null){
-            logger.info("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
-        }else if(TransmissionType.STRUCTURED_MESSAGE==type){
-            channelHandlerMethods.onChannelMessageRead(channelId,bytes,from);
+    public void onChannelRead(Pair<InetSocketAddress, String> channelId, byte[] bytes, TransmissionType type){
+        if(TransmissionType.STRUCTURED_MESSAGE==type){
+            channelHandlerMethods.onChannelMessageRead(channelId.getValue(),bytes,channelId.getKey());
         }else{
-            channelHandlerMethods.onChannelStreamRead(channelId,bytes,from);
+            channelHandlerMethods.onChannelStreamRead(channelId.getValue(),bytes,channelId.getKey());
         }
     }
 
-    private void disconnectOldConnection(Channel old){
-        channelIds.remove(old.id().asShortText());
-        old.disconnect();
-    }
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type){
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, Pair<InetSocketAddress, String> identification){
         try {
             boolean inConnection;
             InetSocketAddress listeningAddress;
@@ -137,38 +134,11 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                 listeningAddress = handShakeMessage.getAddress();
                 inConnection = true;
             }
-            CustomTCPConnection oldConnection = connections.put(listeningAddress,new CustomTCPConnection(channel,type));
-            if(oldConnection!=null ){
-                int comp = QUICLogics.compAddresses(self,listeningAddress);
-                if(comp<0){//2 PEERS SIMULTANEOUSLY CONNECTING TO EACH OTHER
-                    //keep the in connection
-                    if(inConnection){
-                        disconnectOldConnection(oldConnection.channel);
-                        logger.info("{} KEEPING NEW CONNECTION {}. IN CONNECTION: {}. FROM {}",self,channel.id().asShortText(), inConnection,listeningAddress);
-                    }else{
-                        connections.put(listeningAddress,oldConnection);
-                        channel.disconnect();
-                        logger.info("{} KEEPING OLD CONNECTION {}. IN CONNECTION: {}. FROM {}",self,oldConnection.channel.id().asShortText(),inConnection,listeningAddress);
-                        sendPendingMessages(listeningAddress,type);
-                        return;
-                    }
-                }else if(comp>0) /* if(self.hashCode()>listeningAddress.hashCode()) */ {
-                    //keep the out connection
-                    if (inConnection) {
-                        channel.disconnect();
-                        connections.put(listeningAddress,oldConnection);
-                        logger.info("{} KEEPING THE OLD CONNECTION {}. IN CONNECTION: {}. FROM {}",self,oldConnection.channel.id().asShortText(), inConnection,listeningAddress);
-                        sendPendingMessages(listeningAddress,type);
-                        return;
-                    } else {
-                        disconnectOldConnection(oldConnection.channel);
-                        logger.info("{} KEEPING THE NEW CONNECTION {}. IN CONNECTION: {}. FROM {}",self,channel.id().asShortText(),inConnection,listeningAddress);
-                    }
-                }
-            }else{
-                logger.debug("CONNECTION TO {} ACTIVATED.",listeningAddress);
+            CustomTCPConnection customTCPConnection = new CustomTCPConnection(channel,type,identification);
+            if(!connections.containsKey(listeningAddress)){
+                connections.put(listeningAddress,customTCPConnection);
             }
-            channelIds.put(channel.id().asShortText(),listeningAddress);
+            links.put(identification.getRight(),customTCPConnection);
             if(metricsOn){
                 tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,inConnection);
             }
@@ -181,33 +151,42 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     }
 
 
-    public void onConnectionFailed(String channelId, Throwable cause){
-        InetSocketAddress peer = channelIds.get(channelId);
-        handleOpenConnectionFailed(peer,cause);
+    public void onConnectionFailed(Pair<InetSocketAddress, String> connectionId, Throwable cause){
+        handleOpenConnectionFailed(connectionId.getKey(),cause);
     }
 
     /******************************************* CHANNEL EVENTS ****************************************************/
 
     /******************************************* USER EVENTS ****************************************************/
 
-    public void openConnection(InetSocketAddress peer, TransmissionType type) {
+    public String openConnection(InetSocketAddress peer, TransmissionType type, String connectionId) {
+        if(connectionId == null){
+            connectionId = nextId();
+        }
         if(connections.containsKey(peer)){
             logger.debug("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
             if(connecting.containsKey(peer)){
-                return;
+                return connecting.get(peer).getLeft();
             }else{
-                connecting.put(peer,new LinkedList<>());
+                connecting.put(peer,Pair.of(connectionId,new LinkedList<>()));
             }
             logger.debug("{} CONNECTING TO {}",self,peer);
             try {
-                client.connect(peer,tcpStreamMetrics,this,type);
+                client.connect(peer,tcpStreamMetrics,this,type,connectionId);
             }catch (Exception e){
                 e.printStackTrace();
                 handleOpenConnectionFailed(peer,e.getCause());
             }
         }
+        return connectionId;
     }
+
+    @Override
+    public String openConnection(InetSocketAddress peer, TransmissionType type) {
+        return openConnection(peer, type,null);
+    }
+
     public void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING CONNECTION TO {}", peer);
         CustomTCPConnection connection = connections.get(peer);
@@ -218,7 +197,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         }
     }
     private void sendPendingMessages(InetSocketAddress peer, TransmissionType type){
-        List<Pair<byte [],Integer>> messages = connecting.remove(peer);
+        List<Pair<byte [],Integer>> messages = connecting.remove(peer).getRight();
         if(messages!=null){
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self,messages.size(),peer);
             for (Pair<byte[],Integer> message : messages) {
@@ -232,18 +211,30 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     public void send(byte[] message, int len, InetSocketAddress peer, TransmissionType type){
         CustomTCPConnection connection = connections.get(peer);
         if(connection==null){
-
-            List<Pair<byte[],Integer>> pendingMessages = connecting.get(peer);
+            List<Pair<byte[],Integer>> pendingMessages = connecting.get(peer).getRight();
             if( pendingMessages !=null ){
                 pendingMessages.add(Pair.of(message,len));
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             }else if(connectIfNotConnected){
                 openConnection(peer, type);
-                connecting.get(peer).add(Pair.of(message,len));
+                connecting.get(peer).getRight().add(Pair.of(message,len));
             }else{
                 channelHandlerMethods.onMessageSent(message,peer,new Throwable("Unknown Peer : "+peer),type);
             }
-        }else if(connection.type==type){
+        }else{
+            send(message,len,connection,type);
+        }
+    }
+    public void send(byte[] message, int len, String connectionId, TransmissionType type){
+        CustomTCPConnection connection = links.get(connectionId);
+        if(connection==null){
+            channelHandlerMethods.onMessageSent(message, null/* peer **/,new Throwable("Unknown Peer : "+null/* peer **/),type);
+        }else{
+            send(message,len,connection,type);
+        }
+    }
+    private void send(byte[] message, int len,  CustomTCPConnection connection, TransmissionType type){
+        if(connection.type==type){
             ByteBuf byteBuf;
             if(TransmissionType.UNSTRUCTURED_STREAM==type){
                 byteBuf = Unpooled.buffer(len);
@@ -261,10 +252,10 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                         metrics1.setSentAppMessages(metrics1.getSentAppMessages()+1);
                     }
                 }
-                channelHandlerMethods.onMessageSent(message,peer,future.cause(), type);
+                channelHandlerMethods.onMessageSent(message,connection.id.getKey(),future.cause(), type);
             });
         }else{
-            channelHandlerMethods.onMessageSent(message,peer,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND RECEIVED "+type+" DATA TYPE"), type);
+            channelHandlerMethods.onMessageSent(message,connection.id.getKey(),new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND RECEIVED "+type+" DATA TYPE"), type);
         }
     }
 

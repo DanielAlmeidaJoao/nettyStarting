@@ -3,6 +3,7 @@ package org.tcpStreamingAPI.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import org.apache.commons.lang3.tuple.Pair;
 import org.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import org.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
@@ -10,6 +11,7 @@ import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import org.tcpStreamingAPI.utils.TCPStreamUtils;
 import quicSupport.utils.enums.TransmissionType;
 
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 //@ChannelHandler.Sharable
@@ -17,12 +19,14 @@ public class StreamSenderHandler extends CustomChannelHandler {
     private HandShakeMessage handshakeData;
     private final TCPStreamMetrics metrics;
     private final TransmissionType type;
+    public final Pair<InetSocketAddress,String> connectionId;
 
-    public StreamSenderHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics, TransmissionType type){
-        super(consumer);
+    public StreamSenderHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics, TransmissionType type, Pair connectionId){
+        super(consumer,connectionId);
         this.handshakeData = handshakeData;
         this.metrics = metrics;
         this.type = type;
+        this.connectionId = connectionId;
     }
 
     @Override
@@ -46,7 +50,7 @@ public class StreamSenderHandler extends CustomChannelHandler {
                 ctx.channel().close();
             }
         });
-        getConsumer().onChannelActive(ctx.channel(),null,type);
+        getConsumer().onChannelActive(ctx.channel(),null,type,connectionId);
         handshakeData=null;
     }
 

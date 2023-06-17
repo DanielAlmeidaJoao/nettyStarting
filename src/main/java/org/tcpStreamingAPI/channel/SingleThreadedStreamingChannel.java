@@ -2,6 +2,7 @@ package org.tcpStreamingAPI.channel;
 
 import io.netty.channel.Channel;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
@@ -24,27 +25,29 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     }
 
     @Override
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type) {
-        executor.execute(() -> super.onChannelActive(channel,handShakeMessage, type));
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, Pair<InetSocketAddress, String> identification) {
+        executor.execute(() -> super.onChannelActive(channel,handShakeMessage, type, identification));
     }
 
     @Override
-    public void onChannelRead(String channelId, byte[] bytes, TransmissionType type) {
+    public void onChannelRead(Pair<InetSocketAddress, String> channelId, byte[] bytes, TransmissionType type) {
         executor.execute(() -> super.onChannelRead(channelId,bytes, type));
     }
 
     @Override
-    public void onChannelInactive(String channelId) {
+    public void onChannelInactive(Pair<InetSocketAddress, String> channelId) {
         executor.execute(() -> super.onChannelInactive(channelId));
     }
 
     @Override
-    public void onConnectionFailed(String channelId, Throwable cause) {
+    public void onConnectionFailed(Pair<InetSocketAddress, String> channelId, Throwable cause) {
         executor.execute(() -> super.onConnectionFailed(channelId,cause));
     }
 
-    public void openConnection(InetSocketAddress peer, TransmissionType type) {
-        executor.execute(() -> super.openConnection(peer, type));
+    public String openConnection(InetSocketAddress peer, TransmissionType type) {
+        final String conId = nextId();
+        executor.execute(() -> super.openConnection(peer, type,conId));
+        return conId;
     }
     @Override
     public void closeConnection(InetSocketAddress peer) {

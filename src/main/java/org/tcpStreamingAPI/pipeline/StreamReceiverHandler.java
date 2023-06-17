@@ -7,8 +7,8 @@ import org.tcpStreamingAPI.metrics.TCPStreamMetrics;
 //@ChannelHandler.Sharable
 public class StreamReceiverHandler extends CustomChannelHandler {
     private final TCPStreamMetrics metrics;
-    public StreamReceiverHandler(TCPStreamMetrics metrics, StreamingNettyConsumer consumer){
-        super(consumer);
+    public StreamReceiverHandler(TCPStreamMetrics metrics, StreamingNettyConsumer consumer, String connectionId){
+        super(consumer, null);
         this.metrics = metrics;
     }
 
