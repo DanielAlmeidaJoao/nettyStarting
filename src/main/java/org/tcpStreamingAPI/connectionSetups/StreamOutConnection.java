@@ -29,6 +29,8 @@ public class StreamOutConnection {
     }
 
     public void connect(InetSocketAddress peer, TCPStreamMetrics metrics, StreamingNettyConsumer consumer, TransmissionType type, String connectionId){
+        final Pair identification = Pair.of(peer,connectionId);
+
         try {
             Bootstrap b = new Bootstrap();
 
@@ -39,7 +41,6 @@ public class StreamOutConnection {
                         @Override
                     public void initChannel(SocketChannel ch)
                             throws Exception {
-                            Pair identification = Pair.of(peer,connectionId);
                             if(TransmissionType.STRUCTURED_MESSAGE==type){
                                 ch.pipeline().addLast(new DelimitedMessageDecoder(metrics,consumer,identification));
                             }else{
@@ -51,7 +52,7 @@ public class StreamOutConnection {
 
             b.connect().addListener(future -> {
                 if(!future.isSuccess()){
-                    consumer.handleOpenConnectionFailed(peer,future.cause());
+                    consumer.handleOpenConnectionFailed(identification,future.cause());
                 }
             });
             //printSomeConfigs();
@@ -60,7 +61,7 @@ public class StreamOutConnection {
             updateConfiguration(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK,2*64*1024);
             updateConfiguration(ChannelOption.AUTO_READ,Boolean.TRUE);**/
         } catch (Exception e) {
-            consumer.handleOpenConnectionFailed(peer,e.getCause());
+            consumer.handleOpenConnectionFailed(identification,e.getCause());
         }
     }
 

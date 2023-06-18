@@ -156,7 +156,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     @Override
     public void openConnection(Host peer, short proto, TransmissionType streamType) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
-        listener.deliverEvent(new OutConnectionUp(peer, TransmissionType.STRUCTURED_MESSAGE));
+        listener.deliverEvent(new OutConnectionUp(peer,TransmissionType.STRUCTURED_MESSAGE,"BLING BLONG"));
     }
 
     @Override

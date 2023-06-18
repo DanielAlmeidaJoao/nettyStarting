@@ -1,7 +1,6 @@
 package appExamples2.appExamples.channels.streamingChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
-import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
@@ -127,7 +126,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void onChannelInactive(InetSocketAddress peer) {
+    public void onChannelInactive(InetSocketAddress peer, String right) {
         Throwable cause = new Throwable(String.format("CHANNEL %S CLOSED.",peer));
         listener.deliverEvent(new InConnectionDown(toBabelHost(peer), cause));
     }
@@ -149,16 +148,16 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void onChannelActive(Channel channel, boolean incoming, InetSocketAddress peer, TransmissionType type) {
+    public void onChannelActive(String conId, boolean incoming, InetSocketAddress peer, TransmissionType type) {
         if(incoming){
-            listener.deliverEvent(new InConnectionUp(toBabelHost(peer), type));
+            listener.deliverEvent(new InConnectionUp(toBabelHost(peer), type,conId));
         }else{
-            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer), type));
+            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer), type,conId));
         }
     }
 
     @Override
-    public void onMessageSent(byte[] data, InetSocketAddress peer, Throwable cause, TransmissionType type) {
+    public void onMessageSent(byte[] data, InetSocketAddress peer, String value, Throwable cause, TransmissionType type) {
         try {
             if(cause==null && triggerSent){
                 listener.messageSent(FactoryMethods.unSerialize(serializer,data,type,protoToReceiveStreamData), toBabelHost(peer), type);
@@ -175,7 +174,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
+    public void onOpenConnectionFailed(InetSocketAddress peer, String value, Throwable cause) {
         logger.info("CONNECTION TO {} FAILED. CAUSE = {}.",peer,cause);
     }
 

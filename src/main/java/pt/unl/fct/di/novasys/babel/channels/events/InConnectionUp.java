@@ -12,6 +12,7 @@ public class InConnectionUp extends TCPEvent {
 
     private final Host node;
     public final TransmissionType type;
+    public final String linkId;
 
     @Override
     public String toString() {
@@ -20,10 +21,11 @@ public class InConnectionUp extends TCPEvent {
                 '}';
     }
 
-    public InConnectionUp(Host node, TransmissionType type) {
+    public InConnectionUp(Host node, TransmissionType type, String linkId) {
         super(EVENT_ID);
         this.node = node;
         this.type = type;
+        this.linkId = linkId;
     }
 
 

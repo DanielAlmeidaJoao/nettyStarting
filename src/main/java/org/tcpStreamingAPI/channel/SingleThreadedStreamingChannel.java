@@ -72,7 +72,7 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
             }
         });
     }
-    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
+    public void handleOpenConnectionFailed(Pair<InetSocketAddress, String> peer, Throwable cause){
         executor.submit(() -> super.handleOpenConnectionFailed(peer,cause));
     }
 

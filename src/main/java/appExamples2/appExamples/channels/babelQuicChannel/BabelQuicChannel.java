@@ -228,10 +228,10 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         }
         if(incoming){
             logger.debug("InboundConnectionUp " + peer);
-            listener.deliverEvent(new InConnectionUp(host,type));
+            listener.deliverEvent(new InConnectionUp(host,type,"blaba"));
         }else{
             logger.debug("OutboundConnectionUp " + host);
-            listener.deliverEvent(new OutConnectionUp(host,type));
+            listener.deliverEvent(new OutConnectionUp(host,type,"dsadas"));
         }
     }
 

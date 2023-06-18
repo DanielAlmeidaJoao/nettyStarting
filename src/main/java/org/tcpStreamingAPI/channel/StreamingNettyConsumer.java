@@ -15,7 +15,7 @@ public interface StreamingNettyConsumer {
     void onConnectionFailed(Pair<InetSocketAddress, String> channelId, Throwable cause);
 
     void onServerSocketBind(boolean success, Throwable cause);
-    void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+    void handleOpenConnectionFailed(Pair<InetSocketAddress, String> peer, Throwable cause);
 
     String nextId();
 }
