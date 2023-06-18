@@ -57,7 +57,7 @@ public class Main3 {
                 String stream = scanner.nextLine();
                 echoProtocol.sendMessage(message,stream);
             }else if(input.equalsIgnoreCase("createstream")){
-                echoProtocol.createStream();
+                //echoProtocol.createStream();
             }else if(input.equalsIgnoreCase("send")){
                 System.out.printf("MESSAGE TO SEND:");
                 String message = scanner.nextLine();

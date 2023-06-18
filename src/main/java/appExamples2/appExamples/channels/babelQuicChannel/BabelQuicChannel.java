@@ -134,8 +134,8 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
-    public void openConnection(Host peer, short proto, TransmissionType type) {
-        customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),type);
+    public String openConnection(Host peer, short proto, TransmissionType type) {
+        return customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
     @Override
@@ -148,19 +148,20 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         return customQuicChannel.getConnectionType(streamId);
     }
 
+    /**
     public void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
     {
         customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer),type,Triple.of(sourceProto,destProto,handlerId));
-    }
+    } **/
 
-    public void closeStream(String streamId, short proto){
+    public void closeLink(String streamId, short proto){
         customQuicChannel.closeStream(streamId);
     }
 
-    public void sendMessage(T msg,String streamId,short proto){
+    public void sendMessage(T msg, String linkId, short proto){
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            customQuicChannel.send(streamId,toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
+            customQuicChannel.send(linkId,toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -222,17 +223,17 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
                 triple.getLeft(),triple.getMiddle(),triple.getRight());
     }
 
-    public void onConnectionUp(boolean incoming,ConnectionId connectionId ,TransmissionType type) {
+    public void onConnectionUp(boolean incoming,ConnectionId connectionId,TransmissionType type) {
         Host host = FactoryMethods.toBabelHost(connectionId.address);
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
             unstructuredStreamHandlers.put(connectionId.linkId, Triple.of(protoToReceiveStreamData,protoToReceiveStreamData,protoToReceiveStreamData));
         }
         if(incoming){
             logger.debug("InboundConnectionUp " + connectionId.linkId);
-            listener.deliverEvent(new InConnectionUp(host,type,"blaba"));
+            listener.deliverEvent(new InConnectionUp(host,type, connectionId.linkId));
         }else{
             logger.debug("OutboundConnectionUp " + host);
-            listener.deliverEvent(new OutConnectionUp(host,type,"dsadas"));
+            listener.deliverEvent(new OutConnectionUp(host,type, connectionId.linkId));
         }
     }
 

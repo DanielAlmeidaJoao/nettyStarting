@@ -463,8 +463,8 @@ public abstract class GenericProtocol {
      *
      * @param peer the ip/port to create the connection to.
      */
-    protected final void openConnection(Host peer) {
-        openConnection(peer, defaultChannel);
+    protected final String openConnection(Host peer) {
+        return openConnection(peer, defaultChannel);
     }
 
     /**
@@ -474,11 +474,11 @@ public abstract class GenericProtocol {
      * @param peer      the ip/port to create the connection to.
      * @param channelId the channel to create the connection in
      */
-    protected final void openConnection(Host peer, int channelId) {
-        babel.openConnection(channelId, peer, protoId, TransmissionType.STRUCTURED_MESSAGE);
+    protected final String openConnection(Host peer, int channelId) {
+        return babel.openConnection(channelId, peer, protoId, TransmissionType.STRUCTURED_MESSAGE);
     }
-    protected final void openStreamConnection(Host peer, int channelId) {
-        babel.openConnection(channelId, peer, protoId, TransmissionType.UNSTRUCTURED_STREAM);
+    protected final String openStreamConnection(Host peer, int channelId) {
+        return babel.openConnection(channelId, peer, protoId, TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     /**

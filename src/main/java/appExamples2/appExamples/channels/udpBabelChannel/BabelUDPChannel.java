@@ -154,9 +154,10 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void openConnection(Host peer, short proto, TransmissionType streamType) {
+    public String openConnection(Host peer, short proto, TransmissionType streamType) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         listener.deliverEvent(new OutConnectionUp(peer,TransmissionType.STRUCTURED_MESSAGE,"BLING BLONG"));
+        return "TO_IMPLEMENT";
     }
 
     @Override
@@ -177,7 +178,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void sendMessage(T msg,String streamId,short proto) {
+    public void sendMessage(T msg, String linkId, short proto) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }
@@ -197,16 +198,16 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     public void sendStream(byte[] msg,int len,Host host, short proto) {
         new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
     }
-
+    /**
     @Override
     public void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
     {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }
-
+    **/
     @Override
-    public void closeStream(String streamId, short protoId) {
+    public void closeLink(String streamId, short protoId) {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
     }

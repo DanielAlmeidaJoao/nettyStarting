@@ -176,27 +176,16 @@ public class TCPChannel implements TCPNettyConsumer, TCPChannelInterface{
     /******************************************* CHANNEL EVENTS ****************************************************/
 
     /******************************************* USER EVENTS ****************************************************/
-    public boolean connectIfConnectedOrConnecting = false;
     public String openLogics(InetSocketAddress peer, TransmissionType type, String connectionId) {
         if(connectionId == null){
             connectionId = nextId();
         }
-        if(connections.containsKey(peer)){
-            logger.debug("{} ALREADY CONNECTED TO {}",self,peer);
-        }else {
-            //
-            if(connectIfConnectedOrConnecting){
-                connecting.put(connectionId,Pair.of(peer,new LinkedList<>()));
-            }else if(!TCPStreamUtils.isConnectingOrConnected(peer,connections.containsKey(peer),connecting)){
-                connecting.put(connectionId,Pair.of(peer,new LinkedList<>()));
-            }
-            logger.debug("{} CONNECTING TO {}",self,peer);
-            try {
-                client.connect(peer, tcpMetrics,this,type,connectionId);
-            }catch (Exception e){
-                e.printStackTrace();
-                handleOpenConnectionFailed(Pair.of(peer,connectionId),e.getCause());
-            }
+        connecting.put(connectionId,Pair.of(peer,new LinkedList<>()));
+        try {
+            client.connect(peer, tcpMetrics,this,type,connectionId);
+        }catch (Exception e){
+            e.printStackTrace();
+            handleOpenConnectionFailed(Pair.of(peer,connectionId),e.getCause());
         }
         return connectionId;
     }

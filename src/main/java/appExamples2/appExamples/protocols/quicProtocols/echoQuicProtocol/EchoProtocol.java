@@ -11,14 +11,13 @@ import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.message
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import tcpSupport.tcpStreamingAPI.channel.TCPChannel;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
-import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpStreamingAPI.channel.TCPChannel;
+import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -102,7 +101,7 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                openConnection(dest);
+                logger.info("CONNECTION {} OPENEND",openConnection(dest));
                 //registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
                 //setupPeriodicTimer(new SampleTimer(),8000L,5000L);
             }
@@ -153,14 +152,6 @@ public class EchoProtocol extends GenericProtocolExtension {
     public void sendStream(String message, String streamId){
         System.out.println("SENDING "+message.length());
         super.sendStream(channelId,message.getBytes(),message.length(),streamId);
-    }
-    public void createStream(){
-        if(sendByte){
-            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, TransmissionType.UNSTRUCTURED_STREAM);
-        }else{
-            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, TransmissionType.STRUCTURED_MESSAGE);
-        }
-        sendByte =!sendByte;
     }
 
     public void closeStreamM(String stream){
@@ -217,7 +208,7 @@ public class EchoProtocol extends GenericProtocolExtension {
 
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
-        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
+        logger.info("IN CONNECTION TO {} IS UP. CONNECTION {}",event.getNode(),QUICLogics.gson.toJson(event));
         if(dest==null){
             dest = event.getNode();
         }
@@ -231,7 +222,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         **/
     }
     private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
-        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}",event.getNode(),event.type);
+        logger.info("OUT CONNECTION TO {} IS UP. CONNECTION {}",event.getNode(),QUICLogics.gson.toJson(event));
         if(dest==null){
             dest = event.getNode();
         }

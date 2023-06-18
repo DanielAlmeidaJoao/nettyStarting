@@ -65,9 +65,9 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
     }
 
     @Override
-    public void sendMessage(T msg,String streamId,short proto) {
-        addProtoOnSend(streamId,proto);
-        super.sendMessage(msg,streamId,proto);
+    public void sendMessage(T msg, String linkId, short proto) {
+        addProtoOnSend(linkId,proto);
+        super.sendMessage(msg, linkId,proto);
     }
     @Override
     public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId){
@@ -107,19 +107,19 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         }
     }
     @Override
-    public void closeStream(String streamId, short proto){
+    public void closeLink(String streamId, short proto){
         if(proto<0){
-            super.closeStream(streamId,proto);
+            super.closeLink(streamId,proto);
         }else{
             Set<Short> protosUsingThisStream = streamChannelsMap.get(streamId);
             if (protosUsingThisStream!=null){
                 protosUsingThisStream.remove(proto);
                 if(protosUsingThisStream.isEmpty()){
-                    super.closeStream(streamId,proto);
+                    super.closeLink(streamId,proto);
                     hostChannelsMap.remove(proto);
                 }
             }else{
-                super.closeStream(streamId,proto);
+                super.closeLink(streamId,proto);
             }
         }
     }

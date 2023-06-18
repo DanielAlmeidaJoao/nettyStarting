@@ -1,12 +1,16 @@
 package quicSupport.handlers.pipeline;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.ConnectionId;
 import quicSupport.utils.metrics.QuicChannelMetrics;
+
+import java.util.Map;
 
 public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
 
@@ -49,6 +53,16 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
     }
 
+    public static void setId(QuicChannel channel,ConnectionId id){
+        for (Map.Entry<String, ChannelHandler> entry : channel.pipeline()) {
+            if(entry.getValue() instanceof QuicServerChannelConHandler){
+                QuicServerChannelConHandler e = (QuicServerChannelConHandler) entry.getValue();
+                e.setId(id);
+                System.out.println("FOUND FOUND");
+            }
+        }
+
+    }
     /*
     @Override
     public boolean isSharable() {

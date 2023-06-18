@@ -12,11 +12,8 @@ public class TCPStreamUtils {
     public static final Gson g = new Gson();
 
     public static final String AUTO_CONNECT_ON_SEND_PROP = "AUTO_CONNECT";
-    public static boolean isConnectingOrConnected(InetSocketAddress peer, boolean containsHost,
+    public static boolean isConnecting(InetSocketAddress peer,
                                                   Map<String, Pair<InetSocketAddress, List<Pair<byte[], Integer>>>> connecting){
-        if(containsHost){
-            return true;
-        }
         for (Pair<InetSocketAddress, List<Pair<byte[], Integer>>> value : connecting.values()) {
             if(value.getKey().equals(peer)){
                 return true;
