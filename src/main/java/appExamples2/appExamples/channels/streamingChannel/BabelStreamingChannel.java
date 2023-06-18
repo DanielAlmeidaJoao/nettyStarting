@@ -3,10 +3,10 @@ package appExamples2.appExamples.channels.streamingChannel;
 import appExamples2.appExamples.channels.FactoryMethods;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
-import org.tcpStreamingAPI.channel.StreamingChannel;
-import org.tcpStreamingAPI.channel.TCPChannelHandlerMethods;
-import org.tcpStreamingAPI.channel.TCPChannelInterface;
+import tcpSupport.tcpStreamingAPI.channel.SingleThreadedTCPChannel;
+import tcpSupport.tcpStreamingAPI.channel.TCPChannel;
+import tcpSupport.tcpStreamingAPI.channel.TCPChannelHandlerMethods;
+import tcpSupport.tcpStreamingAPI.channel.TCPChannelInterface;
 import pt.unl.fct.di.novasys.babel.channels.*;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
@@ -39,10 +39,10 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
         this.listener = list;
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
         if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
-            tcpChannelInterface = new SingleThreadedStreamingChannel(properties,this, NetworkRole.CHANNEL);
+            tcpChannelInterface = new SingleThreadedTCPChannel(properties,this, NetworkRole.CHANNEL);
             System.out.println("SINGLE THREADED CHANNEL");
         }else {
-            tcpChannelInterface = new StreamingChannel(properties,false,this,NetworkRole.CHANNEL);
+            tcpChannelInterface = new TCPChannel(properties,false,this,NetworkRole.CHANNEL);
             System.out.println("MULTI THREADED CHANNEL");
         }
         protoToReceiveStreamData=proto;
