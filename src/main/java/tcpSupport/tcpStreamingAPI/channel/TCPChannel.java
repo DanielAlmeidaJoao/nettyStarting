@@ -177,16 +177,6 @@ public class TCPChannel implements TCPNettyConsumer, TCPChannelInterface{
 
     /******************************************* USER EVENTS ****************************************************/
     public boolean connectIfConnectedOrConnecting = false;
-    private boolean isConnectingOrConnected(InetSocketAddress peer){
-        if(connections.containsKey(peer)){
-            for (Pair<InetSocketAddress, List<Pair<byte[], Integer>>> value : connecting.values()) {
-                if(value.getKey().equals(peer)){
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
     public String openLogics(InetSocketAddress peer, TransmissionType type, String connectionId) {
         if(connectionId == null){
             connectionId = nextId();
@@ -197,7 +187,7 @@ public class TCPChannel implements TCPNettyConsumer, TCPChannelInterface{
             //
             if(connectIfConnectedOrConnecting){
                 connecting.put(connectionId,Pair.of(peer,new LinkedList<>()));
-            }else if(!isConnectingOrConnected(peer)){
+            }else if(!TCPStreamUtils.isConnectingOrConnected(peer,connections.containsKey(peer),connecting)){
                 connecting.put(connectionId,Pair.of(peer,new LinkedList<>()));
             }
             logger.debug("{} CONNECTING TO {}",self,peer);

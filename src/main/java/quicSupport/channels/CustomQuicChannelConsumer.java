@@ -1,13 +1,10 @@
 package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.utils.ConnectionId;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
-
-import java.net.InetSocketAddress;
 
 public interface CustomQuicChannelConsumer {
 
@@ -18,11 +15,11 @@ public interface CustomQuicChannelConsumer {
 
     void onKeepAliveMessage(ConnectionId parentId);
 
-    void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, Triple<Short,Short,Short> triple, ConnectionId identification);
+    void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, Triple<Short,Short,Short> triple, ConnectionId identification, boolean inConnection);
 
     void onReceivedDelimitedMessage(ConnectionId streamId, byte[] bytes);
 
-    void onReceivedStream(Pair<InetSocketAddress, String> streamId, byte [] bytes);
+    void onReceivedStream(ConnectionId streamId, byte [] bytes);
 
     void streamClosedHandler(ConnectionId channel);
 

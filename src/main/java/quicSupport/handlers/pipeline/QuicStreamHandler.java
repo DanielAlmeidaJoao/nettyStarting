@@ -29,12 +29,12 @@ public class QuicStreamHandler extends ChannelInboundHandlerAdapter {
         this.id = identification;
     }
 
-    public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, Triple<Short,Short,Short> triple){
+    public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, Triple<Short,Short,Short> triple, boolean inConnection){
         if(metrics!=null){
             QuicConnectionMetrics m = metrics.getConnectionMetrics(quicStreamChannel.parent().remoteAddress());
             m.setStreamCount(m.getStreamCount()+1);
         }
-        consumer.streamCreatedHandler(quicStreamChannel,type,triple,id);
+        consumer.streamCreatedHandler(quicStreamChannel,type,triple,id,inConnection);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {

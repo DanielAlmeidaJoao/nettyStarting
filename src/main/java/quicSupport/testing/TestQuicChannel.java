@@ -9,6 +9,7 @@ import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
+import quicSupport.utils.ConnectionId;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
@@ -58,7 +59,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> args) {
+    public void onStreamCreatedHandler(ConnectionId identification, TransmissionType type, Triple<Short,Short,Short> args) {
     }
 
     @Override
@@ -91,7 +92,7 @@ import java.util.Properties;
     FileOutputStream fos = new FileOutputStream("TESTQUIC33.MP4");
     int total = 0;
     @Override
-    public void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadDelimitedMessage(ConnectionId streamId, byte[] bytes) {
         logger.info("READ "+bytes.length);
         total += bytes.length;
         try{
@@ -104,13 +105,13 @@ import java.util.Properties;
     }
 
     @Override
-    public void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadFlowStream(ConnectionId connectionId, byte[] bytes) {
         //TODO
         System.out.println("READ STREAAAAAAAM");
     }
 
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream) {
+    public void onConnectionUp(boolean incoming,ConnectionId connectionId, TransmissionType type) {
 
     }
 

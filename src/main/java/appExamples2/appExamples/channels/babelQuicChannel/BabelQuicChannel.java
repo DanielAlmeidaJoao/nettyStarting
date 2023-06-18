@@ -3,7 +3,6 @@ package appExamples2.appExamples.channels.babelQuicChannel;
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
 import appExamples2.appExamples.channels.babelQuicChannel.events.StreamClosedEvent;
-import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEvent;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
@@ -20,9 +19,10 @@ import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelInterface;
 import quicSupport.channels.SingleThreadedQuicChannel;
+import quicSupport.utils.ConnectionId;
 import quicSupport.utils.enums.NetworkProtocol;
-import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.IOException;
@@ -196,38 +196,39 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         logger.info("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getLocalizedMessage());
     }
 
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short>args) {
-        logger.info("STREAM {} CREATED FOR {} CONNECTION",streamId,peer);
+    public void onStreamCreatedHandler(ConnectionId identification, TransmissionType type, Triple<Short,Short,Short>args) {
+        /**
+        logger.info("STREAM {} CREATED FOR {} CONNECTION",identification);
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
             unstructuredStreamHandlers.put(streamId,args);
         }
-        listener.deliverEvent(new StreamCreatedEvent(streamId,FactoryMethods.toBabelHost(peer),type));
+        listener.deliverEvent(new StreamCreatedEvent(streamId,FactoryMethods.toBabelHost(peer),type)); **/
     }
 
-    public void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadDelimitedMessage(ConnectionId connectionId, byte[] bytes) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
-            FactoryMethods.deserialize(bytes,serializer,listener,from,streamId);
+            FactoryMethods.deserialize(bytes,serializer,listener,connectionId.address,connectionId.linkId);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
     @Override
-    public void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from) {
-        Triple<Short,Short,Short> triple = unstructuredStreamHandlers.get(streamId);
-        listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),streamId,
+    public void onChannelReadFlowStream(ConnectionId connectionId, byte[] bytes) {
+        Triple<Short,Short,Short> triple = unstructuredStreamHandlers.get(connectionId.linkId);
+        listener.deliverMessage(bytes,FactoryMethods.toBabelHost(connectionId.address), connectionId.linkId,
                 triple.getLeft(),triple.getMiddle(),triple.getRight());
     }
 
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream) {
-        Host host = FactoryMethods.toBabelHost(peer);
+    public void onConnectionUp(boolean incoming,ConnectionId connectionId ,TransmissionType type) {
+        Host host = FactoryMethods.toBabelHost(connectionId.address);
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
-            unstructuredStreamHandlers.put(defaultStream,Triple.of(protoToReceiveStreamData,protoToReceiveStreamData,protoToReceiveStreamData));
+            unstructuredStreamHandlers.put(connectionId.linkId, Triple.of(protoToReceiveStreamData,protoToReceiveStreamData,protoToReceiveStreamData));
         }
         if(incoming){
-            logger.debug("InboundConnectionUp " + peer);
+            logger.debug("InboundConnectionUp " + connectionId.linkId);
             listener.deliverEvent(new InConnectionUp(host,type,"blaba"));
         }else{
             logger.debug("OutboundConnectionUp " + host);

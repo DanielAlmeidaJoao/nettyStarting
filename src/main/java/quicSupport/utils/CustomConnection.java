@@ -8,9 +8,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.Exceptions.UnclosableStreamException;
 import quicSupport.utils.enums.TransmissionType;
 
-import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -18,24 +16,25 @@ import java.util.concurrent.TimeUnit;
 public class CustomConnection {
     private static final Logger logger = LogManager.getLogger(CustomConnection.class);
     private final QuicChannel connection;
-    private final QuicStreamChannel defaultStream;
+    private QuicStreamChannel defaultStream;
     private final boolean  inComing;
     private Map<String,QuicStreamChannel> streams;
     private ScheduledFuture scheduledFuture;
     public TransmissionType transmissionType;
 
-    private InetSocketAddress remote;
+    private ConnectionId connectionId;
     private boolean canSendHeartBeat;
     private static long heartBeatTimeout;
     private final long creationTime;
+    private Queue<CustomConnection> brothers;
 
-    public CustomConnection(QuicStreamChannel quicStreamChannel,InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout, TransmissionType type){
+    public CustomConnection(QuicStreamChannel quicStreamChannel, ConnectionId remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout, TransmissionType type){
         creationTime = System.currentTimeMillis();
         defaultStream = quicStreamChannel;
         connection = defaultStream.parent();
         this.inComing = inComing;
         streams = new HashMap<>();
-        this.remote = remote;
+        this.connectionId = remote;
         addStream(defaultStream);
         scheduledFuture = null;
         canSendHeartBeat = inComing;
@@ -45,6 +44,32 @@ public class CustomConnection {
             serverStartScheduling();
         }
         //logger.info("CONNECTION TO {} ON. DEFAULT STREAM: {} .",remote,defaultStream.id().asShortText());
+    }
+    public void addConnection(CustomConnection customConnection){
+        if(brothers == null){
+            brothers = new LinkedList<>();
+        }
+        brothers.add(customConnection);
+    }
+    public void closeAllBros(){
+        if(brothers !=null){
+            for (CustomConnection customConnection : brothers) {
+                customConnection.close();
+            }
+        }
+        brothers = null;
+    }
+    public void setBrothers(Queue<CustomConnection> bros){
+        assert brothers == null;
+        brothers = bros;
+    }
+    public void removeBro(String conId){
+        for (CustomConnection brother : brothers) {
+            if(brother.getConnectionId().linkId == conId){
+                brothers.remove(brother);
+                brother.close();
+            }
+        }
     }
     public boolean hasPassedOneSec(){
         return (System.currentTimeMillis()-creationTime)>2000;
@@ -56,18 +81,28 @@ public class CustomConnection {
         return streams.get(id);
     }
 
-    public void closeStream(String streamId) throws UnclosableStreamException {
-        QuicStreamChannel streamChannel = streams.get(streamId);
+    public CustomConnection closeStream(String streamId) throws UnclosableStreamException {
+        QuicStreamChannel streamChannel = streams.remove(streamId);
         if(defaultStream==streamChannel){
-            throw new UnclosableStreamException("DEFAULT STREAM <"+streamId+"> CANNOT BE CLOSED.");
+            if(streams.isEmpty()){
+                CustomConnection boss = brothers.remove();
+                if(boss != null){
+                    boss.setBrothers(brothers);
+                    return boss;
+                }
+            }else{
+                defaultStream = streams.entrySet().iterator().next().getValue();
+            }
         }
         streamChannel.shutdown();
         streamChannel.disconnect();
+        return null;
     }
     public void close(){
         //streams = null;
         connection.disconnect();
         connection.close();
+        closeAllBros();
     }
 
     private void serverStartScheduling(){
@@ -82,7 +117,7 @@ public class CustomConnection {
                 scheduledFuture.cancel(true);
             }
             scheduledFuture = defaultStream.eventLoop().schedule(() -> {
-                logger.info("HEART BEAT SENT TO {}",remote);
+                logger.info("HEART BEAT SENT TO {}",connectionId.address);
                 defaultStream.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(), QUICLogics.KEEP_ALIVE, transmissionType));
             }, (long) (heartBeatTimeout*0.75), TimeUnit.SECONDS);
     }

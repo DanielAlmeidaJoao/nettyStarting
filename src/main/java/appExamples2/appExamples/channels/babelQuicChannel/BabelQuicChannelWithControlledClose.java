@@ -1,12 +1,12 @@
 package appExamples2.appExamples.channels.babelQuicChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
+import quicSupport.utils.ConnectionId;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
@@ -80,9 +80,9 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
     }
     //////
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream){
-        hostChannelsMap.put(FactoryMethods.toBabelHost(peer),new HashSet<>(registeredProtos));
-        super.onConnectionUp(incoming,peer, type, defaultStream);
+    public void onConnectionUp(boolean incoming, ConnectionId connectionId , TransmissionType type){
+        hostChannelsMap.put(FactoryMethods.toBabelHost(connectionId.address),new HashSet<>(registeredProtos));
+        super.onConnectionUp(incoming,connectionId, type);
     }
     @Override
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
@@ -123,11 +123,7 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
             }
         }
     }
-    @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> args) {
-        streamChannelsMap.put(streamId,new HashSet<>());
-        super.onStreamCreatedHandler(peer,streamId, type,args);
-    }
+
     @Override
     public void onStreamClosedHandler(InetSocketAddress peer, String streamId) {
         streamChannelsMap.remove(streamId);
