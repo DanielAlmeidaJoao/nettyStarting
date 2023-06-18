@@ -46,7 +46,7 @@ public class SingleThreadedTCPChannel extends TCPChannel {
 
     public String openConnection(InetSocketAddress peer, TransmissionType type) {
         final String conId = nextId();
-        executor.execute(() -> super.openConnection(peer, type,conId));
+        executor.execute(() -> super.openLogics(peer,type,conId));
         return conId;
     }
     @Override

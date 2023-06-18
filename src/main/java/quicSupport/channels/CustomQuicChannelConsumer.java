@@ -1,28 +1,33 @@
 package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import quicSupport.utils.ConnectionId;
+import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 
 public interface CustomQuicChannelConsumer {
 
-    void channelActive(QuicStreamChannel streamChannel, byte [] controlData, InetSocketAddress remotePeer, TransmissionType type);
-    void channelInactive(String channelId);
+    void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, ConnectionId remotePeer, TransmissionType type);
+    void channelInactive(ConnectionId channelId);
 
-    void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+    void handleOpenConnectionFailed(ConnectionId peer, Throwable cause);
 
-    void onKeepAliveMessage(String parentId);
+    void onKeepAliveMessage(ConnectionId parentId);
 
-    void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, Triple<Short,Short,Short> triple);
+    void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, Triple<Short,Short,Short> triple, ConnectionId identification);
 
-    void onReceivedDelimitedMessage(String streamId, byte[] bytes);
+    void onReceivedDelimitedMessage(ConnectionId streamId, byte[] bytes);
 
-    void onReceivedStream(String streamId, byte [] bytes);
+    void onReceivedStream(Pair<InetSocketAddress, String> streamId, byte [] bytes);
 
-    void streamClosedHandler(QuicStreamChannel channel);
+    void streamClosedHandler(ConnectionId channel);
 
-    void streamErrorHandler(QuicStreamChannel channel, Throwable throwable);
+    void streamErrorHandler(ConnectionId channel, Throwable throwable);
+
+    String nextId();
 
     }

@@ -29,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
+import quicSupport.utils.ConnectionId;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
@@ -90,22 +91,23 @@ public final class QuicClientExample {
         clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
     }
-    public void connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType) throws Exception{
-        Bootstrap bs = new Bootstrap();
 
+    public void connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType, String conId) throws Exception{
+        final ConnectionId identification = ConnectionId.of(remote,conId);
+        Bootstrap bs = new Bootstrap();
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
                 .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
-                .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics, transmissionType))
-                .streamHandler(new ServerChannelInitializer(consumer,metrics,QUICLogics.OUTGOING_CONNECTION))
+                .handler(new QuicClientChannelConHandler(self,identification,consumer,metrics, transmissionType))
+                .streamHandler(new ServerChannelInitializer(consumer,metrics, QUICLogics.OUTGOING_CONNECTION,identification))
                 .remoteAddress(remote)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
                 .connect().addListener(future -> {
             if(!future.isSuccess()){
-                consumer.handleOpenConnectionFailed(remote,future.cause());
+                consumer.handleOpenConnectionFailed(identification,future.cause());
             }
         });
     }

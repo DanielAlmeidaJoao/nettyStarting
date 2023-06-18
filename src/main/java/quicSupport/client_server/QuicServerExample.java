@@ -87,7 +87,7 @@ public final class QuicServerExample {
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new QuicServerChannelConHandler(consumer,metrics))
-                .streamHandler(new ServerChannelInitializer(consumer,metrics, QUICLogics.INCOMING_CONNECTION))
+                .streamHandler(new ServerChannelInitializer(consumer,metrics, QUICLogics.INCOMING_CONNECTION,null))
                 .build();
         return codec;
     }

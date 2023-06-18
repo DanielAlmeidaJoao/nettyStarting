@@ -73,10 +73,9 @@ public class QUICLogics {
     public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_C_KEYSTORE_ALIAS_KEY";
 
 
-    public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor, QuicChannelMetrics metrics,
-                                                 boolean incoming) throws Exception{
+    public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor, QuicChannelMetrics metrics, ConnectionId id) throws Exception{
         QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL, new ServerChannelInitializer(quicListenerExecutor,metrics,incoming))
+                .createStream(QuicStreamType.BIDIRECTIONAL,new ServerChannelInitializer(quicListenerExecutor,metrics, QUICLogics.OUTGOING_CONNECTION,id))
                 .addListener(future -> {
                     if(metrics!=null && future.isSuccess()){
                         QuicConnectionMetrics q = metrics.getConnectionMetrics(quicChan.remoteAddress());

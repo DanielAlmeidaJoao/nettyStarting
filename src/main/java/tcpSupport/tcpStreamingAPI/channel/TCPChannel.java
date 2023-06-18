@@ -187,7 +187,7 @@ public class TCPChannel implements TCPNettyConsumer, TCPChannelInterface{
         }
         return false;
     }
-    public String openConnection(InetSocketAddress peer, TransmissionType type, String connectionId) {
+    public String openLogics(InetSocketAddress peer, TransmissionType type, String connectionId) {
         if(connectionId == null){
             connectionId = nextId();
         }
@@ -213,7 +213,7 @@ public class TCPChannel implements TCPNettyConsumer, TCPChannelInterface{
 
     @Override
     public String openConnection(InetSocketAddress peer, TransmissionType type) {
-        return openConnection(peer, type,null);
+        return openLogics(peer, type,null);
     }
 
     public void closeConnection(InetSocketAddress peer) {
@@ -253,7 +253,7 @@ public class TCPChannel implements TCPNettyConsumer, TCPChannelInterface{
                 pendingMessages.add(Pair.of(message,len));
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             }else if(connectIfNotConnected){
-                String connectionId = openConnection(peer, type, null);
+                String connectionId = openLogics(peer, type, null);
                 connecting.get(connectionId).getRight().add(Pair.of(message,len));
             }else{
                 channelHandlerMethods.onMessageSent(message,peer, connection.id.getValue(), new Throwable("Unknown Peer : "+peer),type);

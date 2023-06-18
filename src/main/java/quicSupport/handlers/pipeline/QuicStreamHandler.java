@@ -10,20 +10,23 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.client_server.QuicServerExample;
+import quicSupport.utils.ConnectionId;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
-public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
+public class QuicStreamHandler extends ChannelInboundHandlerAdapter {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(QuicServerExample.class);
     public static final String HANDLER_NAME="QuicStreamReadHandler";
 
     private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
+    private final ConnectionId id;
 
-    public QuicStreamReadHandler(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics) {
+    public QuicStreamHandler(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics, ConnectionId identification) {
         this.consumer = streamListenerExecutor;
         this.metrics = metrics;
+        this.id = identification;
     }
 
     public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, Triple<Short,Short,Short> triple){
@@ -31,16 +34,16 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
             QuicConnectionMetrics m = metrics.getConnectionMetrics(quicStreamChannel.parent().remoteAddress());
             m.setStreamCount(m.getStreamCount()+1);
         }
-        consumer.streamCreatedHandler(quicStreamChannel,type,triple);
+        consumer.streamCreatedHandler(quicStreamChannel,type,triple,id);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        consumer.streamClosedHandler((QuicStreamChannel) ctx.channel());
+        consumer.streamClosedHandler(id);
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
-        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause);
+        consumer.streamErrorHandler(id,cause);
     }
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {

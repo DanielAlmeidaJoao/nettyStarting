@@ -2,9 +2,12 @@ package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
+import quicSupport.utils.ConnectionId;
+import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
@@ -27,39 +30,39 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
     /*********************************** Stream Handlers **********************************/
 
     @Override
-    public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable) {
+    public void streamErrorHandler(ConnectionId channel, Throwable throwable) {
         executor.submit(() -> {
             super.streamErrorHandler(channel,throwable);
         });
     }
 
     @Override
-    public void streamClosedHandler(QuicStreamChannel channel) {
+    public void streamClosedHandler(ConnectionId channel) {
         executor.submit(() -> {
             super.streamClosedHandler(channel);
         });
     }
     @Override
-    public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, Triple<Short,Short,Short> triple) {
+    public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, Triple<Short,Short,Short> triple, ConnectionId identification) {
         executor.submit(() ->
         {
-            super.streamCreatedHandler(channel, type,triple);
+            super.streamCreatedHandler(channel, type,triple, identification);
         });
     }
     @Override
-    public void onReceivedDelimitedMessage(String streamId, byte[] bytes){
+    public void onReceivedDelimitedMessage(ConnectionId streamId, byte[] bytes){
         executor.submit(() -> {
             super.onReceivedDelimitedMessage(streamId, bytes);
         });
     }
     @Override
-    public void onReceivedStream(String streamId, byte [] bytes) {
+    public void onReceivedStream(Pair<InetSocketAddress, String> streamId, byte [] bytes) {
         executor.submit(() -> {
             super.onReceivedStream(streamId, bytes);
         });
     }
     @Override
-    public void onKeepAliveMessage(String parentId){
+    public void onKeepAliveMessage(ConnectionId parentId){
         executor.submit(() -> {
             super.onKeepAliveMessage(parentId);
         });
@@ -69,13 +72,13 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
 
     /*********************************** Channel Handlers **********************************/
     @Override
-    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData, InetSocketAddress remotePeer, TransmissionType type){
+    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, ConnectionId remotePeer, TransmissionType type){
         executor.submit(() -> {
             super.channelActive(streamChannel,controlData,remotePeer,type);
         });
     }
     @Override
-    public  void channelInactive(String channelId){
+    public  void channelInactive(ConnectionId channelId){
         executor.submit(() ->{
             super.channelInactive(channelId);
         });
@@ -84,10 +87,12 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
     /*********************************** Channel Handlers **********************************/
 
     /*********************************** User Actions **************************************/
-    public void open(InetSocketAddress peer, TransmissionType type) {
+    public String open(InetSocketAddress peer, TransmissionType type) {
+        String conId = nextId();
         executor.submit(() -> {
-            super.open(peer,type);
+            super.openLogics(peer,type,conId);
         });
+        return conId;
     }
     @Override
     public void closeConnection(InetSocketAddress peer){
@@ -102,10 +107,12 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void createStream(InetSocketAddress peer, TransmissionType type, Triple<Short,Short,Short> args) {
+    public String createStream(InetSocketAddress peer, TransmissionType type, Triple<Short,Short,Short> args) {
+        final String conId = nextId();
         executor.submit(() -> {
-            super.createStream(peer,type,args);
+            super.baseCreateStream(peer,type,args,conId);
         });
+        return conId;
     }
     @Override
     public void closeStream(String streamId){
@@ -140,7 +147,7 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
             super.onServerSocketClose(success,cause);
         });
     }
-    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
+    public void handleOpenConnectionFailed(ConnectionId peer, Throwable cause){
         executor.submit(() -> super.handleOpenConnectionFailed(peer,cause));
     }
     @Override

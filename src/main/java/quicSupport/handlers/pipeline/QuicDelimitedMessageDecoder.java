@@ -10,12 +10,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelConsumer;
+import quicSupport.utils.ConnectionId;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.util.List;
+
+import static quicSupport.utils.QUICLogics.gson;
 
 public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
@@ -23,11 +27,13 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     private final boolean incoming;
     private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
+    private ConnectionId identification;
 
-    public QuicDelimitedMessageDecoder(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics, boolean incoming){
+    public QuicDelimitedMessageDecoder(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics, boolean incoming, ConnectionId identification){
         this.incoming=incoming;
         this.consumer=streamListenerExecutor;
         this.metrics=metrics;
+        this.identification = identification;
     }
 
     @Override
@@ -48,14 +54,14 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         msg.discardSomeReadBytes();
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(QUICLogics.APP_DATA==msgType){
-            consumer.onReceivedDelimitedMessage(ch.id().asShortText(),data);
+            consumer.onReceivedDelimitedMessage(identification,data);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
                 q.setReceivedAppBytes(q.getReceivedAppBytes()+length+ QUICLogics.WRT_OFFSET);
             }
         }else if(QUICLogics.KEEP_ALIVE==msgType){
-            consumer.onKeepAliveMessage(ch.parent().id().asShortText());
+            consumer.onKeepAliveMessage(identification);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedKeepAliveMessages(1+q.getReceivedKeepAliveMessages());
@@ -68,7 +74,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
                 type = TransmissionType.UNSTRUCTURED_STREAM;
                 ch.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
-                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
+                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,identification));
                 short sourceProto = msg.readShort();
                 short destProto = msg.readShort();
                 short handlerId = msg.readShort();
@@ -81,10 +87,14 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
+                q.setStreamCount(q.getStreamCount()+1);
             }
-            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,triple);
+            ((QuicStreamHandler) ch.pipeline().get(QuicStreamHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,triple);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
-            consumer.channelActive(ch,data,null, TransmissionType.STRUCTURED_MESSAGE);
+            assert identification == null;
+            QuicHandShakeMessage handShakeMessage = gson.fromJson(new String(data),QuicHandShakeMessage.class);
+            identification = ConnectionId.of(handShakeMessage.getAddress(),consumer.nextId());
+            consumer.channelActive(ch,handShakeMessage,identification, TransmissionType.STRUCTURED_MESSAGE);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);

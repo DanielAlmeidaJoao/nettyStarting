@@ -1,6 +1,7 @@
 package quicSupport.handlers.pipeline;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import quicSupport.utils.QUICLogics;
@@ -9,6 +10,7 @@ import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
+@ChannelHandler.Sharable
 public class QuicMessageEncoder extends MessageToByteEncoder<MessageToByteEncoderParameter> {
     public static final String HANDLER_NAME="QuicMessageEncoder";
     public final TransmissionType type;
