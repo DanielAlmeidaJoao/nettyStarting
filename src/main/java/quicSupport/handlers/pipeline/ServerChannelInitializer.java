@@ -13,6 +13,7 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
     private final QuicChannelMetrics quicChannelMetrics;
     private final boolean incoming;
     private ConnectionId id;
+    int called = 0;
     public ServerChannelInitializer(CustomQuicChannelConsumer consumer,
                                     QuicChannelMetrics quicChannelMetrics, boolean incoming, ConnectionId id) {
         this.consumer = consumer;
@@ -23,11 +24,19 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
 
     @Override
     protected void initChannel(QuicStreamChannel ch)  {
+        System.out.println(" OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO "+(called++));
         ChannelPipeline cp = ch.pipeline();
         //cp.addLast(new LoggingHandler(LogLevel.INFO));
         /**
         if(quicChannelMetrics!=null){
         } **/
+        System.out.println("ADDRESS "+ch.parent().remoteAddress());
+
+        //InetSocketAddress address = (InetSocketAddress) ch.parent().remoteAddress();
+        /**
+        if(id == null){
+            id = ConnectionId.of(address,consumer.nextId());
+        }**/
         cp.addLast(QuicMessageEncoder.HANDLER_NAME,new QuicMessageEncoder(quicChannelMetrics));
         cp.addLast(QuicDelimitedMessageDecoder.HANDLER_NAME,new QuicDelimitedMessageDecoder(consumer,quicChannelMetrics,incoming,id));
         cp.addLast(QuicStreamHandler.HANDLER_NAME,new QuicStreamHandler(consumer,quicChannelMetrics,id));

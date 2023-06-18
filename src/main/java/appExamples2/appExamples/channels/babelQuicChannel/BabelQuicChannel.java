@@ -250,6 +250,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
+        cause.printStackTrace();
         logger.info("FAILED TO OPEN CONNECTION TO {}. REASON: {}",peer,cause.getLocalizedMessage());
     }
 

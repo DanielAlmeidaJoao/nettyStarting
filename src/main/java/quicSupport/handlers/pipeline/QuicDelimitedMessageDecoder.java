@@ -53,6 +53,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         msg.readBytes(data);
         msg.discardSomeReadBytes();
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
+        System.out.println("MESSAGE TYPE "+msgType+" "+identification);
         if(QUICLogics.APP_DATA==msgType){
             consumer.onReceivedDelimitedMessage(identification,data);
             if(metrics!=null){
@@ -89,7 +90,9 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
                 q.setStreamCount(q.getStreamCount()+1);
             }
-            ((QuicStreamHandler) ch.pipeline().get(QuicStreamHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,triple,false);
+            QuicStreamHandler qsh = (QuicStreamHandler) ch.pipeline().get(QuicStreamHandler.HANDLER_NAME);
+            qsh.setId(identification);
+            qsh.notifyAppDelimitedStreamCreated(ch,type,triple,true);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
             assert identification == null;
             QuicHandShakeMessage handShakeMessage = gson.fromJson(new String(data),QuicHandShakeMessage.class);

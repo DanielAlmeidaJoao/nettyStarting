@@ -21,7 +21,7 @@ public interface CustomQuicChannelConsumer {
 
     void onReceivedStream(ConnectionId streamId, byte [] bytes);
 
-    void streamClosedHandler(ConnectionId channel);
+    void streamInactive(ConnectionId channel);
 
     void streamErrorHandler(ConnectionId channel, Throwable throwable);
 

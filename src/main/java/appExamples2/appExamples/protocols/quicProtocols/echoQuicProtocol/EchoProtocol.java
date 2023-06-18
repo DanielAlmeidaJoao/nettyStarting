@@ -63,7 +63,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
             channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
             channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
-            channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"300");
+            channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"200");
             channelId = createChannel(BabelQuicChannel.NAME, channelProps);
             registerQUICMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC,null,this::uponMsgFail);
 
@@ -135,6 +135,17 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
         sendByte =!sendByte;
     }
+    public void open(String port, String type){
+        try {
+            InetSocketAddress address = new InetSocketAddress(Integer.parseInt(port));
+            Host hh  = new Host(myself.getAddress(),address.getPort());
+            logger.info("CONN OPENED {}",super.openConnection(hh));
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("FAILED TO OPEN "+e.getCause());
+        }
+
+    }
     public void sendMessage(String message){
         System.out.println(sendByte+" SENDBYTE");
         if(sendByte){
@@ -204,8 +215,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     private void uponStreamClosed(StreamClosedEvent event, int channelId) {
         logger.info("STREAM {}[::]{} IS DOWN.",event.streamId,event.host);
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
-
+        //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("IN CONNECTION TO {} IS UP. CONNECTION {}",event.getNode(),QUICLogics.gson.toJson(event));

@@ -104,7 +104,7 @@ public class TCPChannel implements TCPNettyConsumer, TCPChannelInterface{
 
     /******************************************* CHANNEL EVENTS ****************************************************/
     public String nextId(){
-        return String.format("tcp_link_",idCounterGenerator.getAndIncrement());
+        return "tcp_link_"+idCounterGenerator.getAndIncrement();
     }
     public  void onChannelInactive(Pair<InetSocketAddress, String> connectionId){
         CustomTCPConnection chan = links.remove(connectionId.getRight());

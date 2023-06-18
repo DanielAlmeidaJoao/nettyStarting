@@ -5,10 +5,12 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.Exceptions.UnclosableStreamException;
 import quicSupport.utils.enums.TransmissionType;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +24,7 @@ public class CustomConnection {
     private ScheduledFuture scheduledFuture;
     public TransmissionType transmissionType;
 
-    private ConnectionId connectionId;
+    private final ConnectionId connectionId;
     private boolean canSendHeartBeat;
     private static long heartBeatTimeout;
     private final long creationTime;
@@ -35,7 +37,7 @@ public class CustomConnection {
         this.inComing = inComing;
         streams = new HashMap<>();
         this.connectionId = remote;
-        addStream(defaultStream);
+        addStream(remote,defaultStream);
         scheduledFuture = null;
         canSendHeartBeat = inComing;
         this.heartBeatTimeout = heartBeatTimeout;
@@ -71,31 +73,54 @@ public class CustomConnection {
             }
         }
     }
-    public boolean hasPassedOneSec(){
-        return (System.currentTimeMillis()-creationTime)>2000;
-    }
-    public void addStream(QuicStreamChannel streamChannel){
-        streams.put(streamChannel.id().asShortText(),streamChannel);
+    public void addStream(ConnectionId other,QuicStreamChannel streamChannel){
+        if(!this.connectionId.address.equals(other.address)){
+            throw new AssertionError("TRYING TO ADD STREAM FROM A DIFFERENT HOST "+this.connectionId.address+" VS "+other.address);
+        }
+        streams.put(other.linkId,streamChannel);
     }
     public QuicStreamChannel getStream(String id){
-        return streams.get(id);
-    }
-
-    public CustomConnection closeStream(String streamId) throws UnclosableStreamException {
-        QuicStreamChannel streamChannel = streams.remove(streamId);
-        if(defaultStream==streamChannel){
-            if(streams.isEmpty()){
-                CustomConnection boss = brothers.remove();
-                if(boss != null){
-                    boss.setBrothers(brothers);
-                    return boss;
+        QuicStreamChannel ele = streams.get(id);
+        if(ele == null && brothers != null){
+            for (CustomConnection brother : brothers) {
+                ele = brother.getStream(id);
+                if(ele!=null){
+                    return ele;
                 }
-            }else{
-                defaultStream = streams.entrySet().iterator().next().getValue();
             }
         }
-        streamChannel.shutdown();
-        streamChannel.disconnect();
+        return streams.get(id);
+    }
+    public CustomConnection broReplacer(){
+        while (brothers!=null && !brothers.isEmpty()){
+            CustomConnection gg = brothers.remove();
+            if(!gg.connectionDown()){
+                return gg;
+            }
+        }
+        return null;
+    }
+    public CustomConnection closeStream(String streamId)  {
+        try{
+            QuicStreamChannel streamChannel = streams.remove(streamId);
+            if(defaultStream==streamChannel){
+                if(streams.isEmpty() && brothers != null){
+                    CustomConnection boss = brothers.remove();
+                    if(boss != null){
+                        boss.setBrothers(brothers);
+                        brothers = null;
+                        return boss;
+                    }
+                }else if(!streams.isEmpty()){
+                    defaultStream = streams.entrySet().iterator().next().getValue();
+                    return this;
+                }
+            }
+            streamChannel.shutdown();
+            streamChannel.disconnect();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         return null;
     }
     public void close(){
@@ -122,6 +147,6 @@ public class CustomConnection {
             }, (long) (heartBeatTimeout*0.75), TimeUnit.SECONDS);
     }
     public boolean connectionDown(){
-        return connection.isTimedOut();
+        return connection.isTimedOut() || connection.isActive() || !connection.isOpen();
     }
 }

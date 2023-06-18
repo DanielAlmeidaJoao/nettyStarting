@@ -21,14 +21,19 @@ public class QuicStreamHandler extends ChannelInboundHandlerAdapter {
 
     private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
-    private final ConnectionId id;
+    private ConnectionId id;
 
     public QuicStreamHandler(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics, ConnectionId identification) {
         this.consumer = streamListenerExecutor;
         this.metrics = metrics;
         this.id = identification;
     }
-
+    public void setId(ConnectionId identification){
+        if(this.id != null){
+            throw new AssertionError("TRYING TO RE-REGISTER ID");
+        }
+        this.id = identification;
+    }
     public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, Triple<Short,Short,Short> triple, boolean inConnection){
         if(metrics!=null){
             QuicConnectionMetrics m = metrics.getConnectionMetrics(quicStreamChannel.parent().remoteAddress());
@@ -38,7 +43,7 @@ public class QuicStreamHandler extends ChannelInboundHandlerAdapter {
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        consumer.streamClosedHandler(id);
+        consumer.streamInactive(id);
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
