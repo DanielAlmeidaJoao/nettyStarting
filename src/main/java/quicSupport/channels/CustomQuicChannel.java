@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.tcpStreamingAPI.utils.TCPStreamUtils;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
@@ -60,7 +61,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         if(singleT){
             return new HashMap<>();
         }else{
-           return new ConcurrentHashMap<>();
+            return new ConcurrentHashMap<>();
         }
     }
     public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom)throws IOException {
@@ -119,7 +120,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     }
 
     public String nextId(){
-        return "quicchan"+idCounter.getAndIncrement();
+        return "quicchan"+ TCPStreamUtils.channelIdCounter.getAndIncrement();
     }
     public void streamClosedHandler(QuicStreamChannel channel) {
         String streamId = channel.id().asShortText();
@@ -293,7 +294,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 CustomConnection connection = connections.remove(host);
                 logger.info("{} CONNECTION TO {} IS DOWN.",self,connection.getRemote());
                 connection.close();
-                overridenMethods.onConnectionDown(host,connection.isInComing());
+                //overridenMethods.onConnectionDown(host,connection.isInComing());
             }
         }catch (Exception e){
             logger.debug(e.getLocalizedMessage());
@@ -408,9 +409,9 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         return finalConId;
     }
     public void closeStream(String streamId){
-        System.out.println("CALLED CLOSE STREAM STREAM");
         try{
-            InetSocketAddress host = streamHostMapping.get(streamId);
+            String nettyQuicStreamId = customIdToNettyId.remove(streamId);
+            InetSocketAddress host = streamHostMapping.get(nettyQuicStreamId);
             if(host==null){
                 logger.debug("UNKNOWN STREAM ID: {}",streamId);
             }else{

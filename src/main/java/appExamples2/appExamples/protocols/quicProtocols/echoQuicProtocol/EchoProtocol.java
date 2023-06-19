@@ -128,13 +128,19 @@ public class EchoProtocol extends GenericProtocolExtension {
     public static final short HANDLER_ID = 2;
     public static final short HANDLER_ID2 = 3;
     public void sendMessage(String message, String stream){
-        if(sendByte){
-            super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId(),HANDLER_ID);
-        }else {
-            EchoMessage echoMessage = new EchoMessage(myself,message);
-            super.sendMessage(echoMessage,stream);
+        TransmissionType transmissionType = getConnectionType(channelId,stream);
+        if(TransmissionType.UNSTRUCTURED_STREAM == transmissionType){
+            super.sendStream(channelId,message.getBytes(),message.length(),stream);
+        }else{
+            if(sendByte){
+                super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId(),HANDLER_ID);
+            }else {
+                EchoMessage echoMessage = new EchoMessage(myself,message);
+                super.sendMessage(echoMessage,stream);
+            }
+            sendByte =!sendByte;
         }
-        sendByte =!sendByte;
+
     }
     public void openSS(String port, String type){
         try{

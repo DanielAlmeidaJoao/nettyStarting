@@ -45,7 +45,6 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     public final short protoToReceiveStreamData;
     private final Map<String,Triple<Short,Short,Short>> unstructuredStreamHandlers;
 
-
     public BabelQuicChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId) throws IOException {
         this.serializer = serializer;
         this.listener = list;
