@@ -82,7 +82,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
             }
-            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,triple);
+            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,triple,consumer.nextId());
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
             consumer.channelActive(ch,data,null, TransmissionType.STRUCTURED_MESSAGE);
             if(metrics!=null){

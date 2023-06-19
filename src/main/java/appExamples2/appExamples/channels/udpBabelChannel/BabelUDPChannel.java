@@ -154,9 +154,10 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void openConnection(Host peer, short proto, TransmissionType streamType) {
+    public String openConnection(Host peer, short proto, TransmissionType streamType) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         listener.deliverEvent(new OutConnectionUp(peer, TransmissionType.STRUCTURED_MESSAGE));
+        return null;
     }
 
     @Override
@@ -199,10 +200,11 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
+    public String createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
     {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
+        return null;
     }
 
     @Override

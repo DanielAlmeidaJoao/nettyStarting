@@ -90,7 +90,7 @@ public final class QuicClientExample {
         clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
     }
-    public void connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType) throws Exception{
+    public String connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType) throws Exception{
         Bootstrap bs = new Bootstrap();
 
         Channel channel = bs.group(group)
@@ -108,6 +108,7 @@ public final class QuicClientExample {
                 consumer.handleOpenConnectionFailed(remote,future.cause());
             }
         });
+        return channel.id().asShortText();
     }
 
     private QuicStreamChannel getOrThrow(long id){

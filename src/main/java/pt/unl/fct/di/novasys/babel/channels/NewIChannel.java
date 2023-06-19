@@ -7,8 +7,8 @@ import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
-    void openConnection(Host var1, short protoId, TransmissionType type);
-    void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId);
+    String openConnection(Host var1, short protoId, TransmissionType type);
+    String createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId);
     void sendMessage(T var1, Host var2, short protoId);
     void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId);
     //exclusivelly for QUIC

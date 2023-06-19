@@ -111,8 +111,8 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void openConnection(Host peer, short proto, TransmissionType type) {
-        tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer),type);
+    public String openConnection(Host peer, short proto, TransmissionType type) {
+        return tcpChannelInterface.openConnection(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
     @Override
@@ -204,10 +204,11 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
 
     @Override
-    public void createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
+    public String createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
     {
         Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
         throwable.printStackTrace();
+        return null;
     }
 
     @Override

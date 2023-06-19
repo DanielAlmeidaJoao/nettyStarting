@@ -50,7 +50,11 @@ public class Main3 {
         while (!input.equalsIgnoreCase("quit")){
             System.out.print("COMMAND: ");
             input = scanner.nextLine();
-            if(input.equalsIgnoreCase("stream")){
+            if(input.equalsIgnoreCase("open")){
+                System.out.printf("port:");
+                String port = scanner.nextLine();
+                echoProtocol.openSS(port);
+            }else if(input.equalsIgnoreCase("stream")){
                 System.out.printf("MESSAGE TO SEND:");
                 String message = scanner.nextLine();
                 System.out.printf("STREAM:");

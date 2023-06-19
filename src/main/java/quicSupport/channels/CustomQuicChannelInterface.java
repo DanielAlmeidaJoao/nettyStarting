@@ -9,13 +9,13 @@ import java.net.InetSocketAddress;
 
 public interface CustomQuicChannelInterface {
 
-    void open(InetSocketAddress peer, TransmissionType type);
+    String open(InetSocketAddress peer, TransmissionType type);
 
     void closeConnection(InetSocketAddress peer);
 
     void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler);
 
-    void createStream(InetSocketAddress peer, TransmissionType type, Triple<Short,Short,Short> args);
+    String createStream(InetSocketAddress peer, TransmissionType type, Triple<Short,Short,Short> args);
 
     void closeStream(String streamId);
 

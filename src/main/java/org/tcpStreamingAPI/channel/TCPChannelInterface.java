@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 
 public interface TCPChannelInterface {
 
-    void openConnection(InetSocketAddress peer, TransmissionType type);
+    String openConnection(InetSocketAddress peer, TransmissionType type);
     void closeConnection(InetSocketAddress peer);
     void closeServerSocket();
     void send(byte[] message, int len, InetSocketAddress peer, TransmissionType unstructured);

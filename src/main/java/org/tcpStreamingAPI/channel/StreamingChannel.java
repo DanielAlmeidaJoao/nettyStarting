@@ -190,12 +190,12 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     /******************************************* USER EVENTS ****************************************************/
 
-    public void openConnection(InetSocketAddress peer, TransmissionType type) {
+    public String openConnection(InetSocketAddress peer, TransmissionType type) {
         if(connections.containsKey(peer)){
             logger.debug("{} ALREADY CONNECTED TO {}",self,peer);
         }else {
             if(connecting.containsKey(peer)){
-                return;
+                return null;
             }else{
                 connecting.put(peer,new LinkedList<>());
             }
@@ -207,6 +207,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                 handleOpenConnectionFailed(peer,e.getCause());
             }
         }
+        return null;
     }
     public void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING CONNECTION TO {}", peer);

@@ -1,7 +1,6 @@
 package quicSupport.utils;
 
 import io.netty.incubator.codec.quic.QuicChannel;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,9 +17,9 @@ import java.util.concurrent.TimeUnit;
 public class CustomConnection {
     private static final Logger logger = LogManager.getLogger(CustomConnection.class);
     private final QuicChannel connection;
-    private final QuicStreamChannel defaultStream;
+    private final CustomQUICStream defaultStream;
     private final boolean  inComing;
-    private Map<String,QuicStreamChannel> streams;
+    private Map<String,CustomQUICStream> streams;
     private ScheduledFuture scheduledFuture;
     public TransmissionType transmissionType;
 
@@ -29,10 +28,10 @@ public class CustomConnection {
     private static long heartBeatTimeout;
     private final long creationTime;
 
-    public CustomConnection(QuicStreamChannel quicStreamChannel,InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout, TransmissionType type){
+    public CustomConnection(CustomQUICStream quicStreamChannel,InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout, TransmissionType type){
         creationTime = System.currentTimeMillis();
         defaultStream = quicStreamChannel;
-        connection = defaultStream.parent();
+        connection = defaultStream.streamChannel.parent();
         this.inComing = inComing;
         streams = new HashMap<>();
         this.remote = remote;
@@ -49,20 +48,20 @@ public class CustomConnection {
     public boolean hasPassedOneSec(){
         return (System.currentTimeMillis()-creationTime)>2000;
     }
-    public void addStream(QuicStreamChannel streamChannel){
-        streams.put(streamChannel.id().asShortText(),streamChannel);
+    public void addStream(CustomQUICStream streamChannel){
+        streams.put(streamChannel.streamChannel.id().asShortText(),streamChannel);
     }
-    public QuicStreamChannel getStream(String id){
+    public CustomQUICStream getStream(String id){
         return streams.get(id);
     }
 
     public void closeStream(String streamId) throws UnclosableStreamException {
-        QuicStreamChannel streamChannel = streams.get(streamId);
-        if(defaultStream==streamChannel){
+        CustomQUICStream streamChannel = streams.get(streamId);
+        if(defaultStream.streamChannel==streamChannel.streamChannel){
             throw new UnclosableStreamException("DEFAULT STREAM <"+streamId+"> CANNOT BE CLOSED.");
         }
-        streamChannel.shutdown();
-        streamChannel.disconnect();
+        streamChannel.streamChannel.shutdown();
+        streamChannel.streamChannel.disconnect();
     }
     public void close(){
         //streams = null;
@@ -81,9 +80,9 @@ public class CustomConnection {
             if(scheduledFuture!=null){
                 scheduledFuture.cancel(true);
             }
-            scheduledFuture = defaultStream.eventLoop().schedule(() -> {
+            scheduledFuture = defaultStream.streamChannel.eventLoop().schedule(() -> {
                 logger.info("HEART BEAT SENT TO {}",remote);
-                defaultStream.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(), QUICLogics.KEEP_ALIVE, transmissionType));
+                defaultStream.streamChannel.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(), QUICLogics.KEEP_ALIVE, transmissionType));
             }, (long) (heartBeatTimeout*0.75), TimeUnit.SECONDS);
     }
     public boolean connectionDown(){

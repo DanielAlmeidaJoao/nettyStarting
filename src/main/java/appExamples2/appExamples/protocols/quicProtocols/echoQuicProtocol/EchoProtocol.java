@@ -102,7 +102,7 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                openConnection(dest);
+                System.out.println(openConnection(dest));
                 //registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
                 //setupPeriodicTimer(new SampleTimer(),8000L,5000L);
             }
@@ -135,6 +135,14 @@ public class EchoProtocol extends GenericProtocolExtension {
             super.sendMessage(echoMessage,stream);
         }
         sendByte =!sendByte;
+    }
+    public void openSS(String port){
+        try{
+            Host host = new Host(myself.getAddress(),Integer.parseInt(port));
+            System.out.println("OPENNED "+openConnection(host));
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
     public void sendMessage(String message){
         System.out.println(sendByte+" SENDBYTE");
