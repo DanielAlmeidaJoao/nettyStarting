@@ -136,10 +136,14 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
         sendByte =!sendByte;
     }
-    public void openSS(String port){
+    public void openSS(String port, String type){
         try{
             Host host = new Host(myself.getAddress(),Integer.parseInt(port));
-            System.out.println("OPENNED "+openConnection(host));
+            if("M".equalsIgnoreCase(type)){
+                System.out.println("OPENNED MESSAGE CONNECTION "+openConnection(host));
+            }else {
+                System.out.println("OPENNED STREAM CONNECTION"+openStreamConnection(host,channelId));
+            }
         }catch (Exception e){
             System.out.println(e.getMessage());
         }
@@ -217,11 +221,11 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     private void uponStreamCreated(StreamCreatedEvent event, int channelId) {
         logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.transmissionType);
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
+        //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
     }
     private void uponStreamClosed(StreamClosedEvent event, int channelId) {
         logger.info("STREAM {}[::]{} IS DOWN.",event.streamId,event.host);
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
+        //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
 
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
@@ -229,7 +233,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         if(dest==null){
             dest = event.getNode();
         }
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
+        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.conId));
         /**
         if(dest!=null){
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
@@ -243,7 +247,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         if(dest==null){
             dest = event.getNode();
         }
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
+        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.conId));
         /**
         if(dest!=null){
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");

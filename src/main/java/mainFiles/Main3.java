@@ -53,7 +53,9 @@ public class Main3 {
             if(input.equalsIgnoreCase("open")){
                 System.out.printf("port:");
                 String port = scanner.nextLine();
-                echoProtocol.openSS(port);
+                System.out.printf("type: M or S" );
+                String type = scanner.nextLine();
+                echoProtocol.openSS(port,type);
             }else if(input.equalsIgnoreCase("stream")){
                 System.out.printf("MESSAGE TO SEND:");
                 String message = scanner.nextLine();
