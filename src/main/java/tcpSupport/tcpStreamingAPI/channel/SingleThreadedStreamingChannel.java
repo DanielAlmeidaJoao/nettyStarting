@@ -45,7 +45,7 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
 
     public String openConnection(InetSocketAddress peer, TransmissionType type) {
         final String conId = nextId();
-        executor.execute(() -> super.openConnection(peer, type,conId));
+        executor.execute(() -> super.openConnectionLogics(peer, type,conId));
         return conId;
     }
     @Override

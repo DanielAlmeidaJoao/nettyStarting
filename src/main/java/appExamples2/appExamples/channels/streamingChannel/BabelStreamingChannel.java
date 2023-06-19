@@ -1,7 +1,6 @@
 package appExamples2.appExamples.channels.streamingChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
-import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
@@ -149,11 +148,11 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void onChannelActive(Channel channel, boolean incoming, InetSocketAddress peer, TransmissionType type) {
+    public void onChannelActive(String channelId, boolean incoming, InetSocketAddress peer, TransmissionType type) {
         if(incoming){
-            listener.deliverEvent(new InConnectionUp(toBabelHost(peer), type, null));
+            listener.deliverEvent(new InConnectionUp(toBabelHost(peer), type, channelId));
         }else{
-            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer), type, null));
+            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer), type, channelId));
         }
     }
 

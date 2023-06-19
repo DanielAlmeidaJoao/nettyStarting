@@ -141,13 +141,18 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             }
             CustomTCPConnection connection = new CustomTCPConnection(channel,type,listeningAddress,conId);
             nettyIdToConnection.put(channel.id().asShortText(),connection);
-            addressToConnections.compute(listeningAddress,(address, customTCPConnections) -> customTCPConnections).add(connection);
+            List<CustomTCPConnection> cons = addressToConnections.get(listeningAddress);
+            if(cons == null){
+                cons = new LinkedList<>();
+                addressToConnections.put(listeningAddress,cons);
+            }
+            cons.add(connection);
             customIdToConnection.put(conId,connection);
             if(metricsOn){
                 tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,inConnection);
             }
             sendPendingMessages(connection,type);
-            channelHandlerMethods.onChannelActive(channel,inConnection,listeningAddress,type);
+            channelHandlerMethods.onChannelActive(connection.conId,inConnection,listeningAddress,type);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();
