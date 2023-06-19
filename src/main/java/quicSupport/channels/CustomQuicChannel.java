@@ -9,7 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
@@ -24,13 +23,16 @@ import quicSupport.utils.entities.PendingConnectionObj;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
+import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static quicSupport.utils.QUICLogics.*;
@@ -57,13 +59,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     private final boolean connectIfNotConnected;
     private final ChannelHandlerMethods overridenMethods;
     private final AtomicInteger idCounter;
-    private <E, T> Map<E,T> getInst(boolean singleT){
-        if(singleT){
-            return new HashMap<>();
-        }else{
-            return new ConcurrentHashMap<>();
-        }
-    }
+
     public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom)throws IOException {
         this.properties=properties;
         this.overridenMethods = mom;
@@ -81,11 +77,11 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         if(enableMetrics){
             metrics=new QuicChannelMetrics(self,singleThreaded);
         }
-        connections = getInst(singleThreaded);
-        channelIds = getInst(singleThreaded);
-        streamHostMapping = getInst(singleThreaded);
-        connecting= getInst(singleThreaded);
-        customIdToNettyId = getInst(singleThreaded);
+        connections = TCPStreamUtils.getMapInst(singleThreaded);
+        channelIds = TCPStreamUtils.getMapInst(singleThreaded);
+        streamHostMapping = TCPStreamUtils.getMapInst(singleThreaded);
+        connecting= TCPStreamUtils.getMapInst(singleThreaded);
+        customIdToNettyId = TCPStreamUtils.getMapInst(singleThreaded);
 
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
             try{

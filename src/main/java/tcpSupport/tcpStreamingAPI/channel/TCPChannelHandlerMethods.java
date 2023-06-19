@@ -12,6 +12,6 @@ public interface TCPChannelHandlerMethods {
 
     void onChannelActive(Channel channel, boolean handShakeMessage, InetSocketAddress peer, TransmissionType type);
 
-    void onChannelMessageRead(String channelId, byte[] bytes, InetSocketAddress from);
-    void onChannelStreamRead(String channelId, byte[] bytes, InetSocketAddress from);
+    void onChannelMessageRead(String channelId, byte[] bytes, InetSocketAddress from, String conId);
+    void onChannelStreamRead(String channelId, byte[] bytes, InetSocketAddress from, String conId);
 }

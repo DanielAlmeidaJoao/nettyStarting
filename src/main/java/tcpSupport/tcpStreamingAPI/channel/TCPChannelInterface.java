@@ -13,7 +13,7 @@ public interface TCPChannelInterface {
     void send(byte[] message, int len, InetSocketAddress peer, TransmissionType unstructured);
 
     boolean isConnected(InetSocketAddress peer);
-    InetSocketAddress [] getConnections();
+    InetSocketAddress [] getNettyIdToConnection();
     int connectedPeers();
 
     void shutDown();
