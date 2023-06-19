@@ -11,8 +11,8 @@ import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.message
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.tcpStreamingAPI.channel.StreamingChannel;
-import org.tcpStreamingAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
+import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
