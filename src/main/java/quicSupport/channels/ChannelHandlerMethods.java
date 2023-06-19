@@ -26,7 +26,7 @@ public interface ChannelHandlerMethods {
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
     void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from);
 
-    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream);
+    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId);
 
     void onConnectionDown(InetSocketAddress peer, boolean incoming);
 

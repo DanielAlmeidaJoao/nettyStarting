@@ -151,9 +151,9 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void onChannelActive(Channel channel, boolean incoming, InetSocketAddress peer, TransmissionType type) {
         if(incoming){
-            listener.deliverEvent(new InConnectionUp(toBabelHost(peer), type));
+            listener.deliverEvent(new InConnectionUp(toBabelHost(peer), type, null));
         }else{
-            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer), type));
+            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer), type, null));
         }
     }
 

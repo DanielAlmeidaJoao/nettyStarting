@@ -221,17 +221,17 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
                 triple.getLeft(),triple.getMiddle(),triple.getRight());
     }
 
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId) {
         Host host = FactoryMethods.toBabelHost(peer);
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
-            unstructuredStreamHandlers.put(defaultStream,Triple.of(protoToReceiveStreamData,protoToReceiveStreamData,protoToReceiveStreamData));
+            unstructuredStreamHandlers.put(customConId,Triple.of(protoToReceiveStreamData,protoToReceiveStreamData,protoToReceiveStreamData));
         }
         if(incoming){
             logger.debug("InboundConnectionUp " + peer);
-            listener.deliverEvent(new InConnectionUp(host,type));
+            listener.deliverEvent(new InConnectionUp(host,type,customConId));
         }else{
             logger.debug("OutboundConnectionUp " + host);
-            listener.deliverEvent(new OutConnectionUp(host,type));
+            listener.deliverEvent(new OutConnectionUp(host,type,customConId));
         }
     }
 

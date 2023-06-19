@@ -225,7 +225,7 @@ public class EchoProtocol extends GenericProtocolExtension {
 
     }
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
-        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
+        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}. id: {}",event.getNode(),event.type,event.conId);
         if(dest==null){
             dest = event.getNode();
         }
@@ -239,7 +239,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         **/
     }
     private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
-        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}",event.getNode(),event.type);
+        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}. conId: {}",event.getNode(),event.type,event.conId);
         if(dest==null){
             dest = event.getNode();
         }

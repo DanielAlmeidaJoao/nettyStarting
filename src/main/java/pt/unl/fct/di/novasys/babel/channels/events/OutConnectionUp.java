@@ -12,6 +12,7 @@ public class OutConnectionUp extends TCPEvent {
     public static final short EVENT_ID = 5;
     public TransmissionType type;
     private final Host node;
+    public final String conId;
 
     @Override
     public String toString() {
@@ -20,10 +21,11 @@ public class OutConnectionUp extends TCPEvent {
                 '}';
     }
 
-    public OutConnectionUp(Host node, TransmissionType type) {
+    public OutConnectionUp(Host node, TransmissionType type, String customConId) {
         super(EVENT_ID);
         this.node = node;
         this.type=type;
+        this.conId = customConId;
     }
 
 
