@@ -95,13 +95,19 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     /******************************************* CHANNEL EVENTS ****************************************************/
     public  void onChannelInactive(String channelId){
+        channelInactiveLogics(channelId);
+    }
+    private void channelInactiveLogics(String channelId){
+        nettyIdTOConnectingOBJ.remove(channelId);
         CustomTCPConnection connection = nettyIdToConnection.remove(channelId);
         if(connection == null){
             return;
         }
-        addressToConnections.remove(connection.host);
-        addressToConnections.remove(connection.host);
-
+        customIdToConnection.remove(connection.conId);
+        List<CustomTCPConnection> connections = addressToConnections.get(connection.host);
+        if(connections!=null && connections.remove(connection) && connections.isEmpty()){
+            addressToConnections.remove(connection.host);
+        }
         if(metricsOn){
             tcpStreamMetrics.onConnectionClosed(connection.channel.remoteAddress());
         }
@@ -119,10 +125,6 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         }
     }
 
-    private void disconnectOldConnection(Channel old){
-        addressToConnections.remove(old.id().asShortText());
-        old.disconnect();
-    }
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type){
         try {
             boolean inConnection;
@@ -155,6 +157,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     public void onConnectionFailed(String channelId, Throwable cause){
         CustomTCPConnection customTCPConnection = nettyIdToConnection.get(channelId);
+        channelInactiveLogics(channelId);
         if(customTCPConnection != null){
             handleOpenConnectionFailed(customTCPConnection.host,cause);
         }
@@ -185,11 +188,12 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     }
     public void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING CONNECTION TO {}", peer);
-        CustomTCPConnection connection = nettyIdToConnection.get(peer);
-        if(connection.channel!=null){
-            connection.channel.close();
-        }else {
-            logger.info("{} CONNECTION TO {} ALREADY CLOSED",self,peer);
+        List<CustomTCPConnection> connections = addressToConnections.get(peer);
+        if(connections!=null){
+            for (CustomTCPConnection connection : connections) {
+                channelInactiveLogics(connection.conId);
+                connection.channel.close();
+            }
         }
     }
     private void sendPendingMessages(CustomTCPConnection customTCPConnection, TransmissionType type){
@@ -213,7 +217,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             send(message,len,connection,type);
         }
     }
-    public void send(byte[] message, int len, CustomTCPConnection connection, TransmissionType type){
+    private void send(byte[] message, int len, CustomTCPConnection connection, TransmissionType type){
         if(connection.type==type){
             ByteBuf byteBuf;
             if(TransmissionType.UNSTRUCTURED_STREAM==type){
@@ -248,7 +252,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     }
     public void send(byte[] message, int len, InetSocketAddress peer, TransmissionType type){
         var connections = addressToConnections.get(peer);
-        CustomTCPConnection connection=null;
+        CustomTCPConnection connection;
         if(connections == null || (connection=connections.get(0)) == null){
             TCPConnectingObject pendingMessages  = connectingObject(peer);
             if( pendingMessages != null ){
@@ -267,7 +271,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     @Override
     public boolean isConnected(InetSocketAddress peer) {
-        return nettyIdToConnection.containsKey(peer);
+        return addressToConnections.containsKey(peer);
     }
 
     @Override
@@ -292,11 +296,11 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     @Override
     public TransmissionType getConnectionType(InetSocketAddress peer) throws NoSuchElementException{
-        CustomTCPConnection connection = nettyIdToConnection.get(peer);
-        if(connection==null){
+        List<CustomTCPConnection> cons = addressToConnections.get(peer);
+        if(cons==null || cons.isEmpty()){
             throw new NoSuchElementException("UNKNOWN PEER "+peer);
         }else{
-            return connection.type;
+            return cons.get(0).type;
         }
     }
 
@@ -309,7 +313,6 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             logger.error("Server socket bind failed: " + cause);
     }
     public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
-        nettyIdTOConnectingOBJ.remove(peer);
         channelHandlerMethods.onOpenConnectionFailed(peer,cause);
     }
 
@@ -320,21 +323,4 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             throw new MetricsDisabledException("METRICS WAS NOT ENABLED!");
         }
     }
-
-    private void debugPrintMetrics(){
-        System.out.println("curr: ");
-        var ll = tcpStreamMetrics.currentMetrics();
-        for (TCPStreamConnectionMetrics tcpStreamConnectionMetrics : ll) {
-            System.out.println(TCPStreamUtils.g.toJson(tcpStreamConnectionMetrics));
-        }
-        System.out.println("old: ");
-        ll = tcpStreamMetrics.oldMetrics();
-        for (TCPStreamConnectionMetrics tcpStreamConnectionMetrics : ll) {
-            System.out.println(TCPStreamUtils.g.toJson(tcpStreamConnectionMetrics));
-        }
-    }
-
-
-
-
 }

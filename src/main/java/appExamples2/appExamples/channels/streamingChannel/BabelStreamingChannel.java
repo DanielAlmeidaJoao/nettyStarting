@@ -135,7 +135,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void onChannelMessageRead(String channelId, byte[] bytes, InetSocketAddress from, String conId) {
         try {
-            FactoryMethods.deserialize(bytes,serializer,listener,from,null);
+            FactoryMethods.deserialize(bytes,serializer,listener,from,conId);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -144,7 +144,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
     @Override
     public void onChannelStreamRead(String channelId, byte[] bytes, InetSocketAddress from, String conId) {
-        listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),null,
+        listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),conId,
                 protoToReceiveStreamData, protoToReceiveStreamData, protoToReceiveStreamData);
     }
 
