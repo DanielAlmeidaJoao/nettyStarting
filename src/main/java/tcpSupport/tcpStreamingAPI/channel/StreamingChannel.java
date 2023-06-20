@@ -197,10 +197,17 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         if(connections!=null){
             for (CustomTCPConnection connection : connections) {
                 channelInactiveLogics(connection.conId);
-                connection.channel.close();
+                connection.close();
             }
         }
     }
+
+    @Override
+    public void closeConnection(String connectionId) {
+        CustomTCPConnection connection = customIdToConnection.remove(connectionId);
+        connection.close();
+    }
+
     private void sendPendingMessages(CustomTCPConnection customTCPConnection, TransmissionType type){
         TCPConnectingObject connectingObject = nettyIdTOConnectingOBJ.remove(customTCPConnection.conId);
         if(connectingObject!=null){
@@ -307,6 +314,15 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         }else{
             return cons.get(0).type;
         }
+    }
+
+    @Override
+    public TransmissionType getConnectionStreamTransmissionType(String streamId) throws NoSuchElementException {
+        CustomTCPConnection connection = customIdToConnection.get(streamId);
+        if(connection==null){
+            throw new NoSuchElementException("NO SUCH CONNECTION ID: "+streamId);
+        }
+        return connection.type;
     }
 
     /******************************************* USER EVENTS END ****************************************************/

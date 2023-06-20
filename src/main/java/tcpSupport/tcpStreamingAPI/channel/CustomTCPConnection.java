@@ -16,4 +16,9 @@ public class CustomTCPConnection {
         this.host = listeningAddress;
         this.conId = conId;
     }
+
+    public void close(){
+        channel.disconnect();
+        channel.close();
+    }
 }

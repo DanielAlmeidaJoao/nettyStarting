@@ -17,7 +17,7 @@ public interface CustomQuicChannelInterface {
 
     String createStream(InetSocketAddress peer, TransmissionType type, Triple<Short,Short,Short> args);
 
-    void closeStream(String streamId);
+    void closeLink(String streamId);
 
     void readMetrics(QuicReadMetricsHandler handler);
 

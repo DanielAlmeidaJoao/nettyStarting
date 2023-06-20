@@ -112,9 +112,9 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         return streamId;
     }
     @Override
-    public void closeStream(String streamId){
+    public void closeLink(String streamId){
         executor.submit(() -> {
-            super.closeStream(streamId);
+            super.closeLink(streamId);
         });
     }
     @Override

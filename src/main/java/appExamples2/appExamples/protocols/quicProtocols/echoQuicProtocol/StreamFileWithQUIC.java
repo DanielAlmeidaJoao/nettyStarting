@@ -8,14 +8,13 @@ import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEv
 import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
-import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
+import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -145,7 +144,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }catch (Exception e){
             e.printStackTrace();
         }
-        super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, TransmissionType.UNSTRUCTURED_STREAM);
 
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
     }

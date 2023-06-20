@@ -63,10 +63,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
         tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest), TransmissionType.STRUCTURED_MESSAGE);
     }
-    @Override
-    public void sendStream(byte[] msg,int len, Host host, short proto) {
-        tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
-    }
+
     @Override
     public void closeConnection(Host peer, short connection) {
         tcpChannelInterface.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
@@ -121,8 +118,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
     @Override
     public TransmissionType getConnectionStreamTransmissionType(String streamId)  throws NoSuchElementException{
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel").printStackTrace();
-        return TransmissionType.STRUCTURED_MESSAGE;
+        return tcpChannelInterface.getConnectionStreamTransmissionType(streamId);
     }
 
     @Override
@@ -185,34 +181,29 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
     @Override
     public void sendMessage(T msg,String streamId,short proto) {
-        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
-        throwable.printStackTrace();
+        try {
+            byte [] toSend = FactoryMethods.toSend(serializer,msg);
+            tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
-
     @Override
     public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
-        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
-        throwable.printStackTrace();
+        byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
+        tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
     }
-
     @Override
     public void sendStream(byte[] stream,int len, String streamId, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel").printStackTrace();
+        tcpChannelInterface.send(stream,len,streamId,TransmissionType.UNSTRUCTURED_STREAM);
     }
-
-
-
     @Override
-    public String createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
-    {
-        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
-        throwable.printStackTrace();
-        return null;
+    public void sendStream(byte[] msg,int len, Host host, short proto) {
+        tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
     }
-
     @Override
-    public void closeStream(String streamId, short proto) {
-        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
-        throwable.printStackTrace();
+    public void closeLink(String streamId, short proto) {
+        tcpChannelInterface.closeConnection(streamId);
     }
 }

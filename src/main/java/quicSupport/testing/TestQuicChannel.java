@@ -189,7 +189,7 @@ import java.util.Properties;
     }
 
     public void closeStream(String streamId) {
-        customQuicChannel.closeStream(streamId);
+        customQuicChannel.closeLink(streamId);
     }
 
     public void readMetrics(QuicReadMetricsHandler handler) {

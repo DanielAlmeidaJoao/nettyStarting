@@ -173,11 +173,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         super.sendStream(channelId,message.getBytes(),message.length(),streamId);
     }
     public void createStream(){
-        if(sendByte){
-            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, TransmissionType.UNSTRUCTURED_STREAM);
-        }else{
-            super.createStream(channelId,getProtoId(),getProtoId(),HANDLER_ID2, dest, TransmissionType.STRUCTURED_MESSAGE);
-        }
+
         sendByte =!sendByte;
     }
 

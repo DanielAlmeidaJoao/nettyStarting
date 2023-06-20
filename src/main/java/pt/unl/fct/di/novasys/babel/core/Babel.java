@@ -277,19 +277,12 @@ public class Babel {
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
         channelEntry.getLeft().sendStream(stream,dataLen,dest,sourceProto);
     }
-    void createStream(int channelId, short sourceProto, short destProto, short handlerId, Host peer, TransmissionType type) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
-                channelMap.get(channelId);
-        if (channelEntry == null)
-            throw new AssertionError("Creating stream message to non-existing channelId " + channelId);
-        channelEntry.getLeft().createStream(peer,type,sourceProto,destProto,handlerId);
-    }
     void closeStream(int channelId, short protoId,String streamId) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Creating stream message to non-existing channelId " + channelId);
-        channelEntry.getLeft().closeStream(streamId,protoId);
+        channelEntry.getLeft().closeLink(streamId,protoId);
     }
     protected short protoToReceiveStreamData(int channelId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =

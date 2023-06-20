@@ -404,18 +404,18 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
         return finalConId;
     }
-    public void closeStream(String streamId){
+    public void closeLink(String customId){
         try{
-            String nettyQuicStreamId = customIdToNettyId.remove(streamId);
+            String nettyQuicStreamId = customIdToNettyId.remove(customId);
             InetSocketAddress host = streamHostMapping.get(nettyQuicStreamId);
             if(host==null){
-                logger.debug("UNKNOWN STREAM ID: {}",streamId);
+                logger.debug("UNKNOWN STREAM ID: {}",customId);
             }else{
                 CustomConnection connection = connections.get(host);
-                connection.closeStream(streamId);
+                connection.closeStream(customId);
             }
         }catch (Exception e){
-            overridenMethods.failedToCloseStream(streamId,e.getCause());
+            overridenMethods.failedToCloseStream(customId,e.getCause());
         }
     }
 
