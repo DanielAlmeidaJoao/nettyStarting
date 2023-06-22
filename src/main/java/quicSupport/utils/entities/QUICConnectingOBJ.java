@@ -7,21 +7,21 @@ import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
 
-public class PendingConnectionObj {
+public class QUICConnectingOBJ {
     public final List<Pair<byte [],Integer>> msgWithLen;
     public final String conId;
     public final InetSocketAddress peer;
     //public final String operation; //sendMessage or createStream
     public List<Pair<String,TransmissionType>> connectionsToOpen;
 
-    public PendingConnectionObj(String conId, InetSocketAddress peer) {
+    public QUICConnectingOBJ(String conId, InetSocketAddress peer) {
         this.msgWithLen = new LinkedList<>();
         this.conId = conId;
         this.peer = peer;
         connectionsToOpen = null;
     }
 
-    public void openConnection(String customConId, TransmissionType type){
+    public void addToQueue(String customConId, TransmissionType type){
         if(connectionsToOpen == null){
             connectionsToOpen = new LinkedList<>();
         }

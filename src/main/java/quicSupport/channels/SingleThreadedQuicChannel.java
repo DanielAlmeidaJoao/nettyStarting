@@ -34,9 +34,9 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
     }
 
     @Override
-    public void streamClosedHandler(QuicStreamChannel channel) {
+    public void streamInactiveHandler(QuicStreamChannel channel) {
         executor.submit(() -> {
-            super.streamClosedHandler(channel);
+            super.streamInactiveHandler(channel);
         });
     }
     @Override

@@ -23,6 +23,7 @@ import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
+import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +34,7 @@ import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
+import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.InetSocketAddress;
@@ -90,13 +92,14 @@ public final class QuicClientExample {
         clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
     }
-    public String connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType) throws Exception{
+    public String connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType, String id) throws Exception{
         Bootstrap bs = new Bootstrap();
 
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
                 .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
                 .handler(getCodec(properties))
+                .attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY),id)
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics, transmissionType))

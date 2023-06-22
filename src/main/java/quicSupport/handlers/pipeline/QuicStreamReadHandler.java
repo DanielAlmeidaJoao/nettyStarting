@@ -35,7 +35,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        consumer.streamClosedHandler((QuicStreamChannel) ctx.channel());
+        consumer.streamInactiveHandler((QuicStreamChannel) ctx.channel());
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

@@ -108,7 +108,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
 
     @Override
     public InetSocketAddress[] getConnections() {
-        return customQuicChannel.getConnections();
+        return customQuicChannel.getAddressToQUICCons();
     }
 
     @Override

@@ -29,7 +29,7 @@ public interface CustomQuicChannelInterface {
 
     boolean isConnected(InetSocketAddress peer);
     String [] getStreams();
-    InetSocketAddress [] getConnections();
+    InetSocketAddress [] getAddressToQUICCons();
     int connectedPeers();
 
     void shutDown();
