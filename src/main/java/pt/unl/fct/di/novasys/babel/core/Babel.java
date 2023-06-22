@@ -314,7 +314,7 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getStreams in non-existing channelId " + channelId);
-        return channelEntry.getLeft().getStreams();
+        return channelEntry.getLeft().getLinks();
     }
     InetSocketAddress[] getConnections(int channelId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
@@ -335,14 +335,14 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
-        return channelEntry.getLeft().getConnectionStreamTransmissionType(streamId);
+        return channelEntry.getLeft().getTransmissionType(streamId);
     }
     TransmissionType getConnectionType(int channelId, Host host){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
-        return channelEntry.getLeft().getConnectionTransmissionType(host);
+        return channelEntry.getLeft().getTransmissionType(host);
     }
     NetworkProtocol getNetworkProtocol(int channelId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =

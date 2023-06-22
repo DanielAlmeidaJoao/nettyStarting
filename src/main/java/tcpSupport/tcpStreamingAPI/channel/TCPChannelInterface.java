@@ -19,6 +19,8 @@ public interface TCPChannelInterface {
     InetSocketAddress [] getNettyIdToConnection();
     int connectedPeers();
 
+    String [] getLinks();
+
     void shutDown();
 
     TransmissionType getConnectionType(InetSocketAddress toInetSOcketAddress) throws NoSuchElementException;

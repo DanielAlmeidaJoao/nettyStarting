@@ -75,8 +75,8 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public String[] getStreams() {
-        return new String[0];
+    public String[] getLinks() {
+        return tcpChannelInterface.getLinks();
     }
 
     @Override
@@ -112,12 +112,12 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public TransmissionType getConnectionTransmissionType(Host host)  throws NoSuchElementException {
+    public TransmissionType getTransmissionType(Host host)  throws NoSuchElementException {
         return tcpChannelInterface.getConnectionType(FactoryMethods.toInetSOcketAddress(host)) ;
     }
 
     @Override
-    public TransmissionType getConnectionStreamTransmissionType(String streamId)  throws NoSuchElementException{
+    public TransmissionType getTransmissionType(String streamId)  throws NoSuchElementException{
         return tcpChannelInterface.getConnectionStreamTransmissionType(streamId);
     }
 

@@ -123,7 +123,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public String[] getStreams() {
+    public String[] getLinks() {
         return new String[0];
     }
 
@@ -161,13 +161,13 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public TransmissionType getConnectionTransmissionType(Host host) throws NoSuchElementException {
+    public TransmissionType getTransmissionType(Host host) throws NoSuchElementException {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         return TransmissionType.STRUCTURED_MESSAGE;
     }
 
     @Override
-    public TransmissionType getConnectionStreamTransmissionType(String streamId) throws NoSuchElementException {
+    public TransmissionType getTransmissionType(String streamId) throws NoSuchElementException {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         return TransmissionType.STRUCTURED_MESSAGE;
     }

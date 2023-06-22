@@ -102,7 +102,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
-    public String[] getStreams() {
+    public String[] getLinks() {
         return customQuicChannel.getStreams();
     }
 
@@ -138,12 +138,12 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
-    public TransmissionType getConnectionTransmissionType(Host host) throws NoSuchElementException {
+    public TransmissionType getTransmissionType(Host host) throws NoSuchElementException {
         return customQuicChannel.getConnectionType(FactoryMethods.toInetSOcketAddress(host));
     }
 
     @Override
-    public TransmissionType getConnectionStreamTransmissionType(String streamId) {
+    public TransmissionType getTransmissionType(String streamId) {
         return customQuicChannel.getConnectionType(streamId);
     }
 

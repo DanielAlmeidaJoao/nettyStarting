@@ -288,12 +288,18 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
 
     @Override
     public InetSocketAddress[] getNettyIdToConnection() {
-        return nettyIdToConnection.keySet().toArray(new InetSocketAddress[nettyIdToConnection.size()]);
+        return addressToConnections.keySet().toArray(new InetSocketAddress[addressToConnections.size()]);
     }
+
 
     @Override
     public int connectedPeers() {
-        return nettyIdToConnection.size();
+        return addressToConnections.size();
+    }
+
+    @Override
+    public String[] getLinks() {
+        return customIdToConnection.keySet().toArray(new String[customIdToConnection.size()]);
     }
 
     @Override

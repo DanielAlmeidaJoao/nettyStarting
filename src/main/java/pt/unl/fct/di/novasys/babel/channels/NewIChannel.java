@@ -15,8 +15,8 @@ public interface NewIChannel<T> {
     void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
     void sendStream(byte [] stream,int len,String streamId,short proto);
     void sendStream(byte [] stream,int len,Host host,short proto);
-    TransmissionType getConnectionTransmissionType(Host host)  throws NoSuchElementException;
-    TransmissionType getConnectionStreamTransmissionType(String streamId)  throws NoSuchElementException;
+    TransmissionType getTransmissionType(Host host)  throws NoSuchElementException;
+    TransmissionType getTransmissionType(String streamId)  throws NoSuchElementException;
     void registerChannelInterest(short protoId);
     /**
      * removes 'proto' from the set of the protocols using this streamId.
@@ -33,7 +33,7 @@ public interface NewIChannel<T> {
      */
     void closeConnection(Host peer, short protoId);
     boolean isConnected(Host peer);
-    String [] getStreams();
+    String [] getLinks();
     InetSocketAddress [] getConnections();
     int connectedPeers();
     boolean shutDownChannel(short protoId);
