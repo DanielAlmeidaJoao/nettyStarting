@@ -57,6 +57,10 @@ public class CustomQUICConnection {
 
     public void closeStream(String streamId) {
         CustomQUICStreamCon streamChannel = nettyIdToCustomStreamCon.remove(streamId);
+        if(nettyIdToCustomStreamCon.isEmpty()){
+            connection.disconnect();
+            connection.close();
+        }
         //streamChannel.streamChannel.shutdown();
         //streamChannel.streamChannel.disconnect();
     }
