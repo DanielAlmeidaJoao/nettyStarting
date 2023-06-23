@@ -99,12 +99,12 @@ public final class QuicClientExample {
                 .channel(NioDatagramChannel.class)
                 .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
                 .handler(getCodec(properties))
-                .attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY),id)
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics, transmissionType))
                 .streamHandler(new ServerChannelInitializer(consumer,metrics,QUICLogics.OUTGOING_CONNECTION))
                 .remoteAddress(remote)
+                .attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY),id)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
                 .connect().addListener(future -> {
             if(!future.isSuccess()){

@@ -41,7 +41,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         //channelProps.setProperty("metrics_interval","2000");
 
 
-        channelId = makeChan("TCP",address,port);
+        channelId = makeChan(properties.getProperty("NETWORK_PROTO"),address,port);
         System.out.println(myself);
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;

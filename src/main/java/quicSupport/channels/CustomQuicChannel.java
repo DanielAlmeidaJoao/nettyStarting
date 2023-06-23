@@ -76,7 +76,6 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         nettyIdToStream = TCPStreamUtils.getMapInst(singleThreaded);
         customStreamIdToStream = TCPStreamUtils.getMapInst(singleThreaded);
         connecting= TCPStreamUtils.getMapInst(singleThreaded);
-        customIdToNettyId = TCPStreamUtils.getMapInst(singleThreaded);
 
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
             try{
@@ -107,19 +106,19 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         logger.info("{} STREAM {} ERROR: {}",self,streamId,throwable);
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon!=null){
-            overridenMethods.onStreamErrorHandler(streamCon.remotePeer,throwable,streamId);
+            overridenMethods.onStreamErrorHandler(streamCon.customQUICConnection.getRemote(), throwable,streamId);
         }
     }
 
     public String nextId(){
         return "quicchan"+ TCPStreamUtils.channelIdCounter.getAndIncrement();
     }
-    private void removeStream(CustomQUICStreamCon streamCon){
-        List<CustomQUICConnection> con = addressToQUICCons.get(streamCon.customQUICConnection.getRemote());
+    private void removeConnection(CustomQUICConnection streamCon){
+        List<CustomQUICConnection> con = addressToQUICCons.get(streamCon.getRemote());
         if(con!=null){
             for (CustomQUICConnection customQUICConnection : con) {
-                if(customQUICConnection.getConnection()==streamCon.streamChannel.parent()){
-                    customQUICConnection.closeStream(streamCon.streamChannel.id().asShortText());
+                if(customQUICConnection.getConnection()==streamCon){
+                    con.remove(customQUICConnection);
                     return;
                 }
             }
@@ -135,6 +134,13 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 }
             }
         }
+    }
+    private CustomQUICConnection getCustomQUICConnection(InetSocketAddress inetSocketAddress){
+        List<CustomQUICConnection> con = addressToQUICCons.get(inetSocketAddress);
+        if(con!=null && !con.isEmpty()){
+            return con.get(0);
+        }
+        return null;
     }
     private void closeConnections(List<CustomQUICConnection> cons){
         for (CustomQUICConnection con : cons) {
@@ -235,7 +241,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,inConnection));
             }
 
-            CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel, connecting.get(listeningAddress).conId, type,null);
+            CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel,customConId, type,null);
             CustomQUICConnection current =  new CustomQUICConnection(quicStreamChannel, listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
             quicStreamChannel.customQUICConnection = current;
             //use lock here
@@ -247,12 +253,13 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             // till here
             connections.add(current);
             nettyIdToStream.put(streamChannel.parent().id().asShortText(),quicStreamChannel);
+            nettyIdToStream.put(streamChannel.id().asShortText(),quicStreamChannel);
             customStreamIdToStream.put(customConId,quicStreamChannel);
             sendPendingMessages(listeningAddress,type,streamChannel.id().asShortText());
             if(enableMetrics){
                 metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
             }
-            overridenMethods.onConnectionUp(inConnection,listeningAddress,type,current.getDefaultStream().customStreamId);
+            overridenMethods.onConnectionUp(inConnection,listeningAddress,type,customConId);
         }catch (Exception e){
             e.printStackTrace();
             streamChannel.disconnect();
@@ -262,7 +269,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     public  void channelInactive(String parentId){
         CustomQUICConnection customQUICConnection = nettyIdToStream.remove(parentId).customQUICConnection;
         List<CustomQUICConnection> connections = addressToQUICCons.get(customQUICConnection.getRemote());
-        if(connections.remove(customQUICConnection) && connections.isEmpty()){
+        if(connections !=null && connections.remove(customQUICConnection) && connections.isEmpty()){
             addressToQUICCons.remove(customQUICConnection.getRemote());
         }
         logger.info("{} CONNECTION TO {} IS DOWN.",self,customQUICConnection.getRemote());
@@ -397,8 +404,8 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
     }
     public void send(InetSocketAddress peer, byte[] message, int len, TransmissionType type){
-        CustomQUICConnection connection = addressToQUICCons.get(peer);
-        if(connection==null){
+        CustomQUICConnection customQUICConnection = getCustomQUICConnection(peer);
+        if(customQUICConnection==null){
             QUICConnectingOBJ pendingMessages = connecting.get(peer);
             if( pendingMessages !=null ){
                 pendingMessages.msgWithLen.add(Pair.of(message,len));
@@ -410,7 +417,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 overridenMethods.onMessageSent(message,len,new Throwable("UNKNOWN CONNECTION TO "+peer),peer, type);
             }
         }else{
-            sendMessage(connection.getDefaultStream().streamChannel,message,len,peer,type);
+            sendMessage(customQUICConnection.getDefaultStream().streamChannel,message,len,peer,type);
         }
     }
     private void sendMessage(QuicStreamChannel streamChannel, byte[] message, int len, InetSocketAddress peer, TransmissionType type){
@@ -448,7 +455,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
 
     @Override
     public TransmissionType getConnectionType(InetSocketAddress peer) {
-        CustomQUICConnection connection = addressToQUICCons.get(peer);
+        CustomQUICConnection connection = getCustomQUICConnection(peer);
         if(connection==null){
             throw new NoSuchElementException("UNKNOWN ELEMENT "+peer);
         }
@@ -458,11 +465,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     @Override
     public TransmissionType getConnectionType(String streamId) {
         try{
-            streamId = customIdToNettyId.get(streamId);
-            InetSocketAddress peer = customStreamIdToStream.get(streamId);
-            CustomQUICConnection connection = addressToQUICCons.get(peer);
-            System.out.println("CALLELDE CALLED");
-            return connection.getStream(streamId).type;
+            return customStreamIdToStream.get(streamId).type;
         }catch (Exception e){
             throw new NoSuchElementException("UNKNOWN STREAM "+streamId);
         }
