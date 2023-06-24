@@ -5,11 +5,15 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.*;
+import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
+import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
 import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.channels.UDPChannel;
 import udpSupport.channels.UDPChannelHandlerMethods;
@@ -19,8 +23,11 @@ import udpSupport.metrics.ChannelStats;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMethods {
@@ -37,6 +44,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private final BabelMessageSerializerInterface<T> serializer;
     private final ChannelListener<T> listener;
     private final UDPChannelInterface udpChannelInterface;
+    private final Map<String,Host> customConIDToAddress;
     public short ownerProto;
 
     public BabelUDPChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short ownerProto) throws IOException {
@@ -45,8 +53,10 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         this.listener = list;
         if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
             udpChannelInterface = new SingleThreadedUDPChannel(properties,this);
+            customConIDToAddress = new HashMap<>();
         }else {
             udpChannelInterface = new UDPChannel(properties,false,this);
+            customConIDToAddress = new ConcurrentHashMap<>();
         }
         metrics = udpChannelInterface.metricsEnabled();
         if(metrics){
@@ -82,7 +92,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void sendMessage(T msg, Host peer, short connection) {
+    public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
             udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(peer),toSend.length);
@@ -100,6 +110,32 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
+    public void sendMessage(T msg,String streamId,short proto) {
+        Host host = customConIDToAddress.get(streamId);
+        sendMessage(msg,host,proto);
+    }
+
+    @Override
+    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
+        Host host = customConIDToAddress.get(streamId);
+        sendMessage(data,dataLen,host,sourceProto,destProto,handlerId);
+    }
+
+    @Override
+    public void sendStream(byte[] stream,int len,String streamId, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC CHANNELS").printStackTrace();
+    }
+
+    @Override
+    public void sendStream(byte[] msg,int len,Host host, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
+    }
+
+    @Override
+    public void sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
+    }
+    @Override
     public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
 
     }
@@ -115,10 +151,12 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void closeConnection(Host peer, short connection) {
-        logger.debug("CLOSE CONNECTION. UNSUPPORTED OPERATION ON UDP");
-        //Throwable t = new Throwable("PEER DISCONNECTED!");
-        new Exception("TO DOOOO STREAM_ID").printStackTrace();
-        listener.deliverEvent(new OutConnectionDown(peer,null, "streamId"));
+        for (Map.Entry<String, Host> stringHostEntry : customConIDToAddress.entrySet()) {
+            if(stringHostEntry.getValue().equals(peer)){
+                customConIDToAddress.remove(stringHostEntry.getKey());
+            }
+        }
+        listener.deliverEvent(new OutConnectionDown(peer,null, ""));
     }
 
     @Override
@@ -128,17 +166,17 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public String[] getLinks() {
-        return new String[0];
+        return customConIDToAddress.keySet().toArray(new String[customConIDToAddress.size()]);
     }
 
     @Override
     public InetSocketAddress[] getConnections() {
-        return new InetSocketAddress[0];
+        return customConIDToAddress.values().toArray(new InetSocketAddress[customConIDToAddress.size()]);
     }
 
     @Override
     public int connectedPeers() {
-        return -1;
+        return customConIDToAddress.size();
     }
 
     @Override
@@ -157,22 +195,26 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         return NetworkProtocol.UDP;
     }
 
+    public String nextId(){
+        return "udpchan"+ TCPStreamUtils.channelIdCounter.getAndIncrement();
+    }
+
     @Override
     public String openConnection(Host peer, short proto, TransmissionType streamType) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
-        listener.deliverEvent(new OutConnectionUp(peer, TransmissionType.STRUCTURED_MESSAGE, null));
-        return null;
+        String id = nextId();
+        customConIDToAddress.put(id,peer);
+        listener.deliverEvent(new OutConnectionUp(peer, TransmissionType.STRUCTURED_MESSAGE,id));
+        return id;
     }
 
     @Override
     public TransmissionType getTransmissionType(Host host) throws NoSuchElementException {
-        logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         return TransmissionType.STRUCTURED_MESSAGE;
     }
 
     @Override
     public TransmissionType getTransmissionType(String streamId) throws NoSuchElementException {
-        logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         return TransmissionType.STRUCTURED_MESSAGE;
     }
 
@@ -181,36 +223,9 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     }
 
-    @Override
-    public void sendMessage(T msg,String streamId,short proto) {
-        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
-        throwable.printStackTrace();
-    }
-
-    @Override
-    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
-        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
-        throwable.printStackTrace();
-    }
-
-    @Override
-    public void sendStream(byte[] stream,int len,String streamId, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC CHANNELS").printStackTrace();
-    }
-
-    @Override
-    public void sendStream(byte[] msg,int len,Host host, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-    }
-
-    @Override
-    public void sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
-
-    }
 
     @Override
     public void closeLink(String streamId, short protoId) {
-        Throwable throwable = new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY BabelQuicChannel");
-        throwable.printStackTrace();
+        customConIDToAddress.remove(streamId);
     }
 }

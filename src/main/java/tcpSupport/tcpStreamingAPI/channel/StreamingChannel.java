@@ -112,7 +112,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         if(metricsOn){
             tcpStreamMetrics.onConnectionClosed(connection.channel.remoteAddress());
         }
-        channelHandlerMethods.onChannelInactive(connection.host);
+        channelHandlerMethods.onChannelInactive(connection.host,connection.conId);
     }
 
     public void onChannelRead(String channelId, byte[] bytes, TransmissionType type){

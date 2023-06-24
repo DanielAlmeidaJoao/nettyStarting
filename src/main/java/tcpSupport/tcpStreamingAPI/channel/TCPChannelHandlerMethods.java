@@ -5,7 +5,7 @@ import quicSupport.utils.enums.TransmissionType;
 import java.net.InetSocketAddress;
 
 public interface TCPChannelHandlerMethods {
-    void onChannelInactive(InetSocketAddress peer);
+    void onChannelInactive(InetSocketAddress peer, String conId);
     void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
     void onMessageSent(byte[] data, InetSocketAddress peer, Throwable cause, TransmissionType type);
 

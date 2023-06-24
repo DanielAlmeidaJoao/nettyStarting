@@ -56,7 +56,7 @@ public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
         }
     }
     @Override
-    public void onChannelInactive(InetSocketAddress peer){
+    public void onChannelInactive(InetSocketAddress peer, String conId){
         protocolsUsingTheChannel.remove(peer);
     }
     @Override
@@ -64,7 +64,6 @@ public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
         protocolsUsingTheChannel.put(FactoryMethods.toBabelHost(peer),new HashSet<>());
         super.onChannelActive(channel,incoming,peer,type);
     }
-
     @Override
     public boolean shutDownChannel(short protoId) {
         if(protoId<0){
