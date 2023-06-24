@@ -21,6 +21,7 @@ import tcpSupport.tcpStreamingAPI.utils.TCPConnectingObject;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -193,10 +194,9 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     }
     public void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING CONNECTION TO {}", peer);
-        List<CustomTCPConnection> connections = addressToConnections.get(peer);
+        List<CustomTCPConnection> connections = addressToConnections.remove(peer);
         if(connections!=null){
             for (CustomTCPConnection connection : connections) {
-                channelInactiveLogics(connection.conId);
                 connection.close();
             }
         }
@@ -252,6 +252,39 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             });
         }else{
             channelHandlerMethods.onMessageSent(message,connection.host,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND RECEIVED "+type+" DATA TYPE"), type);
+        }
+    }
+    public CustomTCPConnection getConnection(InetSocketAddress peer){
+        List<CustomTCPConnection> connections = addressToConnections.get(peer);
+        if(connections!=null&&!connections.isEmpty()){
+            return connections.get(0);
+        }
+        return null;
+    }
+    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId)  {
+        try {
+            CustomTCPConnection idConnection = customIdToConnection.get(conId);
+            CustomTCPConnection peerConnection = getConnection(peer);
+            if(idConnection == null && peerConnection == null ){
+                channelHandlerMethods.onMessageSent(new byte[0],null,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),TransmissionType.UNSTRUCTURED_STREAM);
+            }else if(idConnection == null ){
+                idConnection = peerConnection;
+            }
+            if(idConnection.type!=TransmissionType.UNSTRUCTURED_STREAM){
+                throw new RuntimeException("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
+            }
+            final ByteBuf buf = Unpooled.buffer(len);
+            buf.writeBytes(inputStream,len);
+            ChannelFuture c = idConnection.channel.writeAndFlush(buf);
+            c.addListener(future -> {
+                if(!future.isSuccess()){
+                    future.cause().printStackTrace();
+                    channelHandlerMethods.onMessageSent(new byte[0],null,future.cause(),TransmissionType.UNSTRUCTURED_STREAM);
+                }
+            });
+        }catch (Exception e){
+            e.printStackTrace();
+            channelHandlerMethods.onMessageSent(new byte[0],null,e.getCause(),TransmissionType.UNSTRUCTURED_STREAM);
         }
     }
     private TCPConnectingObject connectingObject(InetSocketAddress peer){

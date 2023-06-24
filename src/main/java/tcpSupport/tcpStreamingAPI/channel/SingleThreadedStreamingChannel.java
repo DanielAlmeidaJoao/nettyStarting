@@ -11,6 +11,7 @@ import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
@@ -63,6 +64,13 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     @Override
     public void send(byte[] message, int len, String conId, TransmissionType transmissionType){
         executor.execute(() -> super.send(message,len,conId, transmissionType));
+    }
+
+    @Override
+    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
+        executor.execute(() -> {
+            super.sendInputStream(inputStream,len,peer,conId);
+        });
     }
     @Override
     public void closeServerSocket(){

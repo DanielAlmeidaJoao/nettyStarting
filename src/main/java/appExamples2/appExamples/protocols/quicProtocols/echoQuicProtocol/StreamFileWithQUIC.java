@@ -14,6 +14,7 @@ import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
@@ -190,7 +191,14 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             //Path filePath = Paths.get(p);
             //
-            FileInputStream fileInputStream = new FileInputStream(filePath.toFile());
+            File f = filePath.toFile();
+            FileInputStream fileInputStream = new FileInputStream(f);
+            int len = (int) f.length();
+            sendStream(channelId,fileInputStream,len,dest,"");
+            System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
+            if(len >-1){
+                return;
+            }
             byte [] bytes = new byte[bufferSize];
             //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             int read, totalSent = 0;

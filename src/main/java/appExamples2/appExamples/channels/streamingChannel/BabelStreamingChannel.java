@@ -208,7 +208,11 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
     @Override
     public void sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
-
+        InetSocketAddress address=null;
+        if(peerOrConId.getKey()!=null){
+            address = FactoryMethods.toInetSOcketAddress(peerOrConId.getKey());
+        }
+        tcpChannelInterface.sendInputStream(inputStream,len,address,peerOrConId.getValue());
     }
 
     @Override

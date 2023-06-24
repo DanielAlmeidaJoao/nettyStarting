@@ -1,5 +1,6 @@
 package quicSupport.channels;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -441,22 +442,25 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             CustomQUICStreamCon streamChannel = customStreamIdToStream.get(conId);
             CustomQUICConnection connection = getCustomQUICConnection(peer);
             if(streamChannel == null && connection == null ){
-                overridenMethods.onMessageSent(null,len,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),peer,streamChannel.type);
+                overridenMethods.onMessageSent(new byte[0],len,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),peer,TransmissionType.UNSTRUCTURED_STREAM);
             }else if(streamChannel == null ){
                 streamChannel = connection.getDefaultStream();
             }
             if(streamChannel.type!=TransmissionType.UNSTRUCTURED_STREAM){
                 throw new RuntimeException("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
             }
-            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(Unpooled.buffer(len).writeBytes(inputStream,len));
-            CustomQUICStreamCon finalStreamChannel = streamChannel;
+            final ByteBuf buf = Unpooled.buffer(len);
+            buf.writeBytes(inputStream,len);
+            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(buf);
             c.addListener(future -> {
                 if(!future.isSuccess()){
-                    overridenMethods.onMessageSent(null,len,new Throwable("FAILED TO SEND INPUTSTREAM"),peer, finalStreamChannel.type);
+                    future.cause().printStackTrace();
+                    overridenMethods.onMessageSent(new byte[0],len,future.cause(),peer,TransmissionType.UNSTRUCTURED_STREAM);
                 }
             });
         }catch (Exception e){
-            overridenMethods.onMessageSent(null,len,e.getCause(),peer,TransmissionType.UNSTRUCTURED_STREAM);
+            e.printStackTrace();
+            overridenMethods.onMessageSent(new byte[0],0,e.getCause(),peer,TransmissionType.UNSTRUCTURED_STREAM);
         }
     }
     public boolean isConnected(InetSocketAddress peer){

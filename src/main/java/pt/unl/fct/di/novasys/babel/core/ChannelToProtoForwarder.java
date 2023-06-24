@@ -70,7 +70,7 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
     @Override
     public void messageFailed(BabelMessage addressedMessage, Host host, Throwable throwable, TransmissionType type) {
         consumers.values().forEach(c ->
-                c.deliverMessageFailed(new MessageFailedEvent(addressedMessage, host, throwable, channelId)));
+                c.deliverMessageFailed(new MessageFailedEvent(addressedMessage,host,throwable,channelId)));
     }
 
     @Override

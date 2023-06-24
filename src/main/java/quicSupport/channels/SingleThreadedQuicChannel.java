@@ -139,7 +139,7 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
     @Override
     public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
         executor.submit(() -> {
-            sendInputStream(inputStream,len,peer,conId);
+            super.sendInputStream(inputStream,len,peer,conId);
         });
     }
 

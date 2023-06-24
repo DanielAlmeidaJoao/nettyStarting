@@ -54,7 +54,7 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
             logger.debug("Sending: stream bytes to " + dest +" channel " + channelId);
     }
 
-    protected void sendStream(int channelId, InputStream inputStream, int dataLen, Host peer, String conId, short sourceProto) {
+    protected void sendStream(int channelId, InputStream inputStream, int dataLen, Host peer, String conId) {
         babel.sendStream(channelId,inputStream,dataLen,peer,conId,getProtoId());
         if (logger.isDebugEnabled())
             logger.debug("Sending: InputStream bytes to " + peer+" - "+ conId +" channel " + channelId);
