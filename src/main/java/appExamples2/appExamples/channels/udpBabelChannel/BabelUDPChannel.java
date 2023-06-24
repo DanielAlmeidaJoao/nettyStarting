@@ -2,6 +2,7 @@ package appExamples2.appExamples.channels.udpBabelChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.*;
@@ -16,6 +17,7 @@ import udpSupport.channels.UDPChannelInterface;
 import udpSupport.metrics.ChannelStats;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -199,6 +201,11 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     @Override
     public void sendStream(byte[] msg,int len,Host host, short proto) {
         new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
+    }
+
+    @Override
+    public void sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
+
     }
 
     @Override

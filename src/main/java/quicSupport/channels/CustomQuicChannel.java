@@ -29,6 +29,7 @@ import quicSupport.utils.metrics.QuicConnectionMetrics;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -183,7 +184,6 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
     }
     public void onReceivedStream(String streamId, byte [] bytes){
-        System.out.println("RECEIVED UNSTRUCTURED "+bytes.length);
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon != null){
             overridenMethods.onChannelReadFlowStream(streamCon.customStreamId,bytes,streamCon.customQUICConnection.getRemote());
@@ -422,7 +422,6 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         if(streamChannel.type!=type){
             throw new RuntimeException("WRONG MESSAGE. EXPECTED TYPE: "+streamChannel.type+" VS RECEIVED TYPE: "+type);
         }
-        System.out.println("SENNTTING "+len);
         ChannelFuture c;
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
             c = streamChannel.streamChannel.writeAndFlush(Unpooled.buffer(len).writeBytes(message,0,len));
@@ -436,6 +435,29 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 overridenMethods.onMessageSent(message,len,future.cause(),peer,type);
             }
         });
+    }
+    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer,String conId)  {
+        try {
+            CustomQUICStreamCon streamChannel = customStreamIdToStream.get(conId);
+            CustomQUICConnection connection = getCustomQUICConnection(peer);
+            if(streamChannel == null && connection == null ){
+                overridenMethods.onMessageSent(null,len,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),peer,streamChannel.type);
+            }else if(streamChannel == null ){
+                streamChannel = connection.getDefaultStream();
+            }
+            if(streamChannel.type!=TransmissionType.UNSTRUCTURED_STREAM){
+                throw new RuntimeException("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
+            }
+            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(Unpooled.buffer(len).writeBytes(inputStream,len));
+            CustomQUICStreamCon finalStreamChannel = streamChannel;
+            c.addListener(future -> {
+                if(!future.isSuccess()){
+                    overridenMethods.onMessageSent(null,len,new Throwable("FAILED TO SEND INPUTSTREAM"),peer, finalStreamChannel.type);
+                }
+            });
+        }catch (Exception e){
+            overridenMethods.onMessageSent(null,len,e.getCause(),peer,TransmissionType.UNSTRUCTURED_STREAM);
+        }
     }
     public boolean isConnected(InetSocketAddress peer){
         return addressToQUICCons.containsKey(peer);

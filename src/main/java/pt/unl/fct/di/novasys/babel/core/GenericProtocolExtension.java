@@ -8,6 +8,7 @@ import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
 
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
@@ -52,7 +53,13 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
         if (logger.isDebugEnabled())
             logger.debug("Sending: stream bytes to " + dest +" channel " + channelId);
     }
-    
+
+    protected void sendStream(int channelId, InputStream inputStream, int dataLen, Host peer, String conId, short sourceProto) {
+        babel.sendStream(channelId,inputStream,dataLen,peer,conId,getProtoId());
+        if (logger.isDebugEnabled())
+            logger.debug("Sending: InputStream bytes to " + peer+" - "+ conId +" channel " + channelId);
+    }
+
     protected final void closeStream(String streamId) {
         closeStream(defaultChannel, this.protoId, streamId);
     }

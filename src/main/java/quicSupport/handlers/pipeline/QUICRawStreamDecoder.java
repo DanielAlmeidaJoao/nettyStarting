@@ -23,14 +23,11 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
     public QUICRawStreamDecoder(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics, boolean incoming){
         this.consumer=streamListenerExecutor;
         this.metrics=metrics;
-        System.out.println("REGISTERED REGISTERED GG");
     }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
         byte [] data = new byte[msg.readableBytes()];
-        System.out.println("RECEIVED DATA TATA "+data.length);
-
         msg.readBytes(data);
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         consumer.onReceivedStream(ch.id().asShortText(),data);

@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 public class CustomQUICConnection {
     private static final Logger logger = LogManager.getLogger(CustomQUICConnection.class);
     private final QuicChannel connection;
-    private final CustomQUICStreamCon defaultStream;
+    private CustomQUICStreamCon defaultStream;
     private final boolean  inComing;
     private Map<String, CustomQUICStreamCon> nettyIdToCustomStreamCon;
     private ScheduledFuture scheduledFuture;
@@ -57,10 +57,14 @@ public class CustomQUICConnection {
 
     public void closeStream(String streamId) {
         CustomQUICStreamCon streamChannel = nettyIdToCustomStreamCon.remove(streamId);
+
         if(nettyIdToCustomStreamCon.isEmpty()){
             connection.disconnect();
             connection.close();
+        }else if(streamChannel==defaultStream){
+            defaultStream = nettyIdToCustomStreamCon.entrySet().iterator().next().getValue();
         }
+
         //streamChannel.streamChannel.shutdown();
         //streamChannel.streamChannel.disconnect();
     }

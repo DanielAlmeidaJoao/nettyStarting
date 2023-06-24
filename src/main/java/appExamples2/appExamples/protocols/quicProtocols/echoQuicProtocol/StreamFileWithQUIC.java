@@ -3,8 +3,6 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
-import appExamples2.appExamples.channels.babelQuicChannel.events.StreamClosedEvent;
-import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEvent;
 import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,9 +87,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
             registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
 
-            registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
-            registerChannelEventHandler(channelId, StreamClosedEvent.EVENT_ID, this::uponStreamClosed);
-
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
                 openStreamConnection(dest,channelId);
@@ -108,22 +103,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     }
     public static final short HANDLER_ID = 2;
     public static final short HANDLER_ID2 = 43;
-    private void uponStreamCreated(StreamCreatedEvent event, int channelId) {
-        streamId = event.streamId;
-        if(myself.getPort()==8081){
-            new Thread(() -> {
-                startStreaming();
-            }).start();
-        }
-        if(myself.getPort()==8082){
-            System.out.println("PORRAS "+streamId);
-        }
-        logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.transmissionType);
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
-    }
-    private void uponStreamClosed(StreamClosedEvent event, int channelId) {
-        logger.info("STREAM {}[::]{} IS DOWN.",event.streamId,event.host);
-    }
+
     private void uponInConnectionUp(InConnectionUp event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
         try{
@@ -146,6 +126,15 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }
 
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
+        streamId = event.conId;
+        if(myself.getPort()==8081){
+            new Thread(() -> {
+                startStreaming();
+            }).start();
+        }
+        if(myself.getPort()==8082){
+            System.out.println("PORRAS "+streamId);
+        }
     }
     private void uponBytesMessage(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received bytes: {} from {}", new String(msg), from);
@@ -154,7 +143,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     FileOutputStream fos, fos2;
     private void uponStreamBytes(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
         received += msg.length;
-        sendStream(channelId,msg,msg.length,this.streamId);
+        //sendStream(channelId,msg,msg.length,this.streamId);
         try {
             fos.write(msg);
             if(received>=813782079){

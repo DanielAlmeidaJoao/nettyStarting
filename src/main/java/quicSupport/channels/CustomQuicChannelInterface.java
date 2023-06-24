@@ -5,6 +5,7 @@ import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.TransmissionType;
 
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 
 public interface CustomQuicChannelInterface {
@@ -37,4 +38,5 @@ public interface CustomQuicChannelInterface {
     TransmissionType getConnectionType(InetSocketAddress toInetSOcketAddress);
 
     TransmissionType getConnectionType(String streamId);
-}
+    void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId);
+    }

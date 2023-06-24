@@ -9,6 +9,7 @@ import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
@@ -135,6 +136,13 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
             super.send(peer,message,len,type);
         });
     }
+    @Override
+    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
+        executor.submit(() -> {
+            sendInputStream(inputStream,len,peer,conId);
+        });
+    }
+
     /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/

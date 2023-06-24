@@ -1,6 +1,7 @@
 package appExamples2.appExamples.channels.streamingChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
@@ -16,6 +17,7 @@ import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -203,6 +205,12 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     public void sendStream(byte[] msg,int len, Host host, short proto) {
         tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
     }
+
+    @Override
+    public void sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
+
+    }
+
     @Override
     public void closeLink(String streamId, short proto) {
         tcpChannelInterface.closeConnection(streamId);
