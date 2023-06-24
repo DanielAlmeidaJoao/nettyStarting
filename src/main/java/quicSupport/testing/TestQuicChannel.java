@@ -42,7 +42,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onStreamClosedHandler(InetSocketAddress peer, String streamId) {
+    public void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection) {
 
     }
 
@@ -61,7 +61,6 @@ import java.util.Properties;
     public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> args) {
     }
 
-    @Override
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
         try{
             System.out.println("RECEIVED TOTAL "+total);

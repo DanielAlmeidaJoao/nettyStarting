@@ -124,7 +124,8 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     @Override
     public void onChannelInactive(InetSocketAddress peer) {
         Throwable cause = new Throwable(String.format("CHANNEL %S CLOSED.",peer));
-        listener.deliverEvent(new InConnectionDown(toBabelHost(peer), cause));
+        new Exception("TO DOOO ").printStackTrace();
+        listener.deliverEvent(new InConnectionDown(toBabelHost(peer), cause,"streamId"));
     }
 
     @Override

@@ -5,7 +5,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannel;
@@ -32,6 +31,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+        System.out.println("RECEVEID HERE "+ctx.channel().id().asShortText());
         if(msg.readableBytes()<4){
             return;
         }
@@ -63,17 +63,13 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         }else if(QUICLogics.STREAM_CREATED==msgType){
             msg = Unpooled.copiedBuffer(data);
             int ordinal = msg.readInt();
+            msg.release();
             TransmissionType type;
-            Triple triple = null;
             if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
                 type = TransmissionType.UNSTRUCTURED_STREAM;
-                ch.pipeline().replace(QuicMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
+                ch.pipeline().replace(QuicStructuredMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
-                short sourceProto = msg.readShort();
-                short destProto = msg.readShort();
-                short handlerId = msg.readShort();
-                msg.release();
-                triple = Triple.of(sourceProto,destProto,handlerId);
+                System.out.println("RECEIVED STREAM CREATED MESSAGE MMMMMMMMM");
             }else{
                 type = TransmissionType.STRUCTURED_MESSAGE;
             }
@@ -82,7 +78,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
             }
-            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,triple,consumer.nextId(),true);
+            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,consumer.nextId(),true);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
             consumer.channelActive(ch,data,null, TransmissionType.STRUCTURED_MESSAGE);
             if(metrics!=null){

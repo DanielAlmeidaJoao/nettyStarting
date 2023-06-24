@@ -11,19 +11,22 @@ public class OutConnectionDown extends TCPEvent {
 
     private final Host node;
     private final Throwable cause;
+    public final String connectionId;
 
     @Override
     public String toString() {
         return "OutConnectionDown{" +
                 "node=" + node +
                 ", cause=" + cause +
+                ", connectionId= "+connectionId+
                 '}';
     }
 
-    public OutConnectionDown(Host node, Throwable cause) {
+    public OutConnectionDown(Host node, Throwable cause, String streamId) {
         super(EVENT_ID);
         this.cause = cause;
         this.node = node;
+        connectionId = streamId;
     }
 
     public Throwable getCause() {

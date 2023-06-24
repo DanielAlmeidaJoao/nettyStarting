@@ -19,7 +19,7 @@ public interface ChannelHandlerMethods {
 
     void failedToGetMetrics(Throwable cause);
 
-    void onStreamClosedHandler(InetSocketAddress peer, String streamId);
+    void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection);
 
     void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> triple);
 
@@ -28,6 +28,6 @@ public interface ChannelHandlerMethods {
 
     void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId);
 
-    void onConnectionDown(InetSocketAddress peer, boolean incoming);
+    //void onConnectionDown(InetSocketAddress peer, boolean incoming);
 
 }

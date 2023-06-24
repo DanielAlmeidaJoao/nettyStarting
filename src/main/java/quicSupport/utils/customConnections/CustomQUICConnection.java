@@ -1,10 +1,10 @@
 package quicSupport.utils.customConnections;
 
+import io.netty.buffer.Unpooled;
 import io.netty.incubator.codec.quic.QuicChannel;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
@@ -83,7 +83,8 @@ public class CustomQUICConnection {
             }
             scheduledFuture = defaultStream.streamChannel.eventLoop().schedule(() -> {
                 logger.info("HEART BEAT SENT TO {}",remote);
-                defaultStream.streamChannel.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(), QUICLogics.KEEP_ALIVE, transmissionType));
+                //QUICLogics.writeBytes(1,"a".getBytes())
+                defaultStream.streamChannel.writeAndFlush(Unpooled.buffer(1).writeBytes("a".getBytes()));
             }, (long) (heartBeatTimeout*0.75), TimeUnit.SECONDS);
     }
     public boolean connectionDown(){

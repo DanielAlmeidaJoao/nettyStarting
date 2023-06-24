@@ -1,6 +1,8 @@
 package quicSupport.utils;
 
 import com.google.gson.Gson;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicCodecBuilder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -9,7 +11,6 @@ import org.apache.commons.codec.binary.Hex;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
-import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -78,7 +79,7 @@ public class QUICLogics {
         QuicStreamChannel streamChannel = quicChan
                 .createStream(QuicStreamType.BIDIRECTIONAL, new ServerChannelInitializer(quicListenerExecutor,metrics,incoming))
                 .addListener(future -> {
-                    if(metrics!=null && future.isSuccess()){
+                    if(future.isSuccess() && metrics!=null){
                         QuicConnectionMetrics q = metrics.getConnectionMetrics(quicChan.remoteAddress());
                         q.setCreatedStreamCount(q.getCreatedStreamCount()+1);
                     }
@@ -87,14 +88,29 @@ public class QUICLogics {
                 .getNow();
         return streamChannel;
     }
-    public static MessageToByteEncoderParameter writeBytes(int len, byte [] data, byte msgType, TransmissionType type){
-        return new MessageToByteEncoderParameter(msgType,data,len,type);
+    public static MessageToByteEncoderParameter writeBytes(int len, byte [] data, byte msgCode){
+        return new MessageToByteEncoderParameter(msgCode,data,len);
+
         /**
         ByteBuf buf = Unpooled.buffer(len+WRT_OFFSET);
         buf.writeInt(len);
         buf.writeByte(msgType);
         buf.writeBytes(data,0,len);
          **/
+    }
+    public static ByteBuf bufToWrite(int len, byte [] data, byte msgCode){
+        ByteBuf buf = Unpooled.buffer(len+WRT_OFFSET);
+        buf.writeInt(len);
+        buf.writeByte(msgCode);
+        buf.writeBytes(data,0,len);
+        return buf;
+    }
+    public static ByteBuf bufToWrite(int data, byte msgCode){
+        ByteBuf buf = Unpooled.buffer(4+WRT_OFFSET);
+        buf.writeInt(4);
+        buf.writeByte(msgCode);
+        buf.writeInt(data);
+        return buf;
     }
     public static boolean sameAddress(InetSocketAddress address, InetSocketAddress socketAddress){
         return address.getHostName().equals(socketAddress.getHostName())&&address.getPort()==socketAddress.getPort();

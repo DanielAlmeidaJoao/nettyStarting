@@ -63,7 +63,8 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void onPeerDown(InetSocketAddress peer) {
-        listener.deliverEvent(new OutConnectionDown(FactoryMethods.toBabelHost(peer),new Throwable("PEER DISCONNECTED!")));
+        new Exception("TOO DOO ").printStackTrace();
+        listener.deliverEvent(new OutConnectionDown(FactoryMethods.toBabelHost(peer),new Throwable("PEER DISCONNECTED!"), "TO DOOOO"));
     }
 
     @Override
@@ -114,7 +115,8 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     public void closeConnection(Host peer, short connection) {
         logger.debug("CLOSE CONNECTION. UNSUPPORTED OPERATION ON UDP");
         //Throwable t = new Throwable("PEER DISCONNECTED!");
-        listener.deliverEvent(new OutConnectionDown(peer,null));
+        new Exception("TO DOOOO STREAM_ID").printStackTrace();
+        listener.deliverEvent(new OutConnectionDown(peer,null, "streamId"));
     }
 
     @Override

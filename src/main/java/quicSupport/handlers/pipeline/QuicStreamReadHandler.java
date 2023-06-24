@@ -7,7 +7,6 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.utils.enums.TransmissionType;
@@ -26,12 +25,12 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         this.metrics = metrics;
     }
 
-    public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, Triple<Short,Short,Short> triple, String customId, boolean inConnection){
+    public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, String customId, boolean inConnection){
         if(metrics!=null){
             QuicConnectionMetrics m = metrics.getConnectionMetrics(quicStreamChannel.parent().remoteAddress());
             m.setStreamCount(m.getStreamCount()+1);
         }
-        consumer.streamCreatedHandler(quicStreamChannel,type,triple,customId,inConnection);
+        consumer.streamCreatedHandler(quicStreamChannel,type,customId,inConnection);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {

@@ -84,11 +84,7 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         hostChannelsMap.put(FactoryMethods.toBabelHost(peer),new HashSet<>(registeredProtos));
         super.onConnectionUp(incoming,peer, type, defaultStream);
     }
-    @Override
-    public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
-        hostChannelsMap.remove(FactoryMethods.toBabelHost(peer));
-        super.onConnectionDown(peer,incoming);
-    }
+
     @Override
     public void closeConnection(Host peer, short proto) {
         if(proto<0){
@@ -129,9 +125,9 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         super.onStreamCreatedHandler(peer,streamId, type,args);
     }
     @Override
-    public void onStreamClosedHandler(InetSocketAddress peer, String streamId) {
+    public void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection) {
         streamChannelsMap.remove(streamId);
-        super.onStreamClosedHandler(peer,streamId);
+        super.onStreamClosedHandler(peer,streamId, inConnection);
     }
         @Override
     public void registerChannelInterest(short protoId) {

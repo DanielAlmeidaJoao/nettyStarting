@@ -1,7 +1,6 @@
 package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
-import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
@@ -15,7 +14,7 @@ public interface CustomQuicChannelConsumer {
 
     void onKeepAliveMessage(String parentId);
 
-    void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, Triple<Short,Short,Short> triple, String customId, boolean inConnection);
+    void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type,String customId, boolean inConnection);
 
     void onReceivedDelimitedMessage(String streamId, byte[] bytes);
 
