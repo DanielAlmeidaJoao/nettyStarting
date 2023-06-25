@@ -142,7 +142,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private void msgSent(byte[] message, Host host){
         try {
             if(triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,message, TransmissionType.STRUCTURED_MESSAGE,ownerProto),host, TransmissionType.STRUCTURED_MESSAGE);
+                listener.messageSent(FactoryMethods.unSerialize(serializer,message,null,TransmissionType.STRUCTURED_MESSAGE,ownerProto),host, TransmissionType.STRUCTURED_MESSAGE);
             }
         } catch (Exception e) {
             e.printStackTrace();

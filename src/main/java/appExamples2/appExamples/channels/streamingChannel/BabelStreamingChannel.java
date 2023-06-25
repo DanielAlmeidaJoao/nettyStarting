@@ -155,16 +155,16 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void onMessageSent(byte[] data, InetSocketAddress peer, Throwable cause, TransmissionType type) {
+    public void onMessageSent(byte[] data, InputStream inputStream, InetSocketAddress peer, Throwable cause, TransmissionType type) {
         try {
             if(cause==null && triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,data,type,protoToReceiveStreamData), toBabelHost(peer), type);
+                listener.messageSent(FactoryMethods.unSerialize(serializer,data,inputStream,type,protoToReceiveStreamData), toBabelHost(peer), type);
             }else if(cause!=null){
                 Host dest=null;
                 if(peer!=null){
                     dest = FactoryMethods.toBabelHost(peer);
                 }
-                listener.messageFailed(FactoryMethods.unSerialize(serializer,data,type,protoToReceiveStreamData),dest,cause,type);
+                listener.messageFailed(FactoryMethods.unSerialize(serializer,data,inputStream,type,protoToReceiveStreamData),dest,cause,type);
             }
         } catch (Exception e) {
             e.printStackTrace();

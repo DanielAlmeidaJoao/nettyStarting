@@ -3,6 +3,7 @@ package quicSupport.channels;
 import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.utils.enums.TransmissionType;
 
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 
 public interface ChannelHandlerMethods {
@@ -13,7 +14,7 @@ public interface ChannelHandlerMethods {
 
     void failedToCloseStream(String streamId, Throwable reason);
 
-    void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, TransmissionType type);
+    void onMessageSent(byte[] message, InputStream inputStream, int len, Throwable error, InetSocketAddress peer, TransmissionType type);
 
     void failedToCreateStream(InetSocketAddress peer, Throwable error);
 

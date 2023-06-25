@@ -180,6 +180,13 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                               Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+        try {
+            if(msg.inputStream!=null){
+                logger.info("AVAILABLE {}",msg.inputStream.available());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
     int bufferSize = 128*1024; // 8KB buffer size
     public void startStreaming(){
@@ -194,7 +201,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             File f = filePath.toFile();
             FileInputStream fileInputStream = new FileInputStream(f);
             int len = (int) f.length();
-            sendStream(channelId,fileInputStream,len,dest,"");
+            sendStream(channelId,fileInputStream,len,null,"kjj");
             System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
             if(len >-1){
                 return;

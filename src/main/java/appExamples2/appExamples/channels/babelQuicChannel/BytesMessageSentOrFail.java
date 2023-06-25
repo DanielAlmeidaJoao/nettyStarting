@@ -2,13 +2,17 @@ package appExamples2.appExamples.channels.babelQuicChannel;
 
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 
+import java.io.InputStream;
+
 public class BytesMessageSentOrFail extends ProtoMessage {
-    final byte [] bytes;
+    public final byte [] data;
     //final short handlerId=id;
-    final int dataLen;
-    public BytesMessageSentOrFail(short id, byte [] data, int dataLen) {
+    public final int dataLen;
+    public final InputStream inputStream;
+    public BytesMessageSentOrFail(short id, byte [] data, InputStream inputStream, int dataLen) {
         super(id);
-        this.bytes=data;
+        this.data =data;
         this.dataLen=dataLen;
+        this.inputStream = inputStream;
     }
 }

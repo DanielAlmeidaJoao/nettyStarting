@@ -274,16 +274,16 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         }
         //listener.deliverEvent(new StreamClosedEvent(streamId,FactoryMethods.toBabelHost(peer)));
     }
-    public void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, TransmissionType type) {
+    public void onMessageSent(byte[] message, InputStream inputStream, int len, Throwable error, InetSocketAddress peer, TransmissionType type) {
         try {
             if(error==null&&triggerSent){
-                listener.messageSent(FactoryMethods.unSerialize(serializer,message,type,protoToReceiveStreamData),FactoryMethods.toBabelHost(peer),type);
+                listener.messageSent(FactoryMethods.unSerialize(serializer,message,inputStream,type,protoToReceiveStreamData),FactoryMethods.toBabelHost(peer),type);
             }else if(error!=null){
                 Host dest=null;
                 if(peer!=null){
                     dest = FactoryMethods.toBabelHost(peer);
                 }
-                listener.messageFailed(FactoryMethods.unSerialize(serializer,message,type,protoToReceiveStreamData),dest,error,type);
+                listener.messageFailed(FactoryMethods.unSerialize(serializer,message,inputStream,type,protoToReceiveStreamData),dest,error,type);
             }
         } catch (Exception e) {
             e.printStackTrace();

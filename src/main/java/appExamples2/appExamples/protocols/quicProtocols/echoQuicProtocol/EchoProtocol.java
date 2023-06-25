@@ -129,6 +129,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     public static final short HANDLER_ID2 = 3;
     public void sendMessage(String message, String stream){
         TransmissionType transmissionType = getConnectionType(channelId,stream);
+        stream = "d";
         if(TransmissionType.UNSTRUCTURED_STREAM == transmissionType){
             super.sendStream(channelId,message.getBytes(),message.length(),stream);
         }else{
@@ -276,16 +277,20 @@ public class EchoProtocol extends GenericProtocolExtension {
     private void uponMsgFail(EchoMessage msg, Host host, short destProto,
                              Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.info("DATA SENT <{}>",msg.getMessage());
+
     }
     private void uponMsgFail3(BytesMessageSentOrFail msg, Host host, short destProto,
                              Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.error("BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.info("SENT MESSAGE <{}>",new String(msg.data));
     }
     private void uponMsgFail2(BytesMessageSentOrFail msg, Host host, short destProto,
                              Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.info("GGG SENT MESSAGE <{}>",new String(msg.data));
     }
 }

@@ -12,6 +12,7 @@ import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 
 public class FactoryMethods {
@@ -28,9 +29,10 @@ public class FactoryMethods {
         return toSend;
     }
 
-    public static <T> T unSerialize(ISerializer<T> serializer, byte[] bytes, TransmissionType type, short protoToReceiveStreamData) throws IOException {
+    public static <T> T unSerialize(ISerializer<T> serializer, byte[] bytes, InputStream inputStream, TransmissionType type, short protoToReceiveStreamData) throws IOException {
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
-            return (T) new BabelMessage(new BytesMessageSentOrFail(protoToReceiveStreamData,bytes,bytes.length)
+            int len = bytes != null ? bytes.length : inputStream.available();
+            return (T) new BabelMessage(new BytesMessageSentOrFail(protoToReceiveStreamData,bytes,inputStream,len)
                     ,protoToReceiveStreamData,protoToReceiveStreamData);
         }else {
             ByteBuf in = Unpooled.copiedBuffer(bytes);

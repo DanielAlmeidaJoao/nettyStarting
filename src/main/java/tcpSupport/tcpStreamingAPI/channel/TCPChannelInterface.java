@@ -4,7 +4,6 @@ import quicSupport.utils.enums.TransmissionType;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.util.NoSuchElementException;
 
 public interface TCPChannelInterface {
 
@@ -25,8 +24,8 @@ public interface TCPChannelInterface {
 
     void shutDown();
 
-    TransmissionType getConnectionType(InetSocketAddress toInetSOcketAddress) throws NoSuchElementException;
-    TransmissionType getConnectionStreamTransmissionType(String streamId)  throws NoSuchElementException;
+    TransmissionType getConnectionType(InetSocketAddress toInetSOcketAddress);
+    TransmissionType getConnectionStreamTransmissionType(String streamId);
 
 
     }

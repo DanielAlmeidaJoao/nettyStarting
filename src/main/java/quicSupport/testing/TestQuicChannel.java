@@ -16,6 +16,7 @@ import quicSupport.utils.metrics.QuicConnectionMetrics;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -118,7 +119,7 @@ import java.util.Properties;
 
     }
     @Override
-    public void onMessageSent(byte[] message, int len, Throwable error, InetSocketAddress peer, TransmissionType type) {
+    public void onMessageSent(byte[] message, InputStream inputStream, int len, Throwable error, InetSocketAddress peer, TransmissionType type) {
         if(error==null){
             return;
         }

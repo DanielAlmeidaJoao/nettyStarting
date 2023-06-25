@@ -224,7 +224,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     public void send(byte[] message, int len,String customConId, TransmissionType type){
         CustomTCPConnection connection = customIdToConnection.get(customConId);
         if(connection == null ){
-            channelHandlerMethods.onMessageSent(message,null,new Throwable("Unknown Connection ID : "+customConId),type);
+            channelHandlerMethods.onMessageSent(message, null, null,new Throwable("Unknown Connection ID : "+customConId),type);
         }else{
             send(message,len,connection,type);
         }
@@ -248,10 +248,10 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                         metrics1.setSentAppMessages(metrics1.getSentAppMessages()+1);
                     }
                 }
-                channelHandlerMethods.onMessageSent(message,connection.host,future.cause(), type);
+                channelHandlerMethods.onMessageSent(message,null, connection.host,future.cause(), type);
             });
         }else{
-            channelHandlerMethods.onMessageSent(message,connection.host,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND RECEIVED "+type+" DATA TYPE"), type);
+            channelHandlerMethods.onMessageSent(message, null, connection.host,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND RECEIVED "+type+" DATA TYPE"), type);
         }
     }
     public CustomTCPConnection getConnection(InetSocketAddress peer){
@@ -266,25 +266,24 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             CustomTCPConnection idConnection = customIdToConnection.get(conId);
             CustomTCPConnection peerConnection = getConnection(peer);
             if(idConnection == null && peerConnection == null ){
-                channelHandlerMethods.onMessageSent(new byte[0],null,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),TransmissionType.UNSTRUCTURED_STREAM);
+                channelHandlerMethods.onMessageSent(null,inputStream, peer,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),TransmissionType.UNSTRUCTURED_STREAM);
             }else if(idConnection == null ){
                 idConnection = peerConnection;
             }
             if(idConnection.type!=TransmissionType.UNSTRUCTURED_STREAM){
-                throw new RuntimeException("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
+                Throwable t = new Throwable("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
+                channelHandlerMethods.onMessageSent(null,inputStream, peer,t,TransmissionType.UNSTRUCTURED_STREAM);
+                return;
             }
             final ByteBuf buf = Unpooled.buffer(len);
             buf.writeBytes(inputStream,len);
             ChannelFuture c = idConnection.channel.writeAndFlush(buf);
+            CustomTCPConnection finalIdConnection = idConnection;
             c.addListener(future -> {
-                if(!future.isSuccess()){
-                    future.cause().printStackTrace();
-                    channelHandlerMethods.onMessageSent(new byte[0],null,future.cause(),TransmissionType.UNSTRUCTURED_STREAM);
-                }
+                channelHandlerMethods.onMessageSent(null,inputStream,finalIdConnection.host,future.cause(),TransmissionType.UNSTRUCTURED_STREAM);
             });
         }catch (Exception e){
-            e.printStackTrace();
-            channelHandlerMethods.onMessageSent(new byte[0],null,e.getCause(),TransmissionType.UNSTRUCTURED_STREAM);
+            channelHandlerMethods.onMessageSent(null,inputStream,peer,e.getCause(),TransmissionType.UNSTRUCTURED_STREAM);
         }
     }
     private TCPConnectingObject connectingObject(InetSocketAddress peer){
@@ -307,7 +306,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                 String conId = openConnectionLogics(peer,type,null);
                 nettyIdTOConnectingOBJ.get(conId).pendingMessages.add(Pair.of(message,len));
             }else{
-                channelHandlerMethods.onMessageSent(message,peer,new Throwable("Unknown Peer : "+peer),type);
+                channelHandlerMethods.onMessageSent(message,null,peer,new Throwable("Unknown Peer : "+peer),type);
             }
         }else {
             send(message,len,connection,type);
@@ -346,20 +345,20 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     }
 
     @Override
-    public TransmissionType getConnectionType(InetSocketAddress peer) throws NoSuchElementException{
+    public TransmissionType getConnectionType(InetSocketAddress peer){
         List<CustomTCPConnection> cons = addressToConnections.get(peer);
         if(cons==null || cons.isEmpty()){
-            throw new NoSuchElementException("UNKNOWN PEER "+peer);
+            return null;
         }else{
             return cons.get(0).type;
         }
     }
 
     @Override
-    public TransmissionType getConnectionStreamTransmissionType(String streamId) throws NoSuchElementException {
+    public TransmissionType getConnectionStreamTransmissionType(String streamId){
         CustomTCPConnection connection = customIdToConnection.get(streamId);
         if(connection==null){
-            throw new NoSuchElementException("NO SUCH CONNECTION ID: "+streamId);
+            return null;
         }
         return connection.type;
     }
