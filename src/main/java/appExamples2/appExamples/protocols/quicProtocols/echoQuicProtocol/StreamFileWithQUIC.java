@@ -7,8 +7,7 @@ import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
-import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
@@ -85,8 +84,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
             registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
-            registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
-            registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
+            registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionUp);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
@@ -105,7 +103,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     public static final short HANDLER_ID = 2;
     public static final short HANDLER_ID2 = 43;
 
-    private void uponInConnectionUp(InConnectionUp event, int channelId) {
+    private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
         try{
             fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.MP4");
@@ -115,7 +113,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
     }
     String streamId;
-    private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
+    private void uponOutConnectionUp(OnConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}",event.getNode(),event.type);
         if(dest==null){
             dest = event.getNode();

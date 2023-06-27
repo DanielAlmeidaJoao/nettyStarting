@@ -11,11 +11,10 @@ import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.message
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
-import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
@@ -94,8 +93,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
             registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
-            registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
-            registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
+            registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionUp);
 
             registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
             registerChannelEventHandler(channelId, StreamClosedEvent.EVENT_ID, this::uponStreamClosed);
@@ -231,7 +229,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
 
     }
-    private void uponInConnectionUp(InConnectionUp event, int channelId) {
+    private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}. id: {}",event.getNode(),event.type,event.conId);
         if(dest==null){
             dest = event.getNode();
@@ -245,7 +243,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
         **/
     }
-    private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
+    private void uponOutConnectionUp(OnConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}. conId: {}",event.getNode(),event.type,event.conId);
         if(dest==null){
             dest = event.getNode();

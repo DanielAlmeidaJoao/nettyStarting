@@ -10,11 +10,13 @@ public class CustomTCPConnection {
     public final TransmissionType type;
     public final InetSocketAddress host;
     public final String conId;
-    public CustomTCPConnection(Channel channel, TransmissionType type, InetSocketAddress listeningAddress, String conId){
+    public final boolean inConnection;
+    public CustomTCPConnection(Channel channel, TransmissionType type, InetSocketAddress listeningAddress, String conId, boolean inConnection){
         this.channel=channel;
         this.type=type;
         this.host = listeningAddress;
         this.conId = conId;
+        this.inConnection=inConnection;
     }
 
     public void close(){

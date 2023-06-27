@@ -5,13 +5,14 @@ import pt.unl.fct.di.novasys.babel.channels.Host;
 /**
  * Triggered when an established outbound connection is disconnected.
  */
-public class OutConnectionDown extends TCPEvent {
+public class OnConnectionDownEvent extends TCPEvent {
 
     public static final short EVENT_ID = 3;
 
     private final Host node;
     private final Throwable cause;
     public final String connectionId;
+    public boolean inConnection;
 
     @Override
     public String toString() {
@@ -19,14 +20,16 @@ public class OutConnectionDown extends TCPEvent {
                 "node=" + node +
                 ", cause=" + cause +
                 ", connectionId= "+connectionId+
+                ", inConnection="+inConnection+
                 '}';
     }
 
-    public OutConnectionDown(Host node, Throwable cause, String streamId) {
+    public OnConnectionDownEvent(Host node, Throwable cause, String streamId, boolean inConnection) {
         super(EVENT_ID);
         this.cause = cause;
         this.node = node;
         connectionId = streamId;
+        this.inConnection = inConnection;
     }
 
     public Throwable getCause() {

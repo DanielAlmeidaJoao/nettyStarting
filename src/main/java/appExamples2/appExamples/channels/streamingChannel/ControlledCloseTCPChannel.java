@@ -56,7 +56,7 @@ public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
         }
     }
     @Override
-    public void onChannelInactive(InetSocketAddress peer, String conId){
+    public void onChannelInactive(InetSocketAddress peer, String conId, boolean inConnection){
         protocolsUsingTheChannel.remove(peer);
     }
     @Override

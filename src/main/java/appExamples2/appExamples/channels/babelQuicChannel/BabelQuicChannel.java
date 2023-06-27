@@ -12,10 +12,8 @@ import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
-import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
-import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelInterface;
@@ -228,13 +226,8 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
 
     public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId) {
         Host host = FactoryMethods.toBabelHost(peer);
-        if(incoming){
-            logger.debug("InboundConnectionUp " + peer);
-            listener.deliverEvent(new InConnectionUp(host,type,customConId));
-        }else{
-            logger.debug("OutboundConnectionUp " + host);
-            listener.deliverEvent(new OutConnectionUp(host,type,customConId));
-        }
+        logger.debug("OnConnectionUpEvent " + host);
+        listener.deliverEvent(new OnConnectionUpEvent(host,type,customConId,incoming));
     }
     /**
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
@@ -267,11 +260,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
 
     public void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection) {
         logger.info("STREAM {} OF {} CONNECTION CLOSED.",streamId,peer);
-        if(inConnection){
-            listener.deliverEvent(new InConnectionDown(FactoryMethods.toBabelHost(peer),null,streamId));
-        }else{
-            listener.deliverEvent(new OutConnectionDown(FactoryMethods.toBabelHost(peer),null,streamId));
-        }
+        listener.deliverEvent(new OnConnectionDownEvent(FactoryMethods.toBabelHost(peer),null,streamId,inConnection));
         //listener.deliverEvent(new StreamClosedEvent(streamId,FactoryMethods.toBabelHost(peer)));
     }
     public void onMessageSent(byte[] message, InputStream inputStream, int len, Throwable error, InetSocketAddress peer, TransmissionType type) {

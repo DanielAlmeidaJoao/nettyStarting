@@ -6,8 +6,8 @@ import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 
@@ -51,9 +51,8 @@ public class SendFileProtocol extends GenericProtocol {
     public void init(Properties props) throws HandlerRegistrationException, IOException {
         //registerMessageSerializer(channelId,StreamMessage.ID, StreamMessage.serializer);
         //registerMessageHandler(channelId,JoinRequestMessage.MSG_ID,this::uponJoinRequestMessage,this::uponMsgFail);
-        registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
+        registerChannelEventHandler(channelId, OnConnectionDownEvent.EVENT_ID, this::uponInConnectionUp);
         registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
-        registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, this::uponInConnectionDown);
         registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
         try {
         Host peer = new Host(InetAddress.getByName("localhost"),Integer.parseInt(properties.getProperty("p2p_port")));
@@ -65,7 +64,7 @@ public class SendFileProtocol extends GenericProtocol {
 
     }
 
-    private void uponInConnectionDown(InConnectionDown event, int channelId) {
+    private void uponInConnectionDown(OnConnectionDownEvent event, int channelId) {
         try {
             System.out.println("CONNECTION CLOSED! "+totoal);
             fos.close();
@@ -81,7 +80,7 @@ public class SendFileProtocol extends GenericProtocol {
             e.printStackTrace();
         }
     }
-    private void uponInConnectionUp(InConnectionUp event, int channelId) {
+    private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
         if(properties.getProperty("forwarder")==null){
             Host peer = null;

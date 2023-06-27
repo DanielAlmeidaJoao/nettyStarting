@@ -9,8 +9,7 @@ import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
-import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionDown;
-import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
@@ -75,8 +74,13 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void onPeerDown(InetSocketAddress peer) {
-        new Exception("TOO DOO ").printStackTrace();
-        listener.deliverEvent(new OutConnectionDown(FactoryMethods.toBabelHost(peer),new Throwable("PEER DISCONNECTED!"), "TO DOOOO"));
+       Host host = FactoryMethods.toBabelHost(peer);
+        for (Map.Entry<String,Host> entry : customConIDToAddress.entrySet()) {
+            if(entry.getValue().equals(host)){
+                listener.deliverEvent(new OnConnectionDownEvent(host,new Throwable("PEER DISCONNECTED!"),entry.getKey(),true));
+            }
+            return;
+        }
     }
 
     @Override
@@ -156,7 +160,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
                 customConIDToAddress.remove(stringHostEntry.getKey());
             }
         }
-        listener.deliverEvent(new OutConnectionDown(peer,null, ""));
+        listener.deliverEvent(new OnConnectionDownEvent(peer,null, "",true));
     }
 
     @Override
@@ -204,7 +208,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         String id = nextId();
         customConIDToAddress.put(id,peer);
-        listener.deliverEvent(new OutConnectionUp(peer, TransmissionType.STRUCTURED_MESSAGE,id));
+        listener.deliverEvent(new OnConnectionDownEvent(peer,null,id,true));
         return id;
     }
 

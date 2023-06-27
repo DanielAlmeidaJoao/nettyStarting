@@ -6,8 +6,7 @@ import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.message
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
-import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import quicSupport.utils.QUICLogics;
 
@@ -88,7 +87,7 @@ public class EchoProtocol2 extends GenericProtocol {
         System.out.println("CURRENT: "+QUICLogics.gson.toJson(event.getCurrent()));
         System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
     }
-    private void uponInConnectionUp(InConnectionUp event, int channelId) {
+    private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
         if(dest!=null){
 
@@ -97,7 +96,7 @@ public class EchoProtocol2 extends GenericProtocol {
             logger.info("{} MESSAGE SENT!!! TO {} ",myself,dest);
         }
     }
-    private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
+    private void uponOutConnectionUp(OnConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
         if(dest!=null){
 

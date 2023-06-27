@@ -4,14 +4,13 @@ import appExamples2.appExamples.channels.FactoryMethods;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.TCPChannelHandlerMethods;
 import tcpSupport.tcpStreamingAPI.channel.TCPChannelInterface;
 import pt.unl.fct.di.novasys.babel.channels.*;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionDown;
-import pt.unl.fct.di.novasys.babel.channels.events.InConnectionUp;
-import pt.unl.fct.di.novasys.babel.channels.events.OutConnectionUp;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
@@ -124,9 +123,9 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void onChannelInactive(InetSocketAddress peer, String conId) {
+    public void onChannelInactive(InetSocketAddress peer, String conId, boolean inConnection) {
         Throwable cause = new Throwable(String.format("CHANNEL %S CLOSED.",peer));
-        listener.deliverEvent(new InConnectionDown(toBabelHost(peer), cause,conId));
+        listener.deliverEvent(new OnConnectionDownEvent(toBabelHost(peer), cause,conId,inConnection));
     }
 
     @Override
@@ -147,11 +146,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
 
     @Override
     public void onChannelActive(String channelId, boolean incoming, InetSocketAddress peer, TransmissionType type) {
-        if(incoming){
-            listener.deliverEvent(new InConnectionUp(toBabelHost(peer), type, channelId));
-        }else{
-            listener.deliverEvent(new OutConnectionUp(toBabelHost(peer), type, channelId));
-        }
+        listener.deliverEvent(new OnConnectionUpEvent(toBabelHost(peer), type, channelId,incoming));
     }
 
     @Override

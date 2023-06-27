@@ -112,7 +112,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         if(metricsOn){
             tcpStreamMetrics.onConnectionClosed(connection.channel.remoteAddress());
         }
-        channelHandlerMethods.onChannelInactive(connection.host,connection.conId);
+        channelHandlerMethods.onChannelInactive(connection.host,connection.conId,connection.inConnection);
     }
 
     public void onChannelRead(String channelId, byte[] bytes, TransmissionType type){
@@ -140,7 +140,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                 inConnection = true;
                 conId = nextId();
             }
-            CustomTCPConnection connection = new CustomTCPConnection(channel,type,listeningAddress,conId);
+            CustomTCPConnection connection = new CustomTCPConnection(channel,type,listeningAddress,conId,inConnection);
             nettyIdToConnection.put(channel.id().asShortText(),connection);
             List<CustomTCPConnection> cons = addressToConnections.get(listeningAddress);
             if(cons == null){

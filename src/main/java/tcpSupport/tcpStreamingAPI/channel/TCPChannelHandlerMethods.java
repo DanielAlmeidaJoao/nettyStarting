@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 
 public interface TCPChannelHandlerMethods {
-    void onChannelInactive(InetSocketAddress peer, String conId);
+    void onChannelInactive(InetSocketAddress peer, String conId, boolean inConnection);
     void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
     void onMessageSent(byte[] data, InputStream inputStream, InetSocketAddress peer, Throwable cause, TransmissionType type);
 
