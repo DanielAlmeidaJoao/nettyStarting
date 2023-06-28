@@ -1,4 +1,4 @@
-package appExamples2.appExamples.channels.streamingChannel;
+package appExamples2.appExamples.channels.newTCPChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
@@ -10,9 +10,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
+public class NewTCPChannelControlledClose<T> extends BabelNewTCPChannel {
     private Map<Host,Set<Short>> protocolsUsingTheChannel;
-    public ControlledCloseTCPChannel(BabelMessageSerializerInterface serializer, ChannelListener list, Properties properties,short proto) throws IOException {
+    public NewTCPChannelControlledClose(BabelMessageSerializerInterface serializer, ChannelListener list, Properties properties, short proto) throws IOException {
         super(serializer, list, properties,proto);
         protocolsUsingTheChannel = new HashMap<>();
     }

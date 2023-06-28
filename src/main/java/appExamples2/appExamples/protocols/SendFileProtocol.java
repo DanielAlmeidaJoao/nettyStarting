@@ -2,7 +2,7 @@ package appExamples2.appExamples.protocols;
 
 import appExamples2.appExamples.channels.messages.EndOfStreaming;
 import appExamples2.appExamples.channels.messages.StreamMessage;
-import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
+import appExamples2.appExamples.channels.newTCPChannel.BabelNewTCPChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
@@ -40,7 +40,7 @@ public class SendFileProtocol extends GenericProtocol {
         properties = props;
 
         Properties channelProps = new Properties();
-        channelId = createChannel(BabelStreamingChannel.NAME, props);
+        channelId = createChannel(BabelNewTCPChannel.NAME, props);
         try {
             fos = new FileOutputStream("DANIEL_copy.mp4");
         }catch (Exception e){

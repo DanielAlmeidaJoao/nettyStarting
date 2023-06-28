@@ -1,4 +1,4 @@
-package appExamples2.appExamples.channels.streamingChannel;
+package appExamples2.appExamples.channels.newTCPChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,8 +23,8 @@ import java.util.Properties;
 
 import static appExamples2.appExamples.channels.FactoryMethods.toBabelHost;
 
-public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandlerMethods {
-    private static final Logger logger = LogManager.getLogger(BabelStreamingChannel.class);
+public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerMethods {
+    private static final Logger logger = LogManager.getLogger(BabelNewTCPChannel.class);
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
     public final static String NAME = "STREAMING_CHANNEL";
 
@@ -34,7 +34,7 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     private final TCPChannelInterface tcpChannelInterface;
     public final short protoToReceiveStreamData;
 
-    public BabelStreamingChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties,short proto) throws IOException {
+    public BabelNewTCPChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short proto) throws IOException {
 
         this.serializer = serializer;
         this.listener = list;

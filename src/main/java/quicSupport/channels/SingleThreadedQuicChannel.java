@@ -2,7 +2,6 @@ package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
-import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
@@ -14,24 +13,19 @@ import java.net.InetSocketAddress;
 import java.util.Properties;
 
 public class SingleThreadedQuicChannel extends CustomQuicChannel {
-    private DefaultEventExecutor executor;
+    private final DefaultEventExecutor executor;
 
     public SingleThreadedQuicChannel(Properties properties, NetworkRole role, ChannelHandlerMethods mom) throws IOException {
         super(properties,true,role,mom);
         System.out.println("SINGLE THREADED CHANNEL");
         executor = new DefaultEventExecutor();
-        executor.terminationFuture().addListener(future -> {
-           System.out.println("TERMINATED WHY ??? "+future.isSuccess()+" cause: "+future.cause());
-        });
     }
 
     /*********************************** Stream Handlers **********************************/
 
     @Override
     public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable) {
-        executor.submit(() -> {
-            super.streamErrorHandler(channel,throwable);
-        });
+        executor.submit(() -> super.streamErrorHandler(channel,throwable));
     }
 
     @Override
@@ -105,10 +99,10 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public String createStream(InetSocketAddress peer, TransmissionType type, Triple<Short,Short,Short> args) {
+    public String createStream(InetSocketAddress peer, TransmissionType type) {
         final String streamId = nextId();
         executor.submit(() -> {
-            super.createStreamLogics(peer,type,args,streamId);
+            super.createStreamLogics(peer,type,streamId);
         });
         return streamId;
     }

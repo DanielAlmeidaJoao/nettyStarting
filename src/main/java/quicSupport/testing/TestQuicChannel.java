@@ -185,7 +185,7 @@ import java.util.Properties;
     }
 
     public void createStream(InetSocketAddress peer) {
-        customQuicChannel.createStream(peer, TransmissionType.STRUCTURED_MESSAGE,null);
+        customQuicChannel.createStream(peer, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     public void closeStream(String streamId) {

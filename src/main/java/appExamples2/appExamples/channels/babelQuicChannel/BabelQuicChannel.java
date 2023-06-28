@@ -148,7 +148,7 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
 
     public String createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
     {
-        return customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer),type,Triple.of(sourceProto,destProto,handlerId));
+        return customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
     public void closeLink(String streamId, short proto){

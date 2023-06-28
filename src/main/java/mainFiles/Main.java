@@ -1,7 +1,7 @@
 package mainFiles;
 
 import appExamples2.appExamples.channels.initializers.BabelStreamInitializer;
-import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
+import appExamples2.appExamples.channels.newTCPChannel.BabelNewTCPChannel;
 import appExamples2.appExamples.protocols.ReceiveFileProtocol;
 import appExamples2.appExamples.protocols.SendFileProtocol;
 import pt.unl.fct.di.novasys.babel.core.Babel;
@@ -19,7 +19,7 @@ public class Main {
 
         //Get the (singleton) pt.unl.fct.di.novasys.babel instance
         Babel babel = Babel.getInstance();
-        babel.registerChannelInitializer(BabelStreamingChannel.NAME,new BabelStreamInitializer());
+        babel.registerChannelInitializer(BabelNewTCPChannel.NAME,new BabelStreamInitializer());
 
 
         //Loads properties from the configuration file, and merges them with

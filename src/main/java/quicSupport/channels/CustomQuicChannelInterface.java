@@ -1,6 +1,5 @@
 package quicSupport.channels;
 
-import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.TransmissionType;
@@ -16,7 +15,7 @@ public interface CustomQuicChannelInterface {
 
     void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler);
 
-    String createStream(InetSocketAddress peer, TransmissionType type, Triple<Short,Short,Short> args);
+    String createStream(InetSocketAddress peer, TransmissionType type);
 
     void closeLink(String streamId);
 

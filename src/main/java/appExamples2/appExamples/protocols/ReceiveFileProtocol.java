@@ -2,7 +2,7 @@ package appExamples2.appExamples.protocols;
 
 import appExamples2.appExamples.channels.messages.EndOfStreaming;
 import appExamples2.appExamples.channels.messages.StreamMessage;
-import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
+import appExamples2.appExamples.channels.newTCPChannel.BabelNewTCPChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
@@ -31,7 +31,7 @@ public class ReceiveFileProtocol extends GenericProtocol {
         this.self = new Host(InetAddress.getByName(address), Integer.parseInt(port));
         forwarder = new Host(InetAddress.getByName("localhost"),Integer.parseInt(props.getProperty("p2p_port_f")));
 
-        channelId = createChannel(BabelStreamingChannel.NAME, props);
+        channelId = createChannel(BabelNewTCPChannel.NAME, props);
         try {
             fos = new FileOutputStream("DANIEL.mp4");
         }catch (Exception e){

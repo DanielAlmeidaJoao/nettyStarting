@@ -3,7 +3,7 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
-import appExamples2.appExamples.channels.streamingChannel.BabelStreamingChannel;
+import appExamples2.appExamples.channels.newTCPChannel.BabelNewTCPChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
@@ -71,7 +71,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             channelProps.setProperty(StreamingChannel.PORT_KEY,port);
             channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
-            channelId = createChannel(BabelStreamingChannel.NAME, channelProps);
+            channelId = createChannel(BabelNewTCPChannel.NAME, channelProps);
         }
         return channelId;
     }
