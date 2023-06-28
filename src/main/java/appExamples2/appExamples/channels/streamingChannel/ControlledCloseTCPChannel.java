@@ -23,20 +23,20 @@ public class ControlledCloseTCPChannel<T> extends BabelStreamingChannel{
         }
     }
     @Override
-    public void sendMessage(Object msg, Host peer, short proto) {
+    public boolean sendMessage(Object msg, Host peer, short proto) {
         //BabelMessage message = (BabelMessage) msg;
         registerProtoOnSend(peer, proto);
-        super.sendMessage(msg, peer,proto);
+        return super.sendMessage(msg, peer,proto);
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId){
+    public boolean sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId){
        registerProtoOnSend(dest,sourceProto);
-       super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
+       return super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
     }
     @Override
-    public void sendStream(byte [] stream,int len,Host host,short proto){
+    public boolean sendStream(byte [] stream,int len,Host host,short proto){
         registerProtoOnSend(host,proto);
-        super.sendStream(stream,len,host,proto);
+        return super.sendStream(stream,len,host,proto);
     }
     @Override
     public void closeConnection(Host peer, short proto) {

@@ -5,8 +5,8 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
-import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -125,22 +125,28 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public void send(String streamId, byte[] message, int len, TransmissionType type) {
+    public boolean send(String streamId, byte[] message, int len, TransmissionType type) {
+        boolean result = super.containConnection(streamId);
         executor.submit(() -> {
             super.send(streamId,message,len,type);
         });
+        return result;
     }
     @Override
-    public void send(InetSocketAddress peer, byte[] message, int len, TransmissionType type) {
+    public boolean send(InetSocketAddress peer, byte[] message, int len, TransmissionType type) {
+        boolean result = super.containConnection(peer);
         executor.submit(() -> {
             super.send(peer,message,len,type);
         });
+        return result;
     }
     @Override
-    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
+    public boolean sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
+        boolean res = containConnection(conId) || containConnection(peer);
         executor.submit(() -> {
             super.sendInputStream(inputStream,len,peer,conId);
         });
+        return res;
     }
 
     /*********************************** User Actions **************************************/

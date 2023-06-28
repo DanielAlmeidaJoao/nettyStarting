@@ -11,10 +11,10 @@ public interface TCPChannelInterface {
     void closeConnection(InetSocketAddress peer);
     void closeConnection(String connectionId);
     void closeServerSocket();
-    void send(byte[] message, int len, InetSocketAddress peer, TransmissionType unstructured);
-    void send(byte[] message, int len, String conId, TransmissionType unstructured);
+    boolean send(byte[] message, int len, InetSocketAddress peer, TransmissionType unstructured);
+    boolean send(byte[] message, int len, String conId, TransmissionType unstructured);
 
-    void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId);
+    boolean sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId);
 
     boolean isConnected(InetSocketAddress peer);
     InetSocketAddress [] getNettyIdToConnection();

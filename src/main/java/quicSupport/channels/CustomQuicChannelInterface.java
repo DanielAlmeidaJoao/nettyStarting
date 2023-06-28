@@ -22,9 +22,9 @@ public interface CustomQuicChannelInterface {
 
     void readMetrics(QuicReadMetricsHandler handler);
 
-    void send(String streamId, byte[] message, int len, TransmissionType type);
+    boolean send(String streamId, byte[] message, int len, TransmissionType type);
 
-    void send(InetSocketAddress peer, byte[] message, int len, TransmissionType type);
+    boolean send(InetSocketAddress peer, byte[] message, int len, TransmissionType type);
 
     boolean enabledMetrics();
 
@@ -38,5 +38,5 @@ public interface CustomQuicChannelInterface {
     TransmissionType getConnectionType(InetSocketAddress toInetSOcketAddress);
 
     TransmissionType getConnectionType(String streamId);
-    void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId);
+    boolean sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId);
     }

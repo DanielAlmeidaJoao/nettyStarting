@@ -74,10 +74,10 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
 
 
     @Override
-    public void sendMessage(T msg, Host peer, short proto) {
+    public boolean sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
+            return customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -85,9 +85,9 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     }
 
     @Override
-    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
+    public boolean sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
+        return customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
@@ -155,39 +155,39 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         customQuicChannel.closeLink(streamId);
     }
 
-    public void sendMessage(T msg,String streamId,short proto){
+    public boolean sendMessage(T msg,String streamId,short proto){
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            customQuicChannel.send(streamId,toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
+            return customQuicChannel.send(streamId,toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException(e);
         }
+        return false;
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
+    public boolean sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        customQuicChannel.send(streamId,
+        return customQuicChannel.send(streamId,
                 toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
-    public void sendStream(byte[] stream,int len, String streamId, short proto) {
-        customQuicChannel.send(streamId, stream,len, TransmissionType.UNSTRUCTURED_STREAM);
+    public boolean sendStream(byte[] stream,int len, String streamId, short proto) {
+        return customQuicChannel.send(streamId, stream,len, TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override
-    public void sendStream(byte[] stream,int len, Host host, short proto) {
-        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(host),stream,len, TransmissionType.UNSTRUCTURED_STREAM);
+    public boolean sendStream(byte[] stream,int len, Host host, short proto) {
+        return customQuicChannel.send(FactoryMethods.toInetSOcketAddress(host),stream,len, TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override
-    public void sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
+    public boolean sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
         InetSocketAddress address=null;
         if(peerOrConId.getKey()!=null){
             address = FactoryMethods.toInetSOcketAddress(peerOrConId.getKey());
         }
-        customQuicChannel.sendInputStream(inputStream,len,address,peerOrConId.getValue());
+        return customQuicChannel.sendInputStream(inputStream,len,address,peerOrConId.getValue());
     }
 
     @Override

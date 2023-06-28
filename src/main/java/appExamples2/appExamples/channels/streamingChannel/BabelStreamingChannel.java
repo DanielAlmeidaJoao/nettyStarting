@@ -50,19 +50,19 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void sendMessage(T msg, Host peer, short proto) {
+    public boolean sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer), TransmissionType.STRUCTURED_MESSAGE);
+            return tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer), TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
+    public boolean sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest), TransmissionType.STRUCTURED_MESSAGE);
+        return tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest), TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
@@ -177,36 +177,36 @@ public class BabelStreamingChannel<T> implements NewIChannel<T>, TCPChannelHandl
     }
 
     @Override
-    public void sendMessage(T msg,String streamId,short proto) {
+    public boolean sendMessage(T msg,String streamId,short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
+            return tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
     @Override
-    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
+    public boolean sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
+        return tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
     }
     @Override
-    public void sendStream(byte[] stream,int len, String streamId, short proto) {
-        tcpChannelInterface.send(stream,len,streamId,TransmissionType.UNSTRUCTURED_STREAM);
+    public boolean sendStream(byte[] stream,int len, String streamId, short proto) {
+        return tcpChannelInterface.send(stream,len,streamId,TransmissionType.UNSTRUCTURED_STREAM);
     }
     @Override
-    public void sendStream(byte[] msg,int len, Host host, short proto) {
-        tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
+    public boolean sendStream(byte[] msg,int len, Host host, short proto) {
+        return tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override
-    public void sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
+    public boolean sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
         InetSocketAddress address=null;
         if(peerOrConId.getKey()!=null){
             address = FactoryMethods.toInetSOcketAddress(peerOrConId.getKey());
         }
-        tcpChannelInterface.sendInputStream(inputStream,len,address,peerOrConId.getValue());
+        return tcpChannelInterface.sendInputStream(inputStream,len,address,peerOrConId.getValue());
     }
 
     @Override

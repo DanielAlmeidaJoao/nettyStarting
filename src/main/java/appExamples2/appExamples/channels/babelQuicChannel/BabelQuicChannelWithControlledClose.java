@@ -49,34 +49,34 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         }
     }
     @Override
-    public void sendMessage(T msg, Host peer, short proto) {
+    public boolean sendMessage(T msg, Host peer, short proto) {
         addProtoOnSend(peer,proto);
-        super.sendMessage(msg,peer,proto);
+        return super.sendMessage(msg,peer,proto);
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId){
+    public boolean sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId){
         addProtoOnSend(dest,sourceProto);
-        super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
+        return super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
     }
     @Override
-    public void sendStream(byte [] stream,int len,Host host,short proto){
+    public boolean sendStream(byte [] stream,int len,Host host,short proto){
         addProtoOnSend(host,proto);
-        super.sendStream(stream,len,host,proto);
+        return super.sendStream(stream,len,host,proto);
     }
 
     @Override
-    public void sendMessage(T msg,String streamId,short proto) {
+    public boolean sendMessage(T msg,String streamId,short proto) {
         addProtoOnSend(streamId,proto);
-        super.sendMessage(msg,streamId,proto);
+        return super.sendMessage(msg,streamId,proto);
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId){
+    public boolean sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId){
         addProtoOnSend(streamId,sourceProto);
-        super.sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
+        return super.sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
     }
-    public void sendStream(byte [] stream,int len,String streamId,short proto){
+    public boolean sendStream(byte [] stream,int len,String streamId,short proto){
         addProtoOnSend(streamId,proto);
-        super.sendStream(stream,len,streamId,proto);
+        return super.sendStream(stream,len,streamId,proto);
     }
     //////
     @Override

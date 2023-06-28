@@ -10,14 +10,13 @@ import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
     String openConnection(Host var1, short protoId, TransmissionType type);
-    void sendMessage(T var1, Host var2, short protoId);
-    void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId);
-    //exclusivelly for QUIC
-    void sendMessage(T msg,String linkId,short proto);
-    void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
-    void sendStream(byte [] stream,int len,String streamId,short proto);
-    void sendStream(byte [] stream,int len,Host host,short proto);
-    void sendStream(InputStream inputStream, int len, Pair<Host,String> peerOrConId, short proto);
+    boolean sendMessage(T var1, Host var2, short protoId);
+    boolean sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId);
+    boolean sendMessage(T msg,String linkId,short proto);
+    boolean sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
+    boolean sendStream(byte [] stream,int len,String streamId,short proto);
+    boolean sendStream(byte [] stream,int len,Host host,short proto);
+    boolean sendStream(InputStream inputStream, int len, Pair<Host,String> peerOrConId, short proto);
 
     TransmissionType getTransmissionType(Host host)  throws NoSuchElementException;
     TransmissionType getTransmissionType(String streamId)  throws NoSuchElementException;
