@@ -3,6 +3,7 @@ package quicSupport.channels;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.EventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -37,6 +38,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static quicSupport.utils.QUICLogics.*;
 
@@ -121,6 +124,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     }
 
     private CustomQUICConnection getCustomQUICConnection(InetSocketAddress inetSocketAddress){
+        if(inetSocketAddress==null) return null;
         List<CustomQUICConnection> con = addressToQUICCons.get(inetSocketAddress);
         if(con!=null && !con.isEmpty()){
             return con.get(0);
@@ -424,6 +428,40 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             }
         });
     }
+    ConcurrentLinkedQueue<Pair<InputStream,String>> inputStreams = new ConcurrentLinkedQueue<>();
+    AtomicBoolean loopRunning = new AtomicBoolean(false);
+    private void startIteratingStreams(){
+        while (!inputStreams.isEmpty()){
+            loopRunning.set(true);
+            for (Pair<InputStream,String> streamConIdPair : inputStreams) {
+                try{
+                    int available = streamConIdPair.getKey().available();
+                    if(available>0){
+                        System.out.println("AVAILABLE READ "+available);
+                        byte data [] = new byte[available];
+                        streamConIdPair.getLeft().read(data,0,available);
+                        send(streamConIdPair.getRight(),data,available,TransmissionType.UNSTRUCTURED_STREAM);
+                    }
+                }catch (Exception e){
+                    inputStreams.remove(streamConIdPair);
+                }
+            }
+        }
+        loopRunning.set(false);
+        System.out.println("LOOOPING ENDDED");
+
+    }
+    private void addToStreams(InputStream inputStream, String conId, EventLoop loop){
+        for (Pair<InputStream, String> stream : inputStreams) {
+            if(stream.getLeft()==inputStream){
+                return;
+            }
+        }
+        inputStreams.add(Pair.of(inputStream,conId));
+        if(!loopRunning.get()){
+            loop.submit(() -> startIteratingStreams());
+        }
+    }
     public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer,String conId)  {
         try {
             CustomQUICStreamCon streamChannel = customStreamIdToStream.get(conId);
@@ -438,6 +476,9 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 peer = streamChannel.customQUICConnection.getRemote();
                 overridenMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.UNSTRUCTURED_STREAM);
                 return;
+            }
+            if(len<=0){
+                addToStreams(inputStream,conId,streamChannel.streamChannel.parent().eventLoop());
             }
             final ByteBuf buf = Unpooled.buffer(len);
             buf.writeBytes(inputStream,len);

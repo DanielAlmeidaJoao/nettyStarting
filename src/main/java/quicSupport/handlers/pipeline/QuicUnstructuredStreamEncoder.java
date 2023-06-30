@@ -19,7 +19,6 @@ public class QuicUnstructuredStreamEncoder extends MessageToByteEncoder<ByteBuf>
     }
     @Override
     protected void encode(ChannelHandlerContext ctx, ByteBuf message, ByteBuf byteBuf){
-        System.out.println("ENCODDDING HHHHHHHHHH");
         byteBuf.writeBytes(message);
         if(metrics!=null){
             int bytes = byteBuf.readableBytes();

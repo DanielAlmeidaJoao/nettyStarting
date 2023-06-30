@@ -104,13 +104,18 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     public static final short HANDLER_ID2 = 43;
 
     private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
-        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
-        try{
-            fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.MP4");
-        }catch (Exception e){
-            e.printStackTrace();
+        if(event.inConnection){
+            logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
+            try{
+                fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.txt");
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
+        }else{
+            uponOutConnectionUp(event, channelId);
         }
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
+
     }
     String streamId;
     private void uponOutConnectionUp(OnConnectionUpEvent event, int channelId) {
@@ -119,7 +124,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             dest = event.getNode();
         }
         try{
-            fos2 = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_copy.mp4");
+            //fos2 = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_copy.txt");
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -152,7 +157,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }catch (Exception e){
             e.printStackTrace();
         }
-        //logger.info("Received bytes2: {} from {}",msg.length, from);
+
+        logger.info("Received bytes2: {} from {} receivedTOTAL {} ",msg.length,from,received);
     }
     int gg = 0;
     private void uponStreamBytes2(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
@@ -192,18 +198,33 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
             //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             //Path filePath = Paths.get(p);
             //
             File f = filePath.toFile();
             FileInputStream fileInputStream = new FileInputStream(f);
             int len = (int) f.length();
-            sendStream(channelId,fileInputStream,len,"kjj");
+            sendStream(channelId,fileInputStream,0,streamId);
             System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
             if(len >-1){
-                return;
+                FileOutputStream fileOutputStream = new FileOutputStream(f);
+                int b = 0;
+                while (true){
+                    Thread.sleep(5000);
+                    fileOutputStream.write((b+"_OLA ").getBytes());
+                    System.out.println("WROTE TO FILE");
+                    b++;
+                    if(b>5){
+                        Thread.sleep(1000);
+                        fileInputStream.close();
+                        return;
+                    }
+                }
+                //return;
             }
+
             byte [] bytes = new byte[bufferSize];
             //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
             int read, totalSent = 0;
