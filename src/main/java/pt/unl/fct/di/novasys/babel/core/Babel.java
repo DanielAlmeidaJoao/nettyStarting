@@ -1,6 +1,5 @@
 package pt.unl.fct.di.novasys.babel.core;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.ISerializer;
@@ -279,12 +278,19 @@ public class Babel {
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
         channelEntry.getLeft().sendStream(stream,dataLen,dest,sourceProto);
     }
-    protected void sendStream(int channelId, InputStream inputStream, int dataLen, Host peer, String conId, short sourceProto){
+    protected void sendStream(int channelId, InputStream inputStream, int dataLen, Host peer, short sourceProto){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendStream(inputStream,dataLen,Pair.of(peer,conId),sourceProto);
+        channelEntry.getLeft().sendStream(inputStream,dataLen,peer,sourceProto);
+    }
+    protected void sendStream(int channelId, InputStream inputStream, int dataLen, String conId, short sourceProto){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Sending message to non-existing channelId " + channelId);
+        channelEntry.getLeft().sendStream(inputStream,dataLen,conId,sourceProto);
     }
     void closeStream(int channelId, short protoId,String streamId) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =

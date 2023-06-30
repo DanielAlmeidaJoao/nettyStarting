@@ -58,25 +58,19 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.closeConnection(connectionId));
     }
     @Override
-    public boolean send(byte[] message, int len, InetSocketAddress host, TransmissionType transmissionType){
-        boolean sent = containsConnection(host);
+    public void send(byte[] message, int len, InetSocketAddress host, TransmissionType transmissionType){
         executor.execute(() -> super.send(message,len,host, transmissionType));
-        return sent;
     }
     @Override
-    public boolean send(byte[] message, int len, String conId, TransmissionType transmissionType){
-        boolean sent = containsConnection(conId);
+    public void send(byte[] message, int len, String conId, TransmissionType transmissionType){
         executor.execute(() -> super.send(message,len,conId, transmissionType));
-        return sent;
     }
 
     @Override
-    public boolean sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
-        boolean sent = containsConnection(conId) || containsConnection(peer);
+    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
         executor.execute(() -> {
             super.sendInputStream(inputStream,len,peer,conId);
         });
-        return sent;
     }
     @Override
     public void closeServerSocket(){

@@ -199,7 +199,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             File f = filePath.toFile();
             FileInputStream fileInputStream = new FileInputStream(f);
             int len = (int) f.length();
-            sendStream(channelId,fileInputStream,len,null,"kjj");
+            sendStream(channelId,fileInputStream,len,"kjj");
             System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
             if(len >-1){
                 return;

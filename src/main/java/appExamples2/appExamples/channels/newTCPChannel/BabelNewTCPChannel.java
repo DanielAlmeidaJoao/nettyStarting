@@ -1,19 +1,18 @@
 package appExamples2.appExamples.channels.newTCPChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.*;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
+import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.NetworkRole;
+import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.TCPChannelHandlerMethods;
 import tcpSupport.tcpStreamingAPI.channel.TCPChannelInterface;
-import pt.unl.fct.di.novasys.babel.channels.*;
-import quicSupport.utils.enums.NetworkProtocol;
-import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,19 +49,19 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
     }
 
     @Override
-    public boolean sendMessage(T msg, Host peer, short proto) {
+    public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            return tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer), TransmissionType.STRUCTURED_MESSAGE);
+            tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer), TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
     @Override
-    public boolean sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        return tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest), TransmissionType.STRUCTURED_MESSAGE);
+        tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest), TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
@@ -165,7 +164,6 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
             e.printStackTrace();
         }
     }
-
     @Override
     public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
         logger.info("CONNECTION TO {} FAILED. CAUSE = {}.",peer,cause);
@@ -177,36 +175,36 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
     }
 
     @Override
-    public boolean sendMessage(T msg,String streamId,short proto) {
+    public void sendMessage(T msg,String streamId,short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            return tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
+            tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
     @Override
-    public boolean sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
+    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        return tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
+        tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
     }
     @Override
-    public boolean sendStream(byte[] stream,int len, String streamId, short proto) {
-        return tcpChannelInterface.send(stream,len,streamId,TransmissionType.UNSTRUCTURED_STREAM);
+    public void sendStream(byte[] stream,int len, String streamId, short proto) {
+        tcpChannelInterface.send(stream,len,streamId,TransmissionType.UNSTRUCTURED_STREAM);
     }
     @Override
-    public boolean sendStream(byte[] msg,int len, Host host, short proto) {
-        return tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
+    public void sendStream(byte[] msg,int len, Host host, short proto) {
+        tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override
-    public boolean sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
-        InetSocketAddress address=null;
-        if(peerOrConId.getKey()!=null){
-            address = FactoryMethods.toInetSOcketAddress(peerOrConId.getKey());
-        }
-        return tcpChannelInterface.sendInputStream(inputStream,len,address,peerOrConId.getValue());
+    public void sendStream(InputStream inputStream, int len, Host host, short proto) {
+        tcpChannelInterface.sendInputStream(inputStream,len,FactoryMethods.toInetSOcketAddress(host),null);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, int len, String conId, short proto) {
+        tcpChannelInterface.sendInputStream(inputStream,len,null,conId);
     }
 
     @Override

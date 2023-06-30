@@ -119,28 +119,22 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
         });
     }
     @Override
-    public boolean send(String streamId, byte[] message, int len, TransmissionType type) {
-        boolean result = super.containConnection(streamId);
+    public void send(String streamId, byte[] message, int len, TransmissionType type) {
         executor.submit(() -> {
             super.send(streamId,message,len,type);
         });
-        return result;
     }
     @Override
-    public boolean send(InetSocketAddress peer, byte[] message, int len, TransmissionType type) {
-        boolean result = super.containConnection(peer);
+    public void send(InetSocketAddress peer, byte[] message, int len, TransmissionType type) {
         executor.submit(() -> {
             super.send(peer,message,len,type);
         });
-        return result;
     }
     @Override
-    public boolean sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
-        boolean res = containConnection(conId) || containConnection(peer);
+    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
         executor.submit(() -> {
             super.sendInputStream(inputStream,len,peer,conId);
         });
-        return res;
     }
 
     /*********************************** User Actions **************************************/

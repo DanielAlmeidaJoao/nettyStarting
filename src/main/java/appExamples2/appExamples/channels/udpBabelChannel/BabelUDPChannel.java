@@ -2,7 +2,6 @@ package appExamples2.appExamples.channels.udpBabelChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.util.concurrent.DefaultEventExecutor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
@@ -96,12 +95,11 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public boolean sendMessage(T msg, Host peer, short proto) {
+    public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
             udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(peer),toSend.length);
             msgSent(toSend,peer);
-            return true;
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -109,42 +107,40 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public boolean sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
         udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(dest),toSend.length);
-        return true;
     }
 
     @Override
-    public boolean sendMessage(T msg,String streamId,short proto) {
+    public void sendMessage(T msg,String streamId,short proto) {
         Host host = customConIDToAddress.get(streamId);
         sendMessage(msg,host,proto);
-        return true;
     }
 
     @Override
-    public boolean sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
+    public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         Host host = customConIDToAddress.get(streamId);
         sendMessage(data,dataLen,host,sourceProto,destProto,handlerId);
-        return true;
     }
 
     @Override
-    public boolean sendStream(byte[] stream,int len,String streamId, short proto) {
+    public void sendStream(byte[] stream,int len,String streamId, short proto) {
         new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC CHANNELS").printStackTrace();
-        return false;
     }
 
     @Override
-    public boolean sendStream(byte[] msg,int len,Host host, short proto) {
+    public void sendStream(byte[] msg,int len,Host host, short proto) {
         new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-        return false;
     }
 
     @Override
-    public boolean sendStream(InputStream inputStream, int len, Pair<Host, String> peerOrConId, short proto) {
+    public void sendStream(InputStream inputStream, int len,Host dest, short proto) {
         new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-        return false;
+    }
+    @Override
+    public void sendStream(InputStream inputStream, int len,String conId, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
     }
     @Override
     public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){

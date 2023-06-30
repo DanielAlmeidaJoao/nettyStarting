@@ -9,7 +9,6 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.Exceptions.UnknownElement;
@@ -34,7 +33,10 @@ import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import static quicSupport.utils.QUICLogics.*;
 
@@ -379,19 +381,15 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     }
 
 
-    public boolean send(String customId, byte[] message, int len, TransmissionType type) {
-        boolean sent = false;
+    public void send(String customId, byte[] message, int len, TransmissionType type) {
         CustomQUICStreamCon streamCon = customStreamIdToStream.get(customId);
         if(streamCon==null){
             overridenMethods.onMessageSent(message,null, len,new Throwable("UNKNOWN STREAM ID: "+customId), null, type);
         }else {
-            sent = true;
             sendMessage(streamCon,message,len,streamCon.customQUICConnection.getRemote(),type);
         }
-        return sent;
     }
-    public boolean send(InetSocketAddress peer, byte[] message, int len, TransmissionType type){
-        boolean sent = false;
+    public void send(InetSocketAddress peer, byte[] message, int len, TransmissionType type){
         CustomQUICConnection customQUICConnection = getCustomQUICConnection(peer);
         if(customQUICConnection==null){
             QUICConnectingOBJ pendingMessages = connecting.get(peer);
@@ -406,9 +404,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             }
         }else{
             sendMessage(customQUICConnection.getDefaultStream(),message,len,peer,type);
-            sent = true;
         }
-        return sent;
     }
     protected void sendMessage(CustomQUICStreamCon streamChannel, byte[] message, int len, InetSocketAddress peer, TransmissionType type){
         if(streamChannel.type!=type){
@@ -428,13 +424,12 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             }
         });
     }
-    public boolean sendInputStream(InputStream inputStream, int len, InetSocketAddress peer,String conId)  {
+    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer,String conId)  {
         try {
             CustomQUICStreamCon streamChannel = customStreamIdToStream.get(conId);
             CustomQUICConnection connection = getCustomQUICConnection(peer);
             if(streamChannel == null && connection == null ){
                 overridenMethods.onMessageSent(null,inputStream,len,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),peer,TransmissionType.UNSTRUCTURED_STREAM);
-                return false;
             }else if(streamChannel == null ){
                 streamChannel = connection.getDefaultStream();
             }
@@ -442,7 +437,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 Throwable t = new Throwable("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
                 peer = streamChannel.customQUICConnection.getRemote();
                 overridenMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.UNSTRUCTURED_STREAM);
-                return false;
+                return;
             }
             final ByteBuf buf = Unpooled.buffer(len);
             buf.writeBytes(inputStream,len);
@@ -454,12 +449,10 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                     overridenMethods.onMessageSent(new byte[0], inputStream, len,future.cause(), finalPeer,TransmissionType.UNSTRUCTURED_STREAM);
                 }
             });
-            return true;
         }catch (Exception e){
             e.printStackTrace();
             overridenMethods.onMessageSent(null,inputStream,0,e.getCause(),peer,TransmissionType.UNSTRUCTURED_STREAM);
         }
-        return false;
     }
     public boolean isConnected(InetSocketAddress peer){
         return addressToQUICCons.containsKey(peer);
