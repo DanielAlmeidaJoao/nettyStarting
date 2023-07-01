@@ -147,17 +147,18 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     FileOutputStream fos, fos2;
     private void uponStreamBytes(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
         received += msg.length;
-        //sendStream(channelId,msg,msg.length,this.streamId);
-        try {
-            fos.write(msg);
-            if(received>=813782079){
-                fos.close();
-                logger.info("RECEIVED ALL BYTES");
+        if(myself.getPort()==8082){
+            sendStream(channelId,msg,msg.length,streamId);
+            try {
+                fos.write(msg);
+                if(received>=813782079){
+                    fos.close();
+                    logger.info("RECEIVED ALL BYTES");
+                }
+            }catch (Exception e){
+                e.printStackTrace();
             }
-        }catch (Exception e){
-            e.printStackTrace();
         }
-
         logger.info("Received bytes2: {} from {} receivedTOTAL {} ",msg.length,from,received);
     }
     int gg = 0;
@@ -212,6 +213,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 FileOutputStream fileOutputStream = new FileOutputStream(f);
                 int b = 0;
                 while (true){
+                    sendStream(channelId,fileInputStream,0,streamId);
                     Thread.sleep(5000);
                     fileOutputStream.write((b+"_OLA ").getBytes());
                     System.out.println("WROTE TO FILE");

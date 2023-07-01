@@ -17,6 +17,7 @@ import tcpSupport.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import tcpSupport.tcpStreamingAPI.utils.MetricsDisabledException;
+import tcpSupport.tcpStreamingAPI.utils.SendStreamContinuoslyLogics;
 import tcpSupport.tcpStreamingAPI.utils.TCPConnectingObject;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
@@ -49,6 +50,8 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     private final TCPStreamMetrics tcpStreamMetrics;
     private final boolean connectIfNotConnected;
     private final TCPChannelHandlerMethods channelHandlerMethods;
+    private final SendStreamContinuoslyLogics streamContinuoslyLogics;
+
 
 
     public StreamingChannel(Properties properties, boolean singleThreaded, TCPChannelHandlerMethods chm, NetworkRole networkRole)throws IOException{
@@ -92,6 +95,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         connectIfNotConnected = properties.getProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
 
         this.channelHandlerMethods = chm;
+        streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send);
     }
 
     /******************************************* CHANNEL EVENTS ****************************************************/
@@ -214,14 +218,14 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self
                     ,connectingObject.pendingMessages.size(),customTCPConnection.host);
             for (Pair<byte[],Integer> message : connectingObject.pendingMessages) {
-                send(message.getLeft(),message.getRight(),customTCPConnection.host,type);
+                send(customTCPConnection.host,message.getLeft(),message.getRight(),type);
             }
         }
     }
     public void closeServerSocket(){
         server.closeServerSocket();
     }
-    public void send(byte[] message, int len,String customConId, TransmissionType type){
+    public void send(String customConId, byte[] message, int len,TransmissionType type){
         CustomTCPConnection connection = customIdToConnection.get(customConId);
         if(connection == null ){
             channelHandlerMethods.onMessageSent(message, null, null,new Throwable("Unknown Connection ID : "+customConId),type);
@@ -271,16 +275,20 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId)  {
         try {
             CustomTCPConnection idConnection = customIdToConnection.get(conId);
-            CustomTCPConnection peerConnection = getConnection(peer);
-            if(idConnection == null && peerConnection == null ){
+            CustomTCPConnection peerConnection=null;
+            if(idConnection == null && (peerConnection = getConnection(peer))==null ){
                 channelHandlerMethods.onMessageSent(null,inputStream, peer,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),TransmissionType.UNSTRUCTURED_STREAM);
-            }else if(idConnection == null ){
+                return;
+            }else if(peerConnection != null ){
                 idConnection = peerConnection;
             }
             if(idConnection.type!=TransmissionType.UNSTRUCTURED_STREAM){
                 Throwable t = new Throwable("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
                 channelHandlerMethods.onMessageSent(null,inputStream, peer,t,TransmissionType.UNSTRUCTURED_STREAM);
                 return;
+            }
+            if(len<=0){
+                streamContinuoslyLogics.addToStreams(inputStream,conId,idConnection.channel.eventLoop());
             }
             final ByteBuf buf = Unpooled.buffer(len);
             buf.writeBytes(inputStream,len);
@@ -301,7 +309,7 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         }
         return null;
     }
-    public void send(byte[] message, int len, InetSocketAddress peer, TransmissionType type){
+    public void send( InetSocketAddress peer, byte[] message, int len, TransmissionType type){
         var connections = addressToConnections.get(peer);
         CustomTCPConnection connection;
         if(connections == null || (connection=connections.get(0)) == null){

@@ -52,7 +52,7 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
     public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(peer), TransmissionType.STRUCTURED_MESSAGE);
+            tcpChannelInterface.send(FactoryMethods.toInetSOcketAddress(peer),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -61,7 +61,7 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
     @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        tcpChannelInterface.send(toSend,toSend.length,FactoryMethods.toInetSOcketAddress(dest), TransmissionType.STRUCTURED_MESSAGE);
+        tcpChannelInterface.send(FactoryMethods.toInetSOcketAddress(dest), toSend, toSend.length, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
@@ -178,7 +178,7 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
     public void sendMessage(T msg,String streamId,short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
+            tcpChannelInterface.send(streamId, toSend, toSend.length, TransmissionType.STRUCTURED_MESSAGE);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -187,15 +187,15 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
     @Override
     public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        tcpChannelInterface.send(toSend, toSend.length, streamId, TransmissionType.STRUCTURED_MESSAGE);
+        tcpChannelInterface.send(streamId, toSend, toSend.length, TransmissionType.STRUCTURED_MESSAGE);
     }
     @Override
     public void sendStream(byte[] stream,int len, String streamId, short proto) {
-        tcpChannelInterface.send(stream,len,streamId,TransmissionType.UNSTRUCTURED_STREAM);
+        tcpChannelInterface.send(streamId, stream, len, TransmissionType.UNSTRUCTURED_STREAM);
     }
     @Override
     public void sendStream(byte[] msg,int len, Host host, short proto) {
-        tcpChannelInterface.send(msg,len,FactoryMethods.toInetSOcketAddress(host), TransmissionType.UNSTRUCTURED_STREAM);
+        tcpChannelInterface.send(FactoryMethods.toInetSOcketAddress(host), msg, len, TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override

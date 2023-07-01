@@ -58,12 +58,12 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.closeConnection(connectionId));
     }
     @Override
-    public void send(byte[] message, int len, InetSocketAddress host, TransmissionType transmissionType){
-        executor.execute(() -> super.send(message,len,host, transmissionType));
+    public void send(InetSocketAddress host, byte[] message, int len,TransmissionType transmissionType){
+        executor.execute(() -> super.send(host,message,len, transmissionType));
     }
     @Override
-    public void send(byte[] message, int len, String conId, TransmissionType transmissionType){
-        executor.execute(() -> super.send(message,len,conId, transmissionType));
+    public void send(String conId,byte[] message, int len, TransmissionType transmissionType){
+        executor.execute(() -> super.send(conId,message,len, transmissionType));
     }
 
     @Override

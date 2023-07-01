@@ -7,7 +7,7 @@ import quicSupport.utils.enums.TransmissionType;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 
-public interface CustomQuicChannelInterface {
+public interface CustomQuicChannelInterface extends SendBytesInterface {
 
     String open(InetSocketAddress peer, TransmissionType type);
 
@@ -21,7 +21,6 @@ public interface CustomQuicChannelInterface {
 
     void readMetrics(QuicReadMetricsHandler handler);
 
-    void send(String streamId, byte[] message, int len, TransmissionType type);
 
     void send(InetSocketAddress peer, byte[] message, int len, TransmissionType type);
 

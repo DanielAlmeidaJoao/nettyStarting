@@ -3,7 +3,6 @@ package quicSupport.channels;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.EventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -27,6 +26,7 @@ import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
+import tcpSupport.tcpStreamingAPI.utils.SendStreamContinuoslyLogics;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.io.IOException;
@@ -38,8 +38,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static quicSupport.utils.QUICLogics.*;
 
@@ -63,6 +61,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     private static long heartBeatTimeout;
     private final boolean connectIfNotConnected;
     private final ChannelHandlerMethods overridenMethods;
+    private final SendStreamContinuoslyLogics streamContinuoslyLogics;
 
     public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom)throws IOException {
         this.properties=properties;
@@ -101,6 +100,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             client = new QuicClientExample(self,this,new NioEventLoopGroup(1), metrics);
         }
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
+        streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send);
     }
     public InetSocketAddress getSelf(){
         return self;
@@ -428,47 +428,14 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             }
         });
     }
-    ConcurrentLinkedQueue<Pair<InputStream,String>> inputStreams = new ConcurrentLinkedQueue<>();
-    AtomicBoolean loopRunning = new AtomicBoolean(false);
-    private void startIteratingStreams(){
-        while (!inputStreams.isEmpty()){
-            loopRunning.set(true);
-            for (Pair<InputStream,String> streamConIdPair : inputStreams) {
-                try{
-                    int available = streamConIdPair.getKey().available();
-                    if(available>0){
-                        System.out.println("AVAILABLE READ "+available);
-                        byte data [] = new byte[available];
-                        streamConIdPair.getLeft().read(data,0,available);
-                        send(streamConIdPair.getRight(),data,available,TransmissionType.UNSTRUCTURED_STREAM);
-                    }
-                }catch (Exception e){
-                    inputStreams.remove(streamConIdPair);
-                }
-            }
-        }
-        loopRunning.set(false);
-        System.out.println("LOOOPING ENDDED");
-
-    }
-    private void addToStreams(InputStream inputStream, String conId, EventLoop loop){
-        for (Pair<InputStream, String> stream : inputStreams) {
-            if(stream.getLeft()==inputStream){
-                return;
-            }
-        }
-        inputStreams.add(Pair.of(inputStream,conId));
-        if(!loopRunning.get()){
-            loop.submit(() -> startIteratingStreams());
-        }
-    }
     public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer,String conId)  {
         try {
             CustomQUICStreamCon streamChannel = customStreamIdToStream.get(conId);
-            CustomQUICConnection connection = getCustomQUICConnection(peer);
-            if(streamChannel == null && connection == null ){
+            CustomQUICConnection connection=null;
+            if(streamChannel==null && (connection = getCustomQUICConnection(peer))==null){
                 overridenMethods.onMessageSent(null,inputStream,len,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),peer,TransmissionType.UNSTRUCTURED_STREAM);
-            }else if(streamChannel == null ){
+                return;
+            }else if(connection!=null){
                 streamChannel = connection.getDefaultStream();
             }
             if(streamChannel.type!=TransmissionType.UNSTRUCTURED_STREAM){
@@ -478,7 +445,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 return;
             }
             if(len<=0){
-                addToStreams(inputStream,conId,streamChannel.streamChannel.parent().eventLoop());
+                streamContinuoslyLogics.addToStreams(inputStream,conId,streamChannel.streamChannel.parent().eventLoop());
             }
             final ByteBuf buf = Unpooled.buffer(len);
             buf.writeBytes(inputStream,len);
