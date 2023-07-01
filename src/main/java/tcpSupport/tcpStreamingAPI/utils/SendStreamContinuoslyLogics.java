@@ -25,7 +25,6 @@ public class SendStreamContinuoslyLogics {
             try{
                 int available = streamConIdPair.getKey().available();
                 if(available>0){
-                    System.out.println("AVAILABLE READ "+available);
                     byte data [] = new byte[available];
                     streamConIdPair.getLeft().read(data,0,available);
                     sendBytesInterface.send(streamConIdPair.getRight(),data,available, TransmissionType.UNSTRUCTURED_STREAM);
@@ -48,13 +47,12 @@ public class SendStreamContinuoslyLogics {
             }
             for (Pair<InputStream, String> stream : linkedQueue) {
                 if(stream.getLeft()==inputStream){
-                    System.out.println("STREAM ALREADY REGISTERED");
                     return;
                 }
             }
             linkedQueue.add(Pair.of(inputStream,conId));
             if(scheduledFuture!=null) return;
-            scheduledFuture = loop.scheduleAtFixedRate(() -> startIteratingStreams(),1L,1L, TimeUnit.SECONDS);
+            scheduledFuture = loop.scheduleAtFixedRate(() -> startIteratingStreams(),0,1L, TimeUnit.SECONDS);
         }
     }
 }
