@@ -43,7 +43,7 @@ public class Main3 {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("APP ENEDED!!");
         }));
-        System.out.println("APP STARTED!!");
+        System.out.println("APP STARTED ww!!");
         Scanner scanner = new Scanner(System.in);
 
         String input = "";

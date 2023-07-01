@@ -1,7 +1,12 @@
 package pt.unl.fct.di.novasys.babel.internal;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * An abstract class that represents a protocol message
@@ -51,6 +56,66 @@ public class BytesMessageInEvent extends InternalEvent {
 
     public byte [] getMsg() {
         return deliverMessageInMsg;
+    }
+
+    public List<Integer> readDataAsInteger(){
+        List<Integer> integerList = new LinkedList<>();
+        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        while (buf.readableBytes()>=4){
+            integerList.add(buf.readInt());
+        }
+        buf.release();
+        return integerList;
+    }
+    public List<Float> readDataAsFloat(){
+        List<Float> integerList = new LinkedList<>();
+        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        int bytes = Float.BYTES;
+        while (buf.readableBytes()>=bytes){
+            integerList.add(buf.readFloat());
+        }
+        buf.release();
+        return integerList;
+    }
+    public List<Long> readDataAsLong(){
+        List<Long> integerList = new LinkedList<>();
+        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        int bytes = Long.BYTES;
+        while (buf.readableBytes()>=bytes){
+            integerList.add(buf.readLong());
+        }
+        buf.release();
+        return integerList;
+    }
+    public List<Double> readDataAsDouble(){
+        List<Double> integerList = new LinkedList<>();
+        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        int bytes = Double.BYTES;
+        while (buf.readableBytes()>=bytes){
+            integerList.add(buf.readDouble());
+        }
+        buf.release();
+        return integerList;
+    }
+    public List<Short> readDataAsShort(){
+        List<Short> integerList = new LinkedList<>();
+        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        int bytes = Short.BYTES;
+        while (buf.readableBytes()>=bytes){
+            integerList.add(buf.readShort());
+        }
+        buf.release();
+        return integerList;
+    }
+    public List<Boolean> readDataAsBoolean(){
+        List<Boolean> integerList = new LinkedList<>();
+        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        int bytes = 1;
+        while (buf.readableBytes()>=bytes){
+            integerList.add(buf.readBoolean());
+        }
+        buf.release();
+        return integerList;
     }
 
 }

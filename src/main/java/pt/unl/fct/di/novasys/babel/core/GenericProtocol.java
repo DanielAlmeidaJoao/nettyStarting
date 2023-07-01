@@ -754,7 +754,7 @@ public abstract class GenericProtocol {
         byte [] msg = m.getMsg();
         BytesMessageInHandler h = getChannelOrThrow(m.getChannelId()).bytesMessageInHandlerMap.get(m.handlerId);
         if (h != null)
-            h.receive(msg, m.getFrom(),m.sourceProto, m.getChannelId(),m.streamId);
+            h.receive(m);
         else
             logger.warn("Discarding unexpected Bytes message (handler id " + m.handlerId + "): number of bytes = " + m.getMsg().length);
     }

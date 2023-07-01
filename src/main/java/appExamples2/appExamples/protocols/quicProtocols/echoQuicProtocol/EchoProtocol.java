@@ -4,23 +4,24 @@ import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
-import appExamples2.appExamples.channels.babelQuicChannel.events.StreamClosedEvent;
-import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEvent;
 import appExamples2.appExamples.channels.newTCPChannel.BabelNewTCPChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
+import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
-import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
+import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
+import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Properties;
 
 public class EchoProtocol extends GenericProtocolExtension {
@@ -79,7 +80,6 @@ public class EchoProtocol extends GenericProtocolExtension {
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
 
         }
-
         return channelId;
     }
     @Override
@@ -95,12 +95,12 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionUp);
 
-            registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
-            registerChannelEventHandler(channelId, StreamClosedEvent.EVENT_ID, this::uponStreamClosed);
+            //registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
+            //registerChannelEventHandler(channelId, StreamClosedEvent.EVENT_ID, this::uponStreamClosed);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                System.out.println(openConnection(dest));
+                System.out.println(openStreamConnection(dest,channelId));
                 //registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
                 //setupPeriodicTimer(new SampleTimer(),8000L,5000L);
             }
@@ -220,21 +220,25 @@ public class EchoProtocol extends GenericProtocolExtension {
         System.out.println("CURRENT: "+QUICLogics.gson.toJson(event.getCurrent()));
         System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
     }
-    private void uponStreamCreated(StreamCreatedEvent event, int channelId) {
-        logger.info("STREAM {}::{} IS UP. DATA TRANSMISSION TYPE: {}",event.streamId,event.host,event.transmissionType);
-        //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
-    }
-    private void uponStreamClosed(StreamClosedEvent event, int channelId) {
-        logger.info("STREAM {}[::]{} IS DOWN.",event.streamId,event.host);
-        //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.streamId));
-
-    }
     private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
+        System.out.println("PORRRAS 444");
+
+        if(event.inConnection){
+            System.out.println("PORRRAS 66");
+            uponOutConnectionUp(event,channelId);
+            return;
+        }
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}. id: {}",event.getNode(),event.type,event.conId);
+        System.out.println("PORRRAS 21");
         if(dest==null){
             dest = event.getNode();
         }
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.conId));
+        System.out.println("CONNECTION TYPR +++ "+getConnectionType(channelId,event.conId));
+        for (int i = 0; i < 10; i++) {
+            byte [] hh = new byte[4];
+            Unpooled.buffer(4).writeInt(i).readBytes(hh,0,4);
+            super.sendStream(channelId,hh,hh.length,event.conId);
+        }
         /**
         if(dest!=null){
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
@@ -248,7 +252,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         if(dest==null){
             dest = event.getNode();
         }
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.conId));
+        //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.conId));
         /**
         if(dest!=null){
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
@@ -257,14 +261,19 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
          **/
     }
-    private void uponBytesMessage(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received bytes: {} from {}", new String(msg), from);
+    private void uponBytesMessage(BytesMessageInEvent event) {
+        logger.info("Received bytes3: {} from {}", new String(event.getMsg()),event.getFrom());
     }
-    private void uponStreamBytes(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received bytes: {} from {}",msg.length, from);
+    private void uponStreamBytes(BytesMessageInEvent event) {
+        logger.info("Received bytes4: {} from {}",event.getMsg().length,event.getFrom());
+        List<Integer> numbs = event.readDataAsInteger();
+        System.out.println("LEN "+numbs.size());
+        for (Integer numb : numbs) {
+            System.out.println("NUMBERES "+numb);
+        }
     }
-    private void uponStreamBytes2(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received 2bytes2: {} from {}",msg.length, from);
+    private void uponStreamBytes2(BytesMessageInEvent event) {
+        logger.info("Received 2bytes2: {} from {}",event.getMsg().length,event.getFrom());
     }
     private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
         logger.info("Received {} from {}", msg.getMessage(), from);

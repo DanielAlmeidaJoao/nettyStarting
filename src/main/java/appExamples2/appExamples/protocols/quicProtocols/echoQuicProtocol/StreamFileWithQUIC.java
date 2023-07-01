@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
+import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
@@ -140,17 +141,17 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             System.out.println("PORRAS "+streamId);
         }
     }
-    private void uponBytesMessage(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received bytes: {} from {}", new String(msg), from);
+    private void uponBytesMessage(BytesMessageInEvent event) {
+        logger.info("Received bytes: {} from {}", new String(event.getMsg()),event.getFrom());
     }
     long received = 0;
     FileOutputStream fos, fos2;
-    private void uponStreamBytes(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
-        received += msg.length;
+    private void uponStreamBytes(BytesMessageInEvent  event) {
+        received += event.getMsg().length;
         if(myself.getPort()==8082){
-            sendStream(channelId,msg,msg.length,streamId);
+            sendStream(channelId,event.getMsg(),event.getMsg().length,streamId);
             try {
-                fos.write(msg);
+                fos.write(event.getMsg());
                 if(received>=813782079){
                     fos.close();
                     logger.info("RECEIVED ALL BYTES");
@@ -159,13 +160,13 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 e.printStackTrace();
             }
         }
-        logger.info("Received bytes2: {} from {} receivedTOTAL {} ",msg.length,from,received);
+        logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
     }
     int gg = 0;
-    private void uponStreamBytes2(byte [] msg, Host from, short sourceProto, int channelId, String streamId) {
-        gg += msg.length;
+    private void uponStreamBytes2(BytesMessageInEvent event) {
+        gg += event.getMsg().length;
         try{
-            fos2.write(msg);
+            fos2.write(event.getMsg());
             if(gg >= 813782079){
                 fos2.close();
                 logger.info("RECEIVED ALL BYTES");
