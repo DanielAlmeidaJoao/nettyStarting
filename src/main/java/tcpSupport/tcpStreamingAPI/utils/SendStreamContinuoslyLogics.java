@@ -15,9 +15,16 @@ public class SendStreamContinuoslyLogics {
     ConcurrentLinkedQueue<Pair<InputStream,String>> linkedQueue;
     private ScheduledFuture scheduledFuture=null;
     private final SendBytesInterface sendBytesInterface;
+    private final long readPeriod;
 
-    public SendStreamContinuoslyLogics(SendBytesInterface send) {
+    public SendStreamContinuoslyLogics(SendBytesInterface send, String readPeriodStr) {
         this.sendBytesInterface = send;
+        if(readPeriodStr==null){
+            this.readPeriod = 1000;
+        }else{
+            this.readPeriod = Long.parseLong(readPeriodStr);
+        }
+
     }
 
     private void startIteratingStreams(){
@@ -52,7 +59,7 @@ public class SendStreamContinuoslyLogics {
             }
             linkedQueue.add(Pair.of(inputStream,conId));
             if(scheduledFuture!=null) return;
-            scheduledFuture = loop.scheduleAtFixedRate(() -> startIteratingStreams(),0,1L, TimeUnit.SECONDS);
+            scheduledFuture = loop.scheduleAtFixedRate(() -> startIteratingStreams(),0,readPeriod, TimeUnit.MILLISECONDS);
         }
     }
 }

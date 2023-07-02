@@ -143,6 +143,14 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
     }
     @Override
+    public void sendStream(InputStream inputStream,Host dest, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
+    }
+    @Override
+    public void sendStream(InputStream inputStream, String conId, short proto) {
+        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
+    }
+    @Override
     public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
 
     }

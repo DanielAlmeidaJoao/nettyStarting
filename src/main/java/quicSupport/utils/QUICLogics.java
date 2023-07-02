@@ -73,7 +73,6 @@ public class QUICLogics {
     public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_C_KEYSTORE_PASSWORD";
     public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_C_KEYSTORE_ALIAS_KEY";
 
-
     public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor, QuicChannelMetrics metrics,
                                                  boolean incoming) throws Exception{
         QuicStreamChannel streamChannel = quicChan

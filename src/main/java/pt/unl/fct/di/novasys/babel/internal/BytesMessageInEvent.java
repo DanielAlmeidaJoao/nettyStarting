@@ -19,19 +19,19 @@ public class BytesMessageInEvent extends InternalEvent {
     private final byte [] deliverMessageInMsg;
     private final Host from;
     private final int channelId;
-    public final String streamId;
+    public final String conId;
     public final short sourceProto;
     public final short destProto;
     public final short handlerId;
     /**
      * Create a protocol message event with the provided numeric identifier
      */
-    public BytesMessageInEvent(byte [] msg, Host from, int channelId, String streamId,short sourceProto, short destProto,short handlerId) {
+    public BytesMessageInEvent(byte [] msg, Host from, int channelId, String conId, short sourceProto, short destProto, short handlerId) {
         super(EventType.BYTE_MESSAGE_IN);
         this.from = from;
         this.deliverMessageInMsg = msg;
         this.channelId = channelId;
-        this.streamId =streamId;
+        this.conId = conId;
         this.sourceProto = sourceProto;
         this.destProto=destProto;
         this.handlerId=handlerId;

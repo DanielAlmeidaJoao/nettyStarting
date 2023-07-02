@@ -236,61 +236,43 @@ public class Babel {
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
     void sendMessage(int channelId, short protoId, BabelMessage msg, Host target) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
-                channelMap.get(channelId);
-        if (channelEntry == null)
-            throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendMessage(msg, target, protoId);
+        getOrThrow(channelId).getLeft().sendMessage(msg, target, protoId);
     }
     void sendMessage(int channelId, short protoId, BabelMessage msg, String streamId) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
-                channelMap.get(channelId);
-        if (channelEntry == null)
-            throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendMessage(msg,streamId,protoId);
+        getOrThrow(channelId).getLeft().sendMessage(msg,streamId,protoId);
     }
     protected void sendMessage(int channelId,byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
-                channelMap.get(channelId);
-        if (channelEntry == null)
-            throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
+        getOrThrow(channelId).getLeft().sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
     }
 
     protected void sendMessage(int channelId,byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
-                channelMap.get(channelId);
-        if (channelEntry == null)
-            throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
+        getOrThrow(channelId).getLeft().sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
     }
     protected void sendStream(int channelId,byte[] stream,int dataLen, String streamId,short proto){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
-                channelMap.get(channelId);
-        if (channelEntry == null)
-            throw new AssertionError("Sending stream bytes to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendStream(stream,dataLen,streamId,proto);
+        getOrThrow(channelId).getLeft().sendStream(stream,dataLen,streamId,proto);
     }
     protected void sendStream(int channelId,byte[] stream,int dataLen, Host dest, short sourceProto){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
-                channelMap.get(channelId);
-        if (channelEntry == null)
-            throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendStream(stream,dataLen,dest,sourceProto);
+        getOrThrow(channelId).getLeft().sendStream(stream,dataLen,dest,sourceProto);
     }
     protected void sendStream(int channelId, InputStream inputStream, int dataLen, Host peer, short sourceProto){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
-                channelMap.get(channelId);
-        if (channelEntry == null)
-            throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendStream(inputStream,dataLen,peer,sourceProto);
+        getOrThrow(channelId).getLeft().sendStream(inputStream,dataLen,peer,sourceProto);
     }
     protected void sendStream(int channelId, InputStream inputStream, int dataLen, String conId, short sourceProto){
+        getOrThrow(channelId).getLeft().sendStream(inputStream,dataLen,conId,sourceProto);
+    }
+    protected void sendStream(int channelId, InputStream inputStream,Host peer, short sourceProto){
+        getOrThrow(channelId).getLeft().sendStream(inputStream,peer,sourceProto);
+    }
+    protected void sendStream(int channelId, InputStream inputStream, String conId, short sourceProto){
+        getOrThrow(channelId).getLeft().sendStream(inputStream,conId,sourceProto);
+    }
+    private Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> getOrThrow(int channelId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
-        channelEntry.getLeft().sendStream(inputStream,dataLen,conId,sourceProto);
+
+        return channelEntry;
     }
     void closeStream(int channelId, short protoId,String streamId) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =

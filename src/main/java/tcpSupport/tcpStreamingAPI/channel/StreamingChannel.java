@@ -50,7 +50,8 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
     private final TCPStreamMetrics tcpStreamMetrics;
     private final boolean connectIfNotConnected;
     private final TCPChannelHandlerMethods channelHandlerMethods;
-    private final SendStreamContinuoslyLogics streamContinuoslyLogics;
+    private SendStreamContinuoslyLogics readStreamSend;
+    private Properties properties;
 
 
 
@@ -95,7 +96,8 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
         connectIfNotConnected = properties.getProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
 
         this.channelHandlerMethods = chm;
-        streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send);
+        readStreamSend = null;
+        this.properties = properties;
     }
 
     /******************************************* CHANNEL EVENTS ****************************************************/
@@ -288,7 +290,8 @@ public class StreamingChannel implements StreamingNettyConsumer, TCPChannelInter
                 return;
             }
             if(len<=0){
-                streamContinuoslyLogics.addToStreams(inputStream,conId,idConnection.channel.eventLoop());
+                if(readStreamSend ==null) readStreamSend = new SendStreamContinuoslyLogics(this::send,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
+                readStreamSend.addToStreams(inputStream,conId,idConnection.channel.eventLoop());
             }
             final ByteBuf buf = Unpooled.buffer(len);
             buf.writeBytes(inputStream,len);

@@ -17,6 +17,8 @@ public interface NewIChannel<T> {
     void sendStream(byte [] stream,int len,Host host,short proto);
     void sendStream(InputStream inputStream, int len, Host peer, short proto);
     void sendStream(InputStream inputStream, int len, String conId, short proto);
+    void sendStream(InputStream inputStream, Host peer, short proto);
+    void sendStream(InputStream inputStream, String conId, short proto);
 
     TransmissionType getTransmissionType(Host host)  throws NoSuchElementException;
     TransmissionType getTransmissionType(String streamId)  throws NoSuchElementException;

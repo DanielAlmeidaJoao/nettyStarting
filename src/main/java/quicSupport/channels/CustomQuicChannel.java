@@ -61,7 +61,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     private static long heartBeatTimeout;
     private final boolean connectIfNotConnected;
     private final ChannelHandlerMethods overridenMethods;
-    private final SendStreamContinuoslyLogics streamContinuoslyLogics;
+    private SendStreamContinuoslyLogics streamContinuoslyLogics;
 
     public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom)throws IOException {
         this.properties=properties;
@@ -100,7 +100,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
             client = new QuicClientExample(self,this,new NioEventLoopGroup(1), metrics);
         }
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
-        streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send);
+        streamContinuoslyLogics = null;
     }
     public InetSocketAddress getSelf(){
         return self;
@@ -445,6 +445,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
                 return;
             }
             if(len<=0){
+                if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
                 streamContinuoslyLogics.addToStreams(inputStream,conId,streamChannel.streamChannel.parent().eventLoop());
             }
             final ByteBuf buf = Unpooled.buffer(len);

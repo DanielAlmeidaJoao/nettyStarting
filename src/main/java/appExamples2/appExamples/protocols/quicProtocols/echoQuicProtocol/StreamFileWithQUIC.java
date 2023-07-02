@@ -105,8 +105,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     public static final short HANDLER_ID2 = 43;
 
     private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
+        streamId = event.conId;
         if(event.inConnection){
-            logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type);
+            logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type+" SS "+streamId);
             try{
                 fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.txt");
             }catch (Exception e){
@@ -130,8 +131,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             e.printStackTrace();
         }
 
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
-        streamId = event.conId;
+        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode())+" CON ID "+streamId);
+
         if(myself.getPort()==8081){
             new Thread(() -> {
                 startStreaming();
@@ -149,7 +150,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     private void uponStreamBytes(BytesMessageInEvent  event) {
         received += event.getMsg().length;
         if(myself.getPort()==8082){
-            sendStream(channelId,event.getMsg(),event.getMsg().length,streamId);
+            sendStream(channelId,event.getMsg(),event.getMsg().length,event.conId);
             try {
                 fos.write(event.getMsg());
                 if(received>=813782079){
@@ -214,7 +215,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 FileOutputStream fileOutputStream = new FileOutputStream(f);
                 int b = 0;
                 while (true){
-                    sendStream(channelId,fileInputStream,0,streamId);
+                    sendStream(channelId,fileInputStream,streamId);
                     Thread.sleep(5000);
                     fileOutputStream.write((b+"_OLA ").getBytes());
                     System.out.println("WROTE TO FILE");

@@ -189,6 +189,14 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         customQuicChannel.sendInputStream(inputStream,len,null,conId);
     }
     @Override
+    public void sendStream(InputStream inputStream, Host peer, short proto) {
+        customQuicChannel.sendInputStream(inputStream,0,FactoryMethods.toInetSOcketAddress(peer),null);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, String conId, short proto) {
+        customQuicChannel.sendInputStream(inputStream,0,null,conId);
+    }
+    @Override
     public void registerChannelInterest(short protoId) {
         //TODO
     }

@@ -206,6 +206,14 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
     public void sendStream(InputStream inputStream, int len, String conId, short proto) {
         tcpChannelInterface.sendInputStream(inputStream,len,null,conId);
     }
+    @Override
+    public void sendStream(InputStream inputStream, Host host, short proto) {
+        tcpChannelInterface.sendInputStream(inputStream,0,FactoryMethods.toInetSOcketAddress(host),null);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, String conId, short proto) {
+        tcpChannelInterface.sendInputStream(inputStream,0,null,conId);
+    }
 
     @Override
     public void closeLink(String streamId, short proto) {
