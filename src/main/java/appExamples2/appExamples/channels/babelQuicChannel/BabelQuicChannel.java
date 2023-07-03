@@ -2,9 +2,7 @@ package appExamples2.appExamples.channels.babelQuicChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
-import appExamples2.appExamples.channels.babelQuicChannel.events.StreamCreatedEvent;
 import io.netty.util.concurrent.DefaultEventExecutor;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
@@ -209,10 +207,6 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         logger.info("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getLocalizedMessage());
     }
 
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short>args) {
-        logger.info("STREAM {} CREATED FOR {} CONNECTION",streamId,peer);
-        listener.deliverEvent(new StreamCreatedEvent(streamId,FactoryMethods.toBabelHost(peer),type));
-    }
 
     public void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
@@ -267,7 +261,6 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     public void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection) {
         logger.info("STREAM {} OF {} CONNECTION CLOSED.",streamId,peer);
         listener.deliverEvent(new OnConnectionDownEvent(FactoryMethods.toBabelHost(peer),null,streamId,inConnection));
-        //listener.deliverEvent(new StreamClosedEvent(streamId,FactoryMethods.toBabelHost(peer)));
     }
     public void onMessageSent(byte[] message, InputStream inputStream, int len, Throwable error, InetSocketAddress peer, TransmissionType type) {
         try {

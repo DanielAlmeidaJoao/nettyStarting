@@ -1,7 +1,6 @@
 package appExamples2.appExamples.channels.babelQuicChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
@@ -10,6 +9,7 @@ import pt.unl.fct.di.novasys.babel.channels.Host;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,20 +74,44 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
         addProtoOnSend(streamId,sourceProto);
         super.sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
     }
+
+    @Override
     public void sendStream(byte [] stream,int len,String streamId,short proto){
         addProtoOnSend(streamId,proto);
         super.sendStream(stream,len,streamId,proto);
     }
+    @Override
+    public void sendStream(InputStream inputStream, int len, Host peer, short proto){
+        addProtoOnSend(peer,proto);
+        super.sendStream(inputStream,len,peer,proto);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, int len, String conId, short proto){
+        addProtoOnSend(conId,proto);
+        super.sendStream(inputStream,len,conId,proto);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, Host peer, short proto){
+        addProtoOnSend(peer,proto);
+        super.sendStream(inputStream,peer,proto);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, String conId, short proto){
+        addProtoOnSend(conId,proto);
+        super.sendStream(inputStream,conId,proto);
+    }
     //////
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream){
-        hostChannelsMap.put(FactoryMethods.toBabelHost(peer),new HashSet<>(registeredProtos));
-        super.onConnectionUp(incoming,peer, type, defaultStream);
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId){
+        hostChannelsMap.computeIfAbsent(FactoryMethods.toBabelHost(peer),host1 -> new HashSet<>());
+        streamChannelsMap.computeIfAbsent(customConId,s -> new HashSet<>());
+        super.onConnectionUp(incoming,peer, type, customConId);
     }
 
     @Override
     public void closeConnection(Host peer, short proto) {
         if(proto<0){
+            hostChannelsMap.remove(peer);
             super.closeConnection(peer,proto);
         }else{
             Set<Short> protosUsingThisConnection = hostChannelsMap.get(peer);
@@ -105,6 +129,7 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
     @Override
     public void closeLink(String streamId, short proto){
         if(proto<0){
+            streamChannelsMap.remove(streamId);
             super.closeLink(streamId,proto);
         }else{
             Set<Short> protosUsingThisStream = streamChannelsMap.get(streamId);
@@ -119,16 +144,8 @@ public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> 
             }
         }
     }
-    @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> args) {
-        streamChannelsMap.put(streamId,new HashSet<>());
-        super.onStreamCreatedHandler(peer,streamId, type,args);
-    }
-    @Override
-    public void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection) {
-        streamChannelsMap.remove(streamId);
-        super.onStreamClosedHandler(peer,streamId, inConnection);
-    }
+
+
         @Override
     public void registerChannelInterest(short protoId) {
         registeredProtos.add(protoId);

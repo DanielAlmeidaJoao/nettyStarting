@@ -1,6 +1,5 @@
 package quicSupport.channels;
 
-import org.apache.commons.lang3.tuple.Triple;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.InputStream;
@@ -21,8 +20,6 @@ public interface ChannelHandlerMethods {
     void failedToGetMetrics(Throwable cause);
 
     void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection);
-
-    void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> triple);
 
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
     void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from);

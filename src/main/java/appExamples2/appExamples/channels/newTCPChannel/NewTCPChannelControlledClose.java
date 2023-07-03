@@ -7,74 +7,153 @@ import pt.unl.fct.di.novasys.babel.channels.Host;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
-public class NewTCPChannelControlledClose<T> extends BabelNewTCPChannel {
-    private Map<Host,Set<Short>> protocolsUsingTheChannel;
-    public NewTCPChannelControlledClose(BabelMessageSerializerInterface serializer, ChannelListener list, Properties properties, short proto) throws IOException {
-        super(serializer, list, properties,proto);
-        protocolsUsingTheChannel = new HashMap<>();
+public class NewTCPChannelControlledClose<T> extends BabelNewTCPChannel<T>  {
+    private Map<Host, Set<Short>> hostChannelsMap;
+    private Map<String, Set<Short>> conIdChannelsMap;
+    private Set<Short> registeredProtos;
+
+    public NewTCPChannelControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties,short protoId) throws IOException {
+        super(serializer,list,properties,protoId);
+        initMaps(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null);
     }
-    private void registerProtoOnSend(Host peer, short proto){
-        Set<Short> shorts = protocolsUsingTheChannel.get(peer);
-        if(shorts!=null){
-            shorts.add(proto);
+    private void initMaps(boolean singleThreaded){
+        if(singleThreaded){
+            hostChannelsMap = new HashMap<>();
+            registeredProtos = new HashSet<>();
+            conIdChannelsMap = new HashMap<>();
+        }else{
+            hostChannelsMap = new ConcurrentHashMap<>();
+            registeredProtos = new ConcurrentSkipListSet<>();
+            conIdChannelsMap = new ConcurrentHashMap<>();
+        }
+    }
+    private void addProtoOnSend(Host peer,short proto){
+        Set<Short> protosUsingThisConnection = hostChannelsMap.get(peer);
+        if(protosUsingThisConnection!=null){
+            protosUsingThisConnection.add(proto);
+        }
+    }
+    private void addProtoOnSend(String streamId,short proto){
+        Set<Short> protosUsingThisStream = conIdChannelsMap.get(streamId);
+        if(protosUsingThisStream!=null){
+            protosUsingThisStream.add(proto);
         }
     }
     @Override
-    public void sendMessage(Object msg, Host peer, short proto) {
-        //BabelMessage message = (BabelMessage) msg;
-        registerProtoOnSend(peer, proto);
-        super.sendMessage(msg, peer,proto);
+    public void sendMessage(T msg, Host peer, short proto) {
+        addProtoOnSend(peer,proto);
+        super.sendMessage(msg,peer,proto);
     }
     @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId){
-       registerProtoOnSend(dest,sourceProto);
-       super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
+        addProtoOnSend(dest,sourceProto);
+        super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
     }
     @Override
     public void sendStream(byte [] stream,int len,Host host,short proto){
-        registerProtoOnSend(host,proto);
+        addProtoOnSend(host,proto);
         super.sendStream(stream,len,host,proto);
+    }
+
+    @Override
+    public void sendMessage(T msg, String streamId,short proto) {
+        addProtoOnSend(streamId,proto);
+        super.sendMessage(msg,streamId,proto);
+    }
+    @Override
+    public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId){
+        addProtoOnSend(streamId,sourceProto);
+        super.sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
+    }
+
+    @Override
+    public void sendStream(byte [] stream,int len,String streamId,short proto){
+        addProtoOnSend(streamId,proto);
+        super.sendStream(stream,len,streamId,proto);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, int len, Host peer, short proto){
+        addProtoOnSend(peer,proto);
+        super.sendStream(inputStream,len,peer,proto);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, int len, String conId, short proto){
+        addProtoOnSend(conId,proto);
+        super.sendStream(inputStream,len,conId,proto);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, Host peer, short proto){
+        addProtoOnSend(peer,proto);
+        super.sendStream(inputStream,peer,proto);
+    }
+    @Override
+    public void sendStream(InputStream inputStream, String conId, short proto){
+        addProtoOnSend(conId,proto);
+        super.sendStream(inputStream,conId,proto);
     }
     @Override
     public void closeConnection(Host peer, short proto) {
         if(proto<0){
-            super.closeConnection(peer, proto);
+            hostChannelsMap.remove(peer);
+            super.closeConnection(peer,proto);
         }else{
-            Set<Short> shorties = protocolsUsingTheChannel.get(peer);
-            if (shorties!=null){
-                shorties.remove(proto);
-                if(shorties.isEmpty()){
-                    super.closeConnection(peer, proto);
-                    shorties.remove(proto);
+            Set<Short> protosUsingThisConnection = hostChannelsMap.get(peer);
+            if (protosUsingThisConnection!=null){
+                protosUsingThisConnection.remove(proto);
+                if(protosUsingThisConnection.isEmpty()){
+                    super.closeConnection(peer,proto);
+                    hostChannelsMap.remove(proto);
                 }
             }else{
-                super.closeConnection(peer, proto);
+                super.closeConnection(peer,proto);
             }
         }
     }
     @Override
-    public void onChannelInactive(InetSocketAddress peer, String conId, boolean inConnection){
-        protocolsUsingTheChannel.remove(peer);
+    public void closeLink(String streamId, short proto){
+        if(proto<0){
+            conIdChannelsMap.remove(streamId);
+            super.closeLink(streamId,proto);
+        }else{
+            Set<Short> protosUsingThisStream = conIdChannelsMap.get(streamId);
+            if (protosUsingThisStream!=null){
+                protosUsingThisStream.remove(proto);
+                if(protosUsingThisStream.isEmpty()){
+                    super.closeLink(streamId,proto);
+                    hostChannelsMap.remove(proto);
+                }
+            }else{
+                super.closeLink(streamId,proto);
+            }
+        }
     }
     @Override
-    public void onChannelActive(String channel, boolean incoming, InetSocketAddress peer, TransmissionType type){
-        protocolsUsingTheChannel.put(FactoryMethods.toBabelHost(peer),new HashSet<>());
-        super.onChannelActive(channel,incoming,peer,type);
+    public void onChannelActive(String channelId, boolean incoming, InetSocketAddress peer, TransmissionType type) {
+        hostChannelsMap.computeIfAbsent(FactoryMethods.toBabelHost(peer),host1 -> new HashSet<>());
+        conIdChannelsMap.computeIfAbsent(channelId,s -> new HashSet<>());
+        super.onChannelActive(channelId,incoming,peer,type);
     }
+    @Override
+    public void registerChannelInterest(short protoId) {
+        registeredProtos.add(protoId);
+    }
+
     @Override
     public boolean shutDownChannel(short protoId) {
         if(protoId<0){
             return super.shutDownChannel(protoId);
         }else{
-            protocolsUsingTheChannel.remove(protoId);
-            if(protocolsUsingTheChannel.isEmpty()){
+            registeredProtos.remove(protoId);
+            if(registeredProtos.isEmpty()){
                 return super.shutDownChannel(protoId);
             }
         }
         return false;
     }
-
 }

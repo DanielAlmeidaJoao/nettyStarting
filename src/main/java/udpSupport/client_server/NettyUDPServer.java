@@ -181,7 +181,6 @@ public class NettyUDPServer {
                 future.cause().printStackTrace();
                 logger.info("NOT SUCCESS SENDING THE MESSAGE {}"+future.cause());
             }
-            //consumer.messageSentHandler(future.isSuccess(),future.cause(),null /*TODO message */,peer);
         });
     }
     public void shutDownServerClient(){

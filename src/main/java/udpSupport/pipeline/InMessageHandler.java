@@ -114,7 +114,6 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private void onSingleMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
         sendAck(channel, msgId, sender);
         if(channelStats!=null){
-            //TODO: add another parameter that indicates the length of the message received
             channelStats.addReceivedBytes(sender,message.length+9,NetworkStatsKindEnum.MESSAGE_STATS);
         }
         if(!receivedMessages.add(getStrID(sender,msgId))){

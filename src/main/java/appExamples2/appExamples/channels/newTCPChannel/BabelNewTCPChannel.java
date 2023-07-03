@@ -48,7 +48,6 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
         protoToReceiveStreamData=proto;
     }
 
-    @Override
     public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
@@ -58,7 +57,6 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
             throw new RuntimeException(e);
         }
     }
-    @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
         tcpChannelInterface.send(FactoryMethods.toInetSOcketAddress(dest), toSend, toSend.length, TransmissionType.STRUCTURED_MESSAGE);
@@ -121,7 +119,6 @@ public class BabelNewTCPChannel<T> implements NewIChannel<T>, TCPChannelHandlerM
         return tcpChannelInterface.getConnectionStreamTransmissionType(streamId);
     }
 
-    @Override
     public void onChannelInactive(InetSocketAddress peer, String conId, boolean inConnection) {
         Throwable cause = new Throwable(String.format("CHANNEL %S CLOSED.",peer));
         listener.deliverEvent(new OnConnectionDownEvent(toBabelHost(peer), cause,conId,inConnection));
