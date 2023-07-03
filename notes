@@ -1,5 +1,5 @@
-java -Xmx500M -cp asdProj2.jar mainFiles.Main p2p_port=10101 server_port=35000 &
-java -cp target\nettyStart.jar mainFiles.Main
+java -Xmx500M -cp asdProj2.jar mainFiles.Main5 p2p_port=10101 server_port=35000 &
+java -cp target\nettyStart.jar mainFiles.Main5
 
 java -cp target\nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamSender localhost 8081
 java -cp target\nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamInConnection 8081
@@ -25,13 +25,13 @@ the receiver must be the client
 
 Starting Babel
 
-java -Xmx500M -cp target/nettyStart.jar mainFiles.Main sender=o p2p_port=10101 p2p_port_f=10201
+java -Xmx500M -cp target/nettyStart.jar mainFiles.Main5 sender=o p2p_port=10101 p2p_port_f=10201
 
-java -cp target/nettyStart.jar mainFiles.Main address=localhost port=10101
+java -cp target/nettyStart.jar mainFiles.Main5 address=localhost port=10101
 
-java -cp target/nettyStart.jar mainFiles.Main address=localhost port=10103 sender=o
+java -cp target/nettyStart.jar mainFiles.Main5 address=localhost port=10103 sender=o
 
-java -cp target/nettyStart.jar mainFiles.Main address=localhost port=10109 sender=o forwarder=f
+java -cp target/nettyStart.jar mainFiles.Main5 address=localhost port=10109 sender=o forwarder=f
 
 QUIC
 java -cp target/nettyStart.jar quicSupport.client_server.QuicServerExample

@@ -1,6 +1,6 @@
 package mainFiles;
 
-import appExamples2.appExamples.channels.initializers.BabelStreamInitializer;
+import appExamples2.appExamples.channels.initializers.BabelNewTCPChannelInitializer;
 import appExamples2.appExamples.channels.newTCPChannel.BabelNewTCPChannel;
 import appExamples2.appExamples.protocols.ReceiveFileProtocol;
 import appExamples2.appExamples.protocols.SendFileProtocol;
@@ -8,7 +8,7 @@ import pt.unl.fct.di.novasys.babel.core.Babel;
 
 import java.util.Properties;
 
-public class Main {
+public class Main5 {
     static {
         System.setProperty("log4j.configurationFile", "log4j2.xml");
     }
@@ -19,7 +19,7 @@ public class Main {
 
         //Get the (singleton) pt.unl.fct.di.novasys.babel instance
         Babel babel = Babel.getInstance();
-        babel.registerChannelInitializer(BabelNewTCPChannel.NAME,new BabelStreamInitializer());
+        babel.registerChannelInitializer(BabelNewTCPChannel.NAME,new BabelNewTCPChannelInitializer());
 
 
         //Loads properties from the configuration file, and merges them with

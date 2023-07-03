@@ -1,16 +1,15 @@
 package quicSupport.testing;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.CustomQuicChannel;
 import quicSupport.channels.CustomQuicChannelInterface;
-import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
-import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.enums.NetworkRole;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.io.FileInputStream;
@@ -56,10 +55,6 @@ import java.util.Properties;
     }
     public void readOldMetrics(List<QuicConnectionMetrics> old){
         //TODO
-    }
-
-    @Override
-    public void onStreamCreatedHandler(InetSocketAddress peer, String streamId, TransmissionType type, Triple<Short,Short,Short> args) {
     }
 
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
