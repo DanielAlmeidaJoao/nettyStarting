@@ -3,8 +3,8 @@ package quicSupport.testing;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.ChannelHandlerMethods;
-import quicSupport.channels.CustomQuicChannel;
-import quicSupport.channels.CustomQuicChannelInterface;
+import quicSupport.channels.NettyQUICChannel;
+import quicSupport.channels.NettyChannelInterface;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
@@ -26,14 +26,14 @@ import java.util.Properties;
 
     private static final Logger logger = LogManager.getLogger(TestQuicChannel.class);
     //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(TestQuicChannel.class);
-    private final CustomQuicChannelInterface customQuicChannel;
+    private final NettyChannelInterface customQuicChannel;
 
 
     public TestQuicChannel(Properties properties) throws IOException {
         if(properties.getProperty("SINLGE_TRHEADED")!=null){
             customQuicChannel = new SingleThreadedQuicChannel(properties, NetworkRole.CHANNEL,this);
         }else {
-            customQuicChannel = new CustomQuicChannel(properties,false,NetworkRole.CHANNEL,this);
+            customQuicChannel = new NettyQUICChannel(properties,false,NetworkRole.CHANNEL,this);
         }
     }
 
@@ -180,7 +180,7 @@ import java.util.Properties;
     }
 
     public void createStream(InetSocketAddress peer) {
-        customQuicChannel.createStream(peer, TransmissionType.STRUCTURED_MESSAGE);
+        //customQuicChannel.createStream(peer, TransmissionType.STRUCTURED_MESSAGE);
     }
 
     public void closeStream(String streamId) {

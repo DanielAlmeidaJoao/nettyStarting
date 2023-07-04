@@ -7,15 +7,13 @@ import quicSupport.utils.enums.TransmissionType;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 
-public interface CustomQuicChannelInterface extends SendBytesInterface {
+public interface NettyChannelInterface extends SendBytesInterface {
 
     String open(InetSocketAddress peer, TransmissionType type);
 
     void closeConnection(InetSocketAddress peer);
 
     void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler);
-
-    String createStream(InetSocketAddress peer, TransmissionType type);
 
     void closeLink(String streamId);
 

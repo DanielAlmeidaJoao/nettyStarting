@@ -1,7 +1,7 @@
 package mainFiles;
 
+import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.initializers.BabelNewTCPChannelInitializer;
-import appExamples2.appExamples.channels.newTCPChannel.BabelNewTCPChannel;
 import appExamples2.appExamples.protocols.ReceiveFileProtocol;
 import appExamples2.appExamples.protocols.SendFileProtocol;
 import pt.unl.fct.di.novasys.babel.core.Babel;
@@ -19,7 +19,7 @@ public class Main5 {
 
         //Get the (singleton) pt.unl.fct.di.novasys.babel instance
         Babel babel = Babel.getInstance();
-        babel.registerChannelInitializer(BabelNewTCPChannel.NAME,new BabelNewTCPChannelInitializer());
+        babel.registerChannelInitializer(BabelQUIC_TCP_Channel.NAME_TCP,new BabelNewTCPChannelInitializer());
 
 
         //Loads properties from the configuration file, and merges them with

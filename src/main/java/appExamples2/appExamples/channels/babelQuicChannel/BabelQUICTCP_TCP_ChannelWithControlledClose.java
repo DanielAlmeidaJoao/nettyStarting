@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
+import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
@@ -15,14 +16,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-public class BabelQuicChannelWithControlledClose<T> extends BabelQuicChannel<T> {
-    private static final Logger logger = LogManager.getLogger(BabelQuicChannelWithControlledClose.class);
+public class BabelQUICTCP_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_Channel<T> {
+    private static final Logger logger = LogManager.getLogger(BabelQUICTCP_TCP_ChannelWithControlledClose.class);
     private Map<Host, Set<Short>> hostChannelsMap;
     private Map<String, Set<Short>> streamChannelsMap;
     private Set<Short> registeredProtos;
 
-    public BabelQuicChannelWithControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties,short protoId) throws IOException {
-        super(serializer,list,properties,protoId);
+    public BabelQUICTCP_TCP_ChannelWithControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId, NetworkProtocol networkProtocol) throws IOException {
+        super(serializer,list,properties,protoId,networkProtocol);
         initMaps(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null);
     }
     private void initMaps(boolean singleThreaded){

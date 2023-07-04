@@ -7,7 +7,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.channels.CustomQuicChannel;
+import quicSupport.channels.NettyQUICChannel;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
@@ -17,7 +17,7 @@ import quicSupport.utils.metrics.QuicConnectionMetrics;
 import java.util.List;
 
 public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
-    private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
+    private static final Logger logger = LogManager.getLogger(NettyQUICChannel.class);
     public static final String HANDLER_NAME="QuicDelimitedMessageDecoder";
     private final boolean incoming;
     private final CustomQuicChannelConsumer consumer;

@@ -1,10 +1,9 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import appExamples2.appExamples.channels.FactoryMethods;
-import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicChannel;
+import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
-import appExamples2.appExamples.channels.newTCPChannel.BabelNewTCPChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import io.netty.buffer.Unpooled;
@@ -65,7 +64,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
             channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
             channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"300");
-            channelId = createChannel(BabelQuicChannel.NAME, channelProps);
+            channelId = createChannel(BabelQUIC_TCP_Channel.NAME_QUIC, channelProps);
             registerQUICMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC,null,this::uponMsgFail);
 
         }else{
@@ -75,7 +74,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
 
-            channelId = createChannel(BabelNewTCPChannel.NAME, channelProps);
+            channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP, channelProps);
 
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
 

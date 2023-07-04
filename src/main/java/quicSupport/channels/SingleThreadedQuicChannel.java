@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class SingleThreadedQuicChannel extends CustomQuicChannel {
+public class SingleThreadedQuicChannel extends NettyQUICChannel {
     private final DefaultEventExecutor executor;
 
     public SingleThreadedQuicChannel(Properties properties, NetworkRole role, ChannelHandlerMethods mom) throws IOException {
@@ -98,14 +98,7 @@ public class SingleThreadedQuicChannel extends CustomQuicChannel {
             super.getStats(peer,handler);
         });
     }
-    @Override
-    public String createStream(InetSocketAddress peer, TransmissionType type) {
-        final String streamId = nextId();
-        executor.submit(() -> {
-            super.createStreamLogics(peer,type,streamId);
-        });
-        return streamId;
-    }
+
     @Override
     public void closeLink(String streamId){
         executor.submit(() -> {

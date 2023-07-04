@@ -41,8 +41,8 @@ import java.util.Properties;
 
 import static quicSupport.utils.QUICLogics.*;
 
-public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicChannelInterface {
-    private static final Logger logger = LogManager.getLogger(CustomQuicChannel.class);
+public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannelInterface {
+    private static final Logger logger = LogManager.getLogger(NettyQUICChannel.class);
 
     private final InetSocketAddress self;
     private static boolean enableMetrics;
@@ -63,7 +63,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
     private final ChannelHandlerMethods overridenMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
 
-    public CustomQuicChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom)throws IOException {
+    public NettyQUICChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom)throws IOException {
         this.properties=properties;
         this.overridenMethods = mom;
         InetAddress addr;
@@ -322,9 +322,7 @@ public class CustomQuicChannel implements CustomQuicChannelConsumer, CustomQuicC
         }
         return connections.get(0);
     }
-    public String createStream(InetSocketAddress peer, TransmissionType type) {
-        return createStreamLogics(peer,type,null);
-    }
+
     public String createStreamLogics(InetSocketAddress peer, TransmissionType type,String conId) {
         if(conId == null){
             conId = nextId();

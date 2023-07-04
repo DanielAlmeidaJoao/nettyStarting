@@ -12,13 +12,15 @@ import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import quicSupport.channels.ChannelHandlerMethods;
-import quicSupport.channels.CustomQuicChannel;
-import quicSupport.channels.CustomQuicChannelInterface;
+import quicSupport.channels.NettyQUICChannel;
+import quicSupport.channels.NettyChannelInterface;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
+import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
+import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,10 +30,12 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethods {
-    private static final Logger logger = LogManager.getLogger(BabelQuicChannel.class);
+public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerMethods {
+    private static final Logger logger = LogManager.getLogger(BabelQUIC_TCP_Channel.class);
     public final boolean metrics;
-    public final static String NAME = "BabelQuicChannel";
+    public final static String NAME_TCP = "BABEL_TCP_CHANNEL";
+    public final static String NAME_QUIC = "BABEL_QUIC_CHANNEL";
+
     public final static String METRICS_INTERVAL_KEY = "metrics_interval";
     public final static String DEFAULT_METRICS_INTERVAL = "-1";
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
@@ -39,20 +43,14 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     private final boolean triggerSent;
     private final BabelMessageSerializerInterface<T> serializer;
     private final ChannelListener<T> listener;
-    private final CustomQuicChannelInterface customQuicChannel;
+    private final NettyChannelInterface customQuicChannel;
     public final short protoToReceiveStreamData;
     //private final Map<String,Triple<Short,Short,Short>> unstructuredStreamHandlers;
 
-    public BabelQuicChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId) throws IOException {
+    public BabelQUIC_TCP_Channel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId, NetworkProtocol networkProtocol) throws IOException {
         this.serializer = serializer;
         this.listener = list;
-        if(properties.getProperty("SINLGE_TRHEADED")!=null){
-            customQuicChannel = new SingleThreadedQuicChannel(properties, NetworkRole.CHANNEL,this);
-            System.out.println("SINGLE THREADED CHANNEL");
-        }else {
-            customQuicChannel = new CustomQuicChannel(properties,false,NetworkRole.CHANNEL,this);
-            System.out.println("MULTI THREADED CHANNEL");
-        }
+        customQuicChannel = getQUIC_TCP(properties,networkProtocol);
         metrics = customQuicChannel.enabledMetrics();
 
         if(metrics){
@@ -62,6 +60,29 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
         this.protoToReceiveStreamData = protoId;
         //unstructuredStreamHandlers = new HashMap<>();
+    }
+    private NettyChannelInterface getQUIC_TCP(Properties properties, NetworkProtocol protocol) throws IOException {
+        NettyChannelInterface i;
+        if(NetworkProtocol.QUIC==protocol){
+            if(properties.getProperty("SINLGE_TRHEADED")!=null){
+                i = new SingleThreadedQuicChannel(properties, NetworkRole.CHANNEL,this);
+                System.out.println("SINGLE THREADED CHANNEL");
+            }else {
+                i = new NettyQUICChannel(properties,false,NetworkRole.CHANNEL,this);
+                System.out.println("MULTI THREADED CHANNEL");
+            }
+        }else if(NetworkProtocol.TCP==protocol){
+            if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
+                i = new SingleThreadedStreamingChannel(properties,this, NetworkRole.CHANNEL);
+                System.out.println("SINGLE THREADED CHANNEL");
+            }else {
+                i = new StreamingChannel(properties,false,this,NetworkRole.CHANNEL);
+                System.out.println("MULTI THREADED CHANNEL");
+            }
+        }else{
+            throw new RuntimeException("UNSUPPORTED PROTOCOL BY THIS CLASS: "+protocol);
+        }
+        return i;
     }
     void readMetricsMethod(List<QuicConnectionMetrics> current, List<QuicConnectionMetrics> old){
         QUICMetricsEvent quicMetricsEvent = new QUICMetricsEvent(current,old);
@@ -143,11 +164,6 @@ public class BabelQuicChannel<T> implements NewIChannel<T>, ChannelHandlerMethod
     @Override
     public TransmissionType getTransmissionType(String streamId) {
         return customQuicChannel.getConnectionType(streamId);
-    }
-
-    public String createStream(Host peer, TransmissionType type, short sourceProto, short destProto, short handlerId)
-    {
-        return customQuicChannel.createStream(FactoryMethods.toInetSOcketAddress(peer),type);
     }
 
     public void closeLink(String streamId, short proto){

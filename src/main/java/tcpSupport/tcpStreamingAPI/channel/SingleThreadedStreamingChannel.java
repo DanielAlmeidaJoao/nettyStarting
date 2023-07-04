@@ -4,6 +4,7 @@ import io.netty.channel.Channel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.channels.ChannelHandlerMethods;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import tcpSupport.tcpStreamingAPI.utils.MetricsDisabledException;
@@ -19,7 +20,7 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     private static final Logger logger = LogManager.getLogger(SingleThreadedStreamingChannel.class);
 
     private final DefaultEventExecutor executor;
-    public SingleThreadedStreamingChannel(Properties properties, TCPChannelHandlerMethods chm, NetworkRole role) throws IOException {
+    public SingleThreadedStreamingChannel(Properties properties, ChannelHandlerMethods chm, NetworkRole role) throws IOException {
         super(properties,true,chm,role);
         executor = new DefaultEventExecutor();
     }
@@ -44,7 +45,7 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.onConnectionFailed(channelId,cause));
     }
 
-    public String openConnection(InetSocketAddress peer, TransmissionType type) {
+    public String open(InetSocketAddress peer, TransmissionType type) {
         final String conId = nextId();
         executor.execute(() -> super.openConnectionLogics(peer, type,conId));
         return conId;
@@ -54,8 +55,8 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.closeConnection(peer));
     }
     @Override
-    public void closeConnection(String connectionId) {
-        executor.execute(() -> super.closeConnection(connectionId));
+    public void closeLink(String connectionId) {
+        executor.execute(() -> super.closeLink(connectionId));
     }
     @Override
     public void send(InetSocketAddress host, byte[] message, int len,TransmissionType transmissionType){
