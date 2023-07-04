@@ -224,10 +224,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
         connection.close();
     }
 
-    @Override
-    public void readMetrics(QuicReadMetricsHandler handler) {
-        new Exception("TO DO").printStackTrace();
-    }
+
 
     private void sendPendingMessages(CustomTCPConnection customTCPConnection, TransmissionType type){
         TCPConnectingObject connectingObject = nettyIdTOConnectingOBJ.remove(customTCPConnection.conId);
@@ -344,8 +341,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
 
     @Override
     public boolean enabledMetrics() {
-        new Exception("TO DO").printStackTrace();
-        return false;
+        return metricsOn;
     }
 
     @Override
@@ -357,7 +353,6 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
     public InetSocketAddress[] getAddressToQUICCons() {
         return addressToConnections.keySet().toArray(new InetSocketAddress[addressToConnections.size()]);
     }
-
 
     @Override
     public int connectedPeers() {
@@ -410,11 +405,15 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
         channelHandlerMethods.onOpenConnectionFailed(peer,cause);
     }
 
-    protected void readMetrics(ReadMetricsHandler handler) throws MetricsDisabledException {
+    public void readMetrics(ReadMetricsHandler handler) throws MetricsDisabledException {
         if(metricsOn){
             handler.readMetrics(tcpStreamMetrics.currentMetrics(),tcpStreamMetrics.oldMetrics());
         }else {
             throw new MetricsDisabledException("METRICS WAS NOT ENABLED!");
         }
+    }
+    @Override
+    public void readMetrics(QuicReadMetricsHandler handler) {
+        new Exception("TO DO").printStackTrace();
     }
 }
