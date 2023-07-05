@@ -164,7 +164,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
             }
             sendPendingMessages(connection,type);
             //    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId);
-            channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId);
+            channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId, ios);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();

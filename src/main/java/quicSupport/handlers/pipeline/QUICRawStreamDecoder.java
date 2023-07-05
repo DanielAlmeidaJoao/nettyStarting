@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.customConnections.CustomQUICStreamCon;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -27,15 +28,22 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+
+        QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
+        CustomQUICStreamCon streamCon = consumer.getCustomQuicStreamCon(ch.id().asShortText());
+
         byte [] data = new byte[msg.readableBytes()];
         msg.readBytes(data);
-        QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        consumer.onReceivedStream(ch.id().asShortText(),data);
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
             q.setReceivedAppBytes(q.getReceivedAppBytes()+data.length+ QUICLogics.WRT_OFFSET);
         }
+        switch (streamCon.outputStream.streamType){
+            case BYTES: consumer.onReceivedStream(streamCon,data);break;
+            case INPUT_STREAM: streamCon.outputStream.outputStream.write(data);
+        }
+
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

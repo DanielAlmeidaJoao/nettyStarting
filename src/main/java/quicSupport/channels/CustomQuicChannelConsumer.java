@@ -1,6 +1,7 @@
 package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
+import quicSupport.utils.customConnections.CustomQUICStreamCon;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
@@ -18,12 +19,12 @@ public interface CustomQuicChannelConsumer {
 
     void onReceivedDelimitedMessage(String streamId, byte[] bytes);
 
-    void onReceivedStream(String streamId, byte [] bytes);
+    void onReceivedStream(CustomQUICStreamCon streamId, byte [] bytes);
 
     void streamInactiveHandler(QuicStreamChannel channel);
 
     void streamErrorHandler(QuicStreamChannel channel, Throwable throwable);
 
     String nextId();
-
+    CustomQUICStreamCon getCustomQuicStreamCon(String nettyChanId);
     }

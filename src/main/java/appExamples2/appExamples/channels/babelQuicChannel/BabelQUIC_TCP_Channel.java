@@ -19,6 +19,7 @@ import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
+import quicSupport.utils.streamUtils.BabelInputStream;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 
@@ -240,10 +241,10 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d);
     }
 
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream ios) {
         Host host = FactoryMethods.toBabelHost(peer);
         logger.debug("OnConnectionUpEvent " + host);
-        listener.deliverEvent(new OnConnectionUpEvent(host,type,customConId,incoming));
+        listener.deliverEvent(new OnConnectionUpEvent(host,type,customConId,incoming,ios));
     }
     /**
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {

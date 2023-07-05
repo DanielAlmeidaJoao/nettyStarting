@@ -4,7 +4,9 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
+import quicSupport.utils.customConnections.CustomQUICStreamCon;
 import quicSupport.utils.enums.NetworkRole;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
@@ -48,7 +50,7 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
         });
     }
     @Override
-    public void onReceivedStream(String streamId, byte [] bytes) {
+    public void onReceivedStream(CustomQUICStreamCon streamId, byte [] bytes) {
         executor.submit(() -> {
             super.onReceivedStream(streamId, bytes);
         });
@@ -82,7 +84,7 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
     public String open(InetSocketAddress peer, TransmissionType type) {
         final String id = nextId();
         executor.submit(() -> {
-            super.openLogics(peer,type,id);
+            super.openLogics(peer,type, StreamType.BYTES, id);
         });
         return id;
     }

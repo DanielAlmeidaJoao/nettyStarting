@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.NettyQUICChannel;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
@@ -29,6 +30,13 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         this.metrics=metrics;
     }
 
+    private StreamType fromOrdinalToStreamType(int ordinal){
+        if(StreamType.INPUT_STREAM.ordinal()==ordinal){
+            return StreamType.INPUT_STREAM;
+        }else{
+            return StreamType.BYTES;
+        }
+    }
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
         System.out.println("RECEVEID HERE "+ctx.channel().id().asShortText());
@@ -62,10 +70,11 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }
         }else if(QUICLogics.STREAM_CREATED==msgType){
             msg = Unpooled.copiedBuffer(data);
-            int ordinal = msg.readInt();
+            int ordinalTransmissionType = msg.readInt();
+            StreamType streamType = fromOrdinalToStreamType(msg.readInt());
             msg.release();
             TransmissionType type;
-            if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
+            if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinalTransmissionType){
                 type = TransmissionType.UNSTRUCTURED_STREAM;
                 ch.pipeline().replace(QuicStructuredMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
@@ -78,7 +87,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
                 q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
             }
-            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,consumer.nextId(),true);
+            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,consumer.nextId(),true,streamType);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
             consumer.channelActive(ch,data,null, TransmissionType.STRUCTURED_MESSAGE);
             if(metrics!=null){

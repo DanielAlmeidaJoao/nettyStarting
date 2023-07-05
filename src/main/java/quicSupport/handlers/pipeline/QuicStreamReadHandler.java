@@ -9,6 +9,7 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.client_server.QuicServerExample;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
@@ -25,7 +26,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
         this.metrics = metrics;
     }
 
-    public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, String customId, boolean inConnection){
+    public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, String customId, boolean inConnection, StreamType streamType){
         if(metrics!=null){
             QuicConnectionMetrics m = metrics.getConnectionMetrics(quicStreamChannel.parent().remoteAddress());
             m.setStreamCount(m.getStreamCount()+1);

@@ -8,6 +8,7 @@ import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
+import quicSupport.utils.streamUtils.BabelInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -103,10 +104,10 @@ public class BabelQUICTCP_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TC
     }
     //////
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId){
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream ios){
         hostChannelsMap.computeIfAbsent(FactoryMethods.toBabelHost(peer),host1 -> new HashSet<>());
         streamChannelsMap.computeIfAbsent(customConId,s -> new HashSet<>());
-        super.onConnectionUp(incoming,peer, type, customConId);
+        super.onConnectionUp(incoming,peer, type, customConId, ios);
     }
 
     @Override
