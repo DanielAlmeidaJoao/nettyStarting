@@ -23,11 +23,11 @@ public class QUICConnectingOBJ {
         connectionsToOpen = null;
     }
 
-    public void addToQueue(String customConId, TransmissionType type){
+    public void addToQueue(String customConId, TransmissionType type, StreamType streamType){
         if(connectionsToOpen == null){
             connectionsToOpen = new LinkedList<>();
         }
-        connectionsToOpen.add(Triple.of(customConId,type));
+        connectionsToOpen.add(Triple.of(customConId,type,streamType));
     }
 
 }

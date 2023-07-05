@@ -13,6 +13,7 @@ import quicSupport.channels.NettyChannelInterface;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.connectionSetups.StreamInConnection;
 import tcpSupport.tcpStreamingAPI.connectionSetups.StreamOutConnection;
@@ -164,7 +165,8 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
             }
             sendPendingMessages(connection,type);
             //    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId);
-            channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId, ios);
+            new Exception("IMPLEMENT INPUT_STREAM TYPE").printStackTrace();
+            channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId,null);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();
@@ -185,10 +187,16 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
     /******************************************* CHANNEL EVENTS ****************************************************/
 
     /******************************************* USER EVENTS ****************************************************/
-    public String open(InetSocketAddress peer, TransmissionType type) {
-        return openConnectionLogics(peer,type,null);
+    public String openMessageConnection(InetSocketAddress peer) {
+        return openConnectionLogics(peer,TransmissionType.STRUCTURED_MESSAGE,null, null);
     }
-    public String openConnectionLogics(InetSocketAddress peer, TransmissionType type, String conId) {
+
+    @Override
+    public String openStreamConnection(InetSocketAddress peer, StreamType streamType) {
+        return openConnectionLogics(peer,TransmissionType.UNSTRUCTURED_STREAM,null,streamType);
+    }
+
+    public String openConnectionLogics(InetSocketAddress peer, TransmissionType type, String conId, StreamType streamType) {
         if(conId == null ){
             conId = nextId();
         }
@@ -329,7 +337,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
                 pendingMessages.pendingMessages.add(Pair.of(message,len));
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             }else if(connectIfNotConnected){
-                String conId = openConnectionLogics(peer,type,null);
+                String conId = openConnectionLogics(peer,type,null, null);
                 nettyIdTOConnectingOBJ.get(conId).pendingMessages.add(Pair.of(message,len));
             }else{
                 channelHandlerMethods.onMessageSent(message,null,len,new Throwable("Unknown Peer : "+peer),peer,type);

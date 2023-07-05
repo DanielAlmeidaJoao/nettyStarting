@@ -16,6 +16,7 @@ import pt.unl.fct.di.novasys.babel.internal.NotificationEvent;
 import pt.unl.fct.di.novasys.babel.internal.TimerEvent;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
 import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.FileInputStream;
@@ -363,14 +364,20 @@ public class Babel {
      * Opens a connection to a peer in the given channel.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
-    String openConnection(int channelId, Host target, short proto, TransmissionType transmissionType) {
+    String openMessageConnection(int channelId, Host target, short proto) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Opening connection in non-existing channelId " + channelId);
-        return channelEntry.getLeft().openConnection(target,proto, transmissionType);
+        return channelEntry.getLeft().openMessageConnection(target,proto);
     }
-
+    String openStreamConnection(int channelId, Host target, short proto, StreamType streamType) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Opening connection in non-existing channelId " + channelId);
+        return channelEntry.getLeft().openStreamConnection(target,proto,streamType);
+    }
     /**
      * Registers a (de)serializer for a message type.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.

@@ -17,6 +17,7 @@ import quicSupport.channels.NettyChannelInterface;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 import quicSupport.utils.streamUtils.BabelInputStream;
@@ -153,8 +154,13 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
-    public String openConnection(Host peer, short proto, TransmissionType type) {
-        return customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),type);
+    public String openMessageConnection(Host peer, short proto) {
+        return customQuicChannel.openMessageConnection(FactoryMethods.toInetSOcketAddress(peer));
+    }
+    @Override
+    public String openStreamConnection(Host var1, short protoId, StreamType streamType) {
+        return customQuicChannel.openStreamConnection(FactoryMethods.toInetSOcketAddress(var1),streamType);
+
     }
 
     @Override

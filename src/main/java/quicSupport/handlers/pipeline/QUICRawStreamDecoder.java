@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.customConnections.CustomQUICStreamCon;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
@@ -39,9 +40,16 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
             q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
             q.setReceivedAppBytes(q.getReceivedAppBytes()+data.length+ QUICLogics.WRT_OFFSET);
         }
-        switch (streamCon.outputStream.streamType){
+        StreamType type;
+        if(streamCon.babelOutputStream==null){
+            type = StreamType.BYTES;
+        }else{
+            type = streamCon.babelOutputStream.streamType;
+        }
+
+        switch (type){
             case BYTES: consumer.onReceivedStream(streamCon,data);break;
-            case INPUT_STREAM: streamCon.outputStream.outputStream.write(data);
+            case INPUT_STREAM: streamCon.babelOutputStream.outputStream.write(data);
         }
 
     }

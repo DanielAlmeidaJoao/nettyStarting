@@ -45,9 +45,9 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
         executor.execute(() -> super.onConnectionFailed(channelId,cause));
     }
 
-    public String open(InetSocketAddress peer, TransmissionType type) {
+    public String openMessageConnection(InetSocketAddress peer) {
         final String conId = nextId();
-        executor.execute(() -> super.openConnectionLogics(peer, type,conId));
+        executor.execute(() -> super.openConnectionLogics(peer,TransmissionType.STRUCTURED_MESSAGE,conId,null));
         return conId;
     }
     @Override

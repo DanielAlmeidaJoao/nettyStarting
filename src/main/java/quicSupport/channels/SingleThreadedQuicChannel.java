@@ -37,10 +37,10 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
         });
     }
     @Override
-    public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type,String customId, boolean inConnection) {
+    public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, String customId, boolean inConnection, StreamType streamType) {
         executor.submit(() ->
         {
-            super.streamCreatedHandler(channel, type, customId, inConnection);
+            super.streamCreatedHandler(channel, type, customId, inConnection, streamType);
         });
     }
     @Override
@@ -66,9 +66,9 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
 
     /*********************************** Channel Handlers **********************************/
     @Override
-    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData, InetSocketAddress remotePeer, TransmissionType type){
+    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData, InetSocketAddress remotePeer, TransmissionType type, StreamType streamType){
         executor.submit(() -> {
-            super.channelActive(streamChannel,controlData,remotePeer,type);
+            super.channelActive(streamChannel,controlData,remotePeer,type, streamType);
         });
     }
     @Override
@@ -81,10 +81,18 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
     /*********************************** Channel Handlers **********************************/
 
     /*********************************** User Actions **************************************/
-    public String open(InetSocketAddress peer, TransmissionType type) {
+    public String openMessageConnection(InetSocketAddress peer) {
         final String id = nextId();
         executor.submit(() -> {
-            super.openLogics(peer,type, StreamType.BYTES, id);
+            super.openLogics(peer,TransmissionType.STRUCTURED_MESSAGE,StreamType.BYTES, id);
+        });
+        return id;
+    }
+    @Override
+    public String openStreamConnection(InetSocketAddress peer, StreamType streamType){
+        final String id = nextId();
+        executor.submit(() -> {
+            super.openLogics(peer,TransmissionType.UNSTRUCTURED_STREAM,streamType,id);
         });
         return id;
     }

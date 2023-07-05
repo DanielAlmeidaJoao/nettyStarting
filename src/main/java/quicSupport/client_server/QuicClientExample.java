@@ -32,6 +32,7 @@ import quicSupport.handlers.pipeline.QuicClientChannelConHandler;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
@@ -92,7 +93,7 @@ public final class QuicClientExample {
         clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
     }
-    public String connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType, String id) throws Exception{
+    public String connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType, String id, StreamType streamType) throws Exception{
         Bootstrap bs = new Bootstrap();
 
         Channel channel = bs.group(group)
@@ -101,7 +102,7 @@ public final class QuicClientExample {
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
-                .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics, transmissionType))
+                .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics, transmissionType,streamType))
                 .streamHandler(new ServerChannelInitializer(consumer,metrics,QUICLogics.OUTGOING_CONNECTION))
                 .remoteAddress(remote)
                 .attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY),id)

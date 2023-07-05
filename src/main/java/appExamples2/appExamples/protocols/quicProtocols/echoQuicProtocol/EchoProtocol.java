@@ -14,6 +14,7 @@ import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
@@ -99,7 +100,7 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                System.out.println(openStreamConnection(dest,channelId));
+                System.out.println(openStreamConnection(dest,channelId, StreamType.INPUT_STREAM));
                 //registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
                 //setupPeriodicTimer(new SampleTimer(),8000L,5000L);
             }
@@ -144,9 +145,9 @@ public class EchoProtocol extends GenericProtocolExtension {
         try{
             Host host = new Host(myself.getAddress(),Integer.parseInt(port));
             if("M".equalsIgnoreCase(type)){
-                System.out.println("OPENNED MESSAGE CONNECTION "+openConnection(host));
+                System.out.println("OPENNED MESSAGE CONNECTION "+ openMessageConnection(host));
             }else {
-                System.out.println("OPENNED STREAM CONNECTION"+openStreamConnection(host,channelId));
+                System.out.println("OPENNED STREAM CONNECTION"+openStreamConnection(host,channelId,StreamType.BYTES));
             }
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -250,6 +251,10 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}. conId: {}",event.getNode(),event.type,event.conId);
         if(dest==null){
             dest = event.getNode();
+        }
+        System.out.println("INPUT STREAM: "+(event.babelInputStream!=null));
+        if(event.babelInputStream!=null){
+            sendStream(channelId,event.babelInputStream.inputStream,event.conId);
         }
         //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.conId));
         /**

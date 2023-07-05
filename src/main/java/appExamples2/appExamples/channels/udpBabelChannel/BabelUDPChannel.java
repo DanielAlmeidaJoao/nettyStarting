@@ -10,6 +10,7 @@ import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
 import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import udpSupport.channels.SingleThreadedUDPChannel;
@@ -126,28 +127,29 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void sendStream(byte[] stream,int len,String streamId, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC CHANNELS").printStackTrace();
+        unsupportedOperation();
     }
 
     @Override
     public void sendStream(byte[] msg,int len,Host host, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
+        unsupportedOperation();
     }
 
     @Override
     public void sendStream(InputStream inputStream, int len,Host dest, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
+        unsupportedOperation();
     }
     @Override
     public void sendStream(InputStream inputStream, int len,String conId, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-    }
+        unsupportedOperation();    }
     @Override
     public void sendStream(InputStream inputStream,Host dest, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-    }
+        unsupportedOperation();    }
     @Override
     public void sendStream(InputStream inputStream, String conId, short proto) {
+        unsupportedOperation();
+    }
+    private void unsupportedOperation(){
         new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
     }
     @Override
@@ -215,12 +217,18 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public String openConnection(Host peer, short proto, TransmissionType streamType) {
+    public String openMessageConnection(Host peer, short proto) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         String id = nextId();
         customConIDToAddress.put(id,peer);
         listener.deliverEvent(new OnConnectionDownEvent(peer,null,id,true));
         return id;
+    }
+
+    @Override
+    public String openStreamConnection(Host var1, short protoId, StreamType streamType) {
+        unsupportedOperation();
+        return null;
     }
 
     @Override

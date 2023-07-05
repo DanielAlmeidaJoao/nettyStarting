@@ -56,7 +56,7 @@ public class SendFileProtocol extends GenericProtocol {
         registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
         try {
         Host peer = new Host(InetAddress.getByName("localhost"),Integer.parseInt(properties.getProperty("p2p_port")));
-        openConnection(peer);
+        openMessageConnection(peer);
         logger.info("OPENING CONNECTION TO {}",peer);
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);

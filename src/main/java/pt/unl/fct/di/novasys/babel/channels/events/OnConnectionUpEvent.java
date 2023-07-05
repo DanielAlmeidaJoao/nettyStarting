@@ -15,6 +15,7 @@ public class OnConnectionUpEvent extends TCPEvent {
     public final TransmissionType type;
     public final String conId;
     public final boolean inConnection;
+    public final BabelInputStream babelInputStream;
 
     @Override
     public String toString() {
@@ -32,6 +33,7 @@ public class OnConnectionUpEvent extends TCPEvent {
         this.type = type;
         this.conId = customConId;
         this.inConnection = inConnection;
+        this.babelInputStream = ios;
     }
 
 

@@ -2,6 +2,7 @@ package quicSupport.channels;
 
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.InputStream;
@@ -9,7 +10,8 @@ import java.net.InetSocketAddress;
 
 public interface NettyChannelInterface extends SendBytesInterface {
 
-    String open(InetSocketAddress peer, TransmissionType type);
+    String openMessageConnection(InetSocketAddress peer);
+    String openStreamConnection(InetSocketAddress peer, StreamType streamType);
 
     void closeConnection(InetSocketAddress peer);
 

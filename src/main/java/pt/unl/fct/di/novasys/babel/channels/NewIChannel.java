@@ -1,6 +1,7 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
 import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.InputStream;
@@ -8,7 +9,8 @@ import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
-    String openConnection(Host var1, short protoId, TransmissionType type);
+    String openMessageConnection(Host var1, short protoId);
+    String openStreamConnection(Host var1, short protoId, StreamType streamType);
     void sendMessage(T var1, Host var2, short protoId);
     void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId);
     void sendMessage(T msg,String linkId,short proto);

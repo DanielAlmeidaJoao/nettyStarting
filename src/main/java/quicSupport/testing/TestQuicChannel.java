@@ -169,7 +169,7 @@ import java.util.Properties;
     }
 
     public void open(InetSocketAddress remote) {
-        customQuicChannel.open(remote, TransmissionType.STRUCTURED_MESSAGE);
+        customQuicChannel.openMessageConnection(remote);
     }
 
     public void closeConnection(InetSocketAddress peer) {

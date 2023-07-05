@@ -10,6 +10,7 @@ import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.enums.StreamType;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
@@ -88,7 +89,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                openStreamConnection(dest,channelId);
+                openStreamConnection(dest,channelId, StreamType.BYTES);
             }
         } catch (Exception e) {
             logger.error("Error registering message handler: " + e.getMessage());

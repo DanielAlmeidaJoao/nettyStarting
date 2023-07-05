@@ -31,7 +31,7 @@ public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
             QuicConnectionMetrics m = metrics.getConnectionMetrics(quicStreamChannel.parent().remoteAddress());
             m.setStreamCount(m.getStreamCount()+1);
         }
-        consumer.streamCreatedHandler(quicStreamChannel,type,customId,inConnection);
+        consumer.streamCreatedHandler(quicStreamChannel,type,customId,inConnection,streamType);
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {

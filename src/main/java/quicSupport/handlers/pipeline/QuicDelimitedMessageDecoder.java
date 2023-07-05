@@ -71,15 +71,17 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         }else if(QUICLogics.STREAM_CREATED==msgType){
             msg = Unpooled.copiedBuffer(data);
             int ordinalTransmissionType = msg.readInt();
-            StreamType streamType = fromOrdinalToStreamType(msg.readInt());
-            msg.release();
+            StreamType streamType = StreamType.BYTES;
             TransmissionType type;
             if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinalTransmissionType){
+                streamType = fromOrdinalToStreamType(msg.readInt());
+                msg.release();
                 type = TransmissionType.UNSTRUCTURED_STREAM;
                 ch.pipeline().replace(QuicStructuredMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
                 System.out.println("RECEIVED STREAM CREATED MESSAGE MMMMMMMMM");
             }else{
+                msg.release();
                 type = TransmissionType.STRUCTURED_MESSAGE;
             }
             if(metrics!=null){
@@ -89,7 +91,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }
             ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,consumer.nextId(),true,streamType);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
-            consumer.channelActive(ch,data,null, TransmissionType.STRUCTURED_MESSAGE);
+            consumer.channelActive(ch,data,null, TransmissionType.STRUCTURED_MESSAGE,null);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);

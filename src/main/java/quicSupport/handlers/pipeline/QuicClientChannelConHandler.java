@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
+import quicSupport.utils.enums.StreamType;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 
@@ -21,13 +22,15 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     private final CustomQuicChannelConsumer consumer;
     private final QuicChannelMetrics metrics;
     private final TransmissionType transmissionType;
+    public final StreamType streamType;
 
-    public QuicClientChannelConHandler(InetSocketAddress self, InetSocketAddress remote, CustomQuicChannelConsumer consumer, QuicChannelMetrics  metrics, TransmissionType transmissionType) {
+    public QuicClientChannelConHandler(InetSocketAddress self, InetSocketAddress remote, CustomQuicChannelConsumer consumer, QuicChannelMetrics  metrics, TransmissionType transmissionType, StreamType streamType) {
         this.self = self;
         this.remote = remote;
         this.consumer = consumer;
         this.metrics = metrics;
         this.transmissionType = transmissionType;
+        this.streamType = streamType;
     }
 
     @Override
@@ -38,12 +41,12 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
             metrics.initConnectionMetrics(out.remoteAddress());
         }
         QuicStreamChannel streamChannel = QUICLogics.createStream(out,consumer,metrics,false);
-        QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(), transmissionType);
+        QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(), transmissionType,streamType);
         byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
         streamChannel.writeAndFlush(QUICLogics.bufToWrite(hs.length,hs,QUICLogics.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
-                        consumer.channelActive(streamChannel,null,remote, transmissionType);
+                        consumer.channelActive(streamChannel,null,remote, transmissionType,streamType);
                     }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
                         consumer.streamErrorHandler(streamChannel,future.cause());
