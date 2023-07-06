@@ -10,6 +10,7 @@ import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 
 import java.util.List;
 
@@ -27,14 +28,16 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-        byte [] data = new byte[msg.readableBytes()];
-        msg.readBytes(data);
+        //byte [] data = new byte[msg.readableBytes()];
+        //msg.readBytes(data);
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        consumer.onReceivedStream(ch.id().asShortText(),data);
+        BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(msg);
+        consumer.onReceivedStream(ch.id().asShortText(),babelInBytesWrapper);
+        int readAble = msg.readableBytes();
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
-            q.setReceivedAppBytes(q.getReceivedAppBytes()+data.length+ QUICLogics.WRT_OFFSET);
+            q.setReceivedAppBytes(q.getReceivedAppBytes()+readAble+ QUICLogics.WRT_OFFSET);
         }
     }
     @Override

@@ -19,6 +19,7 @@ import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 
@@ -224,18 +225,18 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
 
-    public void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadDelimitedMessage(String connectionId, byte[] bytes, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {
-            FactoryMethods.deserialize(bytes,serializer,listener,from,streamId);
+            FactoryMethods.deserialize(bytes,serializer,listener,from,connectionId);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
     @Override
-    public void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadFlowStream(String streamId, BabelInBytesWrapper bytes, InetSocketAddress from) {
         short d = protoToReceiveStreamData;
         listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d);
     }

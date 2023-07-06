@@ -11,7 +11,7 @@ public class BytesMessageSentOrFail extends ProtoMessage {
     public final InputStream inputStream;
     public BytesMessageSentOrFail(short id, byte [] data, InputStream inputStream, int dataLen) {
         super(id);
-        this.data =data;
+        this.data = data;
         this.dataLen=dataLen;
         this.inputStream = inputStream;
     }

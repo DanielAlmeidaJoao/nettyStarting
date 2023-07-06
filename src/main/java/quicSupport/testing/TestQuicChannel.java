@@ -11,6 +11,7 @@ import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -99,7 +100,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadFlowStream(String streamId, BabelInBytesWrapper bytes, InetSocketAddress from) {
         //TODO
         System.out.println("READ STREAAAAAAAM");
     }

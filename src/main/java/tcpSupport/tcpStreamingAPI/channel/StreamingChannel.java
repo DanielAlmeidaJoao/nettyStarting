@@ -14,6 +14,7 @@ import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 import tcpSupport.tcpStreamingAPI.connectionSetups.StreamInConnection;
 import tcpSupport.tcpStreamingAPI.connectionSetups.StreamOutConnection;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
@@ -125,17 +126,22 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
         channelHandlerMethods.onStreamClosedHandler(connection.host,connection.conId,connection.inConnection);
     }
 
-    public void onChannelRead(String channelId, byte[] bytes, TransmissionType type){
+    public void onChannelMessageRead(String channelId, byte[] bytes){
         CustomTCPConnection connection = nettyIdToConnection.get(channelId);
         if(connection==null){
             logger.info("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
-        }else if(TransmissionType.STRUCTURED_MESSAGE==type){
+        }else {
             channelHandlerMethods.onChannelReadDelimitedMessage(connection.conId,bytes,connection.host);
-        }else{
-            channelHandlerMethods.onChannelReadFlowStream(connection.conId,bytes,connection.host);
         }
     }
-
+    public void onChannelStreamRead(String channelId, BabelInBytesWrapper babelInBytesWrapper){
+        CustomTCPConnection connection = nettyIdToConnection.get(channelId);
+        if(connection==null){
+            logger.info("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
+        }else {
+            channelHandlerMethods.onChannelReadFlowStream(connection.conId,babelInBytesWrapper,connection.host);
+        }
+    }
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type){
         try {
             boolean inConnection;

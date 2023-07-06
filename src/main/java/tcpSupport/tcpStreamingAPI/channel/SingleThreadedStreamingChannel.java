@@ -5,6 +5,7 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.ChannelHandlerMethods;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import tcpSupport.tcpStreamingAPI.utils.MetricsDisabledException;
@@ -31,8 +32,13 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     }
 
     @Override
-    public void onChannelRead(String channelId, byte[] bytes, TransmissionType type) {
-        executor.execute(() -> super.onChannelRead(channelId,bytes, type));
+    public void onChannelMessageRead(String channelId, byte[] bytes) {
+        executor.execute(() -> super.onChannelMessageRead(channelId,bytes));
+    }
+
+    @Override
+    public void onChannelStreamRead(String channelId, BabelInBytesWrapper babelInBytesWrapper) {
+        executor.execute(() -> super.onChannelStreamRead(channelId,babelInBytesWrapper));
     }
 
     @Override

@@ -45,7 +45,7 @@ public class EchoProtocol2 extends GenericProtocol {
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             //registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerMessageHandler(channelId, EchoMessage2.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
+            //registerMessageHandler(channelId, EchoMessage2.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);

@@ -52,8 +52,8 @@ public class SendFileProtocol extends GenericProtocol {
         //registerMessageSerializer(channelId,StreamMessage.ID, StreamMessage.serializer);
         //registerMessageHandler(channelId,JoinRequestMessage.MSG_ID,this::uponJoinRequestMessage,this::uponMsgFail);
         registerChannelEventHandler(channelId, OnConnectionDownEvent.EVENT_ID, this::uponInConnectionUp);
-        registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
-        registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
+        //registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
+        //registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
         try {
         Host peer = new Host(InetAddress.getByName("localhost"),Integer.parseInt(properties.getProperty("p2p_port")));
         openConnection(peer);

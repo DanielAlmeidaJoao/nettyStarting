@@ -26,6 +26,7 @@ import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 import tcpSupport.tcpStreamingAPI.utils.SendStreamContinuoslyLogics;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
@@ -169,10 +170,10 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,bytes,streamCon.customQUICConnection.getRemote());
         }
     }
-    public void onReceivedStream(String streamId, byte [] bytes){
+    public void onReceivedStream(String streamId, BabelInBytesWrapper babelInBytesWrapper){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon != null){
-            overridenMethods.onChannelReadFlowStream(streamCon.customStreamId,bytes,streamCon.customQUICConnection.getRemote());
+            overridenMethods.onChannelReadFlowStream(streamCon.customStreamId,babelInBytesWrapper,streamCon.customQUICConnection.getRemote());
         }
     }
 

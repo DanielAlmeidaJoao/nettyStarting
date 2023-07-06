@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
+import pt.unl.fct.di.novasys.babel.internal.BabelInBytesWrapperEvent;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
@@ -20,7 +21,6 @@ import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.List;
 import java.util.Properties;
 
 public class EchoProtocol extends GenericProtocolExtension {
@@ -65,7 +65,6 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
             channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"300");
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_QUIC, channelProps);
-            registerQUICMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC,null,this::uponMsgFail);
 
         }else{
             System.out.println("TCP ON");
@@ -76,7 +75,6 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP, channelProps);
 
-            registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
 
         }
         return channelId;
@@ -87,10 +85,11 @@ public class EchoProtocol extends GenericProtocolExtension {
         registerMessageSerializer(channelId, EchoMessage.MSG_ID, EchoMessage.serializer);
         /*---------------------- Register Message Handlers -------------------------- */
         try {
+            registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail3);
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
-            registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
+            //registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionUp);
 
@@ -263,20 +262,13 @@ public class EchoProtocol extends GenericProtocolExtension {
     private void uponBytesMessage(BytesMessageInEvent event) {
         logger.info("Received bytes3: {} from {}", new String(event.getMsg()),event.getFrom());
     }
-    private void uponStreamBytes(BytesMessageInEvent event) {
-        logger.info("Received bytes4: {} from {}",event.getMsg().length,event.getFrom());
-        List<Integer> numbs = event.readDataAsInteger();
-        System.out.println("LEN "+numbs.size());
-        for (Integer numb : numbs) {
-            System.out.println("NUMBERES "+numb);
-        }
+    private void uponStreamBytes(BabelInBytesWrapperEvent event) {
+        logger.info("Received bytes4: {} from {}",event.babelInBytesWrapper.availableBytes,event.getFrom());
     }
     private void uponStreamBytes2(BytesMessageInEvent event) {
         logger.info("Received 2bytes2: {} from {}",event.getMsg().length,event.getFrom());
     }
-    private void uponFloodMessage(EchoMessage msg, Host from, short sourceProto, int channelId) {
-        logger.info("Received {} from {}", msg.getMessage(), from);
-    }
+
     private void uponFloodMessageQUIC(EchoMessage msg, Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received QUIC {} from {} {}", msg.getMessage(), from, streamId);
     }

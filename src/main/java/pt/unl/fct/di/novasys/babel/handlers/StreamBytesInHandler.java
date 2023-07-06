@@ -1,7 +1,6 @@
 package pt.unl.fct.di.novasys.babel.handlers;
 
-import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
+import pt.unl.fct.di.novasys.babel.internal.BabelInBytesWrapperEvent;
 
 /**
  * Represents an operation that accepts a single input argument and returns no
@@ -10,13 +9,13 @@ import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
  *
  */
 @FunctionalInterface
-public interface MessageInHandler<T extends ProtoMessage> {
+public interface StreamBytesInHandler {
 
     /**
      * Performs this operation on the ProtocolMessage.
      *
      * @param msg the received message
      */
-    void receive(T msg, Host from, short sourceProto, int channelId, String connectionId);
+    void receive(BabelInBytesWrapperEvent dataInEvent);
 
 }

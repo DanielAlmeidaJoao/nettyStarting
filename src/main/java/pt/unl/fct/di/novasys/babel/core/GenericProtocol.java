@@ -43,6 +43,7 @@ public abstract class GenericProtocol {
     int defaultChannel;
 
     final Map<Integer, ChannelHandlers> channels;
+
     final Map<Short, TimerHandler<? extends ProtoTimer>> timerHandlers;
     final Map<Short, RequestHandler<? extends ProtoRequest>> requestHandlers;
     final Map<Short, ReplyHandler<? extends ProtoReply>> replyHandlers;
@@ -223,16 +224,17 @@ public abstract class GenericProtocol {
         if (sentHandler != null) registerHandler(msgId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
-
-    protected final <V extends ProtoMessage> void registerQUICMessageHandler(int cId, short msgId,
-                                                                         QUICMessageInHandler<V> inHandler,
+    protected final <V extends ProtoMessage> void registerStreamHandler(int cId, short msgId,
+                                                                         StreamBytesInHandler inHandler,
                                                                          MessageSentHandler<V> sentHandler,
                                                                          MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerHandler(msgId, inHandler, getChannelOrThrow(cId).quicMessageInHandlerMap);
+        registerHandler(msgId, inHandler, getChannelOrThrow(cId).streamBytesInHandlerMap);
+
         if (sentHandler != null) registerHandler(msgId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
+
     protected final <V extends ProtoMessage> void registerBytesMessageHandler(int cId,short msgHandlerId,
                                                                                BytesMessageInHandler<V> inHandler,
                                                                                MessageSentHandler<V> sentHandler,
@@ -242,24 +244,15 @@ public abstract class GenericProtocol {
         if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
-    protected final <V extends ProtoMessage> void registerMandatoryStreamDataHandler(int cId,BytesMessageInHandler<V> inHandler,
+    protected final <V extends ProtoMessage> void registerMandatoryStreamDataHandler(int cId,StreamBytesInHandler inHandler,
                                                                               MessageSentHandler<V> sentHandler,
                                                                               MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
         short msgHandlerId = babel.protoToReceiveStreamData(cId);
-        registerHandler(msgHandlerId, inHandler, getChannelOrThrow(cId).bytesMessageInHandlerMap);
+        registerHandler(msgHandlerId, inHandler, getChannelOrThrow(cId).streamBytesInHandlerMap);
         if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
-    protected final <V extends ProtoMessage> void registerStreamDataHandler(int cId,short msgHandlerId,BytesMessageInHandler<V> inHandler,
-                                                                            MessageSentHandler<V> sentHandler,
-                                                                            MessageFailedHandler<V> failHandler)
-            throws HandlerRegistrationException {
-        registerHandler(msgHandlerId, inHandler, getChannelOrThrow(cId).bytesMessageInHandlerMap);
-        if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
-        if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
-    }
-
     /**
      * Register an handler to process a channel-specific event
      *
@@ -622,10 +615,10 @@ public abstract class GenericProtocol {
     final protected void deliverMessageIn(MessageInEvent msgIn) {
         queue.add(msgIn);
     }
-    final protected void deliverQuicMessageIn(QUICMessageInEvent msgIn) {
+    final protected void deliverBytesIn(BytesMessageInEvent msgIn) {
         queue.add(msgIn);
     }
-    final protected void deliverBytesIn(BytesMessageInEvent msgIn) {
+    final protected void deliverBabelInBytesWrapper(BabelInBytesWrapperEvent msgIn) {
         queue.add(msgIn);
     }
 
@@ -674,10 +667,6 @@ public abstract class GenericProtocol {
                 if (logger.isDebugEnabled())
                     logger.debug("Handling event: " + pe);
                 switch (pe.getType()) {
-                    case QUIC_MESSAGE_IN_EVENT:
-                        metrics.messagesInCount++;
-                        this.handleQuicMessageIn((QUICMessageInEvent) pe);
-                        break;
                     case MESSAGE_IN_EVENT:
                         metrics.messagesInCount++;
                         this.handleMessageIn((MessageInEvent) pe);
@@ -685,6 +674,10 @@ public abstract class GenericProtocol {
                     case BYTE_MESSAGE_IN:
                         metrics.messagesInCount++;
                         this.handleBytesMessageIn((BytesMessageInEvent) pe);
+                        break;
+                    case STREAM_BYTES_IN:
+                        metrics.messagesInCount++;
+                        this.handleStreamBytesIn((BabelInBytesWrapperEvent) pe);
                         break;
                     case MESSAGE_FAILED_EVENT:
                         metrics.messagesFailedCount++;
@@ -737,17 +730,9 @@ public abstract class GenericProtocol {
         BabelMessage msg = m.getMsg();
         MessageInHandler h = getChannelOrThrow(m.getChannelId()).messageInHandlers.get(msg.getMessage().getId());
         if (h != null)
-            h.receive(msg.getMessage(), m.getFrom(), msg.getSourceProto(), m.getChannelId());
+            h.receive(msg.getMessage(), m.getFrom(), msg.getSourceProto(), m.getChannelId(),m.connectionId);
         else
             logger.warn("Discarding unexpected message (id " + msg.getMessage().getId() + "): " + m);
-    }
-    private void handleQuicMessageIn(QUICMessageInEvent m) {
-        BabelMessage msg = m.getMsg();
-        QUICMessageInHandler h = getChannelOrThrow(m.getChannelId()).quicMessageInHandlerMap.get(msg.getMessage().getId());
-        if (h != null)
-            h.receive(msg.getMessage(), m.getFrom(), msg.getSourceProto(), m.getChannelId(),m.streamId);
-        else
-            logger.warn("Discarding unexpected QUIC message (id " + msg.getMessage().getId() + "): " + m);
     }
 
     private void handleBytesMessageIn(BytesMessageInEvent m) {
@@ -757,6 +742,13 @@ public abstract class GenericProtocol {
             h.receive(m);
         else
             logger.warn("Discarding unexpected Bytes message (handler id " + m.handlerId + "): number of bytes = " + m.getMsg().length);
+    }
+    private void handleStreamBytesIn(BabelInBytesWrapperEvent m) {
+        StreamBytesInHandler h = getChannelOrThrow(m.getChannelId()).streamBytesInHandlerMap.get(m.handlerId);
+        if (h != null)
+            h.receive(m);
+        else
+            logger.warn("Discarding unexpected Bytes message (handler id " + m.handlerId + "): number of bytes = " + m.babelInBytesWrapper.availableBytes);
     }
 
     private void handleMessageFailed(MessageFailedEvent e) {
@@ -816,7 +808,9 @@ public abstract class GenericProtocol {
     }
 
     private static class ChannelHandlers {
-        private final Map<Short, QUICMessageInHandler<? extends ProtoMessage>> quicMessageInHandlerMap;
+
+        private final Map<Short, StreamBytesInHandler> streamBytesInHandlerMap;
+
         private final Map<Short, BytesMessageInHandler<? extends ProtoMessage>> bytesMessageInHandlerMap;
         private final Map<Short, MessageInHandler<? extends ProtoMessage>> messageInHandlers;
         private final Map<Short, MessageSentHandler<? extends ProtoMessage>> messageSentHandlers;
@@ -824,7 +818,7 @@ public abstract class GenericProtocol {
         private final Map<Short, ChannelEventHandler<? extends ChannelEvent>> channelEventHandlers;
 
         public ChannelHandlers() {
-            this.quicMessageInHandlerMap = new HashMap<>();
+            this.streamBytesInHandlerMap = new HashMap<>();
             this.bytesMessageInHandlerMap = new HashMap<>();
             this.messageInHandlers = new HashMap<>();
             this.messageSentHandlers = new HashMap<>();

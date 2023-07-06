@@ -14,15 +14,17 @@ public class MessageInEvent extends InternalEvent {
     private final pt.unl.fct.di.novasys.babel.internal.BabelMessage deliverMessageInMsg;
     private final Host from;
     private final int channelId;
+    public final String connectionId;
 
     /**
      * Create a protocol message event with the provided numeric identifier
      */
-    public MessageInEvent(pt.unl.fct.di.novasys.babel.internal.BabelMessage msg, Host from, int channelId) {
+    public MessageInEvent(pt.unl.fct.di.novasys.babel.internal.BabelMessage msg, Host from, int channelId,String connectionId) {
         super(EventType.MESSAGE_IN_EVENT);
         this.from = from;
         this.deliverMessageInMsg = msg;
         this.channelId = channelId;
+        this.connectionId = connectionId;
     }
 
     @Override

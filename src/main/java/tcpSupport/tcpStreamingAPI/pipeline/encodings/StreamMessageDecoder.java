@@ -3,6 +3,7 @@ package tcpSupport.tcpStreamingAPI.pipeline.encodings;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
@@ -25,13 +26,15 @@ public class StreamMessageDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out){
-        byte[] bytes = new byte[in.readableBytes()];
+        //byte[] bytes = new byte[in.readableBytes()];
+        int available = in.readableBytes();
         if(metrics!=null){
             TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
             metrics1.setReceivedAppMessages(metrics1.getReceivedAppMessages()+1);
-            metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+bytes.length);
+            metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+available);
         }
-        in.readBytes(bytes);
-        consumer.onChannelRead(ctx.channel().id().asShortText(),bytes,type);
+        //in.readBytes(bytes);
+        BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(in);
+        consumer.onChannelStreamRead(ctx.channel().id().asShortText(),babelInBytesWrapper);
     }
 }

@@ -1,6 +1,7 @@
 package quicSupport.channels;
 
 import quicSupport.utils.enums.TransmissionType;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -22,7 +23,7 @@ public interface ChannelHandlerMethods {
     void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection);
 
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
-    void onChannelReadFlowStream(String streamId, byte[] bytes, InetSocketAddress from);
+    void onChannelReadFlowStream(String streamId, BabelInBytesWrapper bytes, InetSocketAddress from);
 
     void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId);
 

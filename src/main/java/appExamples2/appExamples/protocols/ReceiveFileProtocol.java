@@ -40,8 +40,8 @@ public class ReceiveFileProtocol extends GenericProtocol {
     @Override
     public void init(Properties props) throws HandlerRegistrationException, IOException {
         registerMessageSerializer(channelId, StreamMessage.ID,StreamMessage.serializer);
-        registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
-        registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
+        //registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
+        //registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
 
         registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionDown);
         //openConnection(forwarder);

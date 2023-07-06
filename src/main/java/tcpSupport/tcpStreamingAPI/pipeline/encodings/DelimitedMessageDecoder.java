@@ -41,6 +41,6 @@ public class DelimitedMessageDecoder extends ByteToMessageDecoder {
             metrics1.setReceivedAppMessages(metrics1.getReceivedAppMessages()+1);
             metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+length+4);
         }
-        consumer.onChannelRead(ctx.channel().id().asShortText(),data,type);
+        consumer.onChannelMessageRead(ctx.channel().id().asShortText(),data);
     }
 }

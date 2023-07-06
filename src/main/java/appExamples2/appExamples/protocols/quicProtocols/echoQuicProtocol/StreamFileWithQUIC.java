@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
+import pt.unl.fct.di.novasys.babel.internal.BabelInBytesWrapperEvent;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
@@ -82,7 +83,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail3);
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
-            registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionUp);
 
@@ -146,7 +146,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     }
     long received = 0;
     FileOutputStream fos, fos2;
-    private void uponStreamBytes(BytesMessageInEvent  event) {
+    private void uponStreamBytes(BabelInBytesWrapperEvent event) {
+        new Exception("TO DO").printStackTrace();
+        /**
         received += event.getMsg().length;
         if(myself.getPort()==8082){
             sendStream(channelId,event.getMsg(),event.getMsg().length,event.conId);
@@ -161,6 +163,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             }
         }
         logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
+    **/
     }
     int gg = 0;
     private void uponStreamBytes2(BytesMessageInEvent event) {

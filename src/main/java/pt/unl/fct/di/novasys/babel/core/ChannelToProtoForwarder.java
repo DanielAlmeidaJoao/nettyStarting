@@ -7,6 +7,7 @@ import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.internal.*;
 import quicSupport.utils.enums.TransmissionType;
+import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,18 +30,26 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
     }
 
     @Override
-    public void deliverMessage(BabelMessage message, Host host, String quicStreamId) {
+    public void deliverMessage(BabelMessage message, Host host, String connectionId) {
         GenericProtocol channelConsumer = getConsumer(message.getDestProto());
-        if(quicStreamId==null){
+        channelConsumer.deliverMessageIn(new MessageInEvent(message, host, channelId,connectionId));
+        /**
+        if(connectionId==null){
             channelConsumer.deliverMessageIn(new MessageInEvent(message, host, channelId));
         }else{
-            channelConsumer.deliverQuicMessageIn(new QUICMessageInEvent(message, host, channelId,quicStreamId));
-        }
+            channelConsumer.deliverQuicMessageIn(new QUICMessageInEvent(message, host, channelId,connectionId));
+        }**/
     }
     @Override
     public void deliverMessage(byte [] message, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId) {
         GenericProtocol channelConsumer = getConsumer(destProto);
         channelConsumer.deliverBytesIn(new BytesMessageInEvent(message,host,channelId,quicStreamId,sourceProto,destProto,handlerId));
+    }
+
+    @Override
+    public void deliverMessage(BabelInBytesWrapper babelInBytesWrapper, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId) {
+        GenericProtocol channelConsumer = getConsumer(destProto);
+        channelConsumer.deliverBabelInBytesWrapper(new BabelInBytesWrapperEvent(babelInBytesWrapper,host,channelId,quicStreamId,sourceProto,destProto,handlerId));
     }
 
     @Override
