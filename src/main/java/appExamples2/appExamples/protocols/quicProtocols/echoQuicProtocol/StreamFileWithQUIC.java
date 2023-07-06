@@ -109,7 +109,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         if(event.inConnection){
             logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type+" SS "+streamId);
             try{
-                fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.txt");
+                fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.mp4");
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -201,17 +201,17 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
             //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
+            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             //Path filePath = Paths.get(p);
             //
             File f = filePath.toFile();
             FileInputStream fileInputStream = new FileInputStream(f);
             int len = (int) f.length();
-            sendStream(channelId,fileInputStream,0,streamId);
+            sendStream(channelId,fileInputStream,len,streamId);
             System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
-            if(len >-1){
+            if(len == -1){
                 FileOutputStream fileOutputStream = new FileOutputStream(f);
                 int b = 0;
                 while (true){
