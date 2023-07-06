@@ -67,9 +67,8 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             TransmissionType type;
             if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
                 type = TransmissionType.UNSTRUCTURED_STREAM;
-                ch.pipeline().replace(QuicStructuredMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
+                ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
-                System.out.println("RECEIVED STREAM CREATED MESSAGE MMMMMMMMM");
             }else{
                 type = TransmissionType.STRUCTURED_MESSAGE;
             }

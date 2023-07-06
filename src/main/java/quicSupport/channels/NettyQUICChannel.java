@@ -226,7 +226,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 customConId = nextId();
             }
             if(TransmissionType.UNSTRUCTURED_STREAM==type){
-                streamChannel.pipeline().replace(QuicStructuredMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
+                streamChannel.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
                 streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,inConnection));
             }
             CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel,customConId, type,null, inConnection);
@@ -343,7 +343,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                                     .addListener(future1 -> {
                                         if(future.isSuccess()){
                                             if(TransmissionType.UNSTRUCTURED_STREAM == type){
-                                                streamChannel.pipeline().replace(QuicStructuredMessageEncoder.HANDLER_NAME,QuicUnstructuredStreamEncoder.HANDLER_NAME,new QuicUnstructuredStreamEncoder(metrics));
+                                                streamChannel.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
                                                 streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,false));
                                             }
                                             ((QuicStreamReadHandler) streamChannel.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(streamChannel,type, finalConId, false);
