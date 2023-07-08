@@ -31,7 +31,10 @@ import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 
 public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInterface {
@@ -303,10 +306,13 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
                 channelHandlerMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.STRUCTURED_MESSAGE);
                 return;
             }
+            /**
             if(len<=0){
                 if(readStreamSend ==null) readStreamSend = new SendStreamContinuoslyLogics(this::send,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
                 readStreamSend.addToStreams(inputStream,conId,idConnection.channel.eventLoop());
             }
+            **/
+
             final ByteBuf buf = Unpooled.buffer(len);
             buf.writeBytes(inputStream,len);
             ChannelFuture c = idConnection.channel.writeAndFlush(buf);

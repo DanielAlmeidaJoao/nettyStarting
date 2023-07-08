@@ -108,7 +108,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         if(event.inConnection){
             logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type+" SS "+streamId);
             try{
-                fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.txt");
+                fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.mp4");
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -134,7 +134,10 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
         if(myself.getPort()==8081){
             new Thread(() -> {
-                startStreaming();
+                for (int i = 0; i < 1; i++) {
+                    startStreaming();
+                }
+
             }).start();
         }
         if(myself.getPort()==8082){
@@ -146,24 +149,48 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     }
     long received = 0;
     FileOutputStream fos, fos2;
+    boolean notW = true;
+
     private void uponStreamBytes(BabelInBytesWrapperEvent event) {
-        new Exception("TO DO").printStackTrace();
-        /**
-        received += event.getMsg().length;
-        if(myself.getPort()==8082){
-            sendStream(channelId,event.getMsg(),event.getMsg().length,event.conId);
-            try {
-                fos.write(event.getMsg());
-                if(received>=813782079){
-                    fos.close();
-                    logger.info("RECEIVED ALL BYTES");
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+        //new Exception("TO DO").printStackTrace();
+        //System.out.println(event.getBbw().byteBuf.refCnt()+" "+event.getBbw().byteBuf);
+        //if(event != null) return;
+        received = event.bbw.availableBytes;
+        int rc = event.bbw.availableBytes;
+        logger.info("Received bytes22: {} from {} receivedTOTAL {} ",rc,event.getFrom(),received);
+        if(rc>=0){
+            return;
         }
-        logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
-    **/
+        //logger.info("Received bytes22: {} from {} receivedTOTAL {} ",rc,event.getFrom(),received);
+
+        if(myself.getPort()==8082){
+            //sendStream(channelId,event.getMsg(),event.getMsg().length,event.conId);
+            //if(received<813782079) return;
+            //System.out.println("RECEIVED: "+received+" BUFFERED: "+event.bbw.byteBuf.readableBytes());
+            //int wrote=0;
+            //while (event.bbw.byteBuf.readableBytes()>0 && notW){
+                try {
+                    byte p [] = new byte[event.bbw.byteBuf.readableBytes()];
+                    event.getBbw().byteBuf.readBytes(p);
+                    fos.write(p);
+                    logger.info("RECEIVED ALL BYTES {} - available: {} ",p.length,event.getBbw().availableBytes);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            //}
+            if(received==813782079){
+                try{
+                    fos.close();
+                    notW = false;
+                }catch (Exception e){
+
+                }
+            }
+
+
+        }
+        //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
+
     }
     int gg = 0;
     private void uponStreamBytes2(BytesMessageInEvent event) {
@@ -203,16 +230,18 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
             //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
+            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             //Path filePath = Paths.get(p);
             //
             File f = filePath.toFile();
             FileInputStream fileInputStream = new FileInputStream(f);
+
             int len = (int) f.length();
-            sendStream(channelId,fileInputStream,0,streamId);
+            sendStream(channelId,fileInputStream,len,streamId);
             System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
+            /**
             if(len >-1){
                 FileOutputStream fileOutputStream = new FileOutputStream(f);
                 int b = 0;
@@ -230,23 +259,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 }
                 //return;
             }
-
-            byte [] bytes = new byte[bufferSize];
-            //ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-            int read, totalSent = 0;
-
-            while ( ( ( read =  fileInputStream.read(bytes) ) != -1)) {
-                totalSent += read;
-                if(read<bufferSize){
-                    byte [] n = new byte[read];
-                    System.arraycopy(bytes,0,n,0,read);
-                    bytes = n;
-                }
-                sendStream(channelId,bytes,read,dest);
-                //Thread.sleep(1000);
-                bytes = new byte[bufferSize];
-            }
-            System.out.println("METRICS OUT ? "+totalSent);
+             **/
         }catch (Exception e){
             e.printStackTrace();
         }

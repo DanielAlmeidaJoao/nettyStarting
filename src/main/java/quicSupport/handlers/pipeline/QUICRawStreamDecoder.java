@@ -34,6 +34,7 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
         BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(msg);
         consumer.onReceivedStream(ch.id().asShortText(),babelInBytesWrapper);
         int readAble = msg.readableBytes();
+        logger.info("HEAP BUFFER ? {}",msg.hasArray());
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             q.setReceivedAppMessages(q.getReceivedAppMessages()+1);

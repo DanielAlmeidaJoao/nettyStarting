@@ -125,7 +125,6 @@ public class EchoProtocol extends GenericProtocolExtension {
     public static final short HANDLER_ID2 = 3;
     public void sendMessage(String message, String stream){
         TransmissionType transmissionType = getConnectionType(channelId,stream);
-        stream = "d";
         if(TransmissionType.UNSTRUCTURED_STREAM == transmissionType){
             super.sendStream(channelId,message.getBytes(),message.length(),stream);
         }else{
@@ -231,12 +230,16 @@ public class EchoProtocol extends GenericProtocolExtension {
         if(dest==null){
             dest = event.getNode();
         }
-        System.out.println("CONNECTION TYPR +++ "+getConnectionType(channelId,event.conId));
-        for (int i = 0; i < 10; i++) {
-            byte [] hh = new byte[4];
-            Unpooled.buffer(4).writeInt(i).readBytes(hh,0,4);
-            super.sendStream(channelId,hh,hh.length,event.conId);
+        TransmissionType tp = getConnectionType(channelId,event.conId);
+        System.out.println("CONNECTION TYPR +++ "+tp);
+        if(tp == TransmissionType.UNSTRUCTURED_STREAM){
+            for (int i = 0; i < 10; i++) {
+                byte [] hh = new byte[4];
+                Unpooled.buffer(4).writeInt(i).readBytes(hh,0,4);
+                super.sendStream(channelId,hh,hh.length,event.conId);
+            }
         }
+
         /**
         if(dest!=null){
             EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
@@ -263,7 +266,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("Received bytes3: {} from {}", new String(event.getMsg()),event.getFrom());
     }
     private void uponStreamBytes(BabelInBytesWrapperEvent event) {
-        logger.info("Received bytes4: {} from {}",event.babelInBytesWrapper.availableBytes,event.getFrom());
+        logger.info("Received bytes4: {} from {}",event.bbw.availableBytes,event.getFrom());
     }
     private void uponStreamBytes2(BytesMessageInEvent event) {
         logger.info("Received 2bytes2: {} from {}",event.getMsg().length,event.getFrom());

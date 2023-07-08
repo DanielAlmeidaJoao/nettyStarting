@@ -1,9 +1,11 @@
 package quicSupport.channels;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.handler.stream.ChunkedStream;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
@@ -415,7 +417,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }
         ChannelFuture c;
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
-            c = streamChannel.streamChannel.writeAndFlush(Unpooled.buffer(len).writeBytes(message,0,len));
+            c = streamChannel.streamChannel.writeAndFlush(Unpooled.directBuffer(len).writeBytes(message,0,len));
         }else{
             c = streamChannel.streamChannel.writeAndFlush(QUICLogics.bufToWrite(len,message,APP_DATA));
         }
@@ -443,13 +445,26 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 overridenMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.UNSTRUCTURED_STREAM);
                 return;
             }
+            /**
             if(len<=0){
                 if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
                 streamContinuoslyLogics.addToStreams(inputStream,conId,streamChannel.streamChannel.parent().eventLoop());
+            } **/
+            //final ByteBuf buf = Unpooled.buffer(len);
+            //FileInputStream fis = (FileInputStream) inputStream;
+            System.out.println("SENDING FILE WITH ZERO-COPY");
+
+            //FileRegion region = new DefaultFileRegion(fis.getChannel(), 0, fis.available());
+            //buf.writeBytes(inputStream,len);
+            if(streamChannel.streamChannel.pipeline().get("ChunkedWriteHandler")==null){
+                streamChannel.streamChannel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
             }
-            final ByteBuf buf = Unpooled.buffer(len);
-            buf.writeBytes(inputStream,len);
-            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(buf);
+
+
+            ByteBufAllocator allocator = streamChannel.streamChannel.alloc();
+            System.out.println("HAS ARRAY : "+allocator.buffer().hasArray());
+
+            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
             InetSocketAddress finalPeer = peer;
             c.addListener(future -> {
                 if(!future.isSuccess()){

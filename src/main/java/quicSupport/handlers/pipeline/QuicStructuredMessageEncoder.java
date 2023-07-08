@@ -3,12 +3,13 @@ package quicSupport.handlers.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import quicSupport.utils.DelimitedMessageWrapper;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
-public class QuicStructuredMessageEncoder extends MessageToByteEncoder<ByteBuf> {
+public class QuicStructuredMessageEncoder extends MessageToByteEncoder<DelimitedMessageWrapper> {
     public static final String HANDLER_NAME="QuicMessageEncoder";
     public final TransmissionType type;
 
@@ -19,13 +20,12 @@ public class QuicStructuredMessageEncoder extends MessageToByteEncoder<ByteBuf> 
         type = TransmissionType.STRUCTURED_MESSAGE;
     }
     @Override
-    protected void encode(ChannelHandlerContext ctx, ByteBuf message, ByteBuf byteBuf) {
-        int bytes = message.readableBytes();
-        message.markReaderIndex();
-        message.readInt();
-        byte msgType = message.readByte();
-        message.resetReaderIndex();
-        byteBuf.writeBytes(message);
+    protected void encode(ChannelHandlerContext ctx, DelimitedMessageWrapper message, ByteBuf byteBuf) {
+        byteBuf.writeInt(message.len);
+        byteBuf.writeByte(message.msgCode);
+        byteBuf.writeBytes(message.data);
+        int bytes = byteBuf.readableBytes();
+        byte msgType = message.msgCode;
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             switch (msgType){

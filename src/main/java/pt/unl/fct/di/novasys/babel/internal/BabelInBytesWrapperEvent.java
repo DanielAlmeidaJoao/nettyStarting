@@ -12,7 +12,7 @@ import quicSupport.utils.streamUtils.BabelInBytesWrapper;
  */
 public class BabelInBytesWrapperEvent extends InternalEvent {
 
-    public final BabelInBytesWrapper babelInBytesWrapper;
+    public final BabelInBytesWrapper bbw;
     private final Host from;
     private final int channelId;
     public final String conId;
@@ -25,7 +25,7 @@ public class BabelInBytesWrapperEvent extends InternalEvent {
     public BabelInBytesWrapperEvent(BabelInBytesWrapper wrapper, Host from, int channelId, String conId, short sourceProto, short destProto, short handlerId) {
         super(EventType.STREAM_BYTES_IN);
         this.from = from;
-        this.babelInBytesWrapper = wrapper;
+        this.bbw = wrapper;
         this.channelId = channelId;
         this.conId = conId;
         this.sourceProto = sourceProto;
@@ -36,7 +36,7 @@ public class BabelInBytesWrapperEvent extends InternalEvent {
     @Override
     public String toString() {
         return "MessageInEvent{" +
-                "msg=" + babelInBytesWrapper +
+                "msg=" + bbw +
                 ", from=" + from +
                 ", channelId=" + channelId +
                 '}';
@@ -50,8 +50,9 @@ public class BabelInBytesWrapperEvent extends InternalEvent {
         return channelId;
     }
 
-    public BabelInBytesWrapper getBabelInBytesWrapper() {
-        return babelInBytesWrapper;
+    public BabelInBytesWrapper getBbw() {
+        return bbw;
     }
+
 
 }

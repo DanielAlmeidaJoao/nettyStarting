@@ -1,7 +1,6 @@
 package quicSupport.utils;
 
 import com.google.gson.Gson;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicCodecBuilder;
@@ -97,19 +96,23 @@ public class QUICLogics {
         buf.writeBytes(data,0,len);
          **/
     }
-    public static ByteBuf bufToWrite(int len, byte [] data, byte msgCode){
-        ByteBuf buf = Unpooled.buffer(len+WRT_OFFSET);
+    public static DelimitedMessageWrapper bufToWrite(int len, byte [] data, byte msgCode){
+        return new DelimitedMessageWrapper(len,data,msgCode);
+        /**
+        ByteBuf buf = Unpooled.directBuffer(len+WRT_OFFSET);
         buf.writeInt(len);
         buf.writeByte(msgCode);
         buf.writeBytes(data,0,len);
-        return buf;
+        return buf; **/
     }
-    public static ByteBuf bufToWrite(int data, byte msgCode){
+    public static DelimitedMessageWrapper bufToWrite(int data, byte msgCode){
+        return new DelimitedMessageWrapper(4,Unpooled.buffer(4).writeInt(data).array(),msgCode);
+        /**
         ByteBuf buf = Unpooled.buffer(4+WRT_OFFSET);
         buf.writeInt(4);
         buf.writeByte(msgCode);
         buf.writeInt(data);
-        return buf;
+        return buf; **/
     }
     public static boolean sameAddress(InetSocketAddress address, InetSocketAddress socketAddress){
         return address.getHostName().equals(socketAddress.getHostName())&&address.getPort()==socketAddress.getPort();
