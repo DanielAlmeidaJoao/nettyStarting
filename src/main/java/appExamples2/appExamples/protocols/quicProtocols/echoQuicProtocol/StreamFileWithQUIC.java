@@ -31,6 +31,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     private Host dest;
     private Properties properties;
     public final String NETWORK_PROTO;
+    public final int fileLen = 1035368729;
 
     public StreamFileWithQUIC(Properties properties) throws Exception {
 
@@ -150,17 +151,19 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     long received = 0;
     FileOutputStream fos, fos2;
     boolean notW = true;
+    long start = 0;
 
     private void uponStreamBytes(BabelInBytesWrapperEvent event) {
         //new Exception("TO DO").printStackTrace();
         //System.out.println(event.getBbw().byteBuf.refCnt()+" "+event.getBbw().byteBuf);
         //if(event != null) return;
+        /**
         received = event.bbw.availableBytes;
         int rc = event.bbw.availableBytes;
         logger.info("Received bytes22: {} from {} receivedTOTAL {} ",rc,event.getFrom(),received);
         if(rc>=0){
             return;
-        }
+        }**/
         //logger.info("Received bytes22: {} from {} receivedTOTAL {} ",rc,event.getFrom(),received);
 
         if(myself.getPort()==8082){
@@ -169,17 +172,21 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //System.out.println("RECEIVED: "+received+" BUFFERED: "+event.bbw.byteBuf.readableBytes());
             //int wrote=0;
             //while (event.bbw.byteBuf.readableBytes()>0 && notW){
+            if(start==0){
+                start = System.currentTimeMillis();
+            }
                 try {
-                    byte p [] = new byte[event.bbw.byteBuf.readableBytes()];
-                    event.getBbw().byteBuf.readBytes(p);
-                    fos.write(p);
+                    received += event.bbw.availableBytes;
+                    byte p [] = new byte[event.bbw.availableBytes];
+                    fos.write(event.bbw.bytes);
                     logger.info("RECEIVED ALL BYTES {} - available: {} ",p.length,event.getBbw().availableBytes);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             //}
-            if(received==813782079){
+            if(received==fileLen){
                 try{
+                    logger.info("ELAPSED TIME : {}",(System.currentTimeMillis()-start));
                     fos.close();
                     notW = false;
                 }catch (Exception e){
@@ -229,8 +236,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
-            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             //Path filePath = Paths.get(p);
@@ -241,14 +248,16 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             int len = (int) f.length();
             sendStream(channelId,fileInputStream,len,streamId);
             System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
+            if(len>0) return;
             /**
             if(len >-1){
+                Thread.sleep(5000);
                 FileOutputStream fileOutputStream = new FileOutputStream(f);
                 int b = 0;
                 while (true){
-                    sendStream(channelId,fileInputStream,streamId);
+                    //sendStream(channelId,fileInputStream,streamId);
                     Thread.sleep(5000);
-                    fileOutputStream.write((b+"_OLA ").getBytes());
+                    fileOutputStream.write((UUID.randomUUID().toString()).getBytes());
                     System.out.println("WROTE TO FILE");
                     b++;
                     if(b>5){
@@ -259,7 +268,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 }
                 //return;
             }
-             **/
+            **/
         }catch (Exception e){
             e.printStackTrace();
         }

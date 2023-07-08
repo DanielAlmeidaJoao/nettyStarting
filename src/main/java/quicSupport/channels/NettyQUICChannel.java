@@ -1,6 +1,5 @@
 package quicSupport.channels;
 
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -450,20 +449,10 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
                 streamContinuoslyLogics.addToStreams(inputStream,conId,streamChannel.streamChannel.parent().eventLoop());
             } **/
-            //final ByteBuf buf = Unpooled.buffer(len);
-            //FileInputStream fis = (FileInputStream) inputStream;
-            System.out.println("SENDING FILE WITH ZERO-COPY");
 
-            //FileRegion region = new DefaultFileRegion(fis.getChannel(), 0, fis.available());
-            //buf.writeBytes(inputStream,len);
             if(streamChannel.streamChannel.pipeline().get("ChunkedWriteHandler")==null){
                 streamChannel.streamChannel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
             }
-
-
-            ByteBufAllocator allocator = streamChannel.streamChannel.alloc();
-            System.out.println("HAS ARRAY : "+allocator.buffer().hasArray());
-
             ChannelFuture c = streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
             InetSocketAddress finalPeer = peer;
             c.addListener(future -> {

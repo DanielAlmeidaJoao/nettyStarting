@@ -1,13 +1,13 @@
 package quicSupport.utils.streamUtils;
 
-import io.netty.buffer.ByteBuf;
-
 public class BabelInBytesWrapper {
 
-    public final ByteBuf byteBuf;
+
     public final int availableBytes;
-    public BabelInBytesWrapper(ByteBuf buf){
-        this.byteBuf = buf;
-        this.availableBytes = buf.readableBytes();
+
+    public final byte [] bytes;
+    public BabelInBytesWrapper(byte [] bytes1){
+        this.availableBytes = bytes1.length;
+        this.bytes = bytes1;
     }
 }

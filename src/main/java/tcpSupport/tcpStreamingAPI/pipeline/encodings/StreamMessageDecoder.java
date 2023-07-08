@@ -26,15 +26,16 @@ public class StreamMessageDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out){
-        //byte[] bytes = new byte[in.readableBytes()];
         int available = in.readableBytes();
         if(metrics!=null){
             TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
             metrics1.setReceivedAppMessages(metrics1.getReceivedAppMessages()+1);
             metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+available);
         }
-        //in.readBytes(bytes);
-        BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(in);
+        byte[] bytes = new byte[in.readableBytes()];
+        in.readBytes(bytes);
+        BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(bytes);
+
         consumer.onChannelStreamRead(ctx.channel().id().asShortText(),babelInBytesWrapper);
     }
 }

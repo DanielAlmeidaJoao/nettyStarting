@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.FileRegion;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -26,6 +28,7 @@ import tcpSupport.tcpStreamingAPI.utils.SendStreamContinuoslyLogics;
 import tcpSupport.tcpStreamingAPI.utils.TCPConnectingObject;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Inet4Address;
@@ -306,16 +309,12 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
                 channelHandlerMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.STRUCTURED_MESSAGE);
                 return;
             }
-            /**
-            if(len<=0){
-                if(readStreamSend ==null) readStreamSend = new SendStreamContinuoslyLogics(this::send,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
-                readStreamSend.addToStreams(inputStream,conId,idConnection.channel.eventLoop());
-            }
-            **/
 
-            final ByteBuf buf = Unpooled.buffer(len);
-            buf.writeBytes(inputStream,len);
-            ChannelFuture c = idConnection.channel.writeAndFlush(buf);
+            FileInputStream in = (FileInputStream) inputStream;
+            FileRegion region = new DefaultFileRegion(in.getChannel(), 0, inputStream.available());
+            ChannelFuture c = idConnection.channel.writeAndFlush(region);
+
+
             CustomTCPConnection finalIdConnection = idConnection;
             c.addListener(future -> {
                 channelHandlerMethods.onMessageSent(null,inputStream,len,future.cause(),finalIdConnection.host,TransmissionType.UNSTRUCTURED_STREAM);

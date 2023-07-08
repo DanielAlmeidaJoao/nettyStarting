@@ -28,13 +28,14 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-        //byte [] data = new byte[msg.readableBytes()];
-        //msg.readBytes(data);
+
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
-        BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(msg);
+        byte [] data = new byte[msg.readableBytes()];
+        msg.readBytes(data);
+        BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(data);
+
         consumer.onReceivedStream(ch.id().asShortText(),babelInBytesWrapper);
         int readAble = msg.readableBytes();
-        logger.info("HEAP BUFFER ? {}",msg.hasArray());
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
