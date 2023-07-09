@@ -6,6 +6,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.channel.FileRegion;
+import io.netty.handler.stream.ChunkedStream;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -61,7 +63,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
     private final TCPStreamMetrics tcpStreamMetrics;
     private final boolean connectIfNotConnected;
     private final ChannelHandlerMethods channelHandlerMethods;
-    private SendStreamContinuoslyLogics readStreamSend;
+    private SendStreamContinuoslyLogics streamContinuoslyLogics;
     private Properties properties;
 
 
@@ -107,7 +109,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
         connectIfNotConnected = properties.getProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
 
         this.channelHandlerMethods = chm;
-        readStreamSend = null;
+        streamContinuoslyLogics = null;
         this.properties = properties;
     }
 
@@ -296,7 +298,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
         try {
             CustomTCPConnection idConnection = customIdToConnection.get(conId);
             CustomTCPConnection peerConnection=null;
-            if(idConnection == null && (peerConnection = getConnection(peer))==null ){
+            if(idConnection == null && (peerConnection = getConnection(peer))==null){
                 //channelHandlerMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.STRUCTURED_MESSAGE);
                 channelHandlerMethods.onMessageSent(null,inputStream,len,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+peer+" - "+conId),peer,null);
                 return;
@@ -309,11 +311,22 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
                 channelHandlerMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.STRUCTURED_MESSAGE);
                 return;
             }
-
-            FileInputStream in = (FileInputStream) inputStream;
-            FileRegion region = new DefaultFileRegion(in.getChannel(), 0, inputStream.available());
-            ChannelFuture c = idConnection.channel.writeAndFlush(region);
-
+            if(len<=0){
+                if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
+                streamContinuoslyLogics.addToStreams(inputStream,idConnection.conId,idConnection.channel.eventLoop());
+                return;
+            }
+            ChannelFuture c;
+            if(inputStream instanceof FileInputStream){
+                FileInputStream in = (FileInputStream) inputStream;
+                FileRegion region = new DefaultFileRegion(in.getChannel(), 0, inputStream.available());
+                c = idConnection.channel.writeAndFlush(region);
+            }else{
+                if(idConnection.channel.pipeline().get("ChunkedWriteHandler")==null){
+                    idConnection.channel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
+                }
+                c = idConnection.channel.writeAndFlush(new ChunkedStream(inputStream));
+            }
 
             CustomTCPConnection finalIdConnection = idConnection;
             c.addListener(future -> {

@@ -154,17 +154,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     long start = 0;
 
     private void uponStreamBytes(BabelInBytesWrapperEvent event) {
-        //new Exception("TO DO").printStackTrace();
-        //System.out.println(event.getBbw().byteBuf.refCnt()+" "+event.getBbw().byteBuf);
-        //if(event != null) return;
-        /**
-        received = event.bbw.availableBytes;
-        int rc = event.bbw.availableBytes;
-        logger.info("Received bytes22: {} from {} receivedTOTAL {} ",rc,event.getFrom(),received);
-        if(rc>=0){
-            return;
-        }**/
-        //logger.info("Received bytes22: {} from {} receivedTOTAL {} ",rc,event.getFrom(),received);
+
 
         if(myself.getPort()==8082){
             //sendStream(channelId,event.getMsg(),event.getMsg().length,event.conId);
@@ -175,14 +165,16 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             if(start==0){
                 start = System.currentTimeMillis();
             }
-                try {
-                    received += event.bbw.availableBytes;
-                    byte p [] = new byte[event.bbw.availableBytes];
-                    fos.write(event.bbw.bytes);
-                    logger.info("RECEIVED ALL BYTES {} - available: {} ",p.length,event.getBbw().availableBytes);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+            try {
+                int available = event.bbw.availableBytes;
+                if(available<=0)return;
+                received += available;
+                byte p [] = new byte[available];
+                fos.write(event.bbw.bytes);
+                logger.info("RECEIVED ALL BYTES {} - available: {} ",p.length,available);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
             //}
             if(received==fileLen){
                 try{

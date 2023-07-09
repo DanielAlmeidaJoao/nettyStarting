@@ -444,11 +444,12 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 overridenMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.UNSTRUCTURED_STREAM);
                 return;
             }
-            /**
+
             if(len<=0){
                 if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this::send,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
-                streamContinuoslyLogics.addToStreams(inputStream,conId,streamChannel.streamChannel.parent().eventLoop());
-            } **/
+                streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.parent().eventLoop());
+                return;
+            }
 
             if(streamChannel.streamChannel.pipeline().get("ChunkedWriteHandler")==null){
                 streamChannel.streamChannel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());

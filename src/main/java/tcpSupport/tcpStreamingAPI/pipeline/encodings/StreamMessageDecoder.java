@@ -3,11 +3,11 @@ package tcpSupport.tcpStreamingAPI.pipeline.encodings;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import quicSupport.utils.enums.TransmissionType;
 
 import java.util.List;
 
@@ -32,10 +32,11 @@ public class StreamMessageDecoder extends ByteToMessageDecoder {
             metrics1.setReceivedAppMessages(metrics1.getReceivedAppMessages()+1);
             metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+available);
         }
+
         byte[] bytes = new byte[in.readableBytes()];
         in.readBytes(bytes);
-        BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(bytes);
 
+        BabelInBytesWrapper babelInBytesWrapper = new BabelInBytesWrapper(bytes);
         consumer.onChannelStreamRead(ctx.channel().id().asShortText(),babelInBytesWrapper);
     }
 }

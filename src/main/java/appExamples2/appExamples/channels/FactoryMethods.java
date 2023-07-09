@@ -28,10 +28,16 @@ public class FactoryMethods {
         out.release();
         return toSend;
     }
-
+    private static int available(InputStream inputStream){
+        new Exception("TO DO: MAKE unSerialize RECEIVE nr BYTES SEMT").printStackTrace();
+        try{
+            return inputStream.available();
+        }catch (Exception e){};
+        return 0;
+    }
     public static <T> T unSerialize(ISerializer<T> serializer, byte[] bytes, InputStream inputStream, TransmissionType type, short protoToReceiveStreamData) throws IOException {
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
-            int len = bytes != null ? bytes.length : inputStream.available();
+            int len = bytes != null ? bytes.length : available(inputStream);
             return (T) new BabelMessage(new BytesMessageSentOrFail(protoToReceiveStreamData,bytes,inputStream,len)
                     ,protoToReceiveStreamData,protoToReceiveStreamData);
         }else {
