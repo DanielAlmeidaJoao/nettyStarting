@@ -19,7 +19,7 @@ public interface NettyChannelInterface extends SendBytesInterface {
     void readMetrics(QuicReadMetricsHandler handler);
 
 
-    void send(InetSocketAddress peer, byte[] message, int len, TransmissionType type);
+    void send(InetSocketAddress peer, byte[] message, int len);
 
     boolean enabledMetrics();
 

@@ -31,7 +31,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     private Host dest;
     private Properties properties;
     public final String NETWORK_PROTO;
-    public final int fileLen = 1035368729;
+    public final long fileLen = 2689256162L;
 
     public StreamFileWithQUIC(Properties properties) throws Exception {
 
@@ -172,7 +172,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         if(myself.getPort()==8082){
             out = fos;
             babelInputStream.sendBabelOutputStream(event.babelOutputStream);
-
         }else{
             out = fos2;
         }
@@ -241,7 +240,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
-            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
+
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
@@ -250,7 +251,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             File f = filePath.toFile();
             babelInputStream.sendFile(f);
 
-            int len = (int) f.length();
+            long len = f.length();
             //sendStream(channelId,fileInputStream,len,streamId);
             System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
             if(len>0) return;

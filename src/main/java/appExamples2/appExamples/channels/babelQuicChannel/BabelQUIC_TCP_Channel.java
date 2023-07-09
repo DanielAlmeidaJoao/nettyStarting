@@ -99,7 +99,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     public void sendMessage(T msg, Host peer, short proto) {
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
+            customQuicChannel.send(FactoryMethods.toInetSOcketAddress(peer),toSend,toSend.length);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -109,7 +109,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
+        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(dest),toSend,toSend.length);
     }
 
     @Override
@@ -180,7 +180,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     public void sendMessage(T msg,String streamId,short proto){
         try {
             byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            customQuicChannel.send(streamId,toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
+            customQuicChannel.send(streamId,toSend,toSend.length);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -188,7 +188,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     @Override
     public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
         byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        customQuicChannel.send(streamId, toSend,toSend.length, TransmissionType.STRUCTURED_MESSAGE);
+        customQuicChannel.send(streamId, toSend,toSend.length);
     }
 
     @Override

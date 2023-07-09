@@ -2,7 +2,7 @@ package quicSupport.handlers.pipeline;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
@@ -11,9 +11,7 @@ import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 
-import java.util.List;
-
-public class QUICRawStreamDecoder extends ByteToMessageDecoder {
+public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(QUICRawStreamDecoder.class);
 
     public static final String HANDLER_NAME = "QUICRawStreamDecoder";
@@ -26,7 +24,8 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object in) throws Exception {
+        ByteBuf msg = (ByteBuf) in;
         int readAble = msg.readableBytes();
 
         if(metrics!=null){
@@ -38,8 +37,8 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
         BabelOutputStream babelOutputStream = new BabelOutputStream(msg.retainedSlice());
         msg.readerIndex(msg.readableBytes());
         consumer.onReceivedStream(ctx.channel().id().asShortText(), babelOutputStream);
-
     }
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();

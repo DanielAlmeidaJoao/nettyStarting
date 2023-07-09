@@ -2,6 +2,7 @@ package tcpSupport.tcpStreamingAPI.utils;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import lombok.NonNull;
 import quicSupport.channels.SendStreamInterface;
 import quicSupport.utils.enums.TransmissionType;
 
@@ -62,8 +63,17 @@ public class BabelInputStream {
         streamInterface.sendStream(streamId, Unpooled.directBuffer(len).writeBytes(buf,srcIndex,len),flush);
     }
     public void sendFile(File file) throws FileNotFoundException {
+        long fileLen = file.length();
+        long read = Integer.BYTES;
         FileInputStream inputStream = new FileInputStream(file);
-        sendInputStream(inputStream, (int) file.length());
+        if(read >= fileLen){
+            sendInputStream(inputStream,Integer.BYTES);
+            return;
+        }
+        while (read<fileLen){
+            sendInputStream(inputStream,Integer.BYTES);
+            read += Integer.BYTES;
+        }
     }
     public void sendInputStream(InputStream inputStream, int len){
         streamInterface.sendInputStream(streamId,inputStream,len);
@@ -75,7 +85,7 @@ public class BabelInputStream {
         return flush;
     }
 
-    public static BabelInputStream toBabelStream(String conId, SendStreamInterface streamInterface, TransmissionType type){
+    public static BabelInputStream toBabelStream(String conId,@NonNull SendStreamInterface streamInterface, TransmissionType type){
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
             return new BabelInputStream(conId,streamInterface);
         }

@@ -1,9 +1,10 @@
 package tcpSupport.tcpStreamingAPI.utils;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoop;
 import org.apache.commons.lang3.tuple.Pair;
-import quicSupport.channels.SendBytesInterface;
-import quicSupport.utils.enums.TransmissionType;
+import quicSupport.channels.SendStreamInterface;
 
 import java.io.InputStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -14,10 +15,10 @@ public class SendStreamContinuoslyLogics {
 
     ConcurrentLinkedQueue<Pair<InputStream,String>> linkedQueue;
     private ScheduledFuture scheduledFuture=null;
-    private final SendBytesInterface sendBytesInterface;
+    private final SendStreamInterface sendBytesInterface;
     private final long readPeriod;
 
-    public SendStreamContinuoslyLogics(SendBytesInterface send, String readPeriodStr) {
+    public SendStreamContinuoslyLogics(SendStreamInterface send, String readPeriodStr) {
         this.sendBytesInterface = send;
         if(readPeriodStr==null){
             this.readPeriod = 1000;
@@ -34,7 +35,8 @@ public class SendStreamContinuoslyLogics {
                 if(available>0){
                     byte data [] = new byte[available];
                     streamConIdPair.getLeft().read(data,0,available);
-                    sendBytesInterface.send(streamConIdPair.getRight(),data,available, TransmissionType.UNSTRUCTURED_STREAM);
+                    ByteBuf buf = Unpooled.directBuffer(data.length).writeBytes(data);
+                    sendBytesInterface.sendStream(streamConIdPair.getRight(),buf,true);
                 }
             }catch (Exception e){
                 linkedQueue.remove(streamConIdPair);

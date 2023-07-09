@@ -21,10 +21,6 @@ public class ServerChannelInitializer extends ChannelInitializer<QuicStreamChann
     @Override
     protected void initChannel(QuicStreamChannel ch)  {
         ChannelPipeline cp = ch.pipeline();
-        //cp.addLast(new LoggingHandler(LogLevel.INFO));
-        /**
-        if(quicChannelMetrics!=null){
-        } **/
         cp.addLast(QuicStructuredMessageEncoder.HANDLER_NAME,new QuicStructuredMessageEncoder(quicChannelMetrics));
         cp.addLast(QuicDelimitedMessageDecoder.HANDLER_NAME,new QuicDelimitedMessageDecoder(consumer,quicChannelMetrics,incoming));
         cp.addLast(QuicStreamReadHandler.HANDLER_NAME,new QuicStreamReadHandler(consumer,quicChannelMetrics));

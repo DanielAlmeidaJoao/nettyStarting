@@ -37,11 +37,16 @@ public class BabelOutputStream {
         release();
         return b;
     }
-    public void readRemainingBytes(byte[] dst, int dstIndex, int length){
+    public int readRemainingBytes(byte[] dst, int dstIndex, int length){
+        int available = buf.readableBytes();
+        if(length>available){
+            length = available;
+        }
         buf.readBytes(dst,dstIndex,length);
         if(buf.readableBytes()==0){
             release();
         }
+        return length;
     }
     public void release(){
         buf.release();
