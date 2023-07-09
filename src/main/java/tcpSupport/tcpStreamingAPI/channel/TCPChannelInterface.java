@@ -3,7 +3,6 @@ package tcpSupport.tcpStreamingAPI.channel;
 import quicSupport.channels.SendBytesInterface;
 import quicSupport.utils.enums.TransmissionType;
 
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 
 public interface TCPChannelInterface extends SendBytesInterface {
@@ -16,7 +15,6 @@ public interface TCPChannelInterface extends SendBytesInterface {
     void send(String streamId, byte[] message,int len, TransmissionType type);
 
 
-    void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId);
 
     boolean isConnected(InetSocketAddress peer);
     InetSocketAddress [] getNettyIdToConnection();

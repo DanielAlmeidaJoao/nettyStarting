@@ -3,23 +3,17 @@ package pt.unl.fct.di.novasys.babel.channels;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
 
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
-    String openConnection(Host var1, short protoId, TransmissionType type);
+    String openMessageConnection(Host var1, short protoId);
+    String openStreamConnection(Host var1, short protoId);
+
     void sendMessage(T var1, Host var2, short protoId);
     void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId);
     void sendMessage(T msg,String linkId,short proto);
     void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
-    void sendStream(byte [] stream,int len,String streamId,short proto);
-    void sendStream(byte [] stream,int len,Host host,short proto);
-    void sendStream(InputStream inputStream, int len, Host peer, short proto);
-    void sendStream(InputStream inputStream, int len, String conId, short proto);
-    void sendStream(InputStream inputStream, Host peer, short proto);
-    void sendStream(InputStream inputStream, String conId, short proto);
-
     TransmissionType getTransmissionType(Host host)  throws NoSuchElementException;
     TransmissionType getTransmissionType(String streamId)  throws NoSuchElementException;
     void registerChannelInterest(short protoId);

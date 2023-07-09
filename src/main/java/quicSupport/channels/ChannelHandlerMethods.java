@@ -2,6 +2,7 @@ package quicSupport.channels;
 
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelStream;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -25,7 +26,7 @@ public interface ChannelHandlerMethods {
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
     void onChannelReadFlowStream(String streamId, BabelInBytesWrapper bytes, InetSocketAddress from);
 
-    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId);
+    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelStream babelStream);
 
     //void onConnectionDown(InetSocketAddress peer, boolean incoming);
 

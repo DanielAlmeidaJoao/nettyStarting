@@ -12,6 +12,7 @@ import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelStream;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -106,7 +107,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream, BabelStream babelStream) {
 
     }
 

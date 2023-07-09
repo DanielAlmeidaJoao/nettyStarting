@@ -1,5 +1,6 @@
 package quicSupport.channels;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
@@ -124,14 +125,16 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
             super.send(peer,message,len,type);
         });
     }
+
     @Override
-    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
-        executor.submit(() -> {
-            super.sendInputStream(inputStream,len,peer,conId);
-        });
+    public void sendStream(String customConId , ByteBuf byteBuf, boolean flush){
+        executor.submit(() -> super.sendStream(customConId,byteBuf,flush));
+    }
+    public void sendInputStream(String conId, InputStream inputStream, int len)  {
+        executor.submit(() -> super.sendInputStream(conId,inputStream,len));
     }
 
-    /*********************************** User Actions **************************************/
+        /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/
         @Override

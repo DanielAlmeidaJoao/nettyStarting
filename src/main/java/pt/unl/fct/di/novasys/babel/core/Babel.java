@@ -20,7 +20,6 @@ import quicSupport.utils.enums.TransmissionType;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -248,24 +247,7 @@ public class Babel {
     protected void sendMessage(int channelId,byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId){
         getOrThrow(channelId).getLeft().sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
     }
-    protected void sendStream(int channelId,byte[] stream,int dataLen, String streamId,short proto){
-        getOrThrow(channelId).getLeft().sendStream(stream,dataLen,streamId,proto);
-    }
-    protected void sendStream(int channelId,byte[] stream,int dataLen, Host dest, short sourceProto){
-        getOrThrow(channelId).getLeft().sendStream(stream,dataLen,dest,sourceProto);
-    }
-    protected void sendStream(int channelId, InputStream inputStream, int dataLen, Host peer, short sourceProto){
-        getOrThrow(channelId).getLeft().sendStream(inputStream,dataLen,peer,sourceProto);
-    }
-    protected void sendStream(int channelId, InputStream inputStream, int dataLen, String conId, short sourceProto){
-        getOrThrow(channelId).getLeft().sendStream(inputStream,dataLen,conId,sourceProto);
-    }
-    protected void sendStream(int channelId, InputStream inputStream,Host peer, short sourceProto){
-        getOrThrow(channelId).getLeft().sendStream(inputStream,peer,sourceProto);
-    }
-    protected void sendStream(int channelId, InputStream inputStream, String conId, short sourceProto){
-        getOrThrow(channelId).getLeft().sendStream(inputStream,conId,sourceProto);
-    }
+
     private Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> getOrThrow(int channelId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
@@ -363,12 +345,19 @@ public class Babel {
      * Opens a connection to a peer in the given channel.
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
-    String openConnection(int channelId, Host target, short proto, TransmissionType transmissionType) {
+    String openConnection(int channelId, Host target, short proto) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Opening connection in non-existing channelId " + channelId);
-        return channelEntry.getLeft().openConnection(target,proto, transmissionType);
+        return channelEntry.getLeft().openMessageConnection(target,proto);
+    }
+    String openStreamConnection(int channelId, Host target, short proto) {
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("Opening connection in non-existing channelId " + channelId);
+        return channelEntry.getLeft().openStreamConnection(target,proto);
     }
 
     /**

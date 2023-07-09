@@ -12,7 +12,6 @@ import pt.unl.fct.di.novasys.babel.handlers.*;
 import pt.unl.fct.di.novasys.babel.internal.*;
 import pt.unl.fct.di.novasys.babel.metrics.Metric;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
-import quicSupport.utils.enums.TransmissionType;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -346,7 +345,7 @@ public abstract class GenericProtocol {
     }
 
     /**
-     * Sets the default channel for the {@link #sendMessage(ProtoMessage, Host)}, {@link #openConnection(Host)}
+     * Sets the default channel for the {@link #sendMessage(ProtoMessage, Host)}, {@link #openMessageConnection(Host)}
      * and {@link #closeConnection(Host)} methods.
      *
      * @param channelId the channel id
@@ -358,7 +357,7 @@ public abstract class GenericProtocol {
 
     /**
      * Sends a message to a specified destination, using the default channel.
-     * May require the use of {@link #openConnection(Host)} beforehand.
+     * May require the use of {@link #openMessageConnection(Host)} beforehand.
      *
      * @param msg         the message to send
      * @param destination the ip/port to send the message to
@@ -369,7 +368,7 @@ public abstract class GenericProtocol {
 
     /**
      * Sends a message to a specified destination using the given channel.
-     * May require the use of {@link #openConnection(Host)} beforehand.
+     * May require the use of {@link #openMessageConnection(Host)} beforehand.
      *
      * @param channelId     the channel to send the message through
      * @param msg         the message to send
@@ -381,7 +380,7 @@ public abstract class GenericProtocol {
 
     /**
      * Sends a message to a different protocol in the specified destination, using the default channel.
-     * May require the use of {@link #openConnection(Host)} beforehand.
+     * May require the use of {@link #openMessageConnection(Host)} beforehand.
      *
      * @param destProto   the target protocol for the message.
      * @param msg         the message to send
@@ -393,7 +392,7 @@ public abstract class GenericProtocol {
 
     /**
      * Sends a message to a specified destination, using the default channel, and a specific connection in that channel.
-     * May require the use of {@link #openConnection(Host)} beforehand.
+     * May require the use of {@link #openMessageConnection(Host)} beforehand.
      *
      * @param connection  the channel-specific connection to use.
      * @param msg         the message to send
@@ -405,7 +404,7 @@ public abstract class GenericProtocol {
 
     /**
      * Sends a message to a specified destination, using a specific connection in a given channel.
-     * May require the use of {@link #openConnection(Host)} beforehand.
+     * May require the use of {@link #openMessageConnection(Host)} beforehand.
      *
      * @param channelId     the channel to send the message through
      * @param connection  the channel-specific connection to use.
@@ -419,7 +418,7 @@ public abstract class GenericProtocol {
     /**
      * Sends a message to a different protocol in the specified destination,
      * using a specific connection in the default channel.
-     * May require the use of {@link #openConnection(Host)} beforehand.
+     * May require the use of {@link #openMessageConnection(Host)} beforehand.
      *
      * @param destProto   the target protocol for the message.
      * @param connection  the channel-specific connection to use.
@@ -433,7 +432,7 @@ public abstract class GenericProtocol {
     /**
      * Sends a message to a different protocol in the specified destination,
      * using a specific connection in the given channel.
-     * May require the use of {@link #openConnection(Host)} beforehand.
+     * May require the use of {@link #openMessageConnection(Host)} beforehand.
      *
      * @param channelId   the channel to send the message through
      * @param destProto   the target protocol for the message.
@@ -456,8 +455,8 @@ public abstract class GenericProtocol {
      *
      * @param peer the ip/port to create the connection to.
      */
-    protected final String openConnection(Host peer) {
-        return openConnection(peer, defaultChannel);
+    protected final String openMessageConnection(Host peer) {
+        return openMessageConnection(peer, defaultChannel);
     }
 
     /**
@@ -467,11 +466,11 @@ public abstract class GenericProtocol {
      * @param peer      the ip/port to create the connection to.
      * @param channelId the channel to create the connection in
      */
-    protected final String openConnection(Host peer, int channelId) {
-        return babel.openConnection(channelId, peer, protoId, TransmissionType.STRUCTURED_MESSAGE);
+    protected final String openMessageConnection(Host peer, int channelId) {
+        return babel.openConnection(channelId, peer, protoId);
     }
     protected final String openStreamConnection(Host peer, int channelId) {
-        return babel.openConnection(channelId, peer, protoId, TransmissionType.UNSTRUCTURED_STREAM);
+        return babel.openStreamConnection(channelId, peer, protoId);
     }
 
     /**

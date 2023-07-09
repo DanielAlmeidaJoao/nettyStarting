@@ -8,7 +8,6 @@ import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
 
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
@@ -42,37 +41,6 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
             logger.debug("Sending: bytes to " + streamId + " proto " + destProto +
                     " channel " + channelId);
         babel.sendMessage(channelId,data,dataLen,streamId,sourceProto,destProto,handlerId);
-    }
-    protected void sendStream(int channelId,byte[] stream,int dataLen, String streamId){
-        babel.sendStream(channelId,stream,dataLen,streamId,getProtoId());
-        if (logger.isDebugEnabled())
-            logger.debug("Sending: stream bytes to " + streamId +" channel " + channelId);
-    }
-    protected void sendStream(int channelId,byte[] stream,int dataLen, Host dest){
-        babel.sendStream(channelId,stream,dataLen,dest,getProtoId());
-        if (logger.isDebugEnabled())
-            logger.debug("Sending: stream bytes to " + dest +" channel " + channelId);
-    }
-
-    protected void sendStream(int channelId, InputStream inputStream, int dataLen, Host peer) {
-        babel.sendStream(channelId,inputStream,dataLen,peer,getProtoId());
-        if (logger.isDebugEnabled())
-            logger.debug("Sending: InputStream bytes to " + peer+" channel " + channelId);
-    }
-    protected void sendStream(int channelId, InputStream inputStream, int dataLen, String conId) {
-        babel.sendStream(channelId,inputStream,dataLen,conId,getProtoId());
-        if (logger.isDebugEnabled())
-            logger.debug("Sending: InputStream bytes to " + conId +" channel " + channelId);
-    }
-    protected void sendStream(int channelId, InputStream inputStream, Host peer) {
-        babel.sendStream(channelId,inputStream,peer,getProtoId());
-        if (logger.isDebugEnabled())
-            logger.debug("Sending: InputStream bytes to " + peer+" channel " + channelId);
-    }
-    protected void sendStream(int channelId, InputStream inputStream, String conId) {
-        babel.sendStream(channelId,inputStream,conId,getProtoId());
-        if (logger.isDebugEnabled())
-            logger.debug("Sending: InputStream bytes to " + conId +" channel " + channelId);
     }
 
     protected final void closeStream(String streamId) {

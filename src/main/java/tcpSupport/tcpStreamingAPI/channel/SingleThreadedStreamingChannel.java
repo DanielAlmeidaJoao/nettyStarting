@@ -1,16 +1,17 @@
 package tcpSupport.tcpStreamingAPI.channel;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.ChannelHandlerMethods;
+import quicSupport.utils.enums.NetworkRole;
+import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import tcpSupport.tcpStreamingAPI.utils.MetricsDisabledException;
-import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.enums.NetworkRole;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,13 +73,14 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     public void send(String conId,byte[] message, int len, TransmissionType transmissionType){
         executor.execute(() -> super.send(conId,message,len, transmissionType));
     }
-
     @Override
-    public void sendInputStream(InputStream inputStream, int len, InetSocketAddress peer, String conId){
-        executor.execute(() -> {
-            super.sendInputStream(inputStream,len,peer,conId);
-        });
+    public void sendStream(String customConId , ByteBuf byteBuf, boolean flush){
+        executor.submit(() -> super.sendStream(customConId,byteBuf,flush));
     }
+    public void sendInputStream(String conId, InputStream inputStream, int len)  {
+        executor.submit(() -> super.sendInputStream(conId,inputStream,len));
+    }
+
     @Override
     public void closeServerSocket(){
         executor.execute(() -> super.closeServerSocket());

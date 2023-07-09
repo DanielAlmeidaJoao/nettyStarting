@@ -8,9 +8,9 @@ import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpStreamingAPI.utils.BabelStream;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,11 +59,6 @@ public class BabelQUICTCP_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TC
         addProtoOnSend(dest,sourceProto);
         super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
     }
-    @Override
-    public void sendStream(byte [] stream,int len,Host host,short proto){
-        addProtoOnSend(host,proto);
-        super.sendStream(stream,len,host,proto);
-    }
 
     @Override
     public void sendMessage(T msg,String streamId,short proto) {
@@ -76,37 +71,12 @@ public class BabelQUICTCP_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TC
         super.sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
     }
 
+        //////
     @Override
-    public void sendStream(byte [] stream,int len,String streamId,short proto){
-        addProtoOnSend(streamId,proto);
-        super.sendStream(stream,len,streamId,proto);
-    }
-    @Override
-    public void sendStream(InputStream inputStream, int len, Host peer, short proto){
-        addProtoOnSend(peer,proto);
-        super.sendStream(inputStream,len,peer,proto);
-    }
-    @Override
-    public void sendStream(InputStream inputStream, int len, String conId, short proto){
-        addProtoOnSend(conId,proto);
-        super.sendStream(inputStream,len,conId,proto);
-    }
-    @Override
-    public void sendStream(InputStream inputStream, Host peer, short proto){
-        addProtoOnSend(peer,proto);
-        super.sendStream(inputStream,peer,proto);
-    }
-    @Override
-    public void sendStream(InputStream inputStream, String conId, short proto){
-        addProtoOnSend(conId,proto);
-        super.sendStream(inputStream,conId,proto);
-    }
-    //////
-    @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId){
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelStream babelStream){
         hostChannelsMap.computeIfAbsent(FactoryMethods.toBabelHost(peer),host1 -> new HashSet<>());
         streamChannelsMap.computeIfAbsent(customConId,s -> new HashSet<>());
-        super.onConnectionUp(incoming,peer, type, customConId);
+        super.onConnectionUp(incoming,peer, type, customConId, babelStream);
     }
 
     @Override

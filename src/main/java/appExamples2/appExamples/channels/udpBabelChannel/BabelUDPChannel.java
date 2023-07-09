@@ -19,7 +19,6 @@ import udpSupport.channels.UDPChannelInterface;
 import udpSupport.metrics.ChannelStats;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -123,33 +122,6 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         Host host = customConIDToAddress.get(streamId);
         sendMessage(data,dataLen,host,sourceProto,destProto,handlerId);
     }
-
-    @Override
-    public void sendStream(byte[] stream,int len,String streamId, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC CHANNELS").printStackTrace();
-    }
-
-    @Override
-    public void sendStream(byte[] msg,int len,Host host, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-    }
-
-    @Override
-    public void sendStream(InputStream inputStream, int len,Host dest, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-    }
-    @Override
-    public void sendStream(InputStream inputStream, int len,String conId, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-    }
-    @Override
-    public void sendStream(InputStream inputStream,Host dest, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-    }
-    @Override
-    public void sendStream(InputStream inputStream, String conId, short proto) {
-        new Throwable("UNSUPPORTED OPERATION. SUPPORTED ONLY BY QUIC AND TCP CHANNELS").printStackTrace();
-    }
     @Override
     public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
 
@@ -215,12 +187,18 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public String openConnection(Host peer, short proto, TransmissionType streamType) {
+    public String openMessageConnection(Host peer, short proto) {
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         String id = nextId();
         customConIDToAddress.put(id,peer);
         listener.deliverEvent(new OnConnectionDownEvent(peer,null,id,true));
         return id;
+    }
+
+    @Override
+    public String openStreamConnection(Host var1, short protoId) {
+        new Exception("UNSUPPORTED OPERATION").printStackTrace();
+        return "";
     }
 
     @Override

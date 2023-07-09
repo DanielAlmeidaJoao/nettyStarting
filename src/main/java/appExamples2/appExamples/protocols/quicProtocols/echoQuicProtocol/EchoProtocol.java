@@ -123,10 +123,14 @@ public class EchoProtocol extends GenericProtocolExtension {
     boolean sendByte = true;
     public static final short HANDLER_ID = 2;
     public static final short HANDLER_ID2 = 3;
+    private void toDo(){
+        (new Exception("TO DO THIS BAGULHO")).printStackTrace();
+    }
     public void sendMessage(String message, String stream){
         TransmissionType transmissionType = getConnectionType(channelId,stream);
         if(TransmissionType.UNSTRUCTURED_STREAM == transmissionType){
-            super.sendStream(channelId,message.getBytes(),message.length(),stream);
+            //super.sendStream(channelId,message.getBytes(),message.length(),stream);
+            toDo();
         }else{
             if(sendByte){
                 super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId(),HANDLER_ID);
@@ -142,7 +146,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         try{
             Host host = new Host(myself.getAddress(),Integer.parseInt(port));
             if("M".equalsIgnoreCase(type)){
-                System.out.println("OPENNED MESSAGE CONNECTION "+openConnection(host));
+                System.out.println("OPENNED MESSAGE CONNECTION "+ openMessageConnection(host));
             }else {
                 System.out.println("OPENNED STREAM CONNECTION"+openStreamConnection(host,channelId));
             }
@@ -162,11 +166,13 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     public void sendStream(String message){
         System.out.println("SENDING "+message.length());
-        super.sendStream(channelId,message.getBytes(),message.length(),dest);
+        toDo();
+        //super.sendStream(channelId,message.getBytes(),message.length(),dest);
     }
     public void sendStream(String message, String streamId){
         System.out.println("SENDING "+message.length());
-        super.sendStream(channelId,message.getBytes(),message.length(),streamId);
+        toDo();
+        //super.sendStream(channelId,message.getBytes(),message.length(),streamId);
     }
     public void createStream(){
 
@@ -236,7 +242,8 @@ public class EchoProtocol extends GenericProtocolExtension {
             for (int i = 0; i < 10; i++) {
                 byte [] hh = new byte[4];
                 Unpooled.buffer(4).writeInt(i).readBytes(hh,0,4);
-                super.sendStream(channelId,hh,hh.length,event.conId);
+                toDo();
+                //super.sendStream(channelId,hh,hh.length,event.conId);
             }
         }
 

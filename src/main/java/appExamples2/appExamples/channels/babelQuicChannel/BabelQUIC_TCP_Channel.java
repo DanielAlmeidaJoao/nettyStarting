@@ -22,6 +22,7 @@ import quicSupport.utils.metrics.QuicConnectionMetrics;
 import quicSupport.utils.streamUtils.BabelInBytesWrapper;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
+import tcpSupport.tcpStreamingAPI.utils.BabelStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -153,8 +154,13 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
-    public String openConnection(Host peer, short proto, TransmissionType type) {
-        return customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),type);
+    public String openMessageConnection(Host peer, short proto) {
+        return customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),TransmissionType.STRUCTURED_MESSAGE);
+    }
+
+    @Override
+    public String openStreamConnection(Host peer, short protoId) {
+        return customQuicChannel.open(FactoryMethods.toInetSOcketAddress(peer),TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override
@@ -186,32 +192,6 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
-    public void sendStream(byte[] stream,int len, String streamId, short proto) {
-        customQuicChannel.send(streamId, stream,len, TransmissionType.UNSTRUCTURED_STREAM);
-    }
-
-    @Override
-    public void sendStream(byte[] stream,int len, Host host, short proto) {
-        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(host),stream,len, TransmissionType.UNSTRUCTURED_STREAM);
-    }
-
-    @Override
-    public void sendStream(InputStream inputStream, int len, Host peer, short proto) {
-        customQuicChannel.sendInputStream(inputStream,len,FactoryMethods.toInetSOcketAddress(peer),null);
-    }
-    @Override
-    public void sendStream(InputStream inputStream, int len,String conId, short proto) {
-        customQuicChannel.sendInputStream(inputStream,len,null,conId);
-    }
-    @Override
-    public void sendStream(InputStream inputStream, Host peer, short proto) {
-        customQuicChannel.sendInputStream(inputStream,0,FactoryMethods.toInetSOcketAddress(peer),null);
-    }
-    @Override
-    public void sendStream(InputStream inputStream, String conId, short proto) {
-        customQuicChannel.sendInputStream(inputStream,0,null,conId);
-    }
-    @Override
     public void registerChannelInterest(short protoId) {
         //TODO
     }
@@ -241,10 +221,10 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d);
     }
 
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelStream babelStream) {
         Host host = FactoryMethods.toBabelHost(peer);
         logger.debug("OnConnectionUpEvent " + host);
-        listener.deliverEvent(new OnConnectionUpEvent(host,type,customConId,incoming));
+        listener.deliverEvent(new OnConnectionUpEvent(host,type,customConId,incoming,babelStream));
     }
     /**
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
