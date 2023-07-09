@@ -109,6 +109,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         streamId = event.conId;
         if(event.babelInputStream !=null){
             babelInputStream = event.babelInputStream;
+            babelInputStream.setFlushMode(true);
         }
         if(event.inConnection){
             logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type+" SS "+streamId);
@@ -130,7 +131,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             dest = event.getNode();
         }
         try{
-            //fos2 = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_copy.txt");
+            fos2 = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_copy.mp4");
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -166,47 +167,40 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     long start = 0;
 
     private void uponStreamBytes(BabelInBytesWrapperEvent event) {
+        FileOutputStream out;
+
         if(myself.getPort()==8082){
-            //sendStream(channelId,event.getMsg(),event.getMsg().length,event.conId);
-            //if(received<813782079) return;
-            //System.out.println("RECEIVED: "+received+" BUFFERED: "+event.bbw.byteBuf.readableBytes());
-            //int wrote=0;
-            //while (event.bbw.byteBuf.readableBytes()>0 && notW){
-            /**
-            logger.info("READ AVAILABLE 22"+event.bbw.bytes.length);
-            ByteBuf byteBuf = event.bbw.buf;
-            while (byteBuf.readableBytes()>0){
-                System.out.println(byteBuf.readInt());
-            }
-            if(byteBuf.readableBytes()!=10000){
-                return;
-            }
-             **/
-            if(start==0){
-                start = System.currentTimeMillis();
-            }
-            try {
-                int available = event.babelOutputStream.readableBytes();
-                if(available<=0)return;
-                received += available;
-                fos.write(event.babelOutputStream.readRemainingBytes());
-                logger.info("RECEIVED ALL BYTES {} ",available);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            //}
-            if(received==fileLen){
-                try{
-                    logger.info("ELAPSED TIME : {}",(System.currentTimeMillis()-start));
-                    fos.close();
-                    notW = false;
-                }catch (Exception e){
+            out = fos;
+            babelInputStream.sendBabelOutputStream(event.babelOutputStream);
 
-                }
-            }
-
-
+        }else{
+            out = fos2;
         }
+        int available = event.babelOutputStream.readableBytes();
+        byte [] p = event.babelOutputStream.readRemainingBytes();
+
+        if(start==0){
+            start = System.currentTimeMillis();
+        }
+        try {
+            if(available<=0)return;
+            received += available;
+            out.write(p);
+            logger.info("RECEIVED ALL BYTES {} ",available);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        //}
+        if(received==fileLen){
+            try{
+                logger.info("ELAPSED TIME : {}",(System.currentTimeMillis()-start));
+                out.close();
+                notW = false;
+            }catch (Exception e){
+
+            }
+        }
+
         //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
 
     }

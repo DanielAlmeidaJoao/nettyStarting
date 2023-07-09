@@ -47,7 +47,16 @@ public class BabelInputStream {
     }
     public void sendBytes(byte [] bytes,int srcIndex,int len){
         streamInterface.sendStream(streamId, Unpooled.directBuffer(len).writeBytes(bytes,srcIndex,len),flush);
-
+    }
+    public boolean sendBabelOutputStream(BabelOutputStream babelOutputStream){
+        if(babelOutputStream.readableBytes()>0){
+            streamInterface.sendStream(streamId,babelOutputStream.getBuffer().retainedSlice(),flush);
+            return true;
+        }
+        return false;
+    }
+    public void sendBytes(byte [] bytes){
+        streamInterface.sendStream(streamId, Unpooled.directBuffer(bytes.length).writeBytes(bytes),flush);
     }
     public void sendBytes(ByteBuf buf, int srcIndex, int len){
         streamInterface.sendStream(streamId, Unpooled.directBuffer(len).writeBytes(buf,srcIndex,len),flush);
