@@ -63,19 +63,11 @@ public class BabelInputStream {
         streamInterface.sendStream(streamId, Unpooled.directBuffer(len).writeBytes(buf,srcIndex,len),flush);
     }
     public void sendFile(File file) throws FileNotFoundException {
-        long fileLen = file.length();
-        long read = Integer.BYTES;
         FileInputStream inputStream = new FileInputStream(file);
-        if(read >= fileLen){
-            sendInputStream(inputStream,Integer.BYTES);
-            return;
-        }
-        while (read<fileLen){
-            sendInputStream(inputStream,Integer.BYTES);
-            read += Integer.BYTES;
-        }
+        sendInputStream(inputStream,file.length());
+
     }
-    public void sendInputStream(InputStream inputStream, int len){
+    public void sendInputStream(InputStream inputStream, long len){
         streamInterface.sendInputStream(streamId,inputStream,len);
     }
     public void flushStream(){

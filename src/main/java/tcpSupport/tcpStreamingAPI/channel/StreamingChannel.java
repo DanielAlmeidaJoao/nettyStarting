@@ -302,16 +302,18 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
         }
         return false;
     }
-    public void sendInputStream( String conId, InputStream inputStream, int len)  {
+    public void sendInputStream( String conId, InputStream inputStream, long len)  {
+        int av=0;
         try {
+            av = inputStream.available();
             CustomTCPConnection idConnection = customIdToConnection.get(conId);
             if(idConnection == null){
-                channelHandlerMethods.onMessageSent(null,inputStream,len,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN CONID: "+conId),null,null);
+                channelHandlerMethods.onMessageSent(null,inputStream,inputStream.available(), new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN CONID: "+conId),null,null);
                 return;
             }
             if(idConnection.type!=TransmissionType.UNSTRUCTURED_STREAM){
                 Throwable t = new Throwable("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE. CON ID:"+conId);
-                channelHandlerMethods.onMessageSent(null,inputStream,len,t,idConnection.host, STRUCTURED_MESSAGE);
+                channelHandlerMethods.onMessageSent(null,inputStream,inputStream.available(),t,idConnection.host, STRUCTURED_MESSAGE);
                 return;
             }
             if(len<=0){
@@ -322,7 +324,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
             ChannelFuture c;
             if(inputStream instanceof FileInputStream){
                 FileInputStream in = (FileInputStream) inputStream;
-                FileRegion region = new DefaultFileRegion(in.getChannel(), 0, inputStream.available());
+                FileRegion region = new DefaultFileRegion(in.getChannel(), 0,len);
                 c = idConnection.channel.writeAndFlush(region);
             }else{
                 if(idConnection.channel.pipeline().get("ChunkedWriteHandler")==null){
@@ -333,10 +335,10 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
 
             CustomTCPConnection finalIdConnection = idConnection;
             c.addListener(future -> {
-                channelHandlerMethods.onMessageSent(null,inputStream,len,future.cause(),finalIdConnection.host,TransmissionType.UNSTRUCTURED_STREAM);
+                channelHandlerMethods.onMessageSent(null,inputStream, inputStream.available(), future.cause(),finalIdConnection.host,TransmissionType.UNSTRUCTURED_STREAM);
             });
         }catch (Exception e){
-            channelHandlerMethods.onMessageSent(null,inputStream,len,e.getCause(),null,TransmissionType.UNSTRUCTURED_STREAM);
+            channelHandlerMethods.onMessageSent(null,inputStream,av,e.getCause(),null,TransmissionType.UNSTRUCTURED_STREAM);
         }
     }
     private TCPConnectingObject connectingObject(InetSocketAddress peer){

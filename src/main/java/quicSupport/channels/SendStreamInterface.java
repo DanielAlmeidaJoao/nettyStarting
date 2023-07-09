@@ -8,7 +8,7 @@ public interface SendStreamInterface {
 
         void sendStream(String customConId , ByteBuf byteBuf, boolean flush);
 
-        void sendInputStream( String conId, InputStream inputStream, int len);
+        void sendInputStream( String conId, InputStream inputStream, long len);
 
         boolean flushStream(String conId);
     }

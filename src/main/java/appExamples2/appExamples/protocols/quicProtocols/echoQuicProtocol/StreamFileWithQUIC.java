@@ -16,6 +16,7 @@ import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.nio.file.Path;
@@ -171,7 +172,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
         if(myself.getPort()==8082){
             out = fos;
-            babelInputStream.sendBabelOutputStream(event.babelOutputStream);
+            //babelInputStream.sendBabelOutputStream(event.babelOutputStream);
         }else{
             out = fos2;
         }
@@ -185,7 +186,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             if(available<=0)return;
             received += available;
             out.write(p);
-            logger.info("RECEIVED ALL BYTES {} ",available);
+            logger.info("RECEIVED ALL BYTES {} . {}",available,received);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -249,6 +250,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //Path filePath = Paths.get(p);
             //
             File f = filePath.toFile();
+            FileInputStream fileInputStream = new FileInputStream(f);
             babelInputStream.sendFile(f);
 
             long len = f.length();

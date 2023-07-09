@@ -457,17 +457,17 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             });
         }
     }
-    public void sendInputStream(String conId, InputStream inputStream, int len)  {
+    public void sendInputStream(String conId, InputStream inputStream, long len)  {
         try {
             CustomQUICStreamCon streamChannel = customStreamIdToStream.get(conId);
             if(streamChannel==null){
-                overridenMethods.onMessageSent(null,inputStream,len,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+conId),null,TransmissionType.UNSTRUCTURED_STREAM);
+                overridenMethods.onMessageSent(null,inputStream,inputStream.available(),new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+conId),null,TransmissionType.UNSTRUCTURED_STREAM);
                 return;
             }
             InetSocketAddress peer = streamChannel.customQUICConnection.getRemote();
             if(streamChannel.type!=TransmissionType.UNSTRUCTURED_STREAM){
                 Throwable t = new Throwable("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
-                overridenMethods.onMessageSent(null,inputStream,len,t,peer,TransmissionType.UNSTRUCTURED_STREAM);
+                overridenMethods.onMessageSent(null,inputStream,inputStream.available(),t,peer,TransmissionType.UNSTRUCTURED_STREAM);
                 return;
             }
 
@@ -484,7 +484,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             c.addListener(future -> {
                 if(!future.isSuccess()){
                     future.cause().printStackTrace();
-                    overridenMethods.onMessageSent(new byte[0], inputStream, len,future.cause(), finalPeer,TransmissionType.UNSTRUCTURED_STREAM);
+                    overridenMethods.onMessageSent(new byte[0], inputStream,inputStream.available(),future.cause(), finalPeer,TransmissionType.UNSTRUCTURED_STREAM);
                 }
             });
         }catch (Exception e){

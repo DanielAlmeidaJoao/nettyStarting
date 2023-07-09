@@ -34,6 +34,7 @@ public class BabelOutputStream {
     public byte [] readRemainingBytes(){
         byte [] b = new byte[buf.readableBytes()];
         buf.readBytes(b);
+        buf.discardReadBytes();
         release();
         return b;
     }
@@ -43,6 +44,7 @@ public class BabelOutputStream {
             length = available;
         }
         buf.readBytes(dst,dstIndex,length);
+        buf.discardReadBytes();
         if(buf.readableBytes()==0){
             release();
         }
