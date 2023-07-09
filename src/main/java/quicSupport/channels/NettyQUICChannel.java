@@ -30,8 +30,8 @@ import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
-import tcpSupport.tcpStreamingAPI.utils.BabelStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 import tcpSupport.tcpStreamingAPI.utils.SendStreamContinuoslyLogics;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
@@ -161,9 +161,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         con.customQUICConnection.addStream(con);
         customStreamIdToStream.put(customId,con);
         nettyIdToStream.put(channel.id().asShortText(),con);
-        BabelStream babelStream = BabelStream.toBabelStream(customId,this,type);
+        BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customId,this,type);
         sendPendingMessages(con.customQUICConnection.getRemote(), type);
-        overridenMethods.onConnectionUp(inConnection,con.customQUICConnection.getRemote(),type,customId, babelStream);
+        overridenMethods.onConnectionUp(inConnection,con.customQUICConnection.getRemote(),type,customId, babelInputStream);
     }
 
 
@@ -177,10 +177,10 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,bytes,streamCon.customQUICConnection.getRemote());
         }
     }
-    public void onReceivedStream(String streamId, BabelInBytesWrapper babelInBytesWrapper){
+    public void onReceivedStream(String streamId, BabelOutputStream babelOutputStream){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon != null){
-            overridenMethods.onChannelReadFlowStream(streamCon.customStreamId,babelInBytesWrapper,streamCon.customQUICConnection.getRemote());
+            overridenMethods.onChannelReadFlowStream(streamCon.customStreamId, babelOutputStream,streamCon.customQUICConnection.getRemote());
         }
     }
 
@@ -251,8 +251,8 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             if(enableMetrics){
                 metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
             }
-            BabelStream babelStream = BabelStream.toBabelStream(customConId,this,type);
-            overridenMethods.onConnectionUp(inConnection,listeningAddress,type,customConId,babelStream);
+            BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customConId,this,type);
+            overridenMethods.onConnectionUp(inConnection,listeningAddress,type,customConId, babelInputStream);
         }catch (Exception e){
             e.printStackTrace();
             streamChannel.disconnect();

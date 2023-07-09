@@ -2,7 +2,7 @@ package pt.unl.fct.di.novasys.babel.internal;
 
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 
 /**
  * An abstract class that represents a protocol message
@@ -12,7 +12,7 @@ import quicSupport.utils.streamUtils.BabelInBytesWrapper;
  */
 public class BabelInBytesWrapperEvent extends InternalEvent {
 
-    public final BabelInBytesWrapper bbw;
+    public final BabelOutputStream babelOutputStream;
     private final Host from;
     private final int channelId;
     public final String conId;
@@ -22,10 +22,10 @@ public class BabelInBytesWrapperEvent extends InternalEvent {
     /**
      * Create a protocol message event with the provided numeric identifier
      */
-    public BabelInBytesWrapperEvent(BabelInBytesWrapper wrapper, Host from, int channelId, String conId, short sourceProto, short destProto, short handlerId) {
+    public BabelInBytesWrapperEvent(BabelOutputStream wrapper, Host from, int channelId, String conId, short sourceProto, short destProto, short handlerId) {
         super(EventType.STREAM_BYTES_IN);
         this.from = from;
-        this.bbw = wrapper;
+        this.babelOutputStream = wrapper;
         this.channelId = channelId;
         this.conId = conId;
         this.sourceProto = sourceProto;
@@ -36,7 +36,7 @@ public class BabelInBytesWrapperEvent extends InternalEvent {
     @Override
     public String toString() {
         return "MessageInEvent{" +
-                "msg=" + bbw +
+                "msg=" + babelOutputStream +
                 ", from=" + from +
                 ", channelId=" + channelId +
                 '}';
@@ -50,8 +50,8 @@ public class BabelInBytesWrapperEvent extends InternalEvent {
         return channelId;
     }
 
-    public BabelInBytesWrapper getBbw() {
-        return bbw;
+    public BabelOutputStream getBabelOutputStream() {
+        return babelOutputStream;
     }
 
 

@@ -1,7 +1,7 @@
 package tcpSupport.tcpStreamingAPI.channel;
 
 import io.netty.channel.Channel;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
 
@@ -12,7 +12,7 @@ public interface StreamingNettyConsumer {
     void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type);
     void onChannelMessageRead(String channelId, byte[] bytes);
 
-    void onChannelStreamRead(String channelId, BabelInBytesWrapper babelInBytesWrapper);
+    void onChannelStreamRead(String channelId, BabelOutputStream babelOutputStream);
     void onChannelInactive(String channelId);
     void onConnectionFailed(String channelId, Throwable cause);
 

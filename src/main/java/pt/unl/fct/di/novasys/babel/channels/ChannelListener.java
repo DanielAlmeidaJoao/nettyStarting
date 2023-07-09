@@ -1,7 +1,7 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 
 public interface ChannelListener<T> {
 
@@ -15,7 +15,7 @@ public interface ChannelListener<T> {
 
     void deliverMessage(byte [] message, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId);
 
-    void deliverMessage(BabelInBytesWrapper babelInBytesWrapper, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId);
+    void deliverMessage(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId);
 
     int getChannelId();
 }

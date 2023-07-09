@@ -1,7 +1,7 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 
 public class DummyChannelToProtoForwarder<T> implements ChannelListener<T>{
     @Override
@@ -30,7 +30,7 @@ public class DummyChannelToProtoForwarder<T> implements ChannelListener<T>{
     }
 
     @Override
-    public void deliverMessage(BabelInBytesWrapper babelInBytesWrapper, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId) {
+    public void deliverMessage(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId) {
 
     }
 

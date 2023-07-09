@@ -3,8 +3,6 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
@@ -14,7 +12,7 @@ import pt.unl.fct.di.novasys.babel.internal.BabelInBytesWrapperEvent;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
-import tcpSupport.tcpStreamingAPI.utils.BabelStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.io.File;
@@ -106,11 +104,11 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     public static final short HANDLER_ID = 2;
     public static final short HANDLER_ID2 = 43;
 
-    BabelStream babelStream;
+    BabelInputStream babelInputStream;
     private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
         streamId = event.conId;
-        if(event.babelStream!=null){
-            babelStream = event.babelStream;
+        if(event.babelInputStream !=null){
+            babelInputStream = event.babelInputStream;
         }
         if(event.inConnection){
             logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type+" SS "+streamId);
@@ -141,17 +139,17 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
         if(myself.getPort()==8081){
             new Thread(() -> {
-                for (int i = 0; i < 100; i++) {
-                    //startStreaming();
-                    babelStream.sendInt(i);
+                for (int i = 0; i < 1; i++) {
+                    startStreaming();
+                    //babelInputStream.sendInt(i);
                 }
-                System.out.println("FLUSH MODE "+babelStream.getFlushMode());
-                babelStream.flushStream();
+                System.out.println("FLUSH MODE "+ babelInputStream.getFlushMode());
+                //babelInputStream.flushStream();
 
                 try{
                     Thread.sleep(10000);
                     System.out.println("UPPPP");
-                    babelStream.flushStream();
+                    //babelInputStream.flushStream();
                 }catch (Exception e){}
             }).start();
         }
@@ -168,32 +166,31 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     long start = 0;
 
     private void uponStreamBytes(BabelInBytesWrapperEvent event) {
-
-
         if(myself.getPort()==8082){
             //sendStream(channelId,event.getMsg(),event.getMsg().length,event.conId);
             //if(received<813782079) return;
             //System.out.println("RECEIVED: "+received+" BUFFERED: "+event.bbw.byteBuf.readableBytes());
             //int wrote=0;
             //while (event.bbw.byteBuf.readableBytes()>0 && notW){
-            logger.info("READ AVAILABLE "+event.bbw.bytes.length);
-            ByteBuf byteBuf = Unpooled.copiedBuffer(event.bbw.bytes);
+            /**
+            logger.info("READ AVAILABLE 22"+event.bbw.bytes.length);
+            ByteBuf byteBuf = event.bbw.buf;
             while (byteBuf.readableBytes()>0){
                 System.out.println(byteBuf.readInt());
             }
             if(byteBuf.readableBytes()!=10000){
                 return;
             }
+             **/
             if(start==0){
                 start = System.currentTimeMillis();
             }
             try {
-                int available = event.bbw.availableBytes;
+                int available = event.babelOutputStream.readableBytes();
                 if(available<=0)return;
                 received += available;
-                byte p [] = new byte[available];
-                fos.write(event.bbw.bytes);
-                logger.info("RECEIVED ALL BYTES {} - available: {} ",p.length,available);
+                fos.write(event.babelOutputStream.readRemainingBytes());
+                logger.info("RECEIVED ALL BYTES {} ",available);
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -257,7 +254,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //Path filePath = Paths.get(p);
             //
             File f = filePath.toFile();
-            babelStream.sendFile(f);
+            babelInputStream.sendFile(f);
 
             int len = (int) f.length();
             //sendStream(channelId,fileInputStream,len,streamId);

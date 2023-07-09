@@ -11,8 +11,8 @@ import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
-import tcpSupport.tcpStreamingAPI.utils.BabelStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -101,13 +101,13 @@ import java.util.Properties;
     }
 
     @Override
-    public void onChannelReadFlowStream(String streamId, BabelInBytesWrapper bytes, InetSocketAddress from) {
+    public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from) {
         //TODO
         System.out.println("READ STREAAAAAAAM");
     }
 
     @Override
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream, BabelStream babelStream) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String defaultStream, BabelInputStream babelInputStream) {
 
     }
 

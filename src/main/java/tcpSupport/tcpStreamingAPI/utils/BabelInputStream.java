@@ -10,11 +10,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
-public class BabelStream {
+public class BabelInputStream {
     public final String streamId;
     public final SendStreamInterface streamInterface;
     private boolean flush;
-    BabelStream(String streamId, SendStreamInterface streamInterface){
+    BabelInputStream(String streamId, SendStreamInterface streamInterface){
         this.streamId = streamId;
         this.streamInterface = streamInterface;
         flush = false;
@@ -26,6 +26,12 @@ public class BabelStream {
 
     public void sendInt(int value){
         streamInterface.sendStream(streamId, Unpooled.directBuffer(Integer.BYTES).writeInt(value),flush);
+    }
+    public void sendShort(short value){
+        streamInterface.sendStream(streamId, Unpooled.directBuffer(Short.BYTES).writeShort(value),flush);
+    }
+    public void sendByte(byte value){
+        streamInterface.sendStream(streamId, Unpooled.directBuffer(Byte.BYTES).writeByte(value),flush);
     }
     public void sendBoolean(boolean value){
         streamInterface.sendStream(streamId, Unpooled.directBuffer(1).writeBoolean(value),flush);
@@ -45,7 +51,6 @@ public class BabelStream {
     }
     public void sendBytes(ByteBuf buf, int srcIndex, int len){
         streamInterface.sendStream(streamId, Unpooled.directBuffer(len).writeBytes(buf,srcIndex,len),flush);
-
     }
     public void sendFile(File file) throws FileNotFoundException {
         FileInputStream inputStream = new FileInputStream(file);
@@ -60,9 +65,10 @@ public class BabelStream {
     public boolean getFlushMode(){
         return flush;
     }
-    public static BabelStream toBabelStream(String conId, SendStreamInterface streamInterface, TransmissionType type){
+
+    public static BabelInputStream toBabelStream(String conId, SendStreamInterface streamInterface, TransmissionType type){
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
-            return new BabelStream(conId,streamInterface);
+            return new BabelInputStream(conId,streamInterface);
         }
         return null;
     }

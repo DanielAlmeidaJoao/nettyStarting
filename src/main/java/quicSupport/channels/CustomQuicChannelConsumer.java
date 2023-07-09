@@ -2,7 +2,7 @@ package quicSupport.channels;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 
 import java.net.InetSocketAddress;
 
@@ -19,7 +19,7 @@ public interface CustomQuicChannelConsumer {
 
     void onReceivedDelimitedMessage(String streamId, byte[] bytes);
 
-    void onReceivedStream(String streamId, BabelInBytesWrapper bytes);
+    void onReceivedStream(String streamId, BabelOutputStream bytes);
 
     void streamInactiveHandler(QuicStreamChannel channel);
 

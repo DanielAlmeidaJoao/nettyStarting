@@ -19,10 +19,10 @@ import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
-import tcpSupport.tcpStreamingAPI.utils.BabelStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -216,15 +216,15 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         }
     }
     @Override
-    public void onChannelReadFlowStream(String streamId, BabelInBytesWrapper bytes, InetSocketAddress from) {
+    public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from) {
         short d = protoToReceiveStreamData;
         listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d);
     }
 
-    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelStream babelStream) {
+    public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream babelInputStream) {
         Host host = FactoryMethods.toBabelHost(peer);
         logger.debug("OnConnectionUpEvent " + host);
-        listener.deliverEvent(new OnConnectionUpEvent(host,type,customConId,incoming,babelStream));
+        listener.deliverEvent(new OnConnectionUpEvent(host,type,customConId,incoming, babelInputStream));
     }
     /**
     public void onConnectionDown(InetSocketAddress peer, boolean incoming) {

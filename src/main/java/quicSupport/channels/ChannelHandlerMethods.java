@@ -1,8 +1,8 @@
 package quicSupport.channels;
 
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
-import tcpSupport.tcpStreamingAPI.utils.BabelStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -24,9 +24,9 @@ public interface ChannelHandlerMethods {
     void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection);
 
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
-    void onChannelReadFlowStream(String streamId, BabelInBytesWrapper bytes, InetSocketAddress from);
+    void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from);
 
-    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelStream babelStream);
+    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream babelInputStream);
 
     //void onConnectionDown(InetSocketAddress peer, boolean incoming);
 

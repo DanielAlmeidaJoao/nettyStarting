@@ -20,7 +20,7 @@ import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 import tcpSupport.tcpStreamingAPI.connectionSetups.StreamInConnection;
 import tcpSupport.tcpStreamingAPI.connectionSetups.StreamOutConnection;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
@@ -141,12 +141,12 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
             channelHandlerMethods.onChannelReadDelimitedMessage(connection.conId,bytes,connection.host);
         }
     }
-    public void onChannelStreamRead(String channelId, BabelInBytesWrapper babelInBytesWrapper){
+    public void onChannelStreamRead(String channelId, BabelOutputStream babelOutputStream){
         CustomTCPConnection connection = nettyIdToConnection.get(channelId);
         if(connection==null){
             logger.info("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
         }else {
-            channelHandlerMethods.onChannelReadFlowStream(connection.conId,babelInBytesWrapper,connection.host);
+            channelHandlerMethods.onChannelReadFlowStream(connection.conId, babelOutputStream,connection.host);
         }
     }
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type){
@@ -176,9 +176,9 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
                 tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,inConnection);
             }
             sendPendingMessages(connection,type);
-            BabelStream babelStream = BabelStream.toBabelStream(conId,this,type);
+            BabelInputStream babelInputStream = BabelInputStream.toBabelStream(conId,this,type);
             //    void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId);
-            channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId, babelStream);
+            channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId, babelInputStream);
         }catch (Exception e){
             e.printStackTrace();
             channel.disconnect();

@@ -273,7 +273,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("Received bytes3: {} from {}", new String(event.getMsg()),event.getFrom());
     }
     private void uponStreamBytes(BabelInBytesWrapperEvent event) {
-        logger.info("Received bytes4: {} from {}",event.bbw.availableBytes,event.getFrom());
+        logger.info("Received bytes4: {} from {}",event.babelOutputStream.readableBytes(),event.getFrom());
     }
     private void uponStreamBytes2(BytesMessageInEvent event) {
         logger.info("Received 2bytes2: {} from {}",event.getMsg().length,event.getFrom());

@@ -747,7 +747,7 @@ public abstract class GenericProtocol {
         if (h != null)
             h.receive(m);
         else
-            logger.warn("Discarding unexpected Bytes message (handler id " + m.handlerId + "): number of bytes = " + m.bbw.availableBytes);
+            logger.warn("Discarding unexpected Bytes message (handler id " + m.handlerId + "): number of bytes = " + m.babelOutputStream.readableBytes());
     }
 
     private void handleMessageFailed(MessageFailedEvent e) {

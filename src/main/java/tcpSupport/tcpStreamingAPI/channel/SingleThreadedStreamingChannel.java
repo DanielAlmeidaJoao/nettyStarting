@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.streamUtils.BabelInBytesWrapper;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
 import tcpSupport.tcpStreamingAPI.utils.MetricsDisabledException;
@@ -38,8 +38,8 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     }
 
     @Override
-    public void onChannelStreamRead(String channelId, BabelInBytesWrapper babelInBytesWrapper) {
-        executor.execute(() -> super.onChannelStreamRead(channelId,babelInBytesWrapper));
+    public void onChannelStreamRead(String channelId, BabelOutputStream babelOutputStream) {
+        executor.execute(() -> super.onChannelStreamRead(channelId, babelOutputStream));
     }
 
     @Override
