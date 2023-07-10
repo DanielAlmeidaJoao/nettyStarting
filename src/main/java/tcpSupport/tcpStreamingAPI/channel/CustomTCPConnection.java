@@ -2,6 +2,7 @@ package tcpSupport.tcpStreamingAPI.channel;
 
 import io.netty.channel.Channel;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 
 import java.net.InetSocketAddress;
 
@@ -11,12 +12,14 @@ public class CustomTCPConnection {
     public final InetSocketAddress host;
     public final String conId;
     public final boolean inConnection;
-    public CustomTCPConnection(Channel channel, TransmissionType type, InetSocketAddress listeningAddress, String conId, boolean inConnection){
+    public final BabelInputStream inputStream;
+    public CustomTCPConnection(Channel channel, TransmissionType type, InetSocketAddress listeningAddress, String conId, boolean inConnection, BabelInputStream babelInputStream){
         this.channel=channel;
         this.type=type;
         this.host = listeningAddress;
         this.conId = conId;
         this.inConnection=inConnection;
+        this.inputStream = babelInputStream;
     }
 
     public void close(){

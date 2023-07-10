@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 
@@ -80,7 +80,7 @@ public class SendFileProtocol extends GenericProtocol {
             e.printStackTrace();
         }
     }
-    private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
+    private void uponInConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());
         if(properties.getProperty("forwarder")==null){
             Host peer = null;

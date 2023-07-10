@@ -5,6 +5,7 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
+import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
@@ -66,7 +67,7 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
 
     /*********************************** Channel Handlers **********************************/
     @Override
-    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData, InetSocketAddress remotePeer, TransmissionType type){
+    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type){
         executor.submit(() -> {
             super.channelActive(streamChannel,controlData,remotePeer,type);
         });

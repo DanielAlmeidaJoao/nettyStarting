@@ -7,14 +7,17 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import quicSupport.channels.NettyQUICChannel;
 import quicSupport.channels.CustomQuicChannelConsumer;
+import quicSupport.channels.NettyQUICChannel;
 import quicSupport.utils.QUICLogics;
+import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.util.List;
+
+import static quicSupport.utils.QUICLogics.gson;
 
 public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     private static final Logger logger = LogManager.getLogger(NettyQUICChannel.class);
@@ -31,7 +34,6 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-        System.out.println("RECEVEID HERE "+ctx.channel().id().asShortText());
         if(msg.readableBytes()<4){
             return;
         }
@@ -45,7 +47,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         byte msgType = msg.readByte();
         byte [] data = new byte[length];
         msg.readBytes(data);
-        msg.discardSomeReadBytes();
+        msg.discardReadBytes();
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(QUICLogics.APP_DATA==msgType){
             consumer.onReceivedDelimitedMessage(ch.id().asShortText(),data);
@@ -79,7 +81,13 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }
             ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,consumer.nextId(),true);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
-            consumer.channelActive(ch,data,null, TransmissionType.STRUCTURED_MESSAGE);
+            QuicHandShakeMessage handShakeMessage = gson.fromJson(new String(data), QuicHandShakeMessage.class);
+
+            if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
+                ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
+                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,true));
+            }
+            consumer.channelActive(ch,handShakeMessage,null, TransmissionType.STRUCTURED_MESSAGE);
             if(metrics!=null){
                 QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
                 q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
@@ -88,6 +96,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         }else{
             throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
         }
+        ctx.fireChannelRead(msg);
     }    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();

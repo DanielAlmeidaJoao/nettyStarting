@@ -27,15 +27,13 @@ public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object in) throws Exception {
         ByteBuf msg = (ByteBuf) in;
         int readAble = msg.readableBytes();
-
         if(metrics!=null){
             QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
             q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
             q.setReceivedAppBytes(q.getReceivedAppBytes()+readAble+ QUICLogics.WRT_OFFSET);
         }
-
-        BabelOutputStream babelOutputStream = new BabelOutputStream(msg.retainedSlice());
-        msg.readerIndex(msg.readableBytes());
+        BabelOutputStream babelOutputStream = new BabelOutputStream(msg.duplicate(),readAble);
+        msg.readerIndex(readAble);
         consumer.onReceivedStream(ctx.channel().id().asShortText(), babelOutputStream);
     }
 

@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.channels.events;
 
+import lombok.NonNull;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
@@ -7,7 +8,7 @@ import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 /**
  * Triggered when an incoming connection is established.
  */
-public class OnConnectionUpEvent extends TCPEvent {
+public class OnStreamConnectionUpEvent extends TCPEvent {
 
     public static final short EVENT_ID = 2;
 
@@ -19,7 +20,7 @@ public class OnConnectionUpEvent extends TCPEvent {
 
     @Override
     public String toString() {
-        return "OnConnectionUpEvent{" +
+        return "OnStreamConnectionUpEvent{" +
                 "node=" + node +
                 "type="+type+
                 "conId="+conId+
@@ -27,10 +28,10 @@ public class OnConnectionUpEvent extends TCPEvent {
                 '}';
     }
 
-    public OnConnectionUpEvent(Host node, TransmissionType type, String customConId, boolean inConnection, BabelInputStream babelInputStream) {
+    public OnStreamConnectionUpEvent(Host node, String customConId, boolean inConnection, @NonNull BabelInputStream babelInputStream) {
         super(EVENT_ID);
         this.node = node;
-        this.type = type;
+        this.type = TransmissionType.UNSTRUCTURED_STREAM;
         this.conId = customConId;
         this.inConnection = inConnection;
         this.babelInputStream = babelInputStream;

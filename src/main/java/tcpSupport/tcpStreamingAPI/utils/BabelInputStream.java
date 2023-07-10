@@ -51,7 +51,7 @@ public class BabelInputStream {
     }
     public boolean sendBabelOutputStream(BabelOutputStream babelOutputStream){
         if(babelOutputStream.readableBytes()>0){
-            streamInterface.sendStream(streamId,babelOutputStream.getBuffer().retainedSlice(),flush);
+            streamInterface.sendStream(streamId,babelOutputStream.getBuffer().retainedDuplicate(),flush);
             return true;
         }
         return false;

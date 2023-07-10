@@ -5,7 +5,7 @@ import appExamples2.appExamples.channels.messages.StreamMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 
@@ -43,11 +43,11 @@ public class ReceiveFileProtocol extends GenericProtocol {
         //registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
         //registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
 
-        registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionDown);
+        registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponInConnectionDown);
         //openConnection(forwarder);
     }
 
-    private void uponInConnectionDown(OnConnectionUpEvent event, int channelId) {
+    private void uponInConnectionDown(OnStreamConnectionUpEvent event, int channelId) {
         try {
             System.out.println("CONNECTION CLOSED 2! "+totoal);
             fos.close();

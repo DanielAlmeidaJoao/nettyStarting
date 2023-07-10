@@ -24,7 +24,7 @@ public interface ChannelHandlerMethods {
     void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection);
 
     void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from);
-    void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from);
+    void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from, BabelInputStream inputStream);
 
     void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream babelInputStream);
 

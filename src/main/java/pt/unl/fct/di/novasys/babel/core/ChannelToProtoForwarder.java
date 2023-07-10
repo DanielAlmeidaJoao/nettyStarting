@@ -7,6 +7,7 @@ import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.internal.*;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 
 import java.util.Map;
@@ -46,10 +47,9 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
         channelConsumer.deliverBytesIn(new BytesMessageInEvent(message,host,channelId,quicStreamId,sourceProto,destProto,handlerId));
     }
 
-    @Override
-    public void deliverMessage(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId) {
+    public void deliverStream(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId, BabelInputStream inputStream) {
         GenericProtocol channelConsumer = getConsumer(destProto);
-        channelConsumer.deliverBabelInBytesWrapper(new BabelInBytesWrapperEvent(babelOutputStream,host,channelId,quicStreamId,sourceProto,destProto,handlerId));
+        channelConsumer.deliverBabelInBytesWrapper(new BabelStreamDeliveryEvent(babelOutputStream,host,channelId,quicStreamId,sourceProto,destProto,handlerId,inputStream));
     }
 
     @Override

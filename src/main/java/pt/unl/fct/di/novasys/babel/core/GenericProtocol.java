@@ -617,7 +617,7 @@ public abstract class GenericProtocol {
     final protected void deliverBytesIn(BytesMessageInEvent msgIn) {
         queue.add(msgIn);
     }
-    final protected void deliverBabelInBytesWrapper(BabelInBytesWrapperEvent msgIn) {
+    final protected void deliverBabelInBytesWrapper(BabelStreamDeliveryEvent msgIn) {
         queue.add(msgIn);
     }
 
@@ -676,7 +676,7 @@ public abstract class GenericProtocol {
                         break;
                     case STREAM_BYTES_IN:
                         metrics.messagesInCount++;
-                        this.handleStreamBytesIn((BabelInBytesWrapperEvent) pe);
+                        this.handleStreamBytesIn((BabelStreamDeliveryEvent) pe);
                         break;
                     case MESSAGE_FAILED_EVENT:
                         metrics.messagesFailedCount++;
@@ -742,7 +742,7 @@ public abstract class GenericProtocol {
         else
             logger.warn("Discarding unexpected Bytes message (handler id " + m.handlerId + "): number of bytes = " + m.getMsg().length);
     }
-    private void handleStreamBytesIn(BabelInBytesWrapperEvent m) {
+    private void handleStreamBytesIn(BabelStreamDeliveryEvent m) {
         StreamBytesInHandler h = getChannelOrThrow(m.getChannelId()).streamBytesInHandlerMap.get(m.handlerId);
         if (h != null)
             h.receive(m);

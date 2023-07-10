@@ -10,19 +10,20 @@ import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
 import quicSupport.channels.ChannelHandlerMethods;
-import quicSupport.channels.NettyQUICChannel;
 import quicSupport.channels.NettyChannelInterface;
+import quicSupport.channels.NettyQUICChannel;
 import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
 import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
+import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -216,28 +217,20 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         }
     }
     @Override
-    public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from) {
+    public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from, BabelInputStream inputStream) {
         short d = protoToReceiveStreamData;
-        listener.deliverMessage(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d);
+        listener.deliverStream(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d,inputStream);
     }
 
     public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream babelInputStream) {
         Host host = FactoryMethods.toBabelHost(peer);
-        logger.debug("OnConnectionUpEvent " + host);
-        listener.deliverEvent(new OnConnectionUpEvent(host,type,customConId,incoming, babelInputStream));
-    }
-    /**
-    public void onConnectionDown(InetSocketAddress peer, boolean incoming) {
-        Throwable t = new Throwable("PEER DISCONNECTED!");
-        Host host = FactoryMethods.toBabelHost(peer);
-        if(incoming){
-            logger.error("Inbound connection from {} is down" + peer);
-            listener.deliverEvent(new InConnectionDown(host,t, streamId));
+        logger.debug("OnStreamConnectionUpEvent " + host);
+        if(TransmissionType.STRUCTURED_MESSAGE==type){
+            listener.deliverEvent(new OnMessageConnectionUpEvent(host,customConId,incoming));
         }else{
-            logger.debug("OutboundConnectionDown to " +peer+ "");
-            listener.deliverEvent(new OutConnectionDown(host,t, streamId));
+            listener.deliverEvent(new OnStreamConnectionUpEvent(host,customConId,incoming, babelInputStream));
         }
-    }**/
+    }
 
     public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
         logger.info("FAILED TO OPEN CONNECTION TO {}. REASON: {}",peer,cause.getLocalizedMessage());

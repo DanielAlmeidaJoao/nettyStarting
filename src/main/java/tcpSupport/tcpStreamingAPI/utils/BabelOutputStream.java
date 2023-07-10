@@ -5,13 +5,18 @@ import io.netty.buffer.ByteBuf;
 public class BabelOutputStream {
 
     private final ByteBuf buf;
+    private int available;
 
-    public BabelOutputStream(ByteBuf buf){
+    public BabelOutputStream(ByteBuf buf, int readAble){
         this.buf = buf;
+        this.available = readAble;
     }
-
+    private void decAvailable(int bytes){
+        available -= bytes;
+    }
     public int readInt(){
-        return buf.readInt();
+        int res = buf.readInt();
+        return res;
     }
     public boolean readBoolean(){
         return buf.readBoolean();

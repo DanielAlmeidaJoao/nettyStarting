@@ -1,26 +1,28 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
-import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
-import pt.unl.fct.di.novasys.babel.internal.BabelInBytesWrapperEvent;
+import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
+import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 
 public class EchoProtocol extends GenericProtocolExtension {
@@ -71,7 +73,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
             channelProps.setProperty(StreamingChannel.PORT_KEY,port);
             channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
-            channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
+            //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"FALSE");
 
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP, channelProps);
 
@@ -91,7 +93,8 @@ public class EchoProtocol extends GenericProtocolExtension {
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
             //registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
-            registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionUp);
+            registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
+            registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionUp);
 
             //registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
             //registerChannelEventHandler(channelId, StreamClosedEvent.EVENT_ID, this::uponStreamClosed);
@@ -128,9 +131,14 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     public void sendMessage(String message, String stream){
         TransmissionType transmissionType = getConnectionType(channelId,stream);
+        System.out.println("CACCCLED "+transmissionType);
+        transmissionType = TransmissionType.UNSTRUCTURED_STREAM;
+
         if(TransmissionType.UNSTRUCTURED_STREAM == transmissionType){
             //super.sendStream(channelId,message.getBytes(),message.length(),stream);
-            toDo();
+            for (BabelInputStream babelInputStream : streams) {
+                babelInputStream.sendBytes(message.getBytes());
+            }
         }else{
             if(sendByte){
                 super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId(),HANDLER_ID);
@@ -166,12 +174,16 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     public void sendStream(String message){
         System.out.println("SENDING "+message.length());
-        toDo();
+        for (BabelInputStream stream : streams) {
+            stream.sendBytes(message.getBytes());
+        }
         //super.sendStream(channelId,message.getBytes(),message.length(),dest);
     }
     public void sendStream(String message, String streamId){
         System.out.println("SENDING "+message.length());
-        toDo();
+        for (BabelInputStream stream : streams) {
+            stream.sendBytes(message.getBytes());
+        }
         //super.sendStream(channelId,message.getBytes(),message.length(),streamId);
     }
     public void createStream(){
@@ -223,57 +235,54 @@ public class EchoProtocol extends GenericProtocolExtension {
         System.out.println("CURRENT: "+QUICLogics.gson.toJson(event.getCurrent()));
         System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
     }
-    private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
-        System.out.println("PORRRAS 444");
-
-        if(event.inConnection){
-            System.out.println("PORRRAS 66");
-            uponOutConnectionUp(event,channelId);
-            return;
-        }
+    public List<BabelInputStream> streams = new LinkedList<>();
+    private void uponStreamConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}. id: {}",event.getNode(),event.type,event.conId);
-        System.out.println("PORRRAS 21");
-        if(dest==null){
-            dest = event.getNode();
-        }
-        TransmissionType tp = getConnectionType(channelId,event.conId);
-        System.out.println("CONNECTION TYPR +++ "+tp);
-        if(tp == TransmissionType.UNSTRUCTURED_STREAM){
-            for (int i = 0; i < 10; i++) {
-                byte [] hh = new byte[4];
-                Unpooled.buffer(4).writeInt(i).readBytes(hh,0,4);
-                toDo();
-                //super.sendStream(channelId,hh,hh.length,event.conId);
+        streams.add(event.babelInputStream);
+        event.babelInputStream.setFlushMode(true);
+        if(event.inConnection){
+            if(dest==null){
+                dest = event.getNode();
+            }
+        }else {
+            System.out.println("PORRRAS 21");
+            if(dest==null){
+                dest = event.getNode();
+            }
+            TransmissionType tp = getConnectionType(channelId,event.conId);
+            System.out.println("CONNECTION TYPR +++ "+tp);
+            if(tp == TransmissionType.UNSTRUCTURED_STREAM){
+                for (int i = 0; i < 10; i++) {
+                    for (BabelInputStream stream : streams) {
+                        stream.sendInt(i);
+                        stream.flushStream();
+                    }
+                }
             }
         }
-
-        /**
-        if(dest!=null){
-            EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
-            sendMessage(message,dest);
-            logger.info("{} MESSAGE SENT!!! TO {} ",myself,dest);
-        }
-        **/
     }
-    private void uponOutConnectionUp(OnConnectionUpEvent event, int channelId) {
-        logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}. conId: {}",event.getNode(),event.type,event.conId);
+    private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
         if(dest==null){
             dest = event.getNode();
         }
-        //System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.conId));
-        /**
-        if(dest!=null){
-            EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
-            sendMessage(message,dest);
-            logger.info("{} MESSAGE SENT!!! TO {} ",myself,dest);
-        }
-         **/
     }
+
     private void uponBytesMessage(BytesMessageInEvent event) {
         logger.info("Received bytes3: {} from {}", new String(event.getMsg()),event.getFrom());
     }
-    private void uponStreamBytes(BabelInBytesWrapperEvent event) {
-        logger.info("Received bytes4: {} from {}",event.babelOutputStream.readableBytes(),event.getFrom());
+    private void uponStreamBytes(BabelStreamDeliveryEvent event) {
+        System.out.println("AVAILABLE "+event.babelOutputStream.readableBytes());
+        while(event.babelOutputStream.readableBytes()>=4){
+            if(85 == event.babelOutputStream.readableBytes()){
+                System.exit(-1);
+            }
+            int read = event.babelOutputStream.readInt();
+            logger.info("Received bytes4: {} from {}. ID: {}",read,event.getFrom(),event.conId);
+            if(8082==myself.getPort()){
+                event.babelInputStream.sendInt(read*2);
+            }
+        }
+        logger.info("CONTAINS ? {}",streams.contains(event.babelInputStream));
     }
     private void uponStreamBytes2(BytesMessageInEvent event) {
         logger.info("Received 2bytes2: {} from {}",event.getMsg().length,event.getFrom());

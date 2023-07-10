@@ -13,8 +13,7 @@ import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import tcpSupport.tcpStreamingAPI.pipeline.StreamSenderHandler;
-import tcpSupport.tcpStreamingAPI.pipeline.encodings.DelimitedMessageDecoder;
-import tcpSupport.tcpStreamingAPI.pipeline.encodings.StreamMessageDecoder;
+import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 
 import java.net.InetSocketAddress;
 
@@ -40,13 +39,8 @@ public class StreamOutConnection {
                     .remoteAddress(peer)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
-                    public void initChannel(SocketChannel ch)
-                            throws Exception {
-                            if(TransmissionType.STRUCTURED_MESSAGE==type){
-                                ch.pipeline().addLast(new DelimitedMessageDecoder(metrics, consumer));
-                            }else{
-                                ch.pipeline().addLast(new StreamMessageDecoder(metrics,consumer));
-                            }
+                    public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(metrics, consumer));
                             ch.pipeline().addLast( new StreamSenderHandler(new HandShakeMessage(self,type),consumer,metrics,type));
                     }
                     }).attr(AttributeKey.valueOf(CUSTOM_ID_KEY),conId);

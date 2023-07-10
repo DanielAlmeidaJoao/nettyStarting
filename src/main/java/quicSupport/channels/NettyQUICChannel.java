@@ -121,7 +121,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         logger.info("{} STREAM {} ERROR: {}",self,streamId,throwable);
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon!=null){
-            overridenMethods.onStreamErrorHandler(streamCon.customQUICConnection.getRemote(), throwable,streamId);
+            overridenMethods.onStreamErrorHandler(streamCon.customParentConnection.getRemote(), throwable,streamId);
         }
     }
 
@@ -148,22 +148,22 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         CustomQUICStreamCon streamCon = nettyIdToStream.remove(streamId);
         if(streamCon!=null){
             customStreamIdToStream.remove(streamCon.customStreamId);
-            streamCon.customQUICConnection.closeStream(streamId);
-            overridenMethods.onStreamClosedHandler(streamCon.customQUICConnection.getRemote(),streamCon.customStreamId,streamCon.inConnection);
+            streamCon.customParentConnection.closeStream(streamId);
+            overridenMethods.onStreamClosedHandler(streamCon.customParentConnection.getRemote(),streamCon.customStreamId,streamCon.inConnection);
         }
     }
 
     public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, String customId, boolean inConnection) {
         logger.info("{}. STREAM CREATED {}",self,customId);
         System.out.println("CREATED "+channel.id().asShortText());
-        CustomQUICStreamCon parent = nettyIdToStream.get(channel.parent().id().asShortText());
-        CustomQUICStreamCon con = new CustomQUICStreamCon(channel,customId,type,parent.customQUICConnection,inConnection);
-        con.customQUICConnection.addStream(con);
+        CustomQUICStreamCon firstStreamOfThisCon = nettyIdToStream.get(channel.parent().id().asShortText());
+        BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customId,this,type);
+        CustomQUICStreamCon con = new CustomQUICStreamCon(channel,customId,type,firstStreamOfThisCon.customParentConnection,inConnection, babelInputStream);
+        con.customParentConnection.addStream(con);
         customStreamIdToStream.put(customId,con);
         nettyIdToStream.put(channel.id().asShortText(),con);
-        BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customId,this,type);
-        sendPendingMessages(con.customQUICConnection.getRemote(), type);
-        overridenMethods.onConnectionUp(inConnection,con.customQUICConnection.getRemote(),type,customId, babelInputStream);
+        sendPendingMessages(con.customParentConnection.getRemote(), type);
+        overridenMethods.onConnectionUp(inConnection,con.customParentConnection.getRemote(),type,customId, babelInputStream);
     }
 
 
@@ -172,25 +172,25 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     public void onReceivedDelimitedMessage(String streamId, byte[] bytes){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon!=null){
-            if(withHeartBeat){streamCon.customQUICConnection.scheduleSendHeartBeat_KeepAlive();}
+            if(withHeartBeat){streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();}
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
-            overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,bytes,streamCon.customQUICConnection.getRemote());
+            overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,bytes,streamCon.customParentConnection.getRemote());
         }
     }
     public void onReceivedStream(String streamId, BabelOutputStream babelOutputStream){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon != null){
-            overridenMethods.onChannelReadFlowStream(streamCon.customStreamId, babelOutputStream,streamCon.customQUICConnection.getRemote());
+            overridenMethods.onChannelReadFlowStream(streamCon.customStreamId, babelOutputStream,streamCon.customParentConnection.getRemote(),streamCon.inputStream);
         }
     }
 
     public void onKeepAliveMessage(String parentId){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(parentId);
         if(streamCon!=null){
-            InetSocketAddress remote = streamCon.customQUICConnection.getRemote();
+            InetSocketAddress remote = streamCon.customParentConnection.getRemote();
             logger.info("SELF:{} -- HEART BEAT RECEIVED -- {}",self,remote);
             if(withHeartBeat){
-                streamCon.customQUICConnection.scheduleSendHeartBeat_KeepAlive();
+                streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();
             }
         }
     }
@@ -217,40 +217,43 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     /********************************** Stream Handlers **********************************/
 
     /*********************************** Channel Handlers **********************************/
-    public void channelActive(QuicStreamChannel streamChannel, byte [] controlData, InetSocketAddress remotePeer, TransmissionType type){
+    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage handShakeMessage, InetSocketAddress remotePeer, TransmissionType type){
         boolean inConnection = false;
         try {
             InetSocketAddress listeningAddress;
-            QuicHandShakeMessage handShakeMessage;
             String customConId;
-            if(controlData==null){//is OutGoing
+            if(handShakeMessage==null){//is OutGoing
                 listeningAddress = remotePeer;
                 customConId = streamChannel.parent().attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY)).toString();
             }else{//is InComing
-                handShakeMessage = gson.fromJson(new String(controlData),QuicHandShakeMessage.class);
                 listeningAddress = handShakeMessage.getAddress();
                 type = handShakeMessage.transmissionType;
                 inConnection=true;
                 customConId = nextId();
             }
-            if(TransmissionType.UNSTRUCTURED_STREAM==type){
-                streamChannel.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
-                streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,inConnection));
-            }
-            CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel,customConId, type,null, inConnection);
-            CustomQUICConnection current =  new CustomQUICConnection(quicStreamChannel, listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
-            quicStreamChannel.customQUICConnection = current;
-            synchronized (this){
-                addressToQUICCons.computeIfAbsent(listeningAddress, k -> new LinkedList<>()).add(current);;
-            }
-            nettyIdToStream.put(streamChannel.parent().id().asShortText(),quicStreamChannel);
+
+            CustomQUICConnection parentConnection;
+            BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customConId,this,type);
+            CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel,customConId,type,null,inConnection,babelInputStream);
+                CustomQUICStreamCon firstStreamOfThisCon = nettyIdToStream.get(streamChannel.parent().id().asShortText());
+                if(firstStreamOfThisCon==null){
+                    parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
+                    nettyIdToStream.put(streamChannel.parent().id().asShortText(),quicStreamChannel);
+                    synchronized (addressToQUICCons){
+                        addressToQUICCons.computeIfAbsent(listeningAddress, k -> new LinkedList<>()).add(parentConnection);
+                    }
+                }else{
+                    parentConnection = firstStreamOfThisCon.customParentConnection;
+                }
+                quicStreamChannel.customParentConnection = parentConnection;
+
+
             nettyIdToStream.put(streamChannel.id().asShortText(),quicStreamChannel);
             customStreamIdToStream.put(customConId,quicStreamChannel);
             sendPendingMessages(listeningAddress,type);
             if(enableMetrics){
                 metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
             }
-            BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customConId,this,type);
             overridenMethods.onConnectionUp(inConnection,listeningAddress,type,customConId, babelInputStream);
         }catch (Exception e){
             e.printStackTrace();
@@ -259,7 +262,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     }
 
     public  void channelInactive(String parentId){
-        CustomQUICConnection customQUICConnection = nettyIdToStream.remove(parentId).customQUICConnection;
+        CustomQUICConnection customQUICConnection = nettyIdToStream.remove(parentId).customParentConnection;
         List<CustomQUICConnection> connections = addressToQUICCons.get(customQUICConnection.getRemote());
         if(connections !=null && connections.remove(customQUICConnection) && connections.isEmpty()){
             addressToQUICCons.remove(customQUICConnection.getRemote());
@@ -396,7 +399,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         if(streamCon==null){
             overridenMethods.onMessageSent(message,null, len,new Throwable("UNKNOWN STREAM ID: "+customId), null,STRUCTURED_MESSAGE);
         }else {
-            sendMessage(streamCon,message,len,streamCon.customQUICConnection.getRemote());
+            sendMessage(streamCon,message,len,streamCon.customParentConnection.getRemote());
         }
     }
     public void send(InetSocketAddress peer, byte[] message, int len){
@@ -452,8 +455,8 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 f = connection.streamChannel.write(byteBuf);
             }
             f.addListener(future -> {
-                calcMetricsOnSend(future,connection.customQUICConnection.getConnection(),toSend);
-                overridenMethods.onMessageSent(new byte[0],null,toSend,future.cause(),connection.customQUICConnection.getRemote(),TransmissionType.UNSTRUCTURED_STREAM);
+                calcMetricsOnSend(future,connection.customParentConnection.getConnection(),toSend);
+                overridenMethods.onMessageSent(new byte[0],null,toSend,future.cause(),connection.customParentConnection.getRemote(),TransmissionType.UNSTRUCTURED_STREAM);
             });
         }
     }
@@ -464,7 +467,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 overridenMethods.onMessageSent(null,inputStream,inputStream.available(),new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+conId),null,TransmissionType.UNSTRUCTURED_STREAM);
                 return;
             }
-            InetSocketAddress peer = streamChannel.customQUICConnection.getRemote();
+            InetSocketAddress peer = streamChannel.customParentConnection.getRemote();
             if(streamChannel.type!=TransmissionType.UNSTRUCTURED_STREAM){
                 Throwable t = new Throwable("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
                 overridenMethods.onMessageSent(null,inputStream,inputStream.available(),t,peer,TransmissionType.UNSTRUCTURED_STREAM);

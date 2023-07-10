@@ -10,13 +10,13 @@ import quicSupport.utils.enums.TransmissionType;
 
 import java.util.List;
 
-public class DelimitedMessageDecoder extends ByteToMessageDecoder {
+public class TCPDelimitedMessageDecoder extends ByteToMessageDecoder {
     private final TCPStreamMetrics metrics;
     public final StreamingNettyConsumer consumer;
     public final TransmissionType type;
-    public static final String NAME = "DelimitedMessageDecoder";
+    public static final String NAME = "TCPDelimitedMessageDecoder";
 
-    public DelimitedMessageDecoder(TCPStreamMetrics metrics, StreamingNettyConsumer consumer) {
+    public TCPDelimitedMessageDecoder(TCPStreamMetrics metrics, StreamingNettyConsumer consumer) {
         this.metrics = metrics;
         this.consumer=consumer;
         type = TransmissionType.STRUCTURED_MESSAGE;

@@ -38,11 +38,15 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
             metrics.initConnectionMetrics(out.remoteAddress());
         }
         QuicStreamChannel streamChannel = QUICLogics.createStream(out,consumer,metrics,false);
-        QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(), transmissionType);
+        final QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(), transmissionType);
         byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
         streamChannel.writeAndFlush(QUICLogics.bufToWrite(hs.length,hs,QUICLogics.HANDSHAKE_MESSAGE))
                 .addListener(future -> {
                     if(future.isSuccess()){
+                        if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
+                            streamChannel.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
+                            streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
+                        }
                         consumer.channelActive(streamChannel,null,remote, transmissionType);
                     }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);

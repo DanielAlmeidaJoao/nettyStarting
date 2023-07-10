@@ -19,6 +19,6 @@ public class BabelQuicInitializer implements ChannelInitializer<NewIChannel<Babe
     }**/
     @Override
     public NewIChannel<BabelMessage> initialize(BabelMessageSerializerInterface<BabelMessage> serializer, ChannelListener<BabelMessage> list, Properties properties, short protoId) throws IOException {
-        return new BabelQUICTCP_TCP_ChannelWithControlledClose<>(serializer, list, properties,protoId, NetworkProtocol.QUIC);
+        return new BabelQUIC_TCP_ChannelWithControlledClose<>(serializer, list, properties,protoId, NetworkProtocol.QUIC);
     }
 }

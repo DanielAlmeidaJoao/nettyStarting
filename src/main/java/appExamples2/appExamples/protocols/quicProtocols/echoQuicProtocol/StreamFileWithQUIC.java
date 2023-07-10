@@ -6,9 +6,9 @@ import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
-import pt.unl.fct.di.novasys.babel.internal.BabelInBytesWrapperEvent;
+import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
@@ -16,7 +16,6 @@ import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.nio.file.Path;
@@ -32,7 +31,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     private Host dest;
     private Properties properties;
     public final String NETWORK_PROTO;
-    public final long fileLen = 2689256162L;
+    public final long fileLen = 1035368729;
 
     public StreamFileWithQUIC(Properties properties) throws Exception {
 
@@ -86,7 +85,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail3);
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
-            registerChannelEventHandler(channelId, OnConnectionUpEvent.EVENT_ID, this::uponInConnectionUp);
+            registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
@@ -106,7 +105,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     public static final short HANDLER_ID2 = 43;
 
     BabelInputStream babelInputStream;
-    private void uponInConnectionUp(OnConnectionUpEvent event, int channelId) {
+
+    private void uponStreamConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         streamId = event.conId;
         if(event.babelInputStream !=null){
             babelInputStream = event.babelInputStream;
@@ -126,7 +126,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
     }
     String streamId;
-    private void uponOutConnectionUp(OnConnectionUpEvent event, int channelId) {
+    private void uponOutConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE {}",event.getNode(),event.type);
         if(dest==null){
             dest = event.getNode();
@@ -167,7 +167,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     boolean notW = true;
     long start = 0;
 
-    private void uponStreamBytes(BabelInBytesWrapperEvent event) {
+    private void uponStreamBytes(BabelStreamDeliveryEvent event) {
         FileOutputStream out;
 
         if(myself.getPort()==8082){
@@ -241,8 +241,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
-            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
 
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
@@ -250,7 +250,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //Path filePath = Paths.get(p);
             //
             File f = filePath.toFile();
-            FileInputStream fileInputStream = new FileInputStream(f);
             babelInputStream.sendFile(f);
 
             long len = f.length();

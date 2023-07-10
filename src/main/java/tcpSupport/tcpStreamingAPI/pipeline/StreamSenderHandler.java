@@ -7,6 +7,8 @@ import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
+import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPStreamMessageDecoder;
+import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 import quicSupport.utils.enums.TransmissionType;
 
@@ -46,6 +48,9 @@ public class StreamSenderHandler extends CustomChannelHandler {
                 ctx.channel().close();
             }
         });
+        if(TransmissionType.UNSTRUCTURED_STREAM == type){
+            ctx.channel().pipeline().replace(TCPDelimitedMessageDecoder.NAME, TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(metrics,getConsumer()));
+        }
         getConsumer().onChannelActive(ctx.channel(),null,type);
         handshakeData=null;
     }

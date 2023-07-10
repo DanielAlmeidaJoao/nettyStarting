@@ -101,7 +101,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from) {
+    public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from, BabelInputStream inputStream) {
         //TODO
         System.out.println("READ STREAAAAAAAM");
     }

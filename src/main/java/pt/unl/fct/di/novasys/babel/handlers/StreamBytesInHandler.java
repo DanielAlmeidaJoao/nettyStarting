@@ -1,6 +1,6 @@
 package pt.unl.fct.di.novasys.babel.handlers;
 
-import pt.unl.fct.di.novasys.babel.internal.BabelInBytesWrapperEvent;
+import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 
 /**
  * Represents an operation that accepts a single input argument and returns no
@@ -16,6 +16,6 @@ public interface StreamBytesInHandler {
      *
      * @param msg the received message
      */
-    void receive(BabelInBytesWrapperEvent dataInEvent);
+    void receive(BabelStreamDeliveryEvent dataInEvent);
 
 }
