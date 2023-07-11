@@ -132,7 +132,6 @@ public class EchoProtocol extends GenericProtocolExtension {
     public void sendMessage(String message, String stream){
         TransmissionType transmissionType = getConnectionType(channelId,stream);
         System.out.println("CACCCLED "+transmissionType);
-        transmissionType = TransmissionType.UNSTRUCTURED_STREAM;
 
         if(TransmissionType.UNSTRUCTURED_STREAM == transmissionType){
             //super.sendStream(channelId,message.getBytes(),message.length(),stream);
@@ -262,6 +261,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
     }
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
+        logger.info("CONNECTION UP: {} {} {}",event.conId,event.inConnection,event.type);
         if(dest==null){
             dest = event.getNode();
         }

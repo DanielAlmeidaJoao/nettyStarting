@@ -43,4 +43,11 @@ public class TCPDelimitedMessageDecoder extends ByteToMessageDecoder {
         }
         consumer.onChannelMessageRead(ctx.channel().id().asShortText(),data);
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx,
+                                Throwable cause) {
+        cause.printStackTrace();
+        ctx.close();
+    }
 }

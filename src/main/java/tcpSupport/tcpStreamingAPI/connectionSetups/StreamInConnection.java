@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
 import tcpSupport.tcpStreamingAPI.pipeline.TCPCustomHandshakeHandler;
-import tcpSupport.tcpStreamingAPI.pipeline.StreamReceiverHandler;
 import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 
 import java.net.InetSocketAddress;
@@ -58,7 +57,7 @@ public class StreamInConnection {
                     public void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(TCPCustomHandshakeHandler.NAME,new TCPCustomHandshakeHandler(metrics,consumer));
                         ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(metrics,consumer));
-                        ch.pipeline().addLast(new StreamReceiverHandler(metrics,consumer));
+                        //ch.pipeline().addLast(new TCPServerNettyHandler(metrics,consumer));
                     }
                 });
         ChannelFuture f = b.bind().sync().addListener(future ->

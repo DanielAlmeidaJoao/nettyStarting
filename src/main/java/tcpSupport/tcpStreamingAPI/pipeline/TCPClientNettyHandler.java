@@ -3,6 +3,9 @@ package tcpSupport.tcpStreamingAPI.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
@@ -15,13 +18,18 @@ import quicSupport.utils.enums.TransmissionType;
 import java.net.UnknownHostException;
 
 //@ChannelHandler.Sharable
-public class StreamSenderHandler extends CustomChannelHandler {
+public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
+
+    private static final Logger logger = LogManager.getLogger(TCPClientNettyHandler.class);
+
     private HandShakeMessage handshakeData;
     private final TCPStreamMetrics metrics;
     private final TransmissionType type;
+    private final StreamingNettyConsumer consumer;
 
-    public StreamSenderHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics, TransmissionType type){
-        super(consumer);
+
+    public TCPClientNettyHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics, TransmissionType type){
+        this.consumer = consumer;
         this.handshakeData = handshakeData;
         this.metrics = metrics;
         this.type = type;
@@ -49,16 +57,18 @@ public class StreamSenderHandler extends CustomChannelHandler {
             }
         });
         if(TransmissionType.UNSTRUCTURED_STREAM == type){
-            ctx.channel().pipeline().replace(TCPDelimitedMessageDecoder.NAME, TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(metrics,getConsumer()));
+            ctx.channel().pipeline().replace(TCPDelimitedMessageDecoder.NAME, TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(metrics,consumer));
         }
-        getConsumer().onChannelActive(ctx.channel(),null,type);
+        consumer.onChannelActive(ctx.channel(),null,type);
         handshakeData=null;
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
+        consumer.onConnectionFailed(ctx.channel().id().asShortText(),cause);
         cause.printStackTrace();
         ctx.close();
+        logger.error(cause.getLocalizedMessage());
     }
 }

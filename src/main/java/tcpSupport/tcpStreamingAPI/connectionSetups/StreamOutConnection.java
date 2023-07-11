@@ -12,7 +12,7 @@ import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import tcpSupport.tcpStreamingAPI.pipeline.StreamSenderHandler;
+import tcpSupport.tcpStreamingAPI.pipeline.TCPClientNettyHandler;
 import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 
 import java.net.InetSocketAddress;
@@ -41,7 +41,7 @@ public class StreamOutConnection {
                         @Override
                     public void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(metrics, consumer));
-                            ch.pipeline().addLast( new StreamSenderHandler(new HandShakeMessage(self,type),consumer,metrics,type));
+                            ch.pipeline().addLast( new TCPClientNettyHandler(new HandShakeMessage(self,type),consumer,metrics,type));
                     }
                     }).attr(AttributeKey.valueOf(CUSTOM_ID_KEY),conId);
 
