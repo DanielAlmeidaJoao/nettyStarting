@@ -1,6 +1,6 @@
 package pt.unl.fct.di.novasys.babel.handlers;
 
-import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 
 /**

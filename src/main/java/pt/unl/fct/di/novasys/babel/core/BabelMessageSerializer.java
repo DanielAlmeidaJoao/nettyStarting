@@ -4,7 +4,7 @@ import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
-import pt.unl.fct.di.novasys.babel.channels.ISerializer;
+import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 

@@ -189,11 +189,11 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
             }
         }
     }
-    public void onConnectionFailed(String channelId, Throwable cause){
+    public void onConnectionFailed(String channelId, Throwable cause, TransmissionType type){
         CustomTCPConnection customTCPConnection = nettyIdToConnection.get(channelId);
-        channelInactiveLogics(channelId);
+        //channelInactiveLogics(channelId);
         if(customTCPConnection != null){
-            handleOpenConnectionFailed(customTCPConnection.host,cause);
+            handleOpenConnectionFailed(customTCPConnection.host,cause,type,customTCPConnection.conId);
         }
     }
     public String nextId(){
@@ -216,7 +216,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
             return conId;
         }catch (Exception e){
             e.printStackTrace();
-            handleOpenConnectionFailed(peer,e.getCause());
+            handleOpenConnectionFailed(peer,e.getCause(), type,conId);
         }
         return null;
     }
@@ -429,8 +429,8 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
         else
             logger.error("Server socket bind failed: " + cause);
     }
-    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
-        channelHandlerMethods.onOpenConnectionFailed(peer,cause);
+    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType type, String conId){
+        channelHandlerMethods.onOpenConnectionFailed(peer,cause,type,conId);
     }
 
     public void readMetrics(ReadMetricsHandler handler) throws MetricsDisabledException {

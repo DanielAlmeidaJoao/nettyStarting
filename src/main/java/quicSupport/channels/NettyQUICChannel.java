@@ -294,7 +294,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             client.connect(peer,properties, transmissionType,id);
         }catch (Exception e){
             e.printStackTrace();
-            handleOpenConnectionFailed(peer,e.getCause());
+            handleOpenConnectionFailed(peer,e.getCause(),transmissionType, id);
         }
         return id;
     }
@@ -569,9 +569,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }
     }
     /************************************ FAILURE HANDLERS ************************************************************/
-    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
+    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String id){
         connecting.remove(peer);
-        overridenMethods.onOpenConnectionFailed(peer,cause);
+        overridenMethods.onOpenConnectionFailed(peer,cause,transmissionType,id);
     }
 
 

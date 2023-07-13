@@ -144,8 +144,8 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
             super.onServerSocketClose(success,cause);
         });
     }
-    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
-        executor.submit(() -> super.handleOpenConnectionFailed(peer,cause));
+    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String id){
+        executor.submit(() -> super.handleOpenConnectionFailed(peer,cause, transmissionType, id));
     }
     @Override
     public void shutDown() {

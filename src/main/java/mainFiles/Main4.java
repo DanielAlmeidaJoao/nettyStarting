@@ -21,7 +21,6 @@ public class Main4 {
         babel.registerChannelInitializer(BabelQUIC_TCP_Channel.NAME_QUIC,new BabelQuicInitializer());
         babel.registerChannelInitializer(BabelQUIC_TCP_Channel.NAME_TCP,new BabelNewTCPChannelInitializer());
 
-
         //Loads properties from the configuration file, and merges them with
         // properties passed in the launch argumentsSD=300
         Properties props = Babel.loadConfig(args, DEFAULT_CONF);

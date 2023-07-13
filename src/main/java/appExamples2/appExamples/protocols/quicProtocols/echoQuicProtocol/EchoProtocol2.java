@@ -5,7 +5,7 @@ import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.message
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import quicSupport.utils.QUICLogics;

@@ -7,12 +7,13 @@ import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.message
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnOpenConnectionFailed;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
+import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
@@ -94,7 +95,10 @@ public class EchoProtocol extends GenericProtocolExtension {
             //registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
+            //uponOpenConnectionFailed
             registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionUp);
+            registerChannelEventHandler(channelId, OnOpenConnectionFailed.EVENT_ID, this::uponOpenConnectionFailed);
+
 
             //registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
             //registerChannelEventHandler(channelId, StreamClosedEvent.EVENT_ID, this::uponStreamClosed);
@@ -262,6 +266,12 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION UP: {} {} {}",event.conId,event.inConnection,event.type);
+        if(dest==null){
+            dest = event.getNode();
+        }
+    }
+    private void uponOpenConnectionFailed(OnOpenConnectionFailed event, int channelId) {
+        logger.info("CONNECTION FAILED: {} {} {}",event.connectionId,event.node,event.type);
         if(dest==null){
             dest = event.getNode();
         }

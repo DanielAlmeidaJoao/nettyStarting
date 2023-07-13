@@ -14,9 +14,9 @@ public interface StreamingNettyConsumer {
 
     void onChannelStreamRead(String channelId, BabelOutputStream babelOutputStream);
     void onChannelInactive(String channelId);
-    void onConnectionFailed(String channelId, Throwable cause);
+    void onConnectionFailed(String channelId, Throwable cause, TransmissionType type);
 
     void onServerSocketBind(boolean success, Throwable cause);
-    void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+    void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType type, String conId);
 
 }

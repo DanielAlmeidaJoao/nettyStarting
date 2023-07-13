@@ -1,8 +1,8 @@
 package pt.unl.fct.di.novasys.babel.core;
 
 import org.apache.commons.lang3.tuple.Triple;
-import pt.unl.fct.di.novasys.babel.channels.Host;
-import pt.unl.fct.di.novasys.babel.channels.ISerializer;
+import pt.unl.fct.di.novasys.network.data.Host;
+import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.exceptions.InvalidParameterException;
 import pt.unl.fct.di.novasys.babel.exceptions.NoSuchProtocolException;

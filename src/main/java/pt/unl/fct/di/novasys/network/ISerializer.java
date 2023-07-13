@@ -1,7 +1,6 @@
-package pt.unl.fct.di.novasys.babel.channels;
+package pt.unl.fct.di.novasys.network;
 
 import io.netty.buffer.ByteBuf;
-import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 
 import java.io.IOException;
 

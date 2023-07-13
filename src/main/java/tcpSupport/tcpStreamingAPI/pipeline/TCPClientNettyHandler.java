@@ -66,7 +66,7 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
-        consumer.onConnectionFailed(ctx.channel().id().asShortText(),cause);
+        consumer.onConnectionFailed(ctx.channel().id().asShortText(),cause,type);
         cause.printStackTrace();
         ctx.close();
         logger.error(cause.getLocalizedMessage());

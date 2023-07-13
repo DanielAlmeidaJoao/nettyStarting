@@ -1,17 +1,14 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
-import quicSupport.utils.QUICLogics;
-import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
+import pt.unl.fct.di.novasys.network.data.Host;
 import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
 import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
 
@@ -50,29 +47,15 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("PROTO "+NETWORK_PROTO);
     }
     private int makeChan(String channelName,String address, String port) throws Exception {
-        Properties channelProps = new Properties();
+        Properties channelProps;
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
-            channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
-            channelProps.setProperty(QUICLogics.PORT_KEY,port);
-            //channelProps.setProperty(QUICLogics.QUIC_METRICS,"true");
-            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
-            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
-            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
-
-            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
-            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
-            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
-            channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
-            channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"300");
+            channelProps = TCPStreamUtils.quicChannelProperty(address,port);
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_QUIC, channelProps);
         }else{
             System.out.println("TCP ON");
-            channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
-            channelProps.setProperty(StreamingChannel.PORT_KEY,port);
-            channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
-            channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
+            channelProps = TCPStreamUtils.tcpChannelProperties(address,port);
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP, channelProps);
         }
         return channelId;

@@ -112,7 +112,7 @@ import java.util.Properties;
     }
 
     @Override
-    public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
+    public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String conId) {
 
     }
     @Override

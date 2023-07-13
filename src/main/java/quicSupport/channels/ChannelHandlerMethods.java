@@ -11,7 +11,7 @@ public interface ChannelHandlerMethods {
 
     void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId);
 
-    void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+    void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String conId);
 
     void failedToCloseStream(String streamId, Throwable reason);
 

@@ -2,7 +2,7 @@ package pt.unl.fct.di.novasys.babel.internal;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 
 import java.util.LinkedList;

@@ -65,10 +65,9 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         }
         consumer.channelInactive(ctx.channel().id().asShortText());
     }
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        consumer.handleOpenConnectionFailed((InetSocketAddress) ctx.channel().remoteAddress(),cause);
+        //consumer.handleOpenConnectionFailed((InetSocketAddress) ctx.channel().remoteAddress(),cause, transmissionType, id);
         cause.printStackTrace();
     }
 }

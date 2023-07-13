@@ -1,6 +1,6 @@
 package pt.unl.fct.di.novasys.babel.channels.events;
 
-import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.TransmissionType;
 
 /**

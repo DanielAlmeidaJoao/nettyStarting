@@ -48,8 +48,8 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
     }
 
     @Override
-    public void onConnectionFailed(String channelId, Throwable cause) {
-        executor.execute(() -> super.onConnectionFailed(channelId,cause));
+    public void onConnectionFailed(String channelId, Throwable cause, TransmissionType type) {
+        executor.execute(() -> super.onConnectionFailed(channelId,cause, type));
     }
 
     public String open(InetSocketAddress peer, TransmissionType type) {
@@ -95,8 +95,8 @@ public class SingleThreadedStreamingChannel extends StreamingChannel{
             }
         });
     }
-    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause){
-        executor.submit(() -> super.handleOpenConnectionFailed(peer,cause));
+    public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType type, String conId){
+        executor.submit(() -> super.handleOpenConnectionFailed(peer,cause, type, conId));
     }
 
     @Override

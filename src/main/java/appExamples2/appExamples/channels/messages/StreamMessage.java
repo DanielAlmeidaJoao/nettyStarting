@@ -2,7 +2,7 @@ package appExamples2.appExamples.channels.messages;
 
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
-import pt.unl.fct.di.novasys.babel.channels.ISerializer;
+import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 
 @Getter

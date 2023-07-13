@@ -12,7 +12,7 @@ public interface CustomQuicChannelConsumer {
     void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type);
     void channelInactive(String channelId);
 
-    void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause);
+    void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String id);
 
     void onKeepAliveMessage(String parentId);
 

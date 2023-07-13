@@ -1,7 +1,8 @@
-package pt.unl.fct.di.novasys.babel.channels;
+package pt.unl.fct.di.novasys.network.data;
 
 
 import io.netty.buffer.ByteBuf;
+import pt.unl.fct.di.novasys.network.ISerializer;
 
 import java.io.IOException;
 import java.net.Inet4Address;

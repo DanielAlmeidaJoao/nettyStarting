@@ -3,6 +3,7 @@ package tcpSupport.tcpStreamingAPI.connectionSetups;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -37,6 +38,7 @@ public class StreamOutConnection {
             b.group(group)
                     .channel(socketChannel())
                     .remoteAddress(peer)
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,30*1000)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                     public void initChannel(SocketChannel ch) throws Exception {
@@ -47,7 +49,7 @@ public class StreamOutConnection {
 
             b.connect().addListener(future -> {
                 if(!future.isSuccess()){
-                    consumer.handleOpenConnectionFailed(peer,future.cause());
+                    consumer.handleOpenConnectionFailed(peer,future.cause(), type,conId);
                 }
             });
             //printSomeConfigs();
@@ -56,7 +58,7 @@ public class StreamOutConnection {
             updateConfiguration(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK,2*64*1024);
             updateConfiguration(ChannelOption.AUTO_READ,Boolean.TRUE);**/
         } catch (Exception e) {
-            consumer.handleOpenConnectionFailed(peer,e.getCause());
+            consumer.handleOpenConnectionFailed(peer,e.getCause(), type,conId);
         }
     }
 

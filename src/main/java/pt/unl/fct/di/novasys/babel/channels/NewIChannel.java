@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
+import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.TransmissionType;
 

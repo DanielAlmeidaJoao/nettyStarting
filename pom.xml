@@ -38,12 +38,14 @@
         </profile>
     </profiles>
     -->
-    <repositories>
-        <repository>
-            <id>novasys</id>
-            <url>https://asc.di.fct.unl.pt/~jleitao/mvn-repo/</url>
-        </repository>
-    </repositories>
+    <!--
+        <repositories>
+            <repository>
+                <id>novasys</id>
+                <url>https://asc.di.fct.unl.pt/~jleitao/mvn-repo/</url>
+            </repository>
+        </repositories>
+    -->
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->

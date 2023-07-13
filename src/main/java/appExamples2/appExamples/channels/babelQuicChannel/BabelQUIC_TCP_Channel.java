@@ -7,11 +7,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
-import pt.unl.fct.di.novasys.babel.channels.Host;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnOpenConnectionFailed;
+import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
+import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.NettyChannelInterface;
 import quicSupport.channels.NettyQUICChannel;
@@ -232,8 +233,10 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         }
     }
 
-    public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause) {
-        logger.info("FAILED TO OPEN CONNECTION TO {}. REASON: {}",peer,cause.getLocalizedMessage());
+    public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String conId) {
+        Host h = FactoryMethods.toBabelHost(peer);
+        listener.deliverEvent(new OnOpenConnectionFailed(h,conId,transmissionType,cause));
+        logger.debug("FAILED TO OPEN CONNECTION TO {}. REASON: {}",peer,cause.getLocalizedMessage());
     }
 
     public void failedToCloseStream(String streamId, Throwable reason) {

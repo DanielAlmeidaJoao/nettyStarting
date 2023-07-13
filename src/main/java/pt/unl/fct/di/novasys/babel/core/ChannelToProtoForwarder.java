@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
-import pt.unl.fct.di.novasys.babel.channels.Host;
+import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.internal.*;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
