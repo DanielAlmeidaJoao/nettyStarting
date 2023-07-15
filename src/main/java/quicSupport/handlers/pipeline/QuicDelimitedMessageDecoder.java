@@ -96,7 +96,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         }else{
             throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
         }
-        ctx.fireChannelRead(msg);
+        //ctx.fireChannelRead(msg);
     }    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();

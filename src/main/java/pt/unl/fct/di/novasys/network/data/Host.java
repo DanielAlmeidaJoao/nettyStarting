@@ -4,9 +4,9 @@ package pt.unl.fct.di.novasys.network.data;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
 
-import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Objects;
 
 /**
@@ -83,16 +83,20 @@ public class Host implements Comparable<Host> {
     }
 
 
-    public static ISerializer<Host> serializer = new ISerializer<Host>(){
-
+    public static ISerializer<Host> serializer = new ISerializer<Host>() {
         @Override
-        public Host deserialize(ByteBuf in) throws IOException {
-            return null;
+        public void serialize(Host host, ByteBuf out) {
+            out.writeBytes(host.addressBytes);
+            out.writeShort(host.port);
         }
 
         @Override
-        public void serialize(Host host, ByteBuf out) throws IOException {
-
+        public Host deserialize(ByteBuf in) throws UnknownHostException {
+            byte[] addrBytes = new byte[4];
+            in.readBytes(addrBytes);
+            int port = in.readShort() & 0xFFFF;
+            return new Host(InetAddress.getByAddress(addrBytes), addrBytes, port);
         }
     };
+
 }
