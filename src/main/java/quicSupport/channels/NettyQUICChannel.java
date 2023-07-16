@@ -39,10 +39,10 @@ import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static quicSupport.utils.QUICLogics.*;
 import static quicSupport.utils.enums.TransmissionType.STRUCTURED_MESSAGE;
@@ -54,7 +54,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private static boolean enableMetrics;
     public final static String NAME = "QUIC_CHANNEL";
     public final static String DEFAULT_PORT = "8575";
-    private final Map<InetSocketAddress,List<CustomQUICConnection>> addressToQUICCons;
+    private final Map<InetSocketAddress, ConcurrentLinkedQueue<CustomQUICConnection>> addressToQUICCons;
     private final Map<String, CustomQUICStreamCon> nettyIdToStream; //streamParentID, peer
     private final Map<String,CustomQUICStreamCon> customStreamIdToStream;
     private final Map<InetSocketAddress, QUICConnectingOBJ> connecting;
@@ -131,13 +131,13 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
 
     private CustomQUICConnection getCustomQUICConnection(InetSocketAddress inetSocketAddress){
         if(inetSocketAddress==null) return null;
-        List<CustomQUICConnection> con = addressToQUICCons.get(inetSocketAddress);
+        ConcurrentLinkedQueue<CustomQUICConnection> con = addressToQUICCons.get(inetSocketAddress);
         if(con!=null && !con.isEmpty()){
-            return con.get(0);
+            return con.peek();
         }
         return null;
     }
-    private void closeConnections(List<CustomQUICConnection> cons){
+    private void closeConnections(ConcurrentLinkedQueue<CustomQUICConnection> cons){
         for (CustomQUICConnection con : cons) {
             con.close();
         }
@@ -239,7 +239,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                     parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
                     nettyIdToStream.put(streamChannel.parent().id().asShortText(),quicStreamChannel);
                     synchronized (addressToQUICCons){
-                        addressToQUICCons.computeIfAbsent(listeningAddress, k -> new LinkedList<>()).add(parentConnection);
+                        addressToQUICCons.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(parentConnection);
                     }
                 }else{
                     parentConnection = firstStreamOfThisCon.customParentConnection;
@@ -262,7 +262,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
 
     public  void channelInactive(String parentId){
         CustomQUICConnection customQUICConnection = nettyIdToStream.remove(parentId).customParentConnection;
-        List<CustomQUICConnection> connections = addressToQUICCons.get(customQUICConnection.getRemote());
+        ConcurrentLinkedQueue<CustomQUICConnection> connections = addressToQUICCons.get(customQUICConnection.getRemote());
         if(connections !=null && connections.remove(customQUICConnection) && connections.isEmpty()){
             addressToQUICCons.remove(customQUICConnection.getRemote());
         }
@@ -299,7 +299,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     }
     public void closeConnection(InetSocketAddress peer){
         //System.out.println("CLOSING THIS CONNECTION: "+peer);
-        List<CustomQUICConnection> connections = addressToQUICCons.remove(peer);
+        ConcurrentLinkedQueue<CustomQUICConnection> connections = addressToQUICCons.remove(peer);
         if(connections==null){
             logger.debug("{} IS NOT CONNECTED TO {}",self,peer);
         }else{
@@ -326,11 +326,11 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }
     }
     private CustomQUICConnection getOrThrow(InetSocketAddress peer) throws UnknownElement {
-        List<CustomQUICConnection> connections = addressToQUICCons.get(peer);
+        ConcurrentLinkedQueue<CustomQUICConnection> connections = addressToQUICCons.get(peer);
         if(connections==null || connections.isEmpty()){
             throw new UnknownElement("NO SUCH CONNECTION TO: "+peer);
         }
-        return connections.get(0);
+        return connections.peek();
     }
 
     public String createStreamLogics(InetSocketAddress peer, TransmissionType type,String conId) {
