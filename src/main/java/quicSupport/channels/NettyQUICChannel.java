@@ -155,7 +155,6 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
 
     public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, String customId, boolean inConnection) {
         logger.info("{}. STREAM CREATED {}",self,customId);
-        System.out.println("CREATED "+channel.id().asShortText());
         CustomQUICStreamCon firstStreamOfThisCon = nettyIdToStream.get(channel.parent().id().asShortText());
         BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customId,this,type);
         CustomQUICStreamCon con = new CustomQUICStreamCon(channel,customId,type,firstStreamOfThisCon.customParentConnection,inConnection, babelInputStream);

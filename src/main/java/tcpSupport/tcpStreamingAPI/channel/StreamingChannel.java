@@ -35,9 +35,9 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static quicSupport.utils.enums.TransmissionType.STRUCTURED_MESSAGE;
 
@@ -53,7 +53,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
     public final static String DEFAULT_PORT = "8574";
     private final Map<String, CustomTCPConnection> nettyIdToConnection;
     private final Map<String, TCPConnectingObject> nettyIdTOConnectingOBJ;
-    private final Map<InetSocketAddress,List<CustomTCPConnection>> addressToConnections;
+    private final Map<InetSocketAddress, ConcurrentLinkedQueue<CustomTCPConnection>> addressToConnections;
     private final Map<String,CustomTCPConnection> customIdToConnection;
     private final StreamInConnection server;
     private final StreamOutConnection client;
@@ -120,7 +120,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
             return;
         }
         customIdToConnection.remove(connection.conId);
-        List<CustomTCPConnection> connections = addressToConnections.get(connection.host);
+        ConcurrentLinkedQueue<CustomTCPConnection> connections = addressToConnections.get(connection.host);
         if(connections!=null && connections.remove(connection) && connections.isEmpty()){
             addressToConnections.remove(connection.host);
         }
@@ -166,7 +166,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
             nettyIdToConnection.put(channel.id().asShortText(),connection);
             customIdToConnection.put(conId,connection);
             synchronized (this){
-                addressToConnections.computeIfAbsent(listeningAddress, k -> new LinkedList<>()).add(connection);;
+                addressToConnections.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(connection);;
             }
 
             if(metricsOn){
@@ -222,7 +222,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
     }
     public void closeConnection(InetSocketAddress peer) {
         logger.info("CLOSING ALL CONNECTIONS TO {}", peer);
-        List<CustomTCPConnection> connections = addressToConnections.remove(peer);
+        ConcurrentLinkedQueue<CustomTCPConnection> connections = addressToConnections.remove(peer);
         if(connections!=null){
             for (CustomTCPConnection connection : connections) {
                 connection.close();
@@ -350,8 +350,11 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
     }
     public void send(InetSocketAddress peer, byte[] message, int len){
         var connections = addressToConnections.get(peer);
-        CustomTCPConnection connection;
-        if(connections == null || (connection=connections.get(0)) == null){
+        CustomTCPConnection connection=null;
+        if(!connections.isEmpty()){
+            connection=connections.peek();
+        }
+        if(connections == null || connection == null){
             TCPConnectingObject pendingMessages  = connectingObject(peer);
             if( pendingMessages != null ){
                 pendingMessages.pendingMessages.add(Pair.of(message,len));
@@ -404,11 +407,11 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
 
     @Override
     public TransmissionType getConnectionType(InetSocketAddress peer){
-        List<CustomTCPConnection> cons = addressToConnections.get(peer);
+        ConcurrentLinkedQueue<CustomTCPConnection> cons = addressToConnections.get(peer);
         if(cons==null || cons.isEmpty()){
             return null;
         }else{
-            return cons.get(0).type;
+            return cons.peek().type;
         }
     }
 

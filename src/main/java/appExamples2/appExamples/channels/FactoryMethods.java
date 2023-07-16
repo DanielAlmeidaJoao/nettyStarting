@@ -29,7 +29,7 @@ public class FactoryMethods {
         return toSend;
     }
     private static int available(InputStream inputStream){
-        new Exception("TO DO: MAKE unSerialize RECEIVE nr BYTES SEMT").printStackTrace();
+        //new Exception("TO DO: MAKE unSerialize RECEIVE nr BYTES SEMT").printStackTrace();
         try{
             return inputStream.available();
         }catch (Exception e){};
