@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.utils;
+package tcpSupport.tcpChannelAPI.utils;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

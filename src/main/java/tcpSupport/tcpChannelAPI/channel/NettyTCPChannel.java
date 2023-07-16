@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.channel;
+package tcpSupport.tcpChannelAPI.channel;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -20,13 +20,13 @@ import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.connectionSetups.StreamInConnection;
-import tcpSupport.tcpStreamingAPI.connectionSetups.StreamOutConnection;
-import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import tcpSupport.tcpStreamingAPI.utils.*;
+import tcpSupport.tcpChannelAPI.connectionSetups.StreamInConnection;
+import tcpSupport.tcpChannelAPI.connectionSetups.StreamOutConnection;
+import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
+import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamConnectionMetrics;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
+import tcpSupport.tcpChannelAPI.utils.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -42,8 +42,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static quicSupport.utils.enums.TransmissionType.STRUCTURED_MESSAGE;
 
 
-public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInterface, SendStreamInterface {
-    private static final Logger logger = LogManager.getLogger(StreamingChannel.class);
+public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInterface, SendStreamInterface {
+    private static final Logger logger = LogManager.getLogger(NettyTCPChannel.class);
     private InetSocketAddress self;
 
     public final static String NAME = "STREAMING_CHANNEL";
@@ -64,7 +64,7 @@ public class StreamingChannel implements StreamingNettyConsumer, NettyChannelInt
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
     private Properties properties;
 
-    public StreamingChannel(Properties properties, boolean singleThreaded, ChannelHandlerMethods chm, NetworkRole networkRole)throws IOException{
+    public NettyTCPChannel(Properties properties, boolean singleThreaded, ChannelHandlerMethods chm, NetworkRole networkRole)throws IOException{
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));

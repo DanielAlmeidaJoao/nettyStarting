@@ -1,6 +1,6 @@
-package tcpSupport.tcpStreamingAPI.handlerFunctions;
+package tcpSupport.tcpChannelAPI.handlerFunctions;
 
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamConnectionMetrics;
 
 import java.util.List;
 

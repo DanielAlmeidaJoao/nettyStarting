@@ -3,7 +3,7 @@ package quicSupport.channels;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
 import java.net.InetSocketAddress;
 

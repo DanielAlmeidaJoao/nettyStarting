@@ -1,13 +1,13 @@
-package tcpSupport.tcpStreamingAPI.pipeline.encodings;
+package tcpSupport.tcpChannelAPI.pipeline.encodings;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
-import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamConnectionMetrics;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
 
 import java.util.List;
 

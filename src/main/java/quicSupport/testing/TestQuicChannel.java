@@ -11,8 +11,8 @@ import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

@@ -1,8 +1,8 @@
-package tcpSupport.tcpStreamingAPI.utils;
+package tcpSupport.tcpChannelAPI.utils;
 
 import com.google.gson.Gson;
 import quicSupport.utils.QUICLogics;
-import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
+import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,8 +47,8 @@ public class TCPStreamUtils {
 
     public static Properties tcpChannelProperties(String address, String port){
         Properties channelProps = new Properties();
-        channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
-        channelProps.setProperty(StreamingChannel.PORT_KEY,port);
+        channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
+        channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
         channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
         //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
         return channelProps;

@@ -3,7 +3,7 @@ package pt.unl.fct.di.novasys.babel.channels.events;
 import lombok.NonNull;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 
 /**
  * Triggered when an incoming connection is established.

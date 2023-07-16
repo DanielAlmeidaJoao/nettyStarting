@@ -2,8 +2,8 @@ package pt.unl.fct.di.novasys.babel.internal;
 
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
 /**
  * An abstract class that represents a protocol message

@@ -2,7 +2,7 @@ package quicSupport.utils.customConnections;
 
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 
 public class CustomQUICStreamCon {
 

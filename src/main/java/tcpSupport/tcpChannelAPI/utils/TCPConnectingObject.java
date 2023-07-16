@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.utils;
+package tcpSupport.tcpChannelAPI.utils;
 
 import org.apache.commons.lang3.tuple.Pair;
 

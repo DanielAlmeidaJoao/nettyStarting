@@ -1,16 +1,16 @@
-package tcpSupport.tcpStreamingAPI.pipeline;
+package tcpSupport.tcpChannelAPI.pipeline;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
-import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPStreamMessageDecoder;
-import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
+import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamConnectionMetrics;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
+import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
+import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
+import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
 //@ChannelHandler.Sharable
 public class TCPCustomHandshakeHandler extends ChannelInboundHandlerAdapter {

@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.metrics;
+package tcpSupport.tcpChannelAPI.metrics;
 
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;

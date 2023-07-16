@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.pipeline;
+package tcpSupport.tcpChannelAPI.pipeline;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -6,13 +6,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
-import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPStreamMessageDecoder;
-import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
+import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamConnectionMetrics;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
+import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
+import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
+import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.UnknownHostException;

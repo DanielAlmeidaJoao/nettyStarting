@@ -9,7 +9,7 @@ import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
 public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(QUICRawStreamDecoder.class);

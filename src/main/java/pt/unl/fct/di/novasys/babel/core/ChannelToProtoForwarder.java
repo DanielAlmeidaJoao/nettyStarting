@@ -7,8 +7,8 @@ import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.internal.*;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

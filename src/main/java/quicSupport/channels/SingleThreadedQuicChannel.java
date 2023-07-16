@@ -8,7 +8,7 @@ import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;

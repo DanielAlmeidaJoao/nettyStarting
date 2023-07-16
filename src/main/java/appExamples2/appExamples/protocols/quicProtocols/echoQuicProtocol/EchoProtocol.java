@@ -16,9 +16,9 @@ import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -71,8 +71,8 @@ public class EchoProtocol extends GenericProtocolExtension {
 
         }else{
             System.out.println("TCP ON");
-            channelProps.setProperty(StreamingChannel.ADDRESS_KEY,address);
-            channelProps.setProperty(StreamingChannel.PORT_KEY,port);
+            channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
+            channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
             channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"FALSE");
 

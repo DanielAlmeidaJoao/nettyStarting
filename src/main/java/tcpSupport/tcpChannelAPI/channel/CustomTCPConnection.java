@@ -1,8 +1,8 @@
-package tcpSupport.tcpStreamingAPI.channel;
+package tcpSupport.tcpChannelAPI.channel;
 
 import io.netty.channel.Channel;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 
 import java.net.InetSocketAddress;
 

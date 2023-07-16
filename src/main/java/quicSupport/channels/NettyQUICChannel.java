@@ -29,10 +29,10 @@ import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
-import tcpSupport.tcpStreamingAPI.utils.SendStreamContinuoslyLogics;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.SendStreamContinuoslyLogics;
+import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

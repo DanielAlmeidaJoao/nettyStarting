@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.utils;
+package tcpSupport.tcpChannelAPI.utils;
 
 public class MetricsDisabledException extends Exception{
 

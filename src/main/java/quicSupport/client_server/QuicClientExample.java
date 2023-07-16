@@ -34,7 +34,7 @@ import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicChannelMetrics;
-import tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.InetSocketAddress;

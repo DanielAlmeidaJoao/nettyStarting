@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.connectionSetups;
+package tcpSupport.tcpChannelAPI.connectionSetups;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -10,15 +10,15 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.channel.StreamingNettyConsumer;
-import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpStreamingAPI.metrics.TCPStreamMetrics;
-import tcpSupport.tcpStreamingAPI.pipeline.TCPClientNettyHandler;
-import tcpSupport.tcpStreamingAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
+import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
+import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
+import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
+import tcpSupport.tcpChannelAPI.pipeline.TCPClientNettyHandler;
+import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 
 import java.net.InetSocketAddress;
 
-import static tcpSupport.tcpStreamingAPI.utils.TCPStreamUtils.CUSTOM_ID_KEY;
+import static tcpSupport.tcpChannelAPI.utils.TCPStreamUtils.CUSTOM_ID_KEY;
 
 public class StreamOutConnection {
 

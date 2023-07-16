@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.connectionSetups.messages;
+package tcpSupport.tcpChannelAPI.connectionSetups.messages;
 
 import lombok.Getter;
 import quicSupport.utils.enums.TransmissionType;

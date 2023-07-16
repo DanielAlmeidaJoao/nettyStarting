@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.channel;
+package tcpSupport.tcpChannelAPI.channel;
 
 import quicSupport.utils.enums.TransmissionType;
 

@@ -21,10 +21,10 @@ import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import quicSupport.utils.metrics.QuicConnectionMetrics;
-import tcpSupport.tcpStreamingAPI.channel.SingleThreadedStreamingChannel;
-import tcpSupport.tcpStreamingAPI.channel.StreamingChannel;
-import tcpSupport.tcpStreamingAPI.utils.BabelInputStream;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.channel.SingleThreadedNettyTCPChannel;
+import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
+import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,10 +77,10 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
             }
         }else if(NetworkProtocol.TCP==protocol){
             if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
-                i = new SingleThreadedStreamingChannel(properties,this, NetworkRole.CHANNEL);
+                i = new SingleThreadedNettyTCPChannel(properties,this, NetworkRole.CHANNEL);
                 System.out.println("SINGLE THREADED CHANNEL");
             }else {
-                i = new StreamingChannel(properties,false,this,NetworkRole.CHANNEL);
+                i = new NettyTCPChannel(properties,false,this,NetworkRole.CHANNEL);
                 System.out.println("MULTI THREADED CHANNEL");
             }
         }else{

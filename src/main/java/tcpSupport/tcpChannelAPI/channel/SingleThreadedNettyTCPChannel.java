@@ -1,4 +1,4 @@
-package tcpSupport.tcpStreamingAPI.channel;
+package tcpSupport.tcpChannelAPI.channel;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -8,21 +8,21 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpStreamingAPI.utils.BabelOutputStream;
-import tcpSupport.tcpStreamingAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpStreamingAPI.handlerFunctions.ReadMetricsHandler;
-import tcpSupport.tcpStreamingAPI.utils.MetricsDisabledException;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
+import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
+import tcpSupport.tcpChannelAPI.utils.MetricsDisabledException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class SingleThreadedStreamingChannel extends StreamingChannel{
-    private static final Logger logger = LogManager.getLogger(SingleThreadedStreamingChannel.class);
+public class SingleThreadedNettyTCPChannel extends NettyTCPChannel {
+    private static final Logger logger = LogManager.getLogger(SingleThreadedNettyTCPChannel.class);
 
     private final DefaultEventExecutor executor;
-    public SingleThreadedStreamingChannel(Properties properties, ChannelHandlerMethods chm, NetworkRole role) throws IOException {
+    public SingleThreadedNettyTCPChannel(Properties properties, ChannelHandlerMethods chm, NetworkRole role) throws IOException {
         super(properties,true,chm,role);
         executor = new DefaultEventExecutor();
     }
