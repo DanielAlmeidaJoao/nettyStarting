@@ -52,7 +52,9 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
                     metrics1.setSentControlMessages(metrics1.getSentControlMessages()+1);
                 }
             }else{
+                System.out.println("HHHHHH JHHHHHHHHH 24");
                 future.cause().printStackTrace();
+                System.out.println("HHHHHH JHHHHHHHHH 34");
                 ctx.channel().close();
             }
         });
@@ -67,7 +69,7 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
         consumer.onConnectionFailed(ctx.channel().id().asShortText(),cause,type);
-        cause.printStackTrace();
+        //cause.printStackTrace();
         ctx.close();
         logger.error(cause.getLocalizedMessage());
     }

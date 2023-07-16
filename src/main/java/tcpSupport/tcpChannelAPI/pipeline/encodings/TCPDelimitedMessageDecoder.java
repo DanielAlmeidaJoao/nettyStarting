@@ -47,7 +47,7 @@ public class TCPDelimitedMessageDecoder extends ByteToMessageDecoder {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
-        cause.printStackTrace();
+        //cause.printStackTrace();
         ctx.close();
     }
 }
