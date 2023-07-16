@@ -41,7 +41,7 @@ public class TCPStreamUtils {
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
         channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
-        channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"300");
+        channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
         return channelProps;
     }
 

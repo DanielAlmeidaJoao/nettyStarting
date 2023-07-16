@@ -351,7 +351,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     public void send(InetSocketAddress peer, byte[] message, int len){
         var connections = addressToConnections.get(peer);
         CustomTCPConnection connection=null;
-        if(!connections.isEmpty()){
+        if(connections != null && !connections.isEmpty()){
             connection=connections.peek();
         }
         if(connections == null || connection == null){
