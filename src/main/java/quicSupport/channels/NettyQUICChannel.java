@@ -156,7 +156,16 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, String customId, boolean inConnection) {
         logger.info("{}. STREAM CREATED {}",self,customId);
         CustomQUICStreamCon firstStreamOfThisCon = nettyIdToStream.get(channel.parent().id().asShortText());
-        BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customId,this,type);
+        BabelInputStream babelInputStream = null;
+        if(TransmissionType.UNSTRUCTURED_STREAM==type){
+            babelInputStream = BabelInputStream.toBabelStream(customId,this,type);
+        }
+        if(firstStreamOfThisCon == null ){
+            channel.disconnect();
+            channel.shutdown();
+            channel.close();
+            return;
+        }
         CustomQUICStreamCon con = new CustomQUICStreamCon(channel,customId,type,firstStreamOfThisCon.customParentConnection,inConnection, babelInputStream);
         con.customParentConnection.addStream(con);
         customStreamIdToStream.put(customId,con);
@@ -234,17 +243,17 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             CustomQUICConnection parentConnection;
             BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customConId,this,type);
             CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel,customConId,type,null,inConnection,babelInputStream);
-                CustomQUICStreamCon firstStreamOfThisCon = nettyIdToStream.get(streamChannel.parent().id().asShortText());
-                if(firstStreamOfThisCon==null){
-                    parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
-                    nettyIdToStream.put(streamChannel.parent().id().asShortText(),quicStreamChannel);
-                    synchronized (addressToQUICCons){
-                        addressToQUICCons.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(parentConnection);
-                    }
-                }else{
-                    parentConnection = firstStreamOfThisCon.customParentConnection;
+            CustomQUICStreamCon firstStreamOfThisCon = nettyIdToStream.get(streamChannel.parent().id().asShortText());
+            if(firstStreamOfThisCon==null){
+                parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
+                nettyIdToStream.put(streamChannel.parent().id().asShortText(),quicStreamChannel);
+                synchronized (addressToQUICCons){
+                    addressToQUICCons.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(parentConnection);
                 }
-                quicStreamChannel.customParentConnection = parentConnection;
+            }else{
+                parentConnection = firstStreamOfThisCon.customParentConnection;
+            }
+            quicStreamChannel.customParentConnection = parentConnection;
 
 
             nettyIdToStream.put(streamChannel.id().asShortText(),quicStreamChannel);
