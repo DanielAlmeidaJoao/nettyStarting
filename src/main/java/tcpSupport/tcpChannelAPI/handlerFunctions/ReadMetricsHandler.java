@@ -1,10 +1,10 @@
 package tcpSupport.tcpChannelAPI.handlerFunctions;
 
-import tcpSupport.tcpChannelAPI.metrics.TCPStreamConnectionMetrics;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 
 import java.util.List;
 
 @FunctionalInterface
 public interface ReadMetricsHandler {
-    public void readMetrics(List<TCPStreamConnectionMetrics> current, List<TCPStreamConnectionMetrics> old);
+    public void readMetrics(List<ConnectionProtocolMetrics> current, List<ConnectionProtocolMetrics> old);
 }
