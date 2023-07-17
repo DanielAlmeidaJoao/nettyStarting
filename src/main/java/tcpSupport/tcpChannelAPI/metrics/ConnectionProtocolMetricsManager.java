@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -67,7 +66,7 @@ public class ConnectionProtocolMetricsManager {
         logger.info("{} TO {} METRICS ENABLED.",self,dest);
     }
      **/
-    public void onConnectionClosed(SocketAddress connectionId){
+    public void onConnectionClosed(String connectionId){
         oldConnections.add(currentConnections.remove(connectionId));
     }
     public ConnectionProtocolMetrics getConnectionMetrics(String conId){
@@ -90,5 +89,42 @@ public class ConnectionProtocolMetricsManager {
             copy.add(cloneChannelMetric(value));
         }
         return copy;
+    }
+
+    public void calcMetricsOnReceived(String conId,long bytes){
+        ConnectionProtocolMetrics metrics1 = getConnectionMetrics(conId);
+        if(metrics1==null){
+            return;
+        }
+        metrics1.setReceivedAppMessages(metrics1.getReceivedAppMessages()+1);
+        metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+bytes);
+    }
+    public void calcMetricsOnSend(boolean success, String connectionId, long length){
+        if(success){
+            ConnectionProtocolMetrics metrics1 = getConnectionMetrics(connectionId);
+            if(metrics1==null){
+                return;
+            }
+            metrics1.setSentAppBytes(metrics1.getSentAppBytes()+length);
+            metrics1.setSentAppMessages(metrics1.getSentAppMessages()+1);
+        }
+    }
+    public void calcControlMetricsOnReceived(String conId,long bytes){
+        ConnectionProtocolMetrics metrics1 = getConnectionMetrics(conId);
+        if(metrics1==null){
+            return;
+        }
+        metrics1.setReceivedControlMessages(metrics1.getReceivedControlMessages()+1);
+        metrics1.setReceivedControlBytes(metrics1.getReceivedControlBytes()+bytes);
+    }
+    public void calcControlMetricsOnSend(boolean success, String connectionId, long length){
+        if(success){
+            ConnectionProtocolMetrics metrics1 = getConnectionMetrics(connectionId);
+            if(metrics1==null){
+                return;
+            }
+            metrics1.setSentControlMessages(metrics1.getSentControlMessages()+length);
+            metrics1.setSentControlBytes(metrics1.getSentControlBytes()+1);
+        }
     }
 }

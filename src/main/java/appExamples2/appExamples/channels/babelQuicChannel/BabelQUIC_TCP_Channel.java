@@ -20,9 +20,9 @@ import quicSupport.channels.SingleThreadedQuicChannel;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.metrics.QuicConnectionMetrics;
-import tcpSupport.tcpChannelAPI.channel.SingleThreadedNettyTCPChannel;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
+import tcpSupport.tcpChannelAPI.channel.SingleThreadedNettyTCPChannel;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
@@ -88,7 +88,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         }
         return i;
     }
-    void readMetricsMethod(List<QuicConnectionMetrics> current, List<QuicConnectionMetrics> old){
+    void readMetricsMethod(List<ConnectionProtocolMetrics> current, List<ConnectionProtocolMetrics> old){
         QUICMetricsEvent quicMetricsEvent = new QUICMetricsEvent(current,old);
         listener.deliverEvent(quicMetricsEvent);
     }

@@ -1,12 +1,10 @@
 package quicSupport.channels;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
 import io.netty.util.AttributeKey;
@@ -18,7 +16,6 @@ import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QuicClientExample;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
-import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.handlers.pipeline.*;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
@@ -27,8 +24,8 @@ import quicSupport.utils.customConnections.CustomQUICStreamCon;
 import quicSupport.utils.entities.QUICConnectingOBJ;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.metrics.QuicChannelMetrics;
-import quicSupport.utils.metrics.QuicConnectionMetrics;
+import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 import tcpSupport.tcpChannelAPI.utils.SendStreamContinuoslyLogics;
@@ -63,7 +60,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private QuicServerExample server;
     private final Properties properties;
     private final boolean withHeartBeat;
-    private QuicChannelMetrics metrics;
+    private final ConnectionProtocolMetricsManager metrics;
     private static long heartBeatTimeout;
     private final boolean connectIfNotConnected;
     private final ChannelHandlerMethods overridenMethods;
@@ -84,7 +81,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         withHeartBeat = properties.get(QUICLogics.WITH_HEART_BEAT)!=null;
         heartBeatTimeout = Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+""));
         if(enableMetrics){
-            metrics=new QuicChannelMetrics(self,singleThreaded);
+            metrics = new ConnectionProtocolMetricsManager(self,singleThreaded);
+        }else{
+            metrics = null;
         }
         addressToQUICCons = TCPStreamUtils.getMapInst(singleThreaded);
         nettyIdToStream = TCPStreamUtils.getMapInst(singleThreaded);
@@ -93,7 +92,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
 
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
             try{
-                server = new QuicServerExample(addr.getHostName(), port, this,metrics,properties);
+                server = new QuicServerExample(addr.getHostName(), port, this,properties);
                         server.start(this::onServerSocketBind);
             }catch (Exception e){
                 throw new IOException(e);
@@ -103,7 +102,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             if(NetworkRole.CLIENT==networkRole){
                 properties.remove(CONNECT_ON_SEND);
             }
-            client = new QuicClientExample(self,this,new NioEventLoopGroup(1), metrics);
+            client = new QuicClientExample(self,this,new NioEventLoopGroup(1));
         }
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
         streamContinuoslyLogics = null;
@@ -112,7 +111,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         return self;
     }
     public boolean enabledMetrics(){
-        return enableMetrics;
+        return metrics != null;
     }
     /*********************************** Stream Handlers **********************************/
 
@@ -146,7 +145,11 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         String streamId = channel.id().asShortText();
         logger.info("{}. STREAM {} CLOSED",self,streamId);
         CustomQUICStreamCon streamCon = nettyIdToStream.remove(streamId);
+
         if(streamCon!=null){
+            if(enabledMetrics()){
+                metrics.onConnectionClosed(streamCon.customStreamId);
+            }
             customStreamIdToStream.remove(streamCon.customStreamId);
             streamCon.customParentConnection.closeStream(streamId);
             overridenMethods.onStreamClosedHandler(streamCon.customParentConnection.getRemote(),streamCon.customStreamId,streamCon.inConnection);
@@ -166,6 +169,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             channel.close();
             return;
         }
+        if(metrics !=null){
+            metrics.initConnectionMetrics(customId,firstStreamOfThisCon.customParentConnection.getRemote(),inConnection,5);
+        }
         CustomQUICStreamCon con = new CustomQUICStreamCon(channel,customId,type,firstStreamOfThisCon.customParentConnection,inConnection, babelInputStream);
         con.customParentConnection.addStream(con);
         customStreamIdToStream.put(customId,con);
@@ -174,12 +180,10 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         overridenMethods.onConnectionUp(inConnection,con.customParentConnection.getRemote(),type,customId, babelInputStream);
     }
 
-
-
-
     public void onReceivedDelimitedMessage(String streamId, byte[] bytes){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon!=null){
+            calcMetricsOnReceived(streamCon.customStreamId,bytes.length);
             if(withHeartBeat){streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();}
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
             overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,bytes,streamCon.customParentConnection.getRemote());
@@ -188,14 +192,19 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     public void onReceivedStream(String streamId, BabelOutputStream babelOutputStream){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon != null){
+            calcMetricsOnReceived(streamCon.customStreamId,babelOutputStream.readableBytes());
             overridenMethods.onChannelReadFlowStream(streamCon.customStreamId, babelOutputStream,streamCon.customParentConnection.getRemote(),streamCon.inputStream);
         }
+
     }
 
-    public void onKeepAliveMessage(String parentId){
+    public void onKeepAliveMessage(String parentId, int i){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(parentId);
         if(streamCon!=null){
             InetSocketAddress remote = streamCon.customParentConnection.getRemote();
+            if(enabledMetrics()){
+                metrics.calcControlMetricsOnReceived(streamCon.customStreamId,i);
+            }
             logger.info("SELF:{} -- HEART BEAT RECEIVED -- {}",self,remote);
             if(withHeartBeat){
                 streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();
@@ -225,7 +234,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     /********************************** Stream Handlers **********************************/
 
     /*********************************** Channel Handlers **********************************/
-    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage handShakeMessage, InetSocketAddress remotePeer, TransmissionType type){
+    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage handShakeMessage, InetSocketAddress remotePeer, TransmissionType type, int length){
         boolean inConnection = false;
         try {
             InetSocketAddress listeningAddress;
@@ -245,7 +254,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel,customConId,type,null,inConnection,babelInputStream);
             CustomQUICStreamCon firstStreamOfThisCon = nettyIdToStream.get(streamChannel.parent().id().asShortText());
             if(firstStreamOfThisCon==null){
-                parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type);
+                parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type,metrics);
                 nettyIdToStream.put(streamChannel.parent().id().asShortText(),quicStreamChannel);
                 synchronized (addressToQUICCons){
                     addressToQUICCons.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(parentConnection);
@@ -254,15 +263,13 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 parentConnection = firstStreamOfThisCon.customParentConnection;
             }
             quicStreamChannel.customParentConnection = parentConnection;
-
-
+            if(metrics !=null){
+                metrics.initConnectionMetrics(customConId,listeningAddress,inConnection,length+4);
+            }
             nettyIdToStream.put(streamChannel.id().asShortText(),quicStreamChannel);
             customStreamIdToStream.put(customConId,quicStreamChannel);
-            sendPendingMessages(listeningAddress,type);
-            if(enableMetrics){
-                metrics.updateConnectionMetrics(streamChannel.parent().remoteAddress(),listeningAddress,streamChannel.parent().collectStats().get(),inConnection);
-            }
             overridenMethods.onConnectionUp(inConnection,listeningAddress,type,customConId, babelInputStream);
+            sendPendingMessages(listeningAddress,type);
         }catch (Exception e){
             e.printStackTrace();
             streamChannel.disconnect();
@@ -324,6 +331,12 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             closeConnections(connections);
         }
     }
+
+    @Override
+    public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler) {
+
+    }
+
     private boolean isEnableMetrics(){
         if(!enableMetrics){
             Exception e = new Exception("METRICS IS NOT ENABLED!");
@@ -333,16 +346,6 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         return enableMetrics;
     }
 
-    public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler){
-        if(isEnableMetrics()){
-            try {
-                QuicChannel connection = getOrThrow(peer).getConnection();
-                handler.handle(peer,metrics.getConnectionMetrics(connection.remoteAddress()));
-            } catch (Exception e) {
-                overridenMethods.failedToGetMetrics(e.getCause());
-            }
-        }
-    }
     private CustomQUICConnection getOrThrow(InetSocketAddress peer) throws UnknownElement {
         ConcurrentLinkedQueue<CustomQUICConnection> connections = addressToQUICCons.get(peer);
         if(connections==null || connections.isEmpty()){
@@ -359,20 +362,16 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         try{
             CustomQUICConnection customQUICConnection = getOrThrow(peer);
             customQUICConnection.getConnection()
-                    .createStream(QuicStreamType.BIDIRECTIONAL, new ServerChannelInitializer(this,metrics,false))
+                    .createStream(QuicStreamType.BIDIRECTIONAL, new ServerChannelInitializer(this,false))
                     .addListener(future -> {
                         if(future.isSuccess() ){
-                            if(metrics!=null){
-                                QuicConnectionMetrics q = metrics.getConnectionMetrics(customQUICConnection.getConnection().remoteAddress());
-                                q.setCreatedStreamCount(q.getCreatedStreamCount()+1);
-                            }
                             QuicStreamChannel streamChannel = (QuicStreamChannel) future.getNow();
                             streamChannel.writeAndFlush(QUICLogics.bufToWrite(type.ordinal(),STREAM_CREATED))
                                     .addListener(future1 -> {
                                         if(future.isSuccess()){
                                             if(TransmissionType.UNSTRUCTURED_STREAM == type){
                                                 streamChannel.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
-                                                streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this,metrics,false));
+                                                streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this, false));
                                             }
                                             ((QuicStreamReadHandler) streamChannel.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(streamChannel,type, finalConId, false);
                                         }
@@ -443,20 +442,12 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         ChannelFuture c = streamChannel.streamChannel.writeAndFlush(QUICLogics.bufToWrite(len,message,APP_DATA));
         c.addListener(future -> {
             if(future.isSuccess()){
+                calcMetricsOnSend(future,streamChannel.customStreamId,len);
                 overridenMethods.onMessageSent(message,null, len,null,peer,STRUCTURED_MESSAGE);
             }else{
                 overridenMethods.onMessageSent(message, null, len,future.cause(),peer,STRUCTURED_MESSAGE);
             }
         });
-    }
-    private void calcMetricsOnSend(Future future, Channel channel, int length){
-        if(future.isSuccess()){
-            if(enableMetrics){
-                QuicConnectionMetrics q = metrics.getConnectionMetrics(channel.remoteAddress());
-                q.setSentAppMessages(q.getSentAppMessages()+1);
-                q.setSentAppBytes(q.getSentAppBytes()+length);
-            }
-        }
     }
     @Override
     public void sendStream(String customConId ,ByteBuf byteBuf,boolean flush){
@@ -472,7 +463,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 f = connection.streamChannel.write(byteBuf);
             }
             f.addListener(future -> {
-                calcMetricsOnSend(future,connection.customParentConnection.getConnection(),toSend);
+                calcMetricsOnSend(future,connection.customStreamId,toSend);
                 overridenMethods.onMessageSent(new byte[0],null,toSend,future.cause(),connection.customParentConnection.getRemote(),TransmissionType.UNSTRUCTURED_STREAM);
             });
         }
@@ -502,6 +493,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             ChannelFuture c = streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
             InetSocketAddress finalPeer = peer;
             c.addListener(future -> {
+                calcMetricsOnSend(future,conId,len);
                 if(!future.isSuccess()){
                     future.cause().printStackTrace();
                     overridenMethods.onMessageSent(new byte[0], inputStream,inputStream.available(),future.cause(), finalPeer,TransmissionType.UNSTRUCTURED_STREAM);
@@ -577,12 +569,12 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         logger.debug("Server socket closed. " + (success ? "" : "Cause: " + cause));
     }
 
-    public void readMetrics(QuicReadMetricsHandler handler){
-        if(isEnableMetrics()){
+    public void readMetrics(ReadMetricsHandler handler){
+        if(enabledMetrics()){
             handler.readMetrics(metrics.currentMetrics(),metrics.oldMetrics());
         }else {
-            //throw new Exception("METRICS WAS NOT ENABLED!");
-            logger.info("METRICS WAS NOT ENABLED! ADD PROPERTY {}=TRUE TO ENABLE IT",QUIC_METRICS);
+            logger.error("METRICS NOT ENABLED!");
+            handler.readMetrics(null,null);
         }
     }
     /************************************ FAILURE HANDLERS ************************************************************/
@@ -591,7 +583,18 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         overridenMethods.onOpenConnectionFailed(peer,cause,transmissionType,id);
     }
 
-
+    private void calcMetricsOnReceived(String conId,long bytes){
+        if(enabledMetrics()){
+            metrics.calcMetricsOnReceived(conId,bytes);
+        }
+    }
+    private void calcMetricsOnSend(Future future, String connectionId, long length){
+        if(future.isSuccess()){
+            if(enabledMetrics()){
+                metrics.calcMetricsOnSend(future.isSuccess(),connectionId,length);
+            }
+        }
+    }
 
 
 }

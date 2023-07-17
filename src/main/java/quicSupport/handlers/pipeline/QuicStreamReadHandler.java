@@ -10,26 +10,18 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.client_server.QuicServerExample;
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.metrics.QuicChannelMetrics;
-import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 public class QuicStreamReadHandler extends ChannelInboundHandlerAdapter {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(QuicServerExample.class);
     public static final String HANDLER_NAME="QuicStreamReadHandler";
 
     private final CustomQuicChannelConsumer consumer;
-    private final QuicChannelMetrics metrics;
 
-    public QuicStreamReadHandler(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics) {
+    public QuicStreamReadHandler(CustomQuicChannelConsumer streamListenerExecutor) {
         this.consumer = streamListenerExecutor;
-        this.metrics = metrics;
     }
 
     public void notifyAppDelimitedStreamCreated(QuicStreamChannel quicStreamChannel, TransmissionType type, String customId, boolean inConnection){
-        if(metrics!=null){
-            QuicConnectionMetrics m = metrics.getConnectionMetrics(quicStreamChannel.parent().remoteAddress());
-            m.setStreamCount(m.getStreamCount()+1);
-        }
         consumer.streamCreatedHandler(quicStreamChannel,type,customId,inConnection);
     }
     @Override

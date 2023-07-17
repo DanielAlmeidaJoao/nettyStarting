@@ -9,12 +9,12 @@ import java.net.InetSocketAddress;
 
 public interface CustomQuicChannelConsumer {
 
-    void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type);
+    void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type, int length);
     void channelInactive(String channelId);
 
     void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String id);
 
-    void onKeepAliveMessage(String parentId);
+    void onKeepAliveMessage(String parentId, int i);
 
     void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type,String customId, boolean inConnection);
 

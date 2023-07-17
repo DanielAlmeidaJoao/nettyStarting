@@ -1,11 +1,12 @@
 package quicSupport.utils.customConnections;
 
-import io.netty.buffer.Unpooled;
 import io.netty.incubator.codec.quic.QuicChannel;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -27,8 +28,9 @@ public class CustomQUICConnection {
     private boolean canSendHeartBeat;
     private static long heartBeatTimeout;
     private final long creationTime;
+    public final ConnectionProtocolMetricsManager metricsManager;
 
-    public CustomQUICConnection(CustomQUICStreamCon quicStreamChannel, InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout, TransmissionType type){
+    public CustomQUICConnection(CustomQUICStreamCon quicStreamChannel, InetSocketAddress remote, boolean inComing, boolean withHeartBeat, long heartBeatTimeout, TransmissionType type, ConnectionProtocolMetricsManager metrics){
         creationTime = System.currentTimeMillis();
         defaultStream = quicStreamChannel;
         connection = defaultStream.streamChannel.parent();
@@ -40,6 +42,7 @@ public class CustomQUICConnection {
         canSendHeartBeat = inComing;
         this.heartBeatTimeout = heartBeatTimeout;
         transmissionType = type;
+        this.metricsManager = metrics;
         if(inComing&&withHeartBeat){
             serverStartScheduling();
         }
@@ -82,13 +85,21 @@ public class CustomQUICConnection {
     }
 
     public void scheduleSendHeartBeat_KeepAlive(){
+            final CustomQUICStreamCon stream = defaultStream;
             if(scheduledFuture!=null){
                 scheduledFuture.cancel(true);
             }
-            scheduledFuture = defaultStream.streamChannel.eventLoop().schedule(() -> {
+            if(stream==null && TransmissionType.UNSTRUCTURED_STREAM == stream.type)return;
+            scheduledFuture = stream.streamChannel.eventLoop().schedule(() -> {
                 logger.info("HEART BEAT SENT TO {}",remote);
-                //QUICLogics.writeBytes(1,"a".getBytes())
-                defaultStream.streamChannel.writeAndFlush(Unpooled.buffer(1).writeBytes("a".getBytes()));
+
+                stream.streamChannel.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(),QUICLogics.KEEP_ALIVE)).addListener(
+                        future -> {
+                            if(metricsManager != null){
+                                metricsManager.calcControlMetricsOnSend(future.isSuccess(), defaultStream.customStreamId,2);
+                            }
+                        }
+                );
             }, (long) (heartBeatTimeout*0.75), TimeUnit.SECONDS);
     }
     public boolean connectionDown(){

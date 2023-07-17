@@ -31,7 +31,6 @@ import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
-import quicSupport.utils.metrics.QuicChannelMetrics;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.InetSocketAddress;
@@ -45,16 +44,14 @@ public final class QuicServerExample {
     private boolean started;
     private final InetSocketAddress self;
     private final Properties properties;
-    private QuicChannelMetrics metrics;
 
     private Channel quicChannel;
     private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
 
 
-    public QuicServerExample(String host, int port, CustomQuicChannelConsumer consumer, QuicChannelMetrics metrics, Properties properties) {
+    public QuicServerExample(String host, int port, CustomQuicChannelConsumer consumer, Properties properties) {
         this.consumer = consumer;
         self = new InetSocketAddress(host,port);
-        this.metrics = metrics;
         started = false;
         this.properties=properties;
         quicChannel =null;
@@ -86,8 +83,8 @@ public final class QuicServerExample {
                 // one.
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
-                .handler(new QuicServerChannelConHandler(consumer,metrics))
-                .streamHandler(new ServerChannelInitializer(consumer,metrics, QUICLogics.INCOMING_CONNECTION))
+                .handler(new QuicServerChannelConHandler(consumer))
+                .streamHandler(new ServerChannelInitializer(consumer,QUICLogics.INCOMING_CONNECTION))
                 .build();
         return codec;
     }

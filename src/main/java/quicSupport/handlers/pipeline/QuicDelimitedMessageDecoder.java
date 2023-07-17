@@ -12,8 +12,6 @@ import quicSupport.channels.NettyQUICChannel;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.metrics.QuicChannelMetrics;
-import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import java.util.List;
 
@@ -24,12 +22,10 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     public static final String HANDLER_NAME="QuicDelimitedMessageDecoder";
     private final boolean incoming;
     private final CustomQuicChannelConsumer consumer;
-    private final QuicChannelMetrics metrics;
 
-    public QuicDelimitedMessageDecoder(CustomQuicChannelConsumer streamListenerExecutor, QuicChannelMetrics metrics, boolean incoming){
+    public QuicDelimitedMessageDecoder(CustomQuicChannelConsumer streamListenerExecutor, boolean incoming){
         this.incoming=incoming;
         this.consumer=streamListenerExecutor;
-        this.metrics=metrics;
     }
 
     @Override
@@ -51,17 +47,8 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(QUICLogics.APP_DATA==msgType){
             consumer.onReceivedDelimitedMessage(ch.id().asShortText(),data);
-            if(metrics!=null){
-                QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
-                q.setReceivedAppMessages(q.getReceivedAppMessages()+1);
-                q.setReceivedAppBytes(q.getReceivedAppBytes()+length+ QUICLogics.WRT_OFFSET);
-            }
         }else if(QUICLogics.KEEP_ALIVE==msgType){
-            consumer.onKeepAliveMessage(ch.parent().id().asShortText());
-            if(metrics!=null){
-                QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
-                q.setReceivedKeepAliveMessages(1+q.getReceivedKeepAliveMessages());
-            }
+            consumer.onKeepAliveMessage(ch.parent().id().asShortText(),length+1);
         }else if(QUICLogics.STREAM_CREATED==msgType){
             msg = Unpooled.copiedBuffer(data);
             int ordinal = msg.readInt();
@@ -70,29 +57,19 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
                 type = TransmissionType.UNSTRUCTURED_STREAM;
                 ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
-                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,false));
+                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, false));
             }else{
                 type = TransmissionType.STRUCTURED_MESSAGE;
             }
-            if(metrics!=null){
-                QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
-                q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
-                q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
-            }
+
             ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,consumer.nextId(),true);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
             QuicHandShakeMessage handShakeMessage = gson.fromJson(new String(data), QuicHandShakeMessage.class);
-
             if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
                 ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
-                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,metrics,true));
+                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, true));
             }
-            consumer.channelActive(ch,handShakeMessage,null, TransmissionType.STRUCTURED_MESSAGE);
-            if(metrics!=null){
-                QuicConnectionMetrics q = metrics.getConnectionMetrics(ctx.channel().parent().remoteAddress());
-                q.setReceivedControlMessages(q.getReceivedControlMessages()+1);
-                q.setReceivedControlBytes(q.getReceivedControlBytes()+length+ QUICLogics.WRT_OFFSET);
-            }
+            consumer.channelActive(ch,handShakeMessage,null, TransmissionType.STRUCTURED_MESSAGE,length);
         }else{
             throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
         }

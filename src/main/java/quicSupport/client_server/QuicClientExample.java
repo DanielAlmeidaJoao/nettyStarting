@@ -57,7 +57,7 @@ public final class QuicClientExample {
     private QuicChannelMetrics metrics;
     private QuicSslContext context;
 
-    public QuicClientExample(InetSocketAddress self, CustomQuicChannelConsumer consumer, NioEventLoopGroup g, QuicChannelMetrics metrics){
+    public QuicClientExample(InetSocketAddress self, CustomQuicChannelConsumer consumer, NioEventLoopGroup g){
         this.self = self;
         this.consumer = consumer;
         //
@@ -101,8 +101,8 @@ public final class QuicClientExample {
                 .handler(getCodec(properties))
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
-                .handler(new QuicClientChannelConHandler(self,remote,consumer,metrics, transmissionType))
-                .streamHandler(new ServerChannelInitializer(consumer,metrics,QUICLogics.OUTGOING_CONNECTION))
+                .handler(new QuicClientChannelConHandler(self,remote,consumer, transmissionType))
+                .streamHandler(new ServerChannelInitializer(consumer,QUICLogics.OUTGOING_CONNECTION))
                 .remoteAddress(remote)
                 .attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY),id)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))

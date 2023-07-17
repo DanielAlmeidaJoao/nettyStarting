@@ -2,17 +2,17 @@ package appExamples2.appExamples.channels.babelQuicChannel.events;
 
 import lombok.Getter;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
-import quicSupport.utils.metrics.QuicConnectionMetrics;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 
 import java.util.List;
 
 @Getter
 public class QUICMetricsEvent extends ChannelEvent {
-    private List<QuicConnectionMetrics> current;
-    private List<QuicConnectionMetrics> old;
+    private List<ConnectionProtocolMetrics> current;
+    private List<ConnectionProtocolMetrics> old;
     public static final short EVENT_ID = 12;
 
-    public QUICMetricsEvent(List<QuicConnectionMetrics> current,List<QuicConnectionMetrics> old) {
+    public QUICMetricsEvent(List<ConnectionProtocolMetrics> current,List<ConnectionProtocolMetrics> old) {
         super(EVENT_ID);
         this.current=current;
         this.old=old;

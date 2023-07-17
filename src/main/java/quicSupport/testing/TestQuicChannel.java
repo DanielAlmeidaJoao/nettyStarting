@@ -190,7 +190,7 @@ import java.util.Properties;
     }
 
     public void readMetrics(QuicReadMetricsHandler handler) {
-        customQuicChannel.readMetrics(handler);
+        //customQuicChannel.readMetrics(handler);
     }
 
     public void send(String streamId, byte[] message, int len) {

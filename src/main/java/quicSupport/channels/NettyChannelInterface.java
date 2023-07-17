@@ -1,8 +1,8 @@
 package quicSupport.channels;
 
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
-import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
 
 import java.net.InetSocketAddress;
 
@@ -16,7 +16,7 @@ public interface NettyChannelInterface extends SendBytesInterface {
 
     void closeLink(String streamId);
 
-    void readMetrics(QuicReadMetricsHandler handler);
+    void readMetrics(ReadMetricsHandler handler);
 
 
     void send(InetSocketAddress peer, byte[] message, int len);

@@ -8,10 +8,9 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
-import tcpSupport.tcpChannelAPI.utils.MetricsDisabledException;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,11 +87,7 @@ public class SingleThreadedNettyTCPChannel extends NettyTCPChannel {
     @Override
     public void readMetrics(ReadMetricsHandler handler){
         executor.execute(() -> {
-            try {
-                super.readMetrics(handler);
-            } catch (MetricsDisabledException e) {
-                throw new RuntimeException(e);
-            }
+            super.readMetrics(handler);
         });
     }
     public void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType type, String conId){

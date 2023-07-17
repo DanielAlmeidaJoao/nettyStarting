@@ -10,8 +10,6 @@ import org.apache.commons.codec.binary.Hex;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.ServerChannelInitializer;
 import quicSupport.utils.entities.MessageToByteEncoderParameter;
-import quicSupport.utils.metrics.QuicChannelMetrics;
-import quicSupport.utils.metrics.QuicConnectionMetrics;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.io.ByteArrayOutputStream;
@@ -72,16 +70,10 @@ public class QUICLogics {
     public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_C_KEYSTORE_PASSWORD";
     public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_C_KEYSTORE_ALIAS_KEY";
 
-    public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor, QuicChannelMetrics metrics,
+    public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor,
                                                  boolean incoming) throws Exception{
         QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL, new ServerChannelInitializer(quicListenerExecutor,metrics,incoming))
-                .addListener(future -> {
-                    if(future.isSuccess() && metrics!=null){
-                        QuicConnectionMetrics q = metrics.getConnectionMetrics(quicChan.remoteAddress());
-                        q.setCreatedStreamCount(q.getCreatedStreamCount()+1);
-                    }
-                })
+                .createStream(QuicStreamType.BIDIRECTIONAL, new ServerChannelInitializer(quicListenerExecutor,incoming))
                 .sync()
                 .getNow();
         return streamChannel;

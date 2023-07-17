@@ -21,4 +21,6 @@ public class ConnectionProtocolMetrics {
 
     private boolean isIncoming;
 
+
+
 }

@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
-import quicSupport.handlers.channelFuncHandlers.QuicReadMetricsHandler;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
@@ -57,9 +56,9 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
         });
     }
     @Override
-    public void onKeepAliveMessage(String parentId){
+    public void onKeepAliveMessage(String parentId, int i){
         executor.submit(() -> {
-            super.onKeepAliveMessage(parentId);
+            super.onKeepAliveMessage(parentId, i);
         });
     }
 
@@ -67,9 +66,9 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
 
     /*********************************** Channel Handlers **********************************/
     @Override
-    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type){
+    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type, int length){
         executor.submit(() -> {
-            super.channelActive(streamChannel,controlData,remotePeer,type);
+            super.channelActive(streamChannel,controlData,remotePeer,type, length);
         });
     }
     @Override
@@ -108,12 +107,7 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
             super.closeLink(streamId);
         });
     }
-    @Override
-    public void readMetrics(QuicReadMetricsHandler handler){
-        executor.submit(() -> {
-            super.readMetrics(handler);
-        });
-    }
+
     @Override
     public void send(String streamId, byte[] message, int len) {
         executor.submit(() -> {
