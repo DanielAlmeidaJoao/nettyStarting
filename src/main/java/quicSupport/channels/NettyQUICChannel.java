@@ -487,6 +487,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.parent().eventLoop());
                 return;
             }
+            //
             if(streamChannel.streamChannel.pipeline().get("ChunkedWriteHandler")==null){
                 streamChannel.streamChannel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
             }
