@@ -57,6 +57,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     private final StreamOutConnection client;
     private final ConnectionProtocolMetricsManager metricsManager;
     private final boolean connectIfNotConnected;
+    private final boolean singleConnectionPerPeer;
     private final ChannelHandlerMethods channelHandlerMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
     private Properties properties;
@@ -100,7 +101,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }
 
         connectIfNotConnected = properties.getProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
-
+        singleConnectionPerPeer = properties.getProperty(TCPStreamUtils.SINGLE_CON_PER_PEER)!=null;
         this.channelHandlerMethods = chm;
         streamContinuoslyLogics = null;
         this.properties = properties;
@@ -214,7 +215,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         return null;
     }
     public String openConnectionLogics(InetSocketAddress peer, TransmissionType type, String conId) {
-        if(!connectIfNotConnected){
+        if(singleConnectionPerPeer){
             String connectionId = isConnecting(peer);
             if(connectionId!=null) return connectionId;
             try{

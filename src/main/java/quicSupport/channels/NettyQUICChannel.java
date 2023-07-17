@@ -63,6 +63,8 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private final ConnectionProtocolMetricsManager metrics;
     private static long heartBeatTimeout;
     private final boolean connectIfNotConnected;
+    private final boolean singleConnectionPerPeer;
+
     private final ChannelHandlerMethods overridenMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
 
@@ -105,6 +107,8 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             client = new QuicClientExample(self,this,new NioEventLoopGroup(1));
         }
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
+        singleConnectionPerPeer = properties.getProperty(TCPStreamUtils.SINGLE_CON_PER_PEER)!=null;
+
         streamContinuoslyLogics = null;
     }
     public InetSocketAddress getSelf(){
@@ -293,7 +297,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         return openLogics(peer,type,null);
     }
     public String openLogics(InetSocketAddress peer, TransmissionType transmissionType, String id){
-        if(!connectIfNotConnected){
+        if(singleConnectionPerPeer){
             QUICConnectingOBJ connectingOBJ = connecting.get(peer);
             if(connectingOBJ!=null){
                 return connectingOBJ.conId;
