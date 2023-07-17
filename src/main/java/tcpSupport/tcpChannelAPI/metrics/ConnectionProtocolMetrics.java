@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
 @Getter
 @Setter
 @AllArgsConstructor
-public class TCPStreamConnectionMetrics {
+public class ConnectionProtocolMetrics {
     private InetSocketAddress dest;
     private long receivedAppBytes, sentAppBytes, receivedControlBytes, sentControlBytes;
     private long receivedAppMessages, sentAppMessages, receivedControlMessages, sentControlMessages;

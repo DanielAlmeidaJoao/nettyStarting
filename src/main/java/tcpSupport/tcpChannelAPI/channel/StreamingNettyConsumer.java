@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
 
 public interface StreamingNettyConsumer {
 
-    void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type);
+    void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, int len);
     void onChannelMessageRead(String channelId, byte[] bytes);
 
     void onChannelStreamRead(String channelId, BabelOutputStream babelOutputStream);

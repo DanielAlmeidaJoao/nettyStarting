@@ -12,21 +12,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 //EVERY STREAM HAS THIS OBJECT????
-public class TCPStreamMetrics {
-    private static final Logger logger = LogManager.getLogger(TCPStreamMetrics.class);
+public class ConnectionProtocolMetricsManager {
+    private static final Logger logger = LogManager.getLogger(ConnectionProtocolMetricsManager.class);
 
     private final InetSocketAddress self;
 
     @Getter
-    private final Map<SocketAddress, TCPStreamConnectionMetrics> currentConnections;
+    private final Map<String, ConnectionProtocolMetrics> currentConnections;
     private final ModelMapper modelMapper;
 
 
     @Getter
-    private final Queue<TCPStreamConnectionMetrics> oldConnections;
+    private final Queue<ConnectionProtocolMetrics> oldConnections;
     //private Map<InetSocketAddress, QuicConnectionMetrics> metricsMap;
 
-    public TCPStreamMetrics(InetSocketAddress host, boolean singleThreaded){
+    public ConnectionProtocolMetricsManager(InetSocketAddress host, boolean singleThreaded){
         self=host;
         if(singleThreaded){
             logger.info("SINGLE THREADED METRICS ON!");
@@ -41,40 +41,52 @@ public class TCPStreamMetrics {
         logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }
 
-    public void initConnectionMetrics(SocketAddress connectionId){
+    public void initConnectionMetrics(String connectionId, InetSocketAddress dest, boolean incoming, int len){
         logger.info("SELF: {}. METRICS TO {} ADDED.",self,connectionId);
-        currentConnections.put(connectionId,new TCPStreamConnectionMetrics(
+        ConnectionProtocolMetrics m = new ConnectionProtocolMetrics(
                 null,0,0,0,0,
                 0,0,
                 0,0,0,0,0,0,false
-        ));
+        );
+        m.setIncoming(incoming);
+        m.setDest(dest);
+        currentConnections.put(connectionId,m);
+        if(incoming){
+            m.setReceivedControlBytes(len);
+            m.setReceivedControlMessages(1);
+        }else{
+            m.setSentControlBytes(len);
+            m.setSentControlMessages(1);
+        }
     }
+    /**
     public void updateConnectionMetrics(SocketAddress connectionId, InetSocketAddress dest,boolean incoming){
-        TCPStreamConnectionMetrics m = currentConnections.get(connectionId);
+        ConnectionProtocolMetrics m = currentConnections.get(connectionId);
         m.setIncoming(incoming);
         m.setDest(dest);
         logger.info("{} TO {} METRICS ENABLED.",self,dest);
     }
+     **/
     public void onConnectionClosed(SocketAddress connectionId){
         oldConnections.add(currentConnections.remove(connectionId));
     }
-    public TCPStreamConnectionMetrics getConnectionMetrics(SocketAddress peer){
-        return currentConnections.get(peer);
+    public ConnectionProtocolMetrics getConnectionMetrics(String conId){
+        return currentConnections.get(conId);
     }
 
-    private TCPStreamConnectionMetrics cloneChannelMetric(TCPStreamConnectionMetrics chanMetrics){
-        return modelMapper.map(chanMetrics,TCPStreamConnectionMetrics.class);
+    private ConnectionProtocolMetrics cloneChannelMetric(ConnectionProtocolMetrics chanMetrics){
+        return modelMapper.map(chanMetrics, ConnectionProtocolMetrics.class);
     }
-    public List<TCPStreamConnectionMetrics> oldMetrics(){
-        var copy = new LinkedList<TCPStreamConnectionMetrics>();
-        for (TCPStreamConnectionMetrics oldConnection : oldConnections) {
+    public List<ConnectionProtocolMetrics> oldMetrics(){
+        var copy = new LinkedList<ConnectionProtocolMetrics>();
+        for (ConnectionProtocolMetrics oldConnection : oldConnections) {
             copy.add(cloneChannelMetric(oldConnection));
         }
         return copy;
     }
-    public List<TCPStreamConnectionMetrics> currentMetrics(){
-        var copy = new LinkedList<TCPStreamConnectionMetrics>();
-        for (TCPStreamConnectionMetrics value : currentConnections.values()) {
+    public List<ConnectionProtocolMetrics> currentMetrics(){
+        var copy = new LinkedList<ConnectionProtocolMetrics>();
+        for (ConnectionProtocolMetrics value : currentConnections.values()) {
             copy.add(cloneChannelMetric(value));
         }
         return copy;

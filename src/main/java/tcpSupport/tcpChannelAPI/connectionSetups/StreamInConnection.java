@@ -9,7 +9,6 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
-import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
 import tcpSupport.tcpChannelAPI.pipeline.TCPCustomHandshakeHandler;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 
@@ -42,7 +41,7 @@ public class StreamInConnection {
      * @param sync whether to block the main thread or not
      * @throws Exception
      */
-    public void startListening(boolean sync,TCPStreamMetrics metrics, StreamingNettyConsumer consumer)
+    public void startListening(boolean sync,StreamingNettyConsumer consumer)
             throws Exception{
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
@@ -55,8 +54,8 @@ public class StreamInConnection {
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(TCPCustomHandshakeHandler.NAME,new TCPCustomHandshakeHandler(metrics,consumer));
-                        ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(metrics,consumer));
+                        ch.pipeline().addLast(TCPCustomHandshakeHandler.NAME,new TCPCustomHandshakeHandler(consumer));
+                        ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(consumer));
                         //ch.pipeline().addLast(new TCPServerNettyHandler(metrics,consumer));
                     }
                 });

@@ -28,8 +28,8 @@ public class SingleThreadedNettyTCPChannel extends NettyTCPChannel {
     }
 
     @Override
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type) {
-        executor.execute(() -> super.onChannelActive(channel,handShakeMessage, type));
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, int len) {
+        executor.execute(() -> super.onChannelActive(channel,handShakeMessage, type, len));
     }
 
     @Override

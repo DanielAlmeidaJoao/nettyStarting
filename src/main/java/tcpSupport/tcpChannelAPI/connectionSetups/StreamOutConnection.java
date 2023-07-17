@@ -12,7 +12,6 @@ import io.netty.util.AttributeKey;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
 import tcpSupport.tcpChannelAPI.pipeline.TCPClientNettyHandler;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 
@@ -31,7 +30,7 @@ public class StreamOutConnection {
         this.self = host;
     }
 
-    public void connect(InetSocketAddress peer, TCPStreamMetrics metrics, StreamingNettyConsumer consumer, TransmissionType type, String conId){
+    public void connect(InetSocketAddress peer,StreamingNettyConsumer consumer, TransmissionType type, String conId){
         try {
             Bootstrap b = new Bootstrap();
 
@@ -42,8 +41,8 @@ public class StreamOutConnection {
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(metrics, consumer));
-                            ch.pipeline().addLast( new TCPClientNettyHandler(new HandShakeMessage(self,type),consumer,metrics,type));
+                            ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(consumer));
+                            ch.pipeline().addLast( new TCPClientNettyHandler(new HandShakeMessage(self,type),consumer,type));
                     }
                     }).attr(AttributeKey.valueOf(CUSTOM_ID_KEY),conId);
 

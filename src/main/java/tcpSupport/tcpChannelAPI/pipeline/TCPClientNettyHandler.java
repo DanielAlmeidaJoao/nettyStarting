@@ -6,14 +6,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpChannelAPI.metrics.TCPStreamConnectionMetrics;
-import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
-import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
+import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
-import quicSupport.utils.enums.TransmissionType;
 
 import java.net.UnknownHostException;
 
@@ -23,15 +21,13 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(TCPClientNettyHandler.class);
 
     private HandShakeMessage handshakeData;
-    private final TCPStreamMetrics metrics;
     private final TransmissionType type;
     private final StreamingNettyConsumer consumer;
 
 
-    public TCPClientNettyHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TCPStreamMetrics metrics, TransmissionType type){
+    public TCPClientNettyHandler(HandShakeMessage handshakeData, StreamingNettyConsumer consumer, TransmissionType type){
         this.consumer = consumer;
         this.handshakeData = handshakeData;
-        this.metrics = metrics;
         this.type = type;
     }
 
@@ -41,27 +37,17 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
         ByteBuf tmp = Unpooled.buffer(data.length+4);
         tmp.writeInt(data.length);
         tmp.writeBytes(data);
-        if(metrics!=null){
-            metrics.initConnectionMetrics(ctx.channel().remoteAddress());
-        }
+
         ctx.writeAndFlush(tmp).addListener(future -> {
-            if(future.isSuccess()){
-                if(metrics!=null){
-                    TCPStreamConnectionMetrics metrics1 = metrics.getConnectionMetrics(ctx.channel().remoteAddress());
-                    metrics1.setSentControlBytes(metrics1.getSentControlBytes()+data.length+4);
-                    metrics1.setSentControlMessages(metrics1.getSentControlMessages()+1);
-                }
-            }else{
-                System.out.println("HHHHHH JHHHHHHHHH 24");
-                future.cause().printStackTrace();
-                System.out.println("HHHHHH JHHHHHHHHH 34");
+            if(!future.isSuccess()){
+                //future.cause().printStackTrace();
                 ctx.channel().close();
             }
         });
         if(TransmissionType.UNSTRUCTURED_STREAM == type){
-            ctx.channel().pipeline().replace(TCPDelimitedMessageDecoder.NAME, TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(metrics,consumer));
+            ctx.channel().pipeline().replace(TCPDelimitedMessageDecoder.NAME, TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(consumer));
         }
-        consumer.onChannelActive(ctx.channel(),null,type);
+        consumer.onChannelActive(ctx.channel(),null,type,data.length);
         handshakeData=null;
     }
 

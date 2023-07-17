@@ -24,8 +24,8 @@ import tcpSupport.tcpChannelAPI.connectionSetups.StreamInConnection;
 import tcpSupport.tcpChannelAPI.connectionSetups.StreamOutConnection;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
-import tcpSupport.tcpChannelAPI.metrics.TCPStreamConnectionMetrics;
-import tcpSupport.tcpChannelAPI.metrics.TCPStreamMetrics;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
 import tcpSupport.tcpChannelAPI.utils.*;
 
 import java.io.FileInputStream;
@@ -57,8 +57,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     private final Map<String,CustomTCPConnection> customIdToConnection;
     private final StreamInConnection server;
     private final StreamOutConnection client;
-    private final boolean metricsOn;
-    private final TCPStreamMetrics tcpStreamMetrics;
+    private final ConnectionProtocolMetricsManager connectionProtocolMetricsManager;
     private final boolean connectIfNotConnected;
     private final ChannelHandlerMethods channelHandlerMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
@@ -73,11 +72,11 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
 
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        metricsOn = properties.containsKey("metrics");
+        boolean metricsOn = properties.containsKey("metrics");
         if(metricsOn){
-            tcpStreamMetrics = new TCPStreamMetrics(self,singleThreaded);
+            connectionProtocolMetricsManager = new ConnectionProtocolMetricsManager(self,singleThreaded);
         }else{
-            tcpStreamMetrics = null;
+            connectionProtocolMetricsManager = null;
         }
         nettyIdToConnection = TCPStreamUtils.getMapInst(singleThreaded);
         addressToConnections = TCPStreamUtils.getMapInst(singleThreaded);
@@ -86,7 +85,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
             server = new StreamInConnection(addr.getHostName(),port);
             try{
-                server.startListening(false,tcpStreamMetrics,this);
+                server.startListening(false,this);
             }catch (Exception e){
                 throw new IOException(e);
             }
@@ -124,8 +123,8 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         if(connections!=null && connections.remove(connection) && connections.isEmpty()){
             addressToConnections.remove(connection.host);
         }
-        if(metricsOn){
-            tcpStreamMetrics.onConnectionClosed(connection.channel.remoteAddress());
+        if(enabledMetrics()){
+            connectionProtocolMetricsManager.onConnectionClosed(connection.channel.remoteAddress());
         }
         channelHandlerMethods.onStreamClosedHandler(connection.host,connection.conId,connection.inConnection);
     }
@@ -135,6 +134,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         if(connection==null){
             logger.debug("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
         }else {
+            calcMetricsOnReceived(connection.conId,bytes.length+4);
             channelHandlerMethods.onChannelReadDelimitedMessage(connection.conId,bytes,connection.host);
         }
     }
@@ -143,10 +143,11 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         if(connection==null){
             logger.debug("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
         }else {
+            calcMetricsOnReceived(connection.conId,babelOutputStream.readableBytes());
             channelHandlerMethods.onChannelReadFlowStream(connection.conId,babelOutputStream,connection.host,connection.inputStream);
         }
     }
-    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type){
+    public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, int len){
         try {
             boolean inConnection;
             InetSocketAddress listeningAddress;
@@ -161,6 +162,10 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
                 conId = nextId();
             }
 
+            if(connectionProtocolMetricsManager !=null){
+                connectionProtocolMetricsManager.initConnectionMetrics(conId,listeningAddress,inConnection,len);
+            }
+
             BabelInputStream babelInputStream = BabelInputStream.toBabelStream(conId,this,type);
             CustomTCPConnection connection = new CustomTCPConnection(channel,type,listeningAddress,conId,inConnection,babelInputStream);
             nettyIdToConnection.put(channel.id().asShortText(),connection);
@@ -169,9 +174,6 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
                 addressToConnections.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(connection);;
             }
 
-            if(metricsOn){
-                tcpStreamMetrics.updateConnectionMetrics(channel.remoteAddress(),listeningAddress,inConnection);
-            }
             sendPendingMessages(connection,type);
             channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId, babelInputStream);
         }catch (Exception e){
@@ -227,7 +229,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         nettyIdTOConnectingOBJ.put(conId,new TCPConnectingObject(conId,peer,new LinkedList<>()));
         logger.debug("{} CONNECTING TO {}. CONNECTION ID: ",self,peer,conId);
         try {
-            client.connect(peer,tcpStreamMetrics,this,type,conId);
+            client.connect(peer,this,type,conId);
             return conId;
         }catch (Exception e){
             e.printStackTrace();
@@ -268,10 +270,17 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             send(message,len,connection);
         }
     }
-    private void calcMetricsOnSend(Future future, Channel channel, int length){
+    private void calcMetricsOnReceived(String conId,long bytes){
+        if(enabledMetrics()){
+            ConnectionProtocolMetrics metrics1 = connectionProtocolMetricsManager.getConnectionMetrics(conId);
+            metrics1.setReceivedAppMessages(metrics1.getReceivedAppMessages()+1);
+            metrics1.setReceivedAppBytes(metrics1.getReceivedAppBytes()+bytes);
+        }
+    }
+    private void calcMetricsOnSend(Future future, String connectionId, long length){
         if(future.isSuccess()){
-            if(metricsOn){
-                TCPStreamConnectionMetrics metrics1 = tcpStreamMetrics.getConnectionMetrics(channel.remoteAddress());
+            if(enabledMetrics()){
+                ConnectionProtocolMetrics metrics1 = connectionProtocolMetricsManager.getConnectionMetrics(connectionId);
                 metrics1.setSentAppBytes(metrics1.getSentAppBytes()+length);
                 metrics1.setSentAppMessages(metrics1.getSentAppMessages()+1);
             }
@@ -283,7 +292,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             final int sentBytes = byteBuf.readableBytes();
             ChannelFuture f = connection.channel.writeAndFlush(byteBuf);
             f.addListener(future -> {
-                calcMetricsOnSend(future,connection.channel,sentBytes);
+                calcMetricsOnSend(future,connection.conId,sentBytes);
                 channelHandlerMethods.onMessageSent(message,null,len,future.cause(),connection.host,STRUCTURED_MESSAGE);
             });
         }else{
@@ -304,7 +313,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
                 f = connection.channel.write(byteBuf);
             }
             f.addListener(future -> {
-                calcMetricsOnSend(future,connection.channel,toSend);
+                calcMetricsOnSend(future,connection.conId,toSend);
                 channelHandlerMethods.onMessageSent(new byte[0],null,toSend,future.cause(),connection.host,TransmissionType.UNSTRUCTURED_STREAM);
             });
         }
@@ -349,6 +358,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
 
             CustomTCPConnection finalIdConnection = idConnection;
             c.addListener(future -> {
+                calcMetricsOnSend(future,conId,len);
                 channelHandlerMethods.onMessageSent(null,inputStream, (int) len, future.cause(),finalIdConnection.host,TransmissionType.UNSTRUCTURED_STREAM);
             });
         }catch (Exception e){
@@ -387,7 +397,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
 
     @Override
     public boolean enabledMetrics() {
-        return metricsOn;
+        return connectionProtocolMetricsManager != null;
     }
 
     @Override
@@ -452,8 +462,8 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     }
 
     public void readMetrics(ReadMetricsHandler handler) throws MetricsDisabledException {
-        if(metricsOn){
-            handler.readMetrics(tcpStreamMetrics.currentMetrics(),tcpStreamMetrics.oldMetrics());
+        if(enabledMetrics()){
+            handler.readMetrics(connectionProtocolMetricsManager.currentMetrics(), connectionProtocolMetricsManager.oldMetrics());
         }else {
             throw new MetricsDisabledException("METRICS WAS NOT ENABLED!");
         }
