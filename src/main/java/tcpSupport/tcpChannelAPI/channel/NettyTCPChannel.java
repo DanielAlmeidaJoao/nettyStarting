@@ -205,7 +205,22 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     public String open(InetSocketAddress peer, TransmissionType type) {
         return openConnectionLogics(peer,type,null);
     }
+    private String isConnecting(InetSocketAddress peer){
+        for (TCPConnectingObject value : nettyIdTOConnectingOBJ.values()) {
+            if(value.dest.equals(peer)){
+                return value.customId;
+            }
+        }
+        return null;
+    }
     public String openConnectionLogics(InetSocketAddress peer, TransmissionType type, String conId) {
+        if(!connectIfNotConnected){
+            String connectionId = isConnecting(peer);
+            if(connectionId!=null) return connectionId;
+            try{
+                return addressToConnections.get(peer).peek().conId;
+            }catch (Exception e){};
+        }
         if(conId == null ){
             conId = nextId();
         }

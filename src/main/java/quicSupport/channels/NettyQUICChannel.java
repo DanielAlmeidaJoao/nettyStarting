@@ -286,6 +286,15 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         return openLogics(peer,type,null);
     }
     public String openLogics(InetSocketAddress peer, TransmissionType transmissionType, String id){
+        if(!connectIfNotConnected){
+            QUICConnectingOBJ connectingOBJ = connecting.get(peer);
+            if(connectingOBJ!=null){
+                return connectingOBJ.conId;
+            }
+            try{
+                return addressToQUICCons.get(peer).peek().getDefaultStream().customStreamId;
+            }catch (Exception e){}
+        }
         if(id == null){
             id = nextId();
         }
