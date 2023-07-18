@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
@@ -191,7 +192,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         String id = nextId();
         customConIDToAddress.put(id,peer);
-        listener.deliverEvent(new OnConnectionDownEvent(peer,null,id,true));
+        listener.deliverEvent(new OnMessageConnectionUpEvent(peer,id,false));
         return id;
     }
 
