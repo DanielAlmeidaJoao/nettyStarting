@@ -61,8 +61,8 @@ public class TCPStreamUtils {
         properties.setProperty("UDP_address",address);
         //properties.setProperty("UDP_metrics","on");
         properties.setProperty("UDP_port",port);
-        properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_RETRANSMISSION_TIMEOUT,"3");
-        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"100");
+        properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_RETRANSMISSION_TIMEOUT,"500");
+        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"10");
         return properties;
     }
 }

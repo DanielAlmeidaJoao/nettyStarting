@@ -55,7 +55,7 @@ public class NettyUDPServer {
         datagramPacketCounter = new AtomicLong(0);
         streamIdCounter = new AtomicLong(0);
         MAX_SEND_RETRIES = Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"5"));
-        RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(UDP_RETRANSMISSION_TIMEOUT,"1"));
+        RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(UDP_RETRANSMISSION_TIMEOUT,"500"));
         try {
             channel = start();
         }catch (Exception e){
@@ -94,7 +94,7 @@ public class NettyUDPServer {
                 }
                 scheduleRetransmission(packet,msgId,dest,count+1);
             });
-        }, RETRANSMISSION_TIMEOUT,TimeUnit.SECONDS);
+        }, RETRANSMISSION_TIMEOUT,TimeUnit.MILLISECONDS);
         if(count==0){
             waitingForAcks.put(msgId,System.currentTimeMillis());
         }

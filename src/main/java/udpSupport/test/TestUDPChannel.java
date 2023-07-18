@@ -43,7 +43,7 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
 
     @Override
     public void onPeerDown(InetSocketAddress peer) {
-        //System.out.println("PEER DOWN "+peer);
+        System.out.println("PEER DOWN "+peer);
     }
 
     @Override
