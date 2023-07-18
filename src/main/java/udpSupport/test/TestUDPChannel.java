@@ -35,7 +35,7 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
             udpChannelInterface = new UDPChannel(properties,false,this);
         }
         fos = new FileOutputStream("UDP_MOVIE_FILE.MP4");
-
+        System.out.println("SERVER STARTED ");
 
     }
 
@@ -43,29 +43,28 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
 
     @Override
     public void onPeerDown(InetSocketAddress peer) {
-        System.out.println("PEER DOWN "+peer);
+        //System.out.println("PEER DOWN "+peer);
     }
 
     @Override
     public void onDeliverMessage(byte[] message, InetSocketAddress from) {
-        if(message!=null){
-            System.out.println(from+" <- from "+new String(message));
-            return;
-        }
+
         total += message.length;
+        System.out.println("RECEIVED "+total+" -- "+message.length);
+        /* if(total>0){
+            return;
+        } */
         try{
+
             if(message.length==bufferSize){
                 receivedHashes.add(Hex.encodeHexString(QUICLogics.hash(message)));
             }else {
                 System.out.println("ONLY ONCE "+message.length+" "+total);
             }
-            /**
-            if(from.getPort()==8081){
-                sendMessage(message,from,message.length);
-            }**/
+
             //fos.write(message, 0, message.length);
             //fos.flush();
-            if(total>=813782079/* 1035368729*/){
+            if(total>= 1035368729){
                 //fos.close();
                 System.out.println("FILE CLOSEDDDDDDDDDDDD "+total);
                 sumHashes(receivedHashes);
@@ -98,8 +97,8 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
-            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-            Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             //Path filePath = Paths.get(p);
             //

@@ -56,5 +56,13 @@ public class TCPStreamUtils {
         //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
         return channelProps;
     }
-
+    public static Properties udpChannelProperties(String address, String port){
+        Properties properties = new Properties();
+        properties.setProperty("UDP_address",address);
+        //properties.setProperty("UDP_metrics","on");
+        properties.setProperty("UDP_port",port);
+        properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_RETRANSMISSION_TIMEOUT,"1");
+        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"100");
+        return properties;
+    }
 }

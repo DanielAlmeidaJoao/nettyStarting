@@ -2,6 +2,7 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
+import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
@@ -53,10 +54,14 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //channelProps.setProperty("metrics_interval","2000");
             channelProps = TCPStreamUtils.quicChannelProperty(address,port);
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_QUIC, channelProps);
-        }else{
+        }else if(channelName.equalsIgnoreCase("tcp")){
             System.out.println("TCP ON");
             channelProps = TCPStreamUtils.tcpChannelProperties(address,port);
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP, channelProps);
+        }else{
+            System.out.println("UDP ON");
+            channelProps = TCPStreamUtils.udpChannelProperties(address,port);
+            channelId = createChannel(BabelUDPChannel.NAME,channelProps);
         }
         return channelId;
     }
@@ -72,7 +77,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                openStreamConnection(dest,channelId);
+                //openStreamConnection(dest,channelId);
             }
         } catch (Exception e) {
             logger.error("Error registering message handler: " + e.getMessage());
@@ -239,26 +244,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //sendStream(channelId,fileInputStream,len,streamId);
             System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
             if(len>0) return;
-            /**
-            if(len >-1){
-                Thread.sleep(5000);
-                FileOutputStream fileOutputStream = new FileOutputStream(f);
-                int b = 0;
-                while (true){
-                    //sendStream(channelId,fileInputStream,streamId);
-                    Thread.sleep(5000);
-                    fileOutputStream.write((UUID.randomUUID().toString()).getBytes());
-                    System.out.println("WROTE TO FILE");
-                    b++;
-                    if(b>5){
-                        Thread.sleep(1000);
-                        fileInputStream.close();
-                        return;
-                    }
-                }
-                //return;
-            }
-            **/
+
         }catch (Exception e){
             e.printStackTrace();
         }

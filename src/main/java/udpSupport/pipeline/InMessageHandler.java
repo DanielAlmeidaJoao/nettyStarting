@@ -48,6 +48,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
         DatagramPacket datagramPacket = (DatagramPacket) o;
         ByteBuf content = datagramPacket.content();
+        final int availableBytes = content.readableBytes();
         byte msgCode = content.readByte();
         long msgId = content.readLong();
         //logger.info("RECEIVED MESSAGE CODE: {}",(msgCode==UDPLogics.APP_ACK?"APP_MESSAGE":"ACK"));
@@ -60,12 +61,12 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             message = new byte[content.readableBytes()];
             content.readBytes(message);
             content.release();
-            onStreamRead(channel,streamId,message,streamCount,datagramPacket.sender(),msgId);
+            onStreamRead(channel,streamId,message,streamCount,datagramPacket.sender(),msgId,availableBytes);
         }else if(UDPLogics.SINGLE_MESSAGE==msgCode){
             message = new byte[content.readableBytes()];
             content.readBytes(message);
             content.release();
-            onSingleMessage(channel,msgId,message,datagramPacket.sender());
+            onSingleMessage(channel,msgId,message,datagramPacket.sender(),availableBytes);
         }else if ( UDPLogics.APP_ACK==msgCode){
             content.release();
             onAckMessage(msgId,datagramPacket.sender());
@@ -79,11 +80,10 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private String getStrID(InetSocketAddress sender,long msgId){
         return sender+""+msgId;
     }
-    private void onStreamRead(Channel channel,long streamId, byte [] message , int streamCount,InetSocketAddress sender,long msgId){
-        int receivedBytes = message.length+8+8+4+1;
+    private void onStreamRead(Channel channel, long streamId, byte [] message , int streamCount, InetSocketAddress sender, long msgId, int availableBytes){
         sendAck(channel, msgId, sender);
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,receivedBytes,NetworkStatsKindEnum.MESSAGE_STATS);
+            channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
         if(!receivedMessages.add(getStrID(sender,msgId))){
             return;
@@ -108,19 +108,19 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             msgs++;
         }
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,receivedBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
+            channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
         }
     }
-    private void onSingleMessage(Channel channel,long msgId, byte [] message, InetSocketAddress sender){
+    private void onSingleMessage(Channel channel, long msgId, byte [] message, InetSocketAddress sender, int availableBytes){
         sendAck(channel, msgId, sender);
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,message.length+9,NetworkStatsKindEnum.MESSAGE_STATS);
+            channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
         if(!receivedMessages.add(getStrID(sender,msgId))){
             return;
         }
         if(channelStats!=null){
-            channelStats.addReceivedBytes(sender,message.length+9,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
+            channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
         }
         consumer.deliverMessage(message,sender);
     }
