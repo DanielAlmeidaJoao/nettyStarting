@@ -281,7 +281,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     }
 
     public  void channelInactive(String parentId){
-        CustomQUICConnection customQUICConnection = nettyIdToStream.remove(parentId).customParentConnection;
+        CustomQUICStreamCon aux = nettyIdToStream.remove(parentId);
+        if(aux == null)return;
+        CustomQUICConnection customQUICConnection = aux.customParentConnection;
         ConcurrentLinkedQueue<CustomQUICConnection> connections = addressToQUICCons.get(customQUICConnection.getRemote());
         if(connections !=null && connections.remove(customQUICConnection) && connections.isEmpty()){
             addressToQUICCons.remove(customQUICConnection.getRemote());
