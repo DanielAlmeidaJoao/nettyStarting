@@ -77,7 +77,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                //openStreamConnection(dest,channelId);
+                openStreamConnection(dest,channelId);
             }
         } catch (Exception e) {
             logger.error("Error registering message handler: " + e.getMessage());
