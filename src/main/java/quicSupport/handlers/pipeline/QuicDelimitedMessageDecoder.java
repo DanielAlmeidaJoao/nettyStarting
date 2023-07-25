@@ -50,7 +50,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         }else if(QUICLogics.KEEP_ALIVE==msgType){
             consumer.onKeepAliveMessage(ch.parent().id().asShortText(),length+1);
         }else if(QUICLogics.STREAM_CREATED==msgType){
-            msg = Unpooled.copiedBuffer(data);
+            msg = Unpooled.wrappedBuffer(data);
             int ordinal = msg.readInt();
             msg.release();
             TransmissionType type;

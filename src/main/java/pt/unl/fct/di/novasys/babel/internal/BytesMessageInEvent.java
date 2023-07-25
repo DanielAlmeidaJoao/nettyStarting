@@ -60,7 +60,7 @@ public class BytesMessageInEvent extends InternalEvent {
 
     public List<Integer> readDataAsInteger(){
         List<Integer> integerList = new LinkedList<>();
-        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        ByteBuf buf = Unpooled.wrappedBuffer(deliverMessageInMsg);
         while (buf.readableBytes()>=4){
             integerList.add(buf.readInt());
         }
@@ -69,7 +69,7 @@ public class BytesMessageInEvent extends InternalEvent {
     }
     public List<Float> readDataAsFloat(){
         List<Float> integerList = new LinkedList<>();
-        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        ByteBuf buf = Unpooled.wrappedBuffer(deliverMessageInMsg);
         int bytes = Float.BYTES;
         while (buf.readableBytes()>=bytes){
             integerList.add(buf.readFloat());
@@ -79,7 +79,7 @@ public class BytesMessageInEvent extends InternalEvent {
     }
     public List<Long> readDataAsLong(){
         List<Long> integerList = new LinkedList<>();
-        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        ByteBuf buf = Unpooled.wrappedBuffer(deliverMessageInMsg);
         int bytes = Long.BYTES;
         while (buf.readableBytes()>=bytes){
             integerList.add(buf.readLong());
@@ -89,7 +89,7 @@ public class BytesMessageInEvent extends InternalEvent {
     }
     public List<Double> readDataAsDouble(){
         List<Double> integerList = new LinkedList<>();
-        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        ByteBuf buf = Unpooled.wrappedBuffer(deliverMessageInMsg);
         int bytes = Double.BYTES;
         while (buf.readableBytes()>=bytes){
             integerList.add(buf.readDouble());
@@ -99,7 +99,7 @@ public class BytesMessageInEvent extends InternalEvent {
     }
     public List<Short> readDataAsShort(){
         List<Short> integerList = new LinkedList<>();
-        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        ByteBuf buf = Unpooled.wrappedBuffer(deliverMessageInMsg);
         int bytes = Short.BYTES;
         while (buf.readableBytes()>=bytes){
             integerList.add(buf.readShort());
@@ -109,7 +109,7 @@ public class BytesMessageInEvent extends InternalEvent {
     }
     public List<Boolean> readDataAsBoolean(){
         List<Boolean> integerList = new LinkedList<>();
-        ByteBuf buf = Unpooled.copiedBuffer(deliverMessageInMsg);
+        ByteBuf buf = Unpooled.wrappedBuffer(deliverMessageInMsg);
         int bytes = 1;
         while (buf.readableBytes()>=bytes){
             integerList.add(buf.readBoolean());
