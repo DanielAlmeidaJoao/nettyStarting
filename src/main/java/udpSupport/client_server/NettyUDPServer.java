@@ -84,7 +84,7 @@ public class NettyUDPServer {
                 consumer.peerDown(dest);
                 return;
             }
-            channel.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(packet),dest)).addListener(future -> {
+            channel.writeAndFlush(new DatagramPacket(channel.alloc().directBuffer().writeBytes(packet),dest)).addListener(future -> {
                 if(future.isSuccess()){
                     if(stats!=null){
                         stats.addSentBytes(dest,packet.length, NetworkStatsKindEnum.MESSAGE_STATS);
@@ -129,7 +129,7 @@ public class NettyUDPServer {
     public void sendMessage(byte [] message, InetSocketAddress peer, int len){
         if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.length){
             long streamId = streamIdCounter.incrementAndGet();
-            ByteBuf wholeMessageBuf = Unpooled.copiedBuffer(message,0,len);
+            ByteBuf wholeMessageBuf = Unpooled.wrappedBuffer(message,0,len);
             int streamCount = ceilDiv(message.length,UDPLogics.MAX_UDP_PAYLOAD_SIZE); //do the %
             for (int i = 0; i < streamCount; i++) {
                 long messageId = datagramPacketCounter.incrementAndGet();
@@ -168,9 +168,7 @@ public class NettyUDPServer {
         }
     }
     public void sendMessageAux(byte [] all, InetSocketAddress peer,long messageId){
-        ByteBuf buf = Unpooled.copiedBuffer(all);
-        DatagramPacket datagramPacket = new DatagramPacket(buf,peer);
-        channel.writeAndFlush(datagramPacket).addListener(future -> {
+        channel.writeAndFlush(new DatagramPacket(channel.alloc().directBuffer().writeBytes(all),peer)).addListener(future -> {
             if(future.isSuccess()){
                 scheduleRetransmission(all,messageId,peer,0);
                 if(stats!=null){

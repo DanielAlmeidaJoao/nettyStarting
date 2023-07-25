@@ -41,7 +41,7 @@ public class FactoryMethods {
             return (T) new BabelMessage(new BytesMessageSentOrFail(protoToReceiveStreamData,bytes,inputStream,len)
                     ,protoToReceiveStreamData,protoToReceiveStreamData);
         }else {
-            ByteBuf in = Unpooled.copiedBuffer(bytes);
+            ByteBuf in = Unpooled.wrappedBuffer(bytes);
             T payload = serializer.deserialize(in);
             in.release();
             return payload;
@@ -70,7 +70,7 @@ public class FactoryMethods {
     }
     public static void deserialize(byte [] data, BabelMessageSerializerInterface serializer, ChannelListener listener, InetSocketAddress from, String streamId)
             throws IOException{
-        ByteBuf byteBuf = Unpooled.copiedBuffer(data);
+        ByteBuf byteBuf = Unpooled.wrappedBuffer(data);
         short sourceProto = byteBuf.readShort();
         short destProto = byteBuf.readShort();
         short msgId = byteBuf.readShort();

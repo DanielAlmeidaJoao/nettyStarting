@@ -127,7 +127,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
 
     private void sendAck(Channel channel, long msgId, InetSocketAddress sender) {
         if(maxSendRetry>0){
-            ByteBuf buf = Unpooled.buffer(9);
+            ByteBuf buf = channel.alloc().buffer(9);
             buf.writeByte(UDPLogics.APP_ACK);
             buf.writeLong(msgId);
             DatagramPacket datagramPacket = new DatagramPacket(buf, sender);

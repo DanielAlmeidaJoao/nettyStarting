@@ -18,6 +18,5 @@ public class ClientHandler extends SimpleChannelInboundHandler {
         ByteBuf content = datagramPacket.content();
         byte [] message = new byte[content.readableBytes()];
         content.readBytes(message);
-        System.out.println("CLIENT RECEIVED "+message.length);
     }
 }
