@@ -1,7 +1,6 @@
 package tcpSupport.tcpChannelAPI.pipeline;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +33,7 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws UnknownHostException {
         byte [] data = TCPStreamUtils.g.toJson(handshakeData).getBytes();
-        ByteBuf tmp = Unpooled.buffer(data.length+4);
+        ByteBuf tmp = ctx.alloc().buffer(data.length+4);
         tmp.writeInt(data.length);
         tmp.writeBytes(data);
 

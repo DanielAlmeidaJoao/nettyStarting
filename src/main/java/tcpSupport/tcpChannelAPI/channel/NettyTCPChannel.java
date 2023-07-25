@@ -1,7 +1,6 @@
 package tcpSupport.tcpChannelAPI.channel;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.DefaultFileRegion;
@@ -283,7 +282,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     }
     private void send(byte[] message, int len, CustomTCPConnection connection){
         if(connection.type== STRUCTURED_MESSAGE){
-            ByteBuf byteBuf = Unpooled.directBuffer(len+4).writeInt(len).writeBytes(message,0,len);
+            ByteBuf byteBuf = connection.channel.alloc().directBuffer(len+4).writeInt(len).writeBytes(message,0,len);
             final int sentBytes = byteBuf.readableBytes();
             ChannelFuture f = connection.channel.writeAndFlush(byteBuf);
             f.addListener(future -> {

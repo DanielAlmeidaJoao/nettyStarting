@@ -15,8 +15,6 @@ package quicSupport.client_server;/*
  */
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.FixedRecvByteBufAllocator;
@@ -121,12 +119,13 @@ public final class QuicClientExample {
         }
         return stream;
     }
+    /**
     public void send(long streamId, byte [] data){
         getOrThrow(streamId).writeAndFlush(Unpooled.copiedBuffer(data));
     }
     public void send(long streamId, ByteBuf buf){
         getOrThrow(streamId).writeAndFlush(buf);
-    }
+    } **/
 
     public void closeClient(){
         group.shutdownGracefully();
