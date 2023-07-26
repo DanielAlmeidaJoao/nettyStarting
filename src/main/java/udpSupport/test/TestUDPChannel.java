@@ -1,5 +1,6 @@
 package udpSupport.test;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,19 +48,19 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
     }
 
     @Override
-    public void onDeliverMessage(byte[] message, InetSocketAddress from) {
+    public void onDeliverMessage(ByteBuf message, InetSocketAddress from) {
 
-        total += message.length;
-        System.out.println("RECEIVED "+total+" -- "+message.length);
+        total += message.readableBytes();
+        System.out.println("RECEIVED "+total+" -- "+message.readableBytes());
         /* if(total>0){
             return;
         } */
         try{
 
-            if(message.length==bufferSize){
-                receivedHashes.add(Hex.encodeHexString(QUICLogics.hash(message)));
+            if(message.readableBytes()==bufferSize){
+                receivedHashes.add(Hex.encodeHexString(QUICLogics.hash(message.array())));
             }else {
-                System.out.println("ONLY ONCE "+message.length+" "+total);
+                System.out.println("ONLY ONCE "+message.readableBytes()+" "+total);
             }
 
             //fos.write(message, 0, message.length);

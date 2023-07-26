@@ -1,5 +1,6 @@
 package tcpSupport.tcpChannelAPI.channel;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
@@ -10,7 +11,7 @@ import java.net.InetSocketAddress;
 public interface StreamingNettyConsumer {
 
     void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, int len);
-    void onChannelMessageRead(String channelId, byte[] bytes);
+    void onChannelMessageRead(String channelId, ByteBuf bytes);
 
     void onChannelStreamRead(String channelId, BabelOutputStream babelOutputStream);
     void onChannelInactive(String channelId);

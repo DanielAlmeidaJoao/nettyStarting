@@ -1,6 +1,7 @@
 package appExamples2.appExamples.channels.udpBabelChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
+import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -83,7 +84,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void onDeliverMessage(byte[] message, InetSocketAddress from) {
+    public void onDeliverMessage(ByteBuf message, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {

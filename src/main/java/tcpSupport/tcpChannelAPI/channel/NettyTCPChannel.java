@@ -127,12 +127,12 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         channelHandlerMethods.onStreamClosedHandler(connection.host,connection.conId,connection.inConnection);
     }
 
-    public void onChannelMessageRead(String channelId, byte[] bytes){
+    public void onChannelMessageRead(String channelId, ByteBuf bytes){
         CustomTCPConnection connection = nettyIdToConnection.get(channelId);
         if(connection==null){
             logger.debug("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
         }else {
-            calcMetricsOnReceived(connection.conId,bytes.length+4);
+            calcMetricsOnReceived(connection.conId,bytes.readableBytes()+4);
             channelHandlerMethods.onChannelReadDelimitedMessage(connection.conId,bytes,connection.host);
         }
     }

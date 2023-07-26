@@ -1,5 +1,6 @@
 package udpSupport.channels;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import udpSupport.client_server.NettyUDPServer;
@@ -63,7 +64,7 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
 
 
     @Override
-    public void deliverMessage(byte[] message, InetSocketAddress from){
+    public void deliverMessage(ByteBuf message, InetSocketAddress from){
         channelHandlerMethods.onDeliverMessage(message,from);
     }
     @Override

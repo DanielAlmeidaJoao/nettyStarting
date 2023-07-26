@@ -63,10 +63,11 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             content.release();
             onStreamRead(channel,streamId,message,streamCount,datagramPacket.sender(),msgId,availableBytes);
         }else if(UDPLogics.SINGLE_MESSAGE==msgCode){
-            message = new byte[content.readableBytes()];
-            content.readBytes(message);
+            //message = new byte[content.readableBytes()];
+            //content.readBytes(message);
+            //content.release();
+            onSingleMessage(channel,msgId,content,datagramPacket.sender(),availableBytes);
             content.release();
-            onSingleMessage(channel,msgId,message,datagramPacket.sender(),availableBytes);
         }else if ( UDPLogics.APP_ACK==msgCode){
             content.release();
             onAckMessage(msgId,datagramPacket.sender());
@@ -100,18 +101,19 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             for (byte[] bytes : compute.values()) {
                 all.writeBytes(bytes);
             }
-            message = new byte[all.readableBytes()];
-            all.readBytes(message);
-            all.release();
+            //message = new byte[all.readableBytes()];
+            //all.readBytes(message);
+            //all.release();
             streams.remove(streamId);
-            consumer.deliverMessage(message,sender);
+            consumer.deliverMessage(all,sender);
+            all.release();
             msgs++;
         }
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
         }
     }
-    private void onSingleMessage(Channel channel, long msgId, byte [] message, InetSocketAddress sender, int availableBytes){
+    private void onSingleMessage(Channel channel, long msgId, ByteBuf message, InetSocketAddress sender, int availableBytes){
         sendAck(channel, msgId, sender);
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);

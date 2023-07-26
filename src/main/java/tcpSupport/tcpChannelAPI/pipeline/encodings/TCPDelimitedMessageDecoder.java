@@ -30,10 +30,12 @@ public class TCPDelimitedMessageDecoder extends ByteToMessageDecoder {
             in.resetReaderIndex();
             return;
         }
+        /**
         byte [] data = new byte[length];
         in.readBytes(data);
+        **/
 
-        consumer.onChannelMessageRead(ctx.channel().id().asShortText(),data);
+        consumer.onChannelMessageRead(ctx.channel().id().asShortText(),in);
     }
 
     @Override

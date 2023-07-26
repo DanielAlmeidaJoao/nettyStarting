@@ -1,5 +1,6 @@
 package quicSupport.testing;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.ChannelHandlerMethods;
@@ -88,11 +89,11 @@ import java.util.Properties;
     FileOutputStream fos = new FileOutputStream("TESTQUIC33.MP4");
     int total = 0;
     @Override
-    public void onChannelReadDelimitedMessage(String streamId, byte[] bytes, InetSocketAddress from) {
-        logger.info("READ "+bytes.length);
-        total += bytes.length;
+    public void onChannelReadDelimitedMessage(String streamId, ByteBuf bytes, InetSocketAddress from) {
+        logger.info("READ "+bytes.readableBytes());
+        total += bytes.readableBytes();
         try{
-            fos.write(bytes, 0, bytes.length);
+            fos.write(bytes.array(), 0, bytes.readableBytes());
             fos.flush();
         }catch (Exception e){
             e.printStackTrace();

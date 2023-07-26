@@ -184,10 +184,10 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         overridenMethods.onConnectionUp(inConnection,con.customParentConnection.getRemote(),type,customId, babelInputStream);
     }
 
-    public void onReceivedDelimitedMessage(String streamId, byte[] bytes){
+    public void onReceivedDelimitedMessage(String streamId, ByteBuf bytes){
         CustomQUICStreamCon streamCon = nettyIdToStream.get(streamId);
         if(streamCon!=null){
-            calcMetricsOnReceived(streamCon.customStreamId,bytes.length);
+            calcMetricsOnReceived(streamCon.customStreamId,bytes.readableBytes());
             if(withHeartBeat){streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();}
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
             overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,bytes,streamCon.customParentConnection.getRemote());

@@ -1,5 +1,6 @@
 package udpSupport.channels;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
 
@@ -21,7 +22,7 @@ public class SingleThreadedUDPChannel extends UDPChannel {
     }
 
     @Override
-    public void deliverMessage(byte[] message, InetSocketAddress from) {
+    public void deliverMessage(ByteBuf message, InetSocketAddress from) {
         executor.execute(() -> super.deliverMessage(message, from));
     }
 

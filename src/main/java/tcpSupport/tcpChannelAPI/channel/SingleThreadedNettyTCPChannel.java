@@ -32,7 +32,7 @@ public class SingleThreadedNettyTCPChannel extends NettyTCPChannel {
     }
 
     @Override
-    public void onChannelMessageRead(String channelId, byte[] bytes) {
+    public void onChannelMessageRead(String channelId, ByteBuf bytes) {
         executor.execute(() -> super.onChannelMessageRead(channelId,bytes));
     }
 

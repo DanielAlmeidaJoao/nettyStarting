@@ -68,15 +68,15 @@ public class FactoryMethods {
         byteBuf.release();
         return outPut;
     }
-    public static void deserialize(byte [] data, BabelMessageSerializerInterface serializer, ChannelListener listener, InetSocketAddress from, String streamId)
+    public static void deserialize(ByteBuf byteBuf, BabelMessageSerializerInterface serializer, ChannelListener listener, InetSocketAddress from, String streamId)
             throws IOException{
-        ByteBuf byteBuf = Unpooled.wrappedBuffer(data);
+        //ByteBuf byteBuf = Unpooled.wrappedBuffer(data);
         short sourceProto = byteBuf.readShort();
         short destProto = byteBuf.readShort();
         short msgId = byteBuf.readShort();
         if(msgId==BYTE_MESSAGE_ID){
             short handlerId = byteBuf.readShort();
-            data = new byte [byteBuf.readableBytes()];
+            byte [] data = new byte [byteBuf.readableBytes()];
             byteBuf.readBytes(data);
             listener.deliverMessage(data,FactoryMethods.toBabelHost(from),streamId,sourceProto,destProto,handlerId);
         }else{
@@ -87,6 +87,7 @@ public class FactoryMethods {
             ProtoMessage deserialize = iSerializer.deserialize(byteBuf);
             listener.deliverMessage(new BabelMessage(deserialize, sourceProto, destProto),FactoryMethods.toBabelHost(from),streamId);
         }
-        byteBuf.release();
+        byteBuf.discardReadBytes();
+        //byteBuf.release();
     }
 }

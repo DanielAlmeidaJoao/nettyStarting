@@ -1,5 +1,6 @@
 package quicSupport.channels;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
@@ -18,7 +19,7 @@ public interface CustomQuicChannelConsumer {
 
     void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type,String customId, boolean inConnection);
 
-    void onReceivedDelimitedMessage(String streamId, byte[] bytes);
+    void onReceivedDelimitedMessage(String streamId, ByteBuf bytes);
 
     void onReceivedStream(String streamId, BabelOutputStream bytes);
 

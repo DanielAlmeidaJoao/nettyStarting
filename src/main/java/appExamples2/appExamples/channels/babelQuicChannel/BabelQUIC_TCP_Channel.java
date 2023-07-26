@@ -2,6 +2,7 @@ package appExamples2.appExamples.channels.babelQuicChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
+import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,18 +71,18 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         if(NetworkProtocol.QUIC==protocol){
             if(properties.getProperty("SINLGE_TRHEADED")!=null){
                 i = new SingleThreadedQuicChannel(properties, NetworkRole.CHANNEL,this);
-                System.out.println("SINGLE THREADED CHANNEL");
+                System.out.println("SINGLE THREADED CHANNEL QUIC");
             }else {
                 i = new NettyQUICChannel(properties,false,NetworkRole.CHANNEL,this);
-                System.out.println("MULTI THREADED CHANNEL");
+                System.out.println("MULTI THREADED CHANNEL QUIC");
             }
         }else if(NetworkProtocol.TCP==protocol){
             if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
                 i = new SingleThreadedNettyTCPChannel(properties,this, NetworkRole.CHANNEL);
-                System.out.println("SINGLE THREADED CHANNEL");
+                System.out.println("SINGLE THREADED CHANNEL TCP");
             }else {
                 i = new NettyTCPChannel(properties,false,this,NetworkRole.CHANNEL);
-                System.out.println("MULTI THREADED CHANNEL");
+                System.out.println("MULTI THREADED CHANNEL TCP");
             }
         }else{
             throw new RuntimeException("UNSUPPORTED PROTOCOL BY THIS CLASS: "+protocol);
@@ -207,7 +208,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
 
-    public void onChannelReadDelimitedMessage(String connectionId, byte[] bytes, InetSocketAddress from) {
+    public void onChannelReadDelimitedMessage(String connectionId, ByteBuf bytes, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         try {

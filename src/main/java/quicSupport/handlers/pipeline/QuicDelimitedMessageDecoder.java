@@ -1,7 +1,6 @@
 package quicSupport.handlers.pipeline;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -41,17 +40,16 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             return;
         }
         byte msgType = msg.readByte();
-        byte [] data = new byte[length];
-        msg.readBytes(data);
-        msg.discardReadBytes();
+
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(QUICLogics.APP_DATA==msgType){
-            consumer.onReceivedDelimitedMessage(ch.id().asShortText(),data);
+            consumer.onReceivedDelimitedMessage(ch.id().asShortText(),msg);
         }else if(QUICLogics.KEEP_ALIVE==msgType){
             consumer.onKeepAliveMessage(ch.parent().id().asShortText(),length+1);
         }else if(QUICLogics.STREAM_CREATED==msgType){
-            msg = Unpooled.wrappedBuffer(data);
+            //msg = Unpooled.wrappedBuffer(data);
             int ordinal = msg.readInt();
+            msg.discardReadBytes();
             msg.release();
             TransmissionType type;
             if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
@@ -64,6 +62,8 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
 
             ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,consumer.nextId(),true);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
+            byte [] data = new byte[length];
+            msg.readBytes(data);
             QuicHandShakeMessage handShakeMessage = gson.fromJson(new String(data), QuicHandShakeMessage.class);
             if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
                 ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
@@ -73,6 +73,8 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
         }else{
             throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
         }
+        msg.discardReadBytes();
+
         //ctx.fireChannelRead(msg);
     }    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
