@@ -135,8 +135,12 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private CustomQUICConnection getCustomQUICConnection(InetSocketAddress inetSocketAddress){
         if(inetSocketAddress==null) return null;
         ConcurrentLinkedQueue<CustomQUICConnection> con = addressToQUICCons.get(inetSocketAddress);
-        if(con!=null && !con.isEmpty()){
-            return con.peek();
+        if(con!=null){
+            for (CustomQUICConnection customQUICConnection : con) {
+                if(STRUCTURED_MESSAGE==customQUICConnection.transmissionType){
+                    return customQUICConnection;
+                }
+            }
         }
         return null;
     }
@@ -273,7 +277,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             nettyIdToStream.put(streamChannel.id().asShortText(),quicStreamChannel);
             customStreamIdToStream.put(customConId,quicStreamChannel);
             overridenMethods.onConnectionUp(inConnection,listeningAddress,type,customConId, babelInputStream);
-            sendPendingMessages(listeningAddress,type);
+            if(STRUCTURED_MESSAGE==type){
+                sendPendingMessages(listeningAddress,type);
+            }
         }catch (Exception e){
             e.printStackTrace();
             streamChannel.disconnect();
@@ -403,19 +409,6 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             overridenMethods.failedToCloseStream(customId,e.getCause());
         }
     }
-    public boolean containConnection(String customId){
-        return customStreamIdToStream.containsKey(customId);
-    }
-    public boolean containConnection(InetSocketAddress address){
-        CustomQUICConnection customQUICConnection = getCustomQUICConnection(address);
-        if(customQUICConnection==null){
-            return false;
-        }else{
-            return customQUICConnection.getDefaultStream()!=null;
-        }
-    }
-
-
     public void send(String customId, byte[] message, int len) {
         CustomQUICStreamCon streamCon = customStreamIdToStream.get(customId);
         if(streamCon==null){

@@ -171,8 +171,9 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             synchronized (this){
                 addressToConnections.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(connection);;
             }
-
-            sendPendingMessages(connection,type);
+            if(STRUCTURED_MESSAGE==type){
+                sendPendingMessages(connection,type);
+            }
             channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId, babelInputStream);
         }catch (Exception e){
             e.printStackTrace();
@@ -367,13 +368,21 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }
         return null;
     }
-    public void send(InetSocketAddress peer, byte[] message, int len){
+    private CustomTCPConnection getConnection(InetSocketAddress peer){
         var connections = addressToConnections.get(peer);
-        CustomTCPConnection connection=null;
-        if(connections != null && !connections.isEmpty()){
-            connection=connections.peek();
+        if(connections!=null){
+            for (CustomTCPConnection connection : connections) {
+                if(STRUCTURED_MESSAGE==connection.type){
+                    return connection;
+                }
+            }
         }
-        if(connections == null || connection == null){
+        return null;
+    }
+    public void send(InetSocketAddress peer, byte[] message, int len){
+        CustomTCPConnection connection=getConnection(peer);
+
+        if(connection == null){
             TCPConnectingObject pendingMessages  = connectingObject(peer);
             if( pendingMessages != null ){
                 pendingMessages.pendingMessages.add(Pair.of(message,len));
