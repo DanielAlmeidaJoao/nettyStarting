@@ -1,7 +1,6 @@
 package quicSupport.handlers.pipeline;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -23,16 +22,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     private final boolean incoming;
     private final CustomQuicChannelConsumer consumer;
     private final String customId;
-    private Channel channel;
 
-    private void setChannel(Channel o){
-        if(channel==null){
-            channel = o;
-        }else if(!channel.id().asShortText().equals(o.id().asShortText())){
-            System.out.println("SOMETHING WROOOONG");
-            System.exit(1);
-        }
-    }
 
     public QuicDelimitedMessageDecoder(CustomQuicChannelConsumer streamListenerExecutor, boolean incoming, String customId){
         this.incoming=incoming;
@@ -42,7 +32,6 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
-        setChannel(ctx.channel());
         if(msg.readableBytes()<4){
             return;
         }
