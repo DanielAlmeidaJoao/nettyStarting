@@ -44,6 +44,7 @@ public class TCPStreamUtils {
         //channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
         channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
         channelProps.setProperty(TCPStreamUtils.SINGLE_CON_PER_PEER,"TRUE");
+        //channelProps.setProperty(QUICLogics.WITH_HEART_BEAT,"true");
         return channelProps;
     }
 

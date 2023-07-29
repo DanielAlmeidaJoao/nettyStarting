@@ -18,6 +18,7 @@ package quicSupport.client_server;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
@@ -28,7 +29,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.channelFuncHandlers.SocketBindHandler;
 import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
-import quicSupport.handlers.pipeline.ServerChannelInitializer;
+import quicSupport.handlers.pipeline.QuicStreamInboundHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 
@@ -84,7 +85,12 @@ public final class QuicServerExample {
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new QuicServerChannelConHandler(consumer))
-                .streamHandler(new ServerChannelInitializer(consumer,QUICLogics.INCOMING_CONNECTION))
+                .streamHandler(new ChannelInitializer<Channel>() {
+                    @Override
+                    protected void initChannel(Channel ch) throws Exception {
+                        ch.pipeline().addLast(new QuicStreamInboundHandler(consumer,consumer.nextId(), QUICLogics.INCOMING_CONNECTION));
+                    }
+                })
                 .build();
         return codec;
     }

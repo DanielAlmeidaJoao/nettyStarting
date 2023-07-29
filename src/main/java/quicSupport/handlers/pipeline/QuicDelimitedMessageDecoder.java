@@ -1,6 +1,7 @@
 package quicSupport.handlers.pipeline;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -21,14 +22,27 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     public static final String HANDLER_NAME="QuicDelimitedMessageDecoder";
     private final boolean incoming;
     private final CustomQuicChannelConsumer consumer;
+    private final String customId;
+    private Channel channel;
 
-    public QuicDelimitedMessageDecoder(CustomQuicChannelConsumer streamListenerExecutor, boolean incoming){
+    private void setChannel(Channel o){
+        if(channel==null){
+            channel = o;
+        }else if(!channel.id().asShortText().equals(o.id().asShortText())){
+            System.out.println("SOMETHING WROOOONG");
+            System.exit(1);
+        }
+    }
+
+    public QuicDelimitedMessageDecoder(CustomQuicChannelConsumer streamListenerExecutor, boolean incoming, String customId){
         this.incoming=incoming;
         this.consumer=streamListenerExecutor;
+        this.customId = customId;
     }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+        setChannel(ctx.channel());
         if(msg.readableBytes()<4){
             return;
         }
@@ -43,33 +57,32 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
 
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(QUICLogics.APP_DATA==msgType){
-            consumer.onReceivedDelimitedMessage(ch.id().asShortText(),msg);
+            consumer.onReceivedDelimitedMessage(customId,msg);
         }else if(QUICLogics.KEEP_ALIVE==msgType){
-            consumer.onKeepAliveMessage(ch.parent().id().asShortText(),length+1);
+            msg.readByte();
+            consumer.onKeepAliveMessage(customId,length+1);
         }else if(QUICLogics.STREAM_CREATED==msgType){
             //msg = Unpooled.wrappedBuffer(data);
             int ordinal = msg.readInt();
-            msg.discardReadBytes();
-            msg.release();
+            //msg.discardReadBytes();
             TransmissionType type;
             if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
                 type = TransmissionType.UNSTRUCTURED_STREAM;
                 ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
-                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, false));
+                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, false,customId));
             }else{
                 type = TransmissionType.STRUCTURED_MESSAGE;
             }
-
-            ((QuicStreamReadHandler) ch.pipeline().get(QuicStreamReadHandler.HANDLER_NAME)).notifyAppDelimitedStreamCreated(ch,type,consumer.nextId(),true);
+            consumer.streamCreatedHandler(ch,type,customId,true);
         }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
             byte [] data = new byte[length];
             msg.readBytes(data);
             QuicHandShakeMessage handShakeMessage = gson.fromJson(new String(data), QuicHandShakeMessage.class);
             if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
                 ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
-                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, true));
+                ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, true, customId));
             }
-            consumer.channelActive(ch,handShakeMessage,null, TransmissionType.STRUCTURED_MESSAGE,length);
+            consumer.channelActive(ch,handShakeMessage,null, TransmissionType.STRUCTURED_MESSAGE,length, customId);
         }else{
             throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
         }

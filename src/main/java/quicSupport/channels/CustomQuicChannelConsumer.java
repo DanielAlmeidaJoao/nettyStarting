@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 
 public interface CustomQuicChannelConsumer {
 
-    void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type, int length);
+    void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type, int length, String customConId);
     void channelInactive(String channelId);
 
     void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String id);
@@ -23,9 +23,9 @@ public interface CustomQuicChannelConsumer {
 
     void onReceivedStream(String streamId, BabelOutputStream bytes);
 
-    void streamInactiveHandler(QuicStreamChannel channel);
+    void streamInactiveHandler(QuicStreamChannel channel, String customId);
 
-    void streamErrorHandler(QuicStreamChannel channel, Throwable throwable);
+    void streamErrorHandler(QuicStreamChannel channel, Throwable throwable, String customId);
 
     String nextId();
 

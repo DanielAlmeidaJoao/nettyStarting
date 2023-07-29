@@ -26,14 +26,14 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
     /*********************************** Stream Handlers **********************************/
 
     @Override
-    public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable) {
-        executor.submit(() -> super.streamErrorHandler(channel,throwable));
+    public void streamErrorHandler(QuicStreamChannel channel, Throwable throwable, String customId) {
+        executor.submit(() -> super.streamErrorHandler(channel,throwable, customId));
     }
 
     @Override
-    public void streamInactiveHandler(QuicStreamChannel channel) {
+    public void streamInactiveHandler(QuicStreamChannel channel, String customId) {
         executor.submit(() -> {
-            super.streamInactiveHandler(channel);
+            super.streamInactiveHandler(channel, customId);
         });
     }
     @Override
@@ -66,9 +66,9 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
 
     /*********************************** Channel Handlers **********************************/
     @Override
-    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type, int length){
+    public void channelActive(QuicStreamChannel streamChannel, QuicHandShakeMessage controlData, InetSocketAddress remotePeer, TransmissionType type, int length, String customConId){
         executor.submit(() -> {
-            super.channelActive(streamChannel,controlData,remotePeer,type, length);
+            super.channelActive(streamChannel,controlData,remotePeer,type, length, customConId);
         });
     }
     @Override

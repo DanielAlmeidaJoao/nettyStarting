@@ -24,5 +24,6 @@ public class CustomQUICStreamCon {
     public void close(){
         streamChannel.disconnect();
         streamChannel.close();
+        streamChannel.shutdown();
     }
 }

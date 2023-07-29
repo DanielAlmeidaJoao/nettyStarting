@@ -13,9 +13,11 @@ public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
 
     public static final String HANDLER_NAME = "QUICRawStreamDecoder";
     private final CustomQuicChannelConsumer consumer;
+    private final String customId;
 
-    public QUICRawStreamDecoder(CustomQuicChannelConsumer streamListenerExecutor, boolean incoming){
+    public QUICRawStreamDecoder(CustomQuicChannelConsumer streamListenerExecutor, boolean incoming, String customId){
         this.consumer=streamListenerExecutor;
+        this.customId = customId;
     }
 
     @Override
@@ -24,7 +26,7 @@ public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
         int readAble = msg.readableBytes();
         BabelOutputStream babelOutputStream = new BabelOutputStream(msg.duplicate(),readAble);
         msg.readerIndex(readAble);
-        consumer.onReceivedStream(ctx.channel().id().asShortText(), babelOutputStream);
+        consumer.onReceivedStream(customId,babelOutputStream);
     }
 
     @Override

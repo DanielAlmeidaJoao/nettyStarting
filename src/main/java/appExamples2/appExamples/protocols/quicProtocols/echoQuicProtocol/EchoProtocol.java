@@ -16,7 +16,6 @@ import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
@@ -49,30 +48,19 @@ public class EchoProtocol extends GenericProtocolExtension {
         this.properties = properties;
     }
     private int makeChan(String channelName,String address, String port) throws Exception {
-        Properties channelProps = new Properties();
+        Properties channelProps;
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
+            channelProps = TCPStreamUtils.quicChannelProperty(address,port);
             //channelProps.setProperty("metrics_interval","2000");
 
-            channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
-            channelProps.setProperty(QUICLogics.PORT_KEY,port);
-            //channelProps.setProperty(QUICLogics.QUIC_METRICS,"true");
-
-            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
-            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
-            channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
-
-            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY,"keystore2.jks");
-            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY,"simple");
-            channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
-            channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
-            channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"300");
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_QUIC, channelProps);
 
         }else{
+            channelProps = TCPStreamUtils.tcpChannelProperties(address,port);
             System.out.println("TCP ON");
-            channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
-            channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
+            //channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
+            //channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
             channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"FALSE");
 
@@ -105,7 +93,9 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                System.out.println(openStreamConnection(dest,channelId));
+                System.out.println(openMessageConnection(dest,channelId));
+                //System.out.println(openStreamConnection(dest,channelId));
+
                 //registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
                 //setupPeriodicTimer(new SampleTimer(),8000L,5000L);
             }
@@ -264,10 +254,18 @@ public class EchoProtocol extends GenericProtocolExtension {
             }
         }
     }
+    List<String> cons = new LinkedList<>();
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION UP: {} {} {}",event.conId,event.inConnection,event.type);
+        cons.add(event.conId);
         if(dest==null){
             dest = event.getNode();
+        }
+        for (String con : cons) {
+            sendMessage("OLA "+con,con);
+        }
+        for (String con : cons) {
+            sendMessage("OLA2 "+con,con);
         }
     }
     private void uponOpenConnectionFailed(OnOpenConnectionFailed event, int channelId) {

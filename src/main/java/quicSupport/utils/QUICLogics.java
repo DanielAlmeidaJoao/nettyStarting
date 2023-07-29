@@ -2,14 +2,8 @@ package quicSupport.utils;
 
 import com.google.gson.Gson;
 import io.netty.buffer.Unpooled;
-import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicCodecBuilder;
-import io.netty.incubator.codec.quic.QuicStreamChannel;
-import io.netty.incubator.codec.quic.QuicStreamType;
 import org.apache.commons.codec.binary.Hex;
-import quicSupport.channels.CustomQuicChannelConsumer;
-import quicSupport.handlers.pipeline.ServerChannelInitializer;
-import quicSupport.utils.entities.MessageToByteEncoderParameter;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.io.ByteArrayOutputStream;
@@ -70,24 +64,6 @@ public class QUICLogics {
     public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_C_KEYSTORE_PASSWORD";
     public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_C_KEYSTORE_ALIAS_KEY";
 
-    public static QuicStreamChannel createStream(QuicChannel quicChan, CustomQuicChannelConsumer quicListenerExecutor,
-                                                 boolean incoming) throws Exception{
-        QuicStreamChannel streamChannel = quicChan
-                .createStream(QuicStreamType.BIDIRECTIONAL, new ServerChannelInitializer(quicListenerExecutor,incoming))
-                .sync()
-                .getNow();
-        return streamChannel;
-    }
-    public static MessageToByteEncoderParameter writeBytes(int len, byte [] data, byte msgCode){
-        return new MessageToByteEncoderParameter(msgCode,data,len);
-
-        /**
-        ByteBuf buf = Unpooled.buffer(len+WRT_OFFSET);
-        buf.writeInt(len);
-        buf.writeByte(msgType);
-        buf.writeBytes(data,0,len);
-         **/
-    }
     public static DelimitedMessageWrapper bufToWrite(int len, byte [] data, byte msgCode){
         return new DelimitedMessageWrapper(len,data,msgCode);
         /**

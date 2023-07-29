@@ -171,9 +171,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             synchronized (this){
                 addressToConnections.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(connection);;
             }
-            if(STRUCTURED_MESSAGE==type){
-                sendPendingMessages(connection,type);
-            }
+            sendPendingMessages(connection,type);
             channelHandlerMethods.onConnectionUp(connection.inConnection,connection.host,type,conId, babelInputStream);
         }catch (Exception e){
             e.printStackTrace();
@@ -182,11 +180,11 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     }
     private void sendPendingMessages(CustomTCPConnection customTCPConnection, TransmissionType type){
         TCPConnectingObject connectingObject = nettyIdTOConnectingOBJ.remove(customTCPConnection.conId);
-        if(connectingObject!=null){
+        if(connectingObject!=null && STRUCTURED_MESSAGE==type){
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self
                     ,connectingObject.pendingMessages.size(),customTCPConnection.host);
             for (Pair<byte[],Integer> message : connectingObject.pendingMessages) {
-                send(customTCPConnection.host,message.getLeft(),message.getRight());
+                send(message.getLeft(),message.getRight(),customTCPConnection);
             }
         }
     }
@@ -219,7 +217,9 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             String connectionId = isConnecting(peer);
             if(connectionId!=null) return connectionId;
             try{
-                return addressToConnections.get(peer).peek().conId;
+                CustomTCPConnection con = addressToConnections.get(peer).peek();
+                channelHandlerMethods.onConnectionUp(con.inConnection,peer,con.type,con.conId,con.inputStream);
+                return con.conId;
             }catch (Exception e){};
         }
         if(conId == null ){

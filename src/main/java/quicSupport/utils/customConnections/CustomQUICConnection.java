@@ -54,22 +54,30 @@ public class CustomQUICConnection {
     public void addStream(CustomQUICStreamCon streamChannel){
         nettyIdToCustomStreamCon.put(streamChannel.streamChannel.id().asShortText(),streamChannel);
     }
-    public CustomQUICStreamCon getStream(String id){
-        return nettyIdToCustomStreamCon.get(id);
-    }
-
-    public void closeStream(String streamId) {
-        CustomQUICStreamCon streamChannel = nettyIdToCustomStreamCon.remove(streamId);
+    public void closeStream(String nettyId) {
+        CustomQUICStreamCon streamChannel = nettyIdToCustomStreamCon.remove(nettyId);
 
         if(nettyIdToCustomStreamCon.isEmpty()){
             connection.disconnect();
             connection.close();
         }else if(streamChannel==defaultStream){
             defaultStream = nettyIdToCustomStreamCon.entrySet().iterator().next().getValue();
+            transmissionType = defaultStream.type;
         }
 
         //streamChannel.streamChannel.shutdown();
         //streamChannel.streamChannel.disconnect();
+    }
+    public CustomQUICStreamCon getMessageStream(){
+        if(TransmissionType.STRUCTURED_MESSAGE == defaultStream.type){
+            return defaultStream;
+        }
+        for (CustomQUICStreamCon value : nettyIdToCustomStreamCon.values()) {
+            if(TransmissionType.STRUCTURED_MESSAGE==value.type){
+                return value;
+            }
+        }
+        return null;
     }
     public void close(){
         //streams = null;
@@ -85,15 +93,15 @@ public class CustomQUICConnection {
     }
 
     public void scheduleSendHeartBeat_KeepAlive(){
-            final CustomQUICStreamCon stream = defaultStream;
+            final CustomQUICStreamCon stream = getMessageStream();
             if(scheduledFuture!=null){
                 scheduledFuture.cancel(true);
             }
-            if(stream==null && TransmissionType.UNSTRUCTURED_STREAM == stream.type)return;
+            if(stream==null || TransmissionType.UNSTRUCTURED_STREAM == stream.type)return;
             scheduledFuture = stream.streamChannel.eventLoop().schedule(() -> {
                 logger.info("HEART BEAT SENT TO {}",remote);
 
-                stream.streamChannel.writeAndFlush(QUICLogics.writeBytes(1,"a".getBytes(),QUICLogics.KEEP_ALIVE)).addListener(
+                stream.streamChannel.writeAndFlush(QUICLogics.bufToWrite(1,"C".getBytes(),QUICLogics.KEEP_ALIVE)).addListener(
                         future -> {
                             if(metricsManager != null){
                                 metricsManager.calcControlMetricsOnSend(future.isSuccess(), defaultStream.customStreamId,2);

@@ -4,12 +4,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicChannel;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
+import io.netty.incubator.codec.quic.QuicStreamType;
+import io.netty.util.AttributeKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
 import java.net.InetSocketAddress;
 
@@ -31,7 +34,12 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         logger.debug("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         QuicChannel out = (QuicChannel) ctx.channel();
-        QuicStreamChannel streamChannel = QUICLogics.createStream(out,consumer,false);
+        final String customConId = out.attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY)).toString();
+
+        QuicStreamChannel streamChannel = out
+                .createStream(QuicStreamType.BIDIRECTIONAL, new QuicStreamInboundHandler(consumer, customConId, QUICLogics.OUTGOING_CONNECTION))
+                .sync()
+                .getNow();
         final QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(), transmissionType);
         byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
         streamChannel.writeAndFlush(QUICLogics.bufToWrite(hs.length,hs,QUICLogics.HANDSHAKE_MESSAGE))
@@ -39,12 +47,12 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
                     if(future.isSuccess()){
                         if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
                             streamChannel.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
-                            streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,false));
+                            streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,false,customConId));
                         }
-                        consumer.channelActive(streamChannel,null,remote, transmissionType,hs.length);
+                        consumer.channelActive(streamChannel,null,remote, transmissionType,hs.length,customConId);
                     }else{
                         logger.info("{} CONNECTION TO {} COULD NOT BE ACTIVATED.",self,remote);
-                        consumer.streamErrorHandler(streamChannel,future.cause());
+                        consumer.streamErrorHandler(streamChannel,future.cause(), customConId);
                         future.cause().printStackTrace();
                         out.close();
                     }
