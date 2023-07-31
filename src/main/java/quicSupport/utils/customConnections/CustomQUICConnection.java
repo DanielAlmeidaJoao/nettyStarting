@@ -1,5 +1,6 @@
 package quicSupport.utils.customConnections;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.incubator.codec.quic.QuicChannel;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
@@ -100,8 +101,11 @@ public class CustomQUICConnection {
             if(stream==null || TransmissionType.UNSTRUCTURED_STREAM == stream.type)return;
             scheduledFuture = stream.streamChannel.eventLoop().schedule(() -> {
                 logger.info("HEART BEAT SENT TO {}",remote);
-
-                stream.streamChannel.writeAndFlush(QUICLogics.bufToWrite(1,"C".getBytes(),QUICLogics.KEEP_ALIVE)).addListener(
+                ByteBuf byteBuf = stream.streamChannel.alloc().directBuffer(4+1);
+                byteBuf.writeInt(4);
+                byteBuf.writeByte(QUICLogics.KEEP_ALIVE);
+                byteBuf.writeBytes("C".getBytes());
+                stream.streamChannel.writeAndFlush(byteBuf).addListener(
                         future -> {
                             if(metricsManager != null){
                                 metricsManager.calcControlMetricsOnSend(future.isSuccess(), defaultStream.customStreamId,2);

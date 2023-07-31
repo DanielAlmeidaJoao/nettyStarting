@@ -9,7 +9,6 @@ import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.ChannelHandlerMethods;
@@ -183,8 +182,8 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         if(connectingObject!=null && STRUCTURED_MESSAGE==type){
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self
                     ,connectingObject.pendingMessages.size(),customTCPConnection.host);
-            for (Pair<byte[],Integer> message : connectingObject.pendingMessages) {
-                send(message.getLeft(),message.getRight(),customTCPConnection);
+            for (ByteBuf message : connectingObject.pendingMessages) {
+                sendAux(message,customTCPConnection);
             }
         }
     }
@@ -261,12 +260,12 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     public void closeServerSocket(){
         server.closeServerSocket();
     }
-    public void send(String customConId, byte[] message, int len){
+    public void send(String customConId, ByteBuf message){
         CustomTCPConnection connection = customIdToConnection.get(customConId);
         if(connection == null ){
-            channelHandlerMethods.onMessageSent(message, null, len,new Throwable("Unknown Connection ID : "+customConId),null, STRUCTURED_MESSAGE);
+            channelHandlerMethods.onMessageSent(message.array(),null, message.readableBytes(),new Throwable("Unknown Connection ID : "+customConId),null, STRUCTURED_MESSAGE);
         }else{
-            send(message,len,connection);
+            sendAux(message,connection);
         }
     }
     private void calcMetricsOnReceived(String conId,long bytes){
@@ -281,17 +280,18 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             }
         }
     }
-    private void send(byte[] message, int len, CustomTCPConnection connection){
+    private void sendAux(ByteBuf message, CustomTCPConnection connection){
+        final int len = message.readableBytes();
         if(connection.type== STRUCTURED_MESSAGE){
-            ByteBuf byteBuf = connection.channel.alloc().directBuffer(len+4).writeInt(len).writeBytes(message,0,len);
-            final int sentBytes = byteBuf.readableBytes();
+            final byte [] sentBytes = message.array();
+            ByteBuf byteBuf = connection.channel.alloc().directBuffer(len+4).writeInt(len).writeBytes(message);
             ChannelFuture f = connection.channel.writeAndFlush(byteBuf);
             f.addListener(future -> {
-                calcMetricsOnSend(future,connection.conId,sentBytes);
-                channelHandlerMethods.onMessageSent(message,null,len,future.cause(),connection.host,STRUCTURED_MESSAGE);
+                calcMetricsOnSend(future,connection.conId,sentBytes.length);
+                channelHandlerMethods.onMessageSent(sentBytes,null,len,future.cause(),connection.host,STRUCTURED_MESSAGE);
             });
         }else{
-            channelHandlerMethods.onMessageSent(message, null,len,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND EXPECTING "+ STRUCTURED_MESSAGE+" DATA TYPE"),connection.host, STRUCTURED_MESSAGE);
+            channelHandlerMethods.onMessageSent(message.array(), null,len,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND EXPECTING "+ STRUCTURED_MESSAGE+" DATA TYPE"),connection.host, STRUCTURED_MESSAGE);
         }
     }
 
@@ -379,22 +379,22 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }
         return null;
     }
-    public void send(InetSocketAddress peer, byte[] message, int len){
+    public void send(InetSocketAddress peer,ByteBuf message){
         CustomTCPConnection connection=getConnection(peer);
 
         if(connection == null){
             TCPConnectingObject pendingMessages  = connectingObject(peer);
             if( pendingMessages != null ){
-                pendingMessages.pendingMessages.add(Pair.of(message,len));
+                pendingMessages.pendingMessages.add(message);
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             }else if(connectIfNotConnected){
                 String conId = openConnectionLogics(peer,STRUCTURED_MESSAGE,null);
-                nettyIdTOConnectingOBJ.get(conId).pendingMessages.add(Pair.of(message,len));
+                nettyIdTOConnectingOBJ.get(conId).pendingMessages.add(message);
             }else{
-                channelHandlerMethods.onMessageSent(message,null,len,new Throwable("Unknown Peer : "+peer),peer, STRUCTURED_MESSAGE);
+                channelHandlerMethods.onMessageSent(message.array(),null,message.readableBytes(),new Throwable("Unknown Peer : "+peer),peer, STRUCTURED_MESSAGE);
             }
         }else {
-            send(message,len,connection);
+            sendAux(message,connection);
         }
     }
 

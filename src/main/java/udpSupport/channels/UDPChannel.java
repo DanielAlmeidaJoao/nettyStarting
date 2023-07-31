@@ -52,8 +52,8 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     public boolean metricsEnabled(){
         return metrics!=null;
     }
-    public void sendMessage(byte [] message, InetSocketAddress dest,int len){
-        udpServer.sendMessage(message,dest,len);
+    public void sendMessage(ByteBuf message, InetSocketAddress dest){
+        udpServer.sendMessage(message.array(),dest,message.readableBytes());
     }
     public InetSocketAddress getSelf(){
         return self;

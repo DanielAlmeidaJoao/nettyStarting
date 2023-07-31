@@ -1,5 +1,6 @@
 package quicSupport.channels;
 
+import io.netty.buffer.ByteBuf;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
@@ -19,7 +20,7 @@ public interface NettyChannelInterface extends SendBytesInterface {
     void readMetrics(ReadMetricsHandler handler);
 
 
-    void send(InetSocketAddress peer, byte[] message, int len);
+    void send(InetSocketAddress peer, ByteBuf message);
 
     boolean enabledMetrics();
 

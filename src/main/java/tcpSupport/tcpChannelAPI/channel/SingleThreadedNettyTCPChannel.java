@@ -65,12 +65,12 @@ public class SingleThreadedNettyTCPChannel extends NettyTCPChannel {
         executor.execute(() -> super.closeLink(connectionId));
     }
     @Override
-    public void send(InetSocketAddress host, byte[] message, int len){
-        executor.execute(() -> super.send(host,message,len));
+    public void send(InetSocketAddress host, ByteBuf message){
+        executor.execute(() -> super.send(host,message));
     }
     @Override
-    public void send(String conId,byte[] message, int len){
-        executor.execute(() -> super.send(conId,message,len));
+    public void send(String conId,ByteBuf message){
+        executor.execute(() -> super.send(conId,message));
     }
     @Override
     public void sendStream(String customConId , ByteBuf byteBuf, boolean flush){

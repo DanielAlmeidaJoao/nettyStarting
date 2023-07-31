@@ -20,13 +20,15 @@ public class FactoryMethods {
     public final static String SINGLE_THREADED_PROP="SINGLE_THREADED";
     public final static short BYTE_MESSAGE_ID = -1;
 
-    public static <T> byte [] toSend(ISerializer<T> serializer, T msg) throws IOException {
+    public static <T> ByteBuf toSend(ISerializer<T> serializer, T msg) throws IOException {
         ByteBuf out = Unpooled.buffer();
         serializer.serialize(msg, out);
+        /*
         byte [] toSend = new byte[out.readableBytes()];
         out.readBytes(toSend);
         out.release();
-        return toSend;
+        */
+        return out;
     }
     private static int available(InputStream inputStream){
         //new Exception("TO DO: MAKE unSerialize RECEIVE nr BYTES SEMT").printStackTrace();
@@ -56,17 +58,19 @@ public class FactoryMethods {
     public static InetSocketAddress toInetSOcketAddress(Host address){
         return new InetSocketAddress(address.getAddress(),address.getPort());
     }
-    public static byte [] serializeWhenSendingBytes(short sourceProto, short destProto,short handlerId, byte [] data, int dataLen){
+    public static ByteBuf serializeWhenSendingBytes(short sourceProto, short destProto,short handlerId, byte [] data, int dataLen){
         ByteBuf byteBuf = Unpooled.buffer(8+dataLen);
         byteBuf.writeShort(sourceProto);
         byteBuf.writeShort(destProto);
         byteBuf.writeShort(BYTE_MESSAGE_ID);
         byteBuf.writeShort(handlerId);
         byteBuf.writeBytes(data,0,dataLen);
+        /**
         byte [] outPut = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(outPut);
         byteBuf.release();
-        return outPut;
+         **/
+        return byteBuf;
     }
     public static void deserialize(ByteBuf byteBuf, BabelMessageSerializerInterface serializer, ChannelListener listener, InetSocketAddress from, String streamId)
             throws IOException{

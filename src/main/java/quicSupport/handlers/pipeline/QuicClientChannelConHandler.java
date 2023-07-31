@@ -1,5 +1,6 @@
 package quicSupport.handlers.pipeline;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.incubator.codec.quic.QuicChannel;
@@ -42,7 +43,11 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
                 .getNow();
         final QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(), transmissionType);
         byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
-        streamChannel.writeAndFlush(QUICLogics.bufToWrite(hs.length,hs,QUICLogics.HANDSHAKE_MESSAGE))
+        ByteBuf byteBuf = ctx.alloc().directBuffer(hs.length+1);
+        byteBuf.writeInt(hs.length);
+        byteBuf.writeByte(QUICLogics.HANDSHAKE_MESSAGE);
+        byteBuf.writeBytes(hs);
+        streamChannel.writeAndFlush(byteBuf)
                 .addListener(future -> {
                     if(future.isSuccess()){
                         if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){

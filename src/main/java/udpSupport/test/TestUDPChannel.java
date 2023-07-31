@@ -1,6 +1,7 @@
 package udpSupport.test;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -116,7 +117,7 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
                 }else {
                     System.out.println("EXPECTED ONCE!!! "+read);
                 }
-                udpChannelInterface.sendMessage(bytes,peer,read);
+                udpChannelInterface.sendMessage(Unpooled.copiedBuffer(bytes,0,read),peer);
                 cc++;
                 //Thread.sleep(1000);
                 bytes = new byte[bufferSize];
@@ -147,7 +148,7 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
                 int p = scanner.nextInt();
                 scanner.nextLine();
                 InetSocketAddress address = new InetSocketAddress(host, p);
-                udpChannelInterface.sendMessage(input.getBytes(),address,input.length());
+                udpChannelInterface.sendMessage(Unpooled.copiedBuffer(input.getBytes()),address);
                 System.out.println("SENT "+input);
             }
         }

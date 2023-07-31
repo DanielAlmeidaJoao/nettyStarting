@@ -1,5 +1,6 @@
 package quicSupport.utils.entities;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.commons.lang3.tuple.Pair;
 import quicSupport.utils.enums.TransmissionType;
 //hello
@@ -8,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class QUICConnectingOBJ {
-    public final List<Pair<byte [],Integer>> msgWithLen;
+    public final List<ByteBuf> msgWithLen;
     public final String conId;
     public final InetSocketAddress peer;
     //public final String operation; //sendMessage or createStream

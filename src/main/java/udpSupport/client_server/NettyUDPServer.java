@@ -126,7 +126,7 @@ public class NettyUDPServer {
         logger.info("UDP SERVER LISTENING ON : {}",address);
         return server;
     }
-    public void sendMessage(byte [] message, InetSocketAddress peer, int len){
+    public void sendMessage(byte[] message, InetSocketAddress peer, int len){
         if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.length){
             long streamId = streamIdCounter.incrementAndGet();
             ByteBuf wholeMessageBuf = Unpooled.wrappedBuffer(message,0,len);

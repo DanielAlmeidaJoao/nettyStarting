@@ -109,15 +109,15 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
     }
 
     @Override
-    public void send(String streamId, byte[] message, int len) {
+    public void send(String streamId, ByteBuf message) {
         executor.submit(() -> {
-            super.send(streamId,message,len);
+            super.send(streamId,message);
         });
     }
     @Override
-    public void send(InetSocketAddress peer, byte[] message, int len) {
+    public void send(InetSocketAddress peer,ByteBuf message) {
         executor.submit(() -> {
-            super.send(peer,message,len);
+            super.send(peer,message);
         });
     }
 

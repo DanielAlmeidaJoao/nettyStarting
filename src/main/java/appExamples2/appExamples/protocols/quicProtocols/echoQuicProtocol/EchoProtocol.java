@@ -262,10 +262,10 @@ public class EchoProtocol extends GenericProtocolExtension {
             dest = event.getNode();
         }
         for (String con : cons) {
-            sendMessage("OLA "+con,con);
+            sendMessage("OLA ".repeat(1000)+con,con);
         }
         for (String con : cons) {
-            sendMessage("OLA2 "+con,con);
+            sendMessage("OLA2 ".repeat(1000)+con,con);
         }
     }
     private void uponOpenConnectionFailed(OnOpenConnectionFailed event, int channelId) {
@@ -276,7 +276,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
 
     private void uponBytesMessage(BytesMessageInEvent event) {
-        logger.info("Received bytes3: {} from {}", new String(event.getMsg()),event.getFrom());
+        logger.info("Received bytes3: {} from {}", (new String(event.getMsg())).hashCode(),event.getFrom());
     }
     private void uponStreamBytes(BabelStreamDeliveryEvent event) {
         System.out.println("AVAILABLE "+event.babelOutputStream.readableBytes());
@@ -297,7 +297,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
 
     private void uponFloodMessageQUIC(EchoMessage msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received QUIC {} from {} {}", msg.getMessage(), from, streamId);
+        logger.info("Received QUIC {} from {} {}", msg.getMessage().hashCode(), from, streamId);
     }
     private void uponMsgFail(EchoMessage msg, Host host, short destProto,
                              Throwable throwable, int channelId) {

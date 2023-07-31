@@ -46,7 +46,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
 
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(QUICLogics.APP_DATA==msgType){
-            consumer.onReceivedDelimitedMessage(customId,msg);
+            consumer.onReceivedDelimitedMessage(customId,msg.readBytes(length));
         }else if(QUICLogics.KEEP_ALIVE==msgType){
             msg.readByte();
             consumer.onKeepAliveMessage(customId,length+1);

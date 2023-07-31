@@ -98,9 +98,9 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     @Override
     public void sendMessage(T msg, Host peer, short proto) {
         try {
-            byte [] toSend = FactoryMethods.toSend(serializer,msg);
-            udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(peer),toSend.length);
-            msgSent(toSend,peer);
+            ByteBuf toSend = FactoryMethods.toSend(serializer,msg);
+            udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(peer));
+            msgSent(toSend.array(),peer);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -109,8 +109,8 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId) {
-        byte [] toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
-        udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(dest),toSend.length);
+        ByteBuf toSend = FactoryMethods.serializeWhenSendingBytes(sourceProto,destProto,handlerId,data,dataLen);
+        udpChannelInterface.sendMessage(toSend,FactoryMethods.toInetSOcketAddress(dest));
     }
 
     @Override
