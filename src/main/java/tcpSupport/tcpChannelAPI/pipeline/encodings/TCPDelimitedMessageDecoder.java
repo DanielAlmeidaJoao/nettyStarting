@@ -34,8 +34,9 @@ public class TCPDelimitedMessageDecoder extends ByteToMessageDecoder {
         byte [] data = new byte[length];
         in.readBytes(data);
         **/
-
-        consumer.onChannelMessageRead(ctx.channel().id().asShortText(),in.readBytes(length));
+        ByteBuf buf = in.readBytes(length);
+        consumer.onChannelMessageRead(ctx.channel().id().asShortText(),buf);
+        buf.release();
     }
 
     @Override

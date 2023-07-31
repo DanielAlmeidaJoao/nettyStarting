@@ -313,7 +313,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             }
             try{
                 CustomQUICStreamCon con = addressToQUICCons.get(peer).peek().getDefaultStream();
-                overridenMethods.onConnectionUp(con.inConnection,peer,con.type,con.customStreamId,con.inputStream);
+                //overridenMethods.onConnectionUp(con.inConnection,peer,con.type,con.customStreamId,con.inputStream);
                 return con.customStreamId;
             }catch (Exception e){}
         }

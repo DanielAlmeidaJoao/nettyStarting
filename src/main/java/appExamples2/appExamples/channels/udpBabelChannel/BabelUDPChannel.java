@@ -53,9 +53,11 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
             udpChannelInterface = new SingleThreadedUDPChannel(properties,this);
             customConIDToAddress = new HashMap<>();
+            System.out.println("UDP SINGLE THREADED");
         }else {
             udpChannelInterface = new UDPChannel(properties,false,this);
             customConIDToAddress = new ConcurrentHashMap<>();
+            System.out.println("UDP MULTITHREADED");
         }
         metrics = udpChannelInterface.metricsEnabled();
         if(metrics){

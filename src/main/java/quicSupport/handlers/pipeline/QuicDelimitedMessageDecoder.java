@@ -43,10 +43,10 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             return;
         }
         byte msgType = msg.readByte();
-
+        msg = msg.readBytes(length);
         QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
         if(QUICLogics.APP_DATA==msgType){
-            consumer.onReceivedDelimitedMessage(customId,msg.readBytes(length));
+            consumer.onReceivedDelimitedMessage(customId,msg);
         }else if(QUICLogics.KEEP_ALIVE==msgType){
             msg.readByte();
             consumer.onKeepAliveMessage(customId,length+1);
@@ -76,7 +76,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
         }
         msg.discardReadBytes();
-
+        msg.release();
         //ctx.fireChannelRead(msg);
     }    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

@@ -217,7 +217,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             if(connectionId!=null) return connectionId;
             try{
                 CustomTCPConnection con = addressToConnections.get(peer).peek();
-                channelHandlerMethods.onConnectionUp(con.inConnection,peer,con.type,con.conId,con.inputStream);
+                //channelHandlerMethods.onConnectionUp(con.inConnection,peer,con.type,con.conId,con.inputStream);
                 return con.conId;
             }catch (Exception e){};
         }
