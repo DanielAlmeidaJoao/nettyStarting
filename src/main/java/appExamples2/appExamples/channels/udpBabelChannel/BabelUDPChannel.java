@@ -44,6 +44,8 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private final ChannelListener<T> listener;
     private final UDPChannelInterface udpChannelInterface;
     private final Map<String,Host> customConIDToAddress;
+    private final Map<Host,String> hostStringMap;
+
     public short ownerProto;
 
     public BabelUDPChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short ownerProto) throws IOException {
@@ -53,10 +55,12 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
             udpChannelInterface = new SingleThreadedUDPChannel(properties,this);
             customConIDToAddress = new HashMap<>();
+            hostStringMap = new HashMap<>();
             System.out.println("UDP SINGLE THREADED");
         }else {
             udpChannelInterface = new UDPChannel(properties,false,this);
             customConIDToAddress = new ConcurrentHashMap<>();
+            hostStringMap = new ConcurrentHashMap<>();
             System.out.println("UDP MULTITHREADED");
         }
         metrics = udpChannelInterface.metricsEnabled();
@@ -117,12 +121,20 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void sendMessage(T msg,String streamId,short proto) {
+        if(streamId==null){
+            listener.messageFailed(msg,null,new Throwable("UNKNOWN ID"),TransmissionType.STRUCTURED_MESSAGE);
+            return;
+        }
         Host host = customConIDToAddress.get(streamId);
         sendMessage(msg,host,proto);
     }
 
     @Override
     public void sendMessage(byte[] data, int dataLen, String streamId, short sourceProto, short destProto,short handlerId) {
+        if(streamId==null){
+            listener.messageFailed(null,null,new Throwable("UNKNOWN CONNECTION ID: "+streamId),TransmissionType.STRUCTURED_MESSAGE);
+            return;
+        }
         Host host = customConIDToAddress.get(streamId);
         sendMessage(data,dataLen,host,sourceProto,destProto,handlerId);
     }
@@ -147,6 +159,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
                 customConIDToAddress.remove(stringHostEntry.getKey());
             }
         }
+        hostStringMap.remove(peer);
         listener.deliverEvent(new OnConnectionDownEvent(peer,null, "",true));
     }
 
@@ -192,8 +205,13 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public String openMessageConnection(Host peer, short proto) {
+        String oldID = hostStringMap.get(peer);
+        if(oldID!=null){
+            return oldID;
+        }
         logger.debug("OPEN CONNECTION. UNSUPPORTED OPERATION ON UDP");
         String id = nextId();
+        hostStringMap.put(peer,id);
         customConIDToAddress.put(id,peer);
         listener.deliverEvent(new OnMessageConnectionUpEvent(peer,id,false));
         return id;

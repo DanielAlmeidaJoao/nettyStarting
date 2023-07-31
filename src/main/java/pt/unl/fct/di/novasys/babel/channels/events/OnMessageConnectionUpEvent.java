@@ -17,7 +17,7 @@ public class OnMessageConnectionUpEvent extends TCPEvent {
 
     @Override
     public String toString() {
-        return "OnStreamConnectionUpEvent{" +
+        return "OnMessageConnectionUpEvent{" +
                 "node=" + node +
                 "type="+type+
                 "conId="+conId+
