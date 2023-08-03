@@ -216,13 +216,14 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                               Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+        /**
         try {
             if(msg.inputStream!=null){
                 logger.info("AVAILABLE {}",msg.inputStream.available());
             }
         }catch (Exception e){
             e.printStackTrace();
-        }
+        } **/
     }
     int bufferSize = 128*1024; // 8KB buffer size
     public void startStreaming(){

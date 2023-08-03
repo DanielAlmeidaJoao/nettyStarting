@@ -261,11 +261,16 @@ public class EchoProtocol extends GenericProtocolExtension {
         if(dest==null){
             dest = event.getNode();
         }
+
         for (String con : cons) {
-            sendMessage("OLA ".repeat(1000)+con,con);
+            String m1 = "OLA ".repeat(1000)+con;
+            System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
+            sendMessage(m1,con);
         }
         for (String con : cons) {
-            sendMessage("OLA2 ".repeat(1000)+con,con);
+            String m1 = "OLA23 ".repeat(1000)+con;
+            System.out.println("SENT2: "+m1.hashCode()+" "+m1.length());
+            sendMessage(m1,con);
         }
     }
     private void uponOpenConnectionFailed(OnOpenConnectionFailed event, int channelId) {

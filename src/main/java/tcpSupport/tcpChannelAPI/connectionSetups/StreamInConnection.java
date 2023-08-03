@@ -10,7 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.pipeline.TCPCustomHandshakeHandler;
-import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 
 import java.net.InetSocketAddress;
 
@@ -54,8 +53,8 @@ public class StreamInConnection {
                 .childHandler(new ChannelInitializer<SocketChannel>(){
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
+                        //TALK ABOUT TCP FAST OPEN IN THESIS
                         ch.pipeline().addLast(TCPCustomHandshakeHandler.NAME,new TCPCustomHandshakeHandler(consumer));
-                        ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(consumer));
                         //ch.pipeline().addLast(new TCPServerNettyHandler(metrics,consumer));
                     }
                 });

@@ -14,6 +14,7 @@ import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.pipeline.TCPClientNettyHandler;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
+import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
 
 import java.net.InetSocketAddress;
 
@@ -41,7 +42,11 @@ public class StreamOutConnection {
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(consumer));
+                            if(TransmissionType.STRUCTURED_MESSAGE==type){
+                                ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(consumer));
+                            }else{
+                                ch.pipeline().addLast(TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(consumer));
+                            }
                             ch.pipeline().addLast( new TCPClientNettyHandler(new HandShakeMessage(self,type),consumer,type));
                     }
                     }).attr(AttributeKey.valueOf(CUSTOM_ID_KEY),conId);

@@ -18,31 +18,30 @@ public class TCPDelimitedMessageDecoder extends ByteToMessageDecoder {
         type = TransmissionType.STRUCTURED_MESSAGE;
     }
 
-    @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out){
-        if(in.readableBytes()<4){
-            return;
-        }
-        in.markReaderIndex();
-        int length = in.readInt();
-
-        if(in.readableBytes()<length){
-            in.resetReaderIndex();
-            return;
-        }
-        /**
-        byte [] data = new byte[length];
-        in.readBytes(data);
-        **/
-        ByteBuf buf = in.readBytes(length);
-        consumer.onChannelMessageRead(ctx.channel().id().asShortText(),buf);
-        buf.release();
-    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
         //cause.printStackTrace();
         ctx.close();
+    }
+
+    //@Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        while(in.readableBytes()>0){
+            if(in.readableBytes()<4){
+                return;
+            }
+            in.markReaderIndex();
+            int length = in.readInt();
+            if(in.readableBytes()<length){
+                in.resetReaderIndex();
+                return;
+            }
+            ByteBuf buf = in.readBytes(length);
+            in.discardReadBytes();
+            consumer.onChannelMessageRead(ctx.channel().id().asShortText(),buf);
+            buf.release();
+        }
     }
 }

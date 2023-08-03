@@ -8,8 +8,6 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
-import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
 import java.net.UnknownHostException;
@@ -43,9 +41,10 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
                 ctx.channel().close();
             }
         });
+        /**
         if(TransmissionType.UNSTRUCTURED_STREAM == type){
             ctx.channel().pipeline().replace(TCPDelimitedMessageDecoder.NAME, TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(consumer));
-        }
+        }**/
         consumer.onChannelActive(ctx.channel(),null,type,data.length);
         handshakeData=null;
     }

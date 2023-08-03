@@ -2,7 +2,7 @@ package tcpSupport.tcpChannelAPI.pipeline;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.ByteToMessageDecoder;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
@@ -10,8 +10,10 @@ import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
+import java.util.List;
+
 //@ChannelHandler.Sharable
-public class TCPCustomHandshakeHandler extends ChannelInboundHandlerAdapter {
+public class TCPCustomHandshakeHandler extends ByteToMessageDecoder {
 
     public static final String NAME ="CHSHAKE_HANDLER";
     private final StreamingNettyConsumer consumer;
@@ -21,8 +23,7 @@ public class TCPCustomHandshakeHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        ByteBuf in = (ByteBuf) msg;
+    public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         if(in.readableBytes()<4){
             return;
         }
@@ -38,11 +39,12 @@ public class TCPCustomHandshakeHandler extends ChannelInboundHandlerAdapter {
         in.discardReadBytes();
         String gg = new String(controlData);
         HandShakeMessage handShakeMessage = TCPStreamUtils.g.fromJson(gg, HandShakeMessage.class);
-        if(TransmissionType.UNSTRUCTURED_STREAM == handShakeMessage.type){
-            ctx.channel().pipeline().replace(TCPDelimitedMessageDecoder.NAME, TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(consumer));
+        if(TransmissionType.STRUCTURED_MESSAGE==handShakeMessage.type){
+            ctx.channel().pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(consumer));
+        }else{
+            ctx.channel().pipeline().addLast(TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(consumer));
         }
         consumer.onChannelActive(ctx.channel(),handShakeMessage, handShakeMessage.type,len);
         ctx.channel().pipeline().remove(TCPCustomHandshakeHandler.NAME);
-        ctx.fireChannelRead(in);
     }
 }
