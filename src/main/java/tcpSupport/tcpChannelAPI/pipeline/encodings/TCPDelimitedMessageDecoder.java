@@ -2,19 +2,16 @@ package tcpSupport.tcpChannelAPI.pipeline.encodings;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
+import tcpSupport.tcpChannelAPI.pipeline.AbstractMessageDecoderHandler;
 
-import java.util.List;
-
-public class TCPDelimitedMessageDecoder extends ByteToMessageDecoder {
-    public final StreamingNettyConsumer consumer;
+public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
     public final TransmissionType type;
     public static final String NAME = "TCPDelimitedMessageDecoder";
 
     public TCPDelimitedMessageDecoder(StreamingNettyConsumer consumer) {
-        this.consumer=consumer;
+        super(consumer);
         type = TransmissionType.STRUCTURED_MESSAGE;
     }
 
@@ -26,22 +23,12 @@ public class TCPDelimitedMessageDecoder extends ByteToMessageDecoder {
         ctx.close();
     }
 
-    //@Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        while(in.readableBytes()>0){
-            if(in.readableBytes()<4){
-                return;
-            }
-            in.markReaderIndex();
-            int length = in.readInt();
-            if(in.readableBytes()<length){
-                in.resetReaderIndex();
-                return;
-            }
-            ByteBuf buf = in.readBytes(length);
-            in.discardReadBytes();
-            consumer.onChannelMessageRead(ctx.channel().id().asShortText(),buf);
-            buf.release();
-        }
+    @Override
+    public boolean handleReceivedMessage(ChannelHandlerContext ctx, ByteBuf in, int len) {
+        ByteBuf buf = in.readBytes(len);
+        in.discardReadBytes();
+        consumer.onChannelMessageRead(ctx.channel().id().asShortText(),buf);
+        buf.release();
+        return true;
     }
 }
