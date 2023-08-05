@@ -102,7 +102,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             if(NetworkRole.CLIENT==networkRole){
                 properties.remove(CONNECT_ON_SEND);
             }
-            client = new QuicClientExample(self,this,new NioEventLoopGroup(1));
+            client = new QuicClientExample(self,this,new NioEventLoopGroup());
         }
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
         singleConnectionPerPeer = properties.getProperty(TCPStreamUtils.SINGLE_CON_PER_PEER)!=null;

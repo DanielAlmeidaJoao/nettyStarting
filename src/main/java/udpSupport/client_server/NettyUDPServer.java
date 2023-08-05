@@ -103,8 +103,7 @@ public class NettyUDPServer {
     private Channel start() throws Exception{
         OnAckFunction onAckReceived = this::onAckReceived;
         Channel server;
-        int n_threads = Integer.parseInt(properties.getProperty(UDP_N_THREADS,"2"));
-        EventLoopGroup group = new NioEventLoopGroup(n_threads);
+        EventLoopGroup group = new NioEventLoopGroup();
         Bootstrap b = new Bootstrap();
         b.group(group)
                 .channel(NioDatagramChannel.class)

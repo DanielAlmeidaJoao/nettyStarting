@@ -29,7 +29,7 @@ public class StreamOutConnection {
     public InetSocketAddress self;
     private final int connectionTimeout;
     public StreamOutConnection(InetSocketAddress host,Properties properties) {
-        group = createNewWorkerGroup(1);
+        group = createNewWorkerGroup();
         this.self = host;
         connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPStreamUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
 
@@ -69,10 +69,10 @@ public class StreamOutConnection {
         }
     }
 
-    public static EventLoopGroup createNewWorkerGroup(int nThreads) {
+    public static EventLoopGroup createNewWorkerGroup() {
         //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
         //else
-        return new NioEventLoopGroup(nThreads);
+        return new NioEventLoopGroup();
     }
     private Class<? extends Channel> socketChannel(){
         /**

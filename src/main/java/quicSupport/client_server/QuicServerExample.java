@@ -102,7 +102,7 @@ public final class QuicServerExample {
             return;
         }
         QuicSslContext context = getSignedSslContext();
-        NioEventLoopGroup group = new NioEventLoopGroup(4);
+        NioEventLoopGroup group = new NioEventLoopGroup();
         ChannelHandler codec = getChannelHandler(context);
         try {
             Bootstrap bs = new Bootstrap();
