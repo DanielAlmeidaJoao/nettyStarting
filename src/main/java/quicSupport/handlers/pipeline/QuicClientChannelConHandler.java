@@ -51,7 +51,6 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
                 .addListener(future -> {
                     if(future.isSuccess()){
                         if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
-                            streamChannel.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
                             streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer,false,customConId));
                         }
                         consumer.channelActive(streamChannel,null,remote, transmissionType,hs.length,customConId);

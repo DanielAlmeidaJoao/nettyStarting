@@ -57,7 +57,6 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             TransmissionType type;
             if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
                 type = TransmissionType.UNSTRUCTURED_STREAM;
-                ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, false,customId));
             }else{
                 type = TransmissionType.STRUCTURED_MESSAGE;
@@ -68,7 +67,6 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             msg.readBytes(data);
             QuicHandShakeMessage handShakeMessage = gson.fromJson(new String(data), QuicHandShakeMessage.class);
             if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
-                ch.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
                 ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, true, customId));
             }
             consumer.channelActive(ch,handShakeMessage,null, TransmissionType.STRUCTURED_MESSAGE,length, customId);

@@ -163,7 +163,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
                 metricsManager.initConnectionMetrics(conId,listeningAddress,inConnection,len);
             }
 
-            BabelInputStream babelInputStream = BabelInputStream.toBabelStream(conId,this,type);
+            BabelInputStream babelInputStream = BabelInputStream.toBabelStream(conId,this,type, channel.alloc());
             CustomTCPConnection connection = new CustomTCPConnection(channel,type,listeningAddress,conId,inConnection,babelInputStream);
             nettyIdToConnection.put(channel.id().asShortText(),connection);
             customIdToConnection.put(conId,connection);

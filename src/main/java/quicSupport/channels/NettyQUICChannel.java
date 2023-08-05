@@ -165,7 +165,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         CustomQUICStreamCon firstStreamOfThisCon = customStreamIdToStream.get(channel.parent().id().asShortText());
         BabelInputStream babelInputStream = null;
         if(TransmissionType.UNSTRUCTURED_STREAM==type){
-            babelInputStream = BabelInputStream.toBabelStream(customId,this,type);
+            babelInputStream = BabelInputStream.toBabelStream(customId,this,type,channel.alloc());
         }
         if(firstStreamOfThisCon == null ){
             channel.disconnect();
@@ -258,7 +258,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             }
 
             CustomQUICConnection parentConnection;
-            BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customConId,this,type);
+            BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customConId,this,type, streamChannel.alloc());
             CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel,customConId,type,null,inConnection,babelInputStream);
             CustomQUICStreamCon firstStreamOfThisCon = customStreamIdToStream.get(streamChannel.parent().id().asShortText());
             getQuicStreamReadHandler(streamChannel).setStreamCon(quicStreamChannel);
@@ -385,7 +385,6 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                                     .addListener(future1 -> {
                                         if(future.isSuccess()){
                                             if(TransmissionType.UNSTRUCTURED_STREAM == type){
-                                                streamChannel.pipeline().remove(QuicStructuredMessageEncoder.HANDLER_NAME);
                                                 streamChannel.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(this, false, finalConId));
                                             }
                                             streamCreatedHandler(streamChannel,type,finalConId,false);
