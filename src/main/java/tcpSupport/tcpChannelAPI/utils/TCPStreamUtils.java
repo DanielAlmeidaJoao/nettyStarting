@@ -21,6 +21,8 @@ public class TCPStreamUtils {
     public static final String READ_STREAM_PERIOD_KEY = "READ_STREAM_PERIOD_KEY";
     public static final String SINGLE_CON_PER_PEER = "SINGLE_PEER_CONNECTION";
 
+    public static final String CONNECT_TIMEOUT_MILLIS = "CONNECT_TIMEOUT_MILLIS";
+
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
         if(singleT){
             return new HashMap<>();

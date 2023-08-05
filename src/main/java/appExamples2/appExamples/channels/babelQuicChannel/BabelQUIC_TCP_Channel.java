@@ -172,8 +172,8 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
-    public TransmissionType getTransmissionType(String streamId) {
-        return customQuicChannel.getConnectionType(streamId);
+    public TransmissionType getTransmissionType(String connectionId) {
+        return customQuicChannel.getConnectionType(connectionId);
     }
 
     public void closeLink(String streamId, short proto){

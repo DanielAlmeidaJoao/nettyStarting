@@ -16,7 +16,7 @@ public interface NewIChannel<T> {
     void sendMessage(T msg,String linkId,short proto);
     void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
     TransmissionType getTransmissionType(Host host)  throws NoSuchElementException;
-    TransmissionType getTransmissionType(String streamId)  throws NoSuchElementException;
+    TransmissionType getTransmissionType(String connectionId)  throws NoSuchElementException;
     void registerChannelInterest(short protoId);
     /**
      * removes 'proto' from the set of the protocols using this streamId.

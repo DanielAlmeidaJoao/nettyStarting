@@ -93,7 +93,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             if(NetworkRole.CLIENT==networkRole){
                 properties.remove(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP);
             }
-            client = new StreamOutConnection(self);
+            client = new StreamOutConnection(self,properties);
         }else{
             client=null;
         }

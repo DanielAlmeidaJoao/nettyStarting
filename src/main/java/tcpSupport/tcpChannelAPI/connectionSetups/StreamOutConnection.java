@@ -15,8 +15,10 @@ import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.pipeline.TCPClientNettyHandler;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
+import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
 import java.net.InetSocketAddress;
+import java.util.Properties;
 
 import static tcpSupport.tcpChannelAPI.utils.TCPStreamUtils.CUSTOM_ID_KEY;
 
@@ -25,20 +27,21 @@ public class StreamOutConnection {
 
     private EventLoopGroup group;
     public InetSocketAddress self;
-
-    public StreamOutConnection(InetSocketAddress host) {
+    private final int connectionTimeout;
+    public StreamOutConnection(InetSocketAddress host,Properties properties) {
         group = createNewWorkerGroup(1);
         this.self = host;
+        connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPStreamUtils.CONNECT_TIMEOUT_MILLIS,30*1000));
+
     }
 
-    public void connect(InetSocketAddress peer,StreamingNettyConsumer consumer, TransmissionType type, String conId){
+    public void connect(InetSocketAddress peer, StreamingNettyConsumer consumer, TransmissionType type, String conId){
         try {
             Bootstrap b = new Bootstrap();
-
             b.group(group)
                     .channel(socketChannel())
                     .remoteAddress(peer)
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,30*1000)
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,connectionTimeout)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                     public void initChannel(SocketChannel ch) throws Exception {
