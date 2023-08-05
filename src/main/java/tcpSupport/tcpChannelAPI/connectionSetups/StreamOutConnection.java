@@ -31,7 +31,7 @@ public class StreamOutConnection {
     public StreamOutConnection(InetSocketAddress host,Properties properties) {
         group = createNewWorkerGroup(1);
         this.self = host;
-        connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPStreamUtils.CONNECT_TIMEOUT_MILLIS,30*1000));
+        connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPStreamUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
 
     }
 
