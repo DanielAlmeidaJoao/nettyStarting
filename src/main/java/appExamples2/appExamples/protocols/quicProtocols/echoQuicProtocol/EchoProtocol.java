@@ -266,11 +266,11 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
 
         for (String con : cons) {
-            for (int i = 0; i < 50; i++) {
-                String m1 = "OOooo 00".repeat(i) + con;
+            for (int i = 1; i <= 1; i++) {
+                String m1 = "0".repeat(i) + con;
                 System.out.println();
                 EchoMessage echoMessage = new EchoMessage(myself, m1);
-                //System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
+                System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
                 super.sendMessage(echoMessage, con);
             }
         }

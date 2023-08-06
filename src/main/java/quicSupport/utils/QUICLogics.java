@@ -55,15 +55,15 @@ public class QUICLogics {
     private static final String initialMaxStreamsBidirectional="200";
     private static final String initialMaxStreamsUnidirectional="200";
 
-    private static final String maxAckDelay = "100";
+    private static final String maxAckDelay = "250";
 
-    public static final String SERVER_KEYSTORE_FILE_KEY = "QUIC_S_KEYSTORE_FILE";
-    public static final String SERVER_KEYSTORE_PASSWORD_KEY = "QUIC_S_KEYSTORE_PASSWORD";
-    public static final String SERVER_KEYSTORE_ALIAS_KEY = "QUIC_S_KEYSTORE_ALIAS_KEY";
+    public static final String SERVER_KEYSTORE_FILE_KEY = "QUIC_SERVER_KEYSTORE_FILE";
+    public static final String SERVER_KEYSTORE_PASSWORD_KEY = "QUIC_SERVER_KEYSTORE_PASSWORD";
+    public static final String SERVER_KEYSTORE_ALIAS_KEY = "QUIC_SERVER_KEYSTORE_ALIAS_KEY";
 
-    public static final String CLIENT_KEYSTORE_FILE_KEY = "QUIC_C_KEYSTORE_FILE";
-    public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_C_KEYSTORE_PASSWORD";
-    public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_C_KEYSTORE_ALIAS_KEY";
+    public static final String CLIENT_KEYSTORE_FILE_KEY = "QUIC_CLIENT_KEYSTORE_FILE";
+    public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_CLIENT_KEYSTORE_PASSWORD";
+    public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_CLIENT_KEYSTORE_ALIAS_KEY";
 
     public static ByteBuf bufToWrite(ByteBuf data, byte msgCode, ByteBufAllocator alloc){
         //return new DelimitedMessageWrapper(len,data,msgCode);
@@ -94,7 +94,7 @@ public class QUICLogics {
                 .initialMaxStreamsBidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_BIDIRECTIONAL,initialMaxStreamsBidirectional)))
                 .initialMaxStreamsUnidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_UNIDIRECTIONAL,initialMaxStreamsUnidirectional)))
                 .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MILLISECONDS)
-                .activeMigration(true)
+                //.activeMigration(true);
                 .maxRecvUdpPayloadSize(1024*1024).maxSendUdpPayloadSize(1024*1024);
     }
 

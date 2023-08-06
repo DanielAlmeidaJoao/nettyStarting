@@ -28,7 +28,6 @@ public class NettyUDPServer {
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
     public static final int BUFFER_SIZE = 1024 * 65;
     public static final String UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
-    public static final String UDP_N_THREADS = "UDP_N_THREADS";
     public int RETRANSMISSION_TIMEOUT;
     public final int MAX_SEND_RETRIES;
     public static final String MAX_SEND_RETRIES_KEY = "UPD_MAX_SEND_RETRIES";
