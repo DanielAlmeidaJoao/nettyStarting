@@ -442,12 +442,13 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             throw new RuntimeException("WRONG MESSAGE. EXPECTED TYPE: "+STRUCTURED_MESSAGE+" VS RECEIVED TYPE: "+streamChannel.type);
         }
         final byte [] sent = message.array();
-
-        ByteBuf header = streamChannel.streamChannel.alloc().directBuffer(5);
-        streamChannel.streamChannel.write(header.writeInt(message.readableBytes()).writeByte(APP_DATA));
+        /**
+        ByteBuf header = streamChannel.streamChannel.alloc().directBuffer(5)
+                .writeInt(message.readableBytes()).writeByte(APP_DATA);
+        streamChannel.streamChannel.write(header);
         ChannelFuture c = streamChannel.streamChannel.writeAndFlush(message);
-
-        //ChannelFuture c = streamChannel.streamChannel.writeAndFlush(QUICLogics.bufToWrite(message,APP_DATA,streamChannel.streamChannel.alloc()));
+        **/
+        ChannelFuture c = streamChannel.streamChannel.writeAndFlush(QUICLogics.bufToWrite(message,APP_DATA,streamChannel.streamChannel.alloc()));
 
         c.addListener(future -> {
             if(future.isSuccess()){

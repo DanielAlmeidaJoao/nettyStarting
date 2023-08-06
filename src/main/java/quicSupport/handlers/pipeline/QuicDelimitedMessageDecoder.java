@@ -42,6 +42,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }
             byte msgType = msg.readByte();
             ByteBuf aux = msg.readBytes(length);
+            msg.discardReadBytes();
             QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
             if(QUICLogics.APP_DATA==msgType){
                 consumer.onReceivedDelimitedMessage(customId,aux);
@@ -75,6 +76,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             aux.release();
             //ctx.fireChannelRead(msg);
         }
+
     }    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
