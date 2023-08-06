@@ -257,21 +257,29 @@ public class EchoProtocol extends GenericProtocolExtension {
     List<String> cons = new LinkedList<>();
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION UP: {} {} {}",event.conId,event.inConnection,event.type);
+        if(event.inConnection){
+            return;
+        }
         cons.add(event.conId);
         if(dest==null){
             dest = event.getNode();
         }
 
         for (String con : cons) {
-            String m1 = "OLA ".repeat(1000)+con;
-            System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
-            sendMessage(m1,con);
+            for (int i = 0; i < 50; i++) {
+                String m1 = "OOooo 00".repeat(i) + con;
+                System.out.println();
+                EchoMessage echoMessage = new EchoMessage(myself, m1);
+                //System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
+                super.sendMessage(echoMessage, con);
+            }
         }
+        /**
         for (String con : cons) {
             String m1 = "OLA23 ".repeat(1000)+con;
             System.out.println("SENT2: "+m1.hashCode()+" "+m1.length());
             sendMessage(m1,con);
-        }
+        } **/
     }
     private void uponOpenConnectionFailed(OnOpenConnectionFailed event, int channelId) {
         logger.info("CONNECTION FAILED: {} {} {}",event.connectionId,event.node,event.type);

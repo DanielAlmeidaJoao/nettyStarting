@@ -2,7 +2,7 @@ package quicSupport.utils;
 
 import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.incubator.codec.quic.QuicCodecBuilder;
 import org.apache.commons.codec.binary.Hex;
 
@@ -65,18 +65,18 @@ public class QUICLogics {
     public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_C_KEYSTORE_PASSWORD";
     public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_C_KEYSTORE_ALIAS_KEY";
 
-    public static ByteBuf bufToWrite(ByteBuf data, byte msgCode){
+    public static ByteBuf bufToWrite(ByteBuf data, byte msgCode, ByteBufAllocator alloc){
         //return new DelimitedMessageWrapper(len,data,msgCode);
-        ByteBuf buf = Unpooled.directBuffer(data.readableBytes()+1);
+        ByteBuf buf = alloc.directBuffer(data.readableBytes()+1);
         buf.writeInt(data.readableBytes());
         buf.writeByte(msgCode);
         buf.writeBytes(data);
         return buf;
     }
-    public static ByteBuf bufToWrite(int data, byte msgCode){
+    public static ByteBuf bufToWrite(int data, byte msgCode,ByteBufAllocator alloc){
         //return new DelimitedMessageWrapper(4,Unpooled.buffer(4).writeInt(data).array(),msgCode);
 
-        ByteBuf buf = Unpooled.buffer(4+1);
+        ByteBuf buf = alloc.directBuffer(4+1);
         buf.writeInt(4);
         buf.writeByte(msgCode);
         buf.writeInt(data);

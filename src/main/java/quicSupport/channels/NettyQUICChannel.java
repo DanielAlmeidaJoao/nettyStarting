@@ -381,7 +381,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                     .addListener(future -> {
                         if(future.isSuccess() ){
                             QuicStreamChannel streamChannel = (QuicStreamChannel) future.getNow();
-                            streamChannel.writeAndFlush(QUICLogics.bufToWrite(type.ordinal(),STREAM_CREATED))
+                            streamChannel.writeAndFlush(QUICLogics.bufToWrite(type.ordinal(),STREAM_CREATED,streamChannel.alloc()))
                                     .addListener(future1 -> {
                                         if(future.isSuccess()){
                                             if(TransmissionType.UNSTRUCTURED_STREAM == type){
@@ -442,7 +442,13 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             throw new RuntimeException("WRONG MESSAGE. EXPECTED TYPE: "+STRUCTURED_MESSAGE+" VS RECEIVED TYPE: "+streamChannel.type);
         }
         final byte [] sent = message.array();
-        ChannelFuture c = streamChannel.streamChannel.writeAndFlush(QUICLogics.bufToWrite(message,APP_DATA));
+
+        ByteBuf header = streamChannel.streamChannel.alloc().directBuffer(5);
+        streamChannel.streamChannel.write(header.writeInt(message.readableBytes()).writeByte(APP_DATA));
+        ChannelFuture c = streamChannel.streamChannel.writeAndFlush(message);
+
+        //ChannelFuture c = streamChannel.streamChannel.writeAndFlush(QUICLogics.bufToWrite(message,APP_DATA,streamChannel.streamChannel.alloc()));
+
         c.addListener(future -> {
             if(future.isSuccess()){
                 calcMetricsOnSend(future,streamChannel.customStreamId,sent.length);

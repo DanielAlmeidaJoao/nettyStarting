@@ -182,7 +182,8 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
     public void sendMessage(T msg,String streamId,short proto){
         try {
-            customQuicChannel.send(streamId,FactoryMethods.toSend(serializer,msg));
+            ByteBuf b = FactoryMethods.toSend(serializer,msg);
+            customQuicChannel.send(streamId,b);
         } catch (IOException e) {
             e.printStackTrace();
         }
