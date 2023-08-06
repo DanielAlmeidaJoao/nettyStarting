@@ -550,21 +550,17 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     }
 
     @Override
-    public TransmissionType getConnectionType(InetSocketAddress peer) {
-        CustomQUICConnection connection = getCustomQUICConnection(peer);
-        if(connection==null){
-            return null;
-        }
-        return connection.transmissionType;
-    }
-
-    @Override
     public TransmissionType getConnectionType(String streamId) {
         try{
             return customStreamIdToStream.get(streamId).type;
         }catch (Exception e){
             return null;
         }
+    }
+
+    @Override
+    public boolean isConnected(String connectionID) {
+        return customStreamIdToStream.containsKey(connectionID);
     }
     /*********************************** User Actions **************************************/
 

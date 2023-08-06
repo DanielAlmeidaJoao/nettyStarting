@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -126,7 +125,12 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
-    public String[] getLinks() {
+    public boolean isConnected(String connectionID) {
+        return customQuicChannel.isConnected(connectionID);
+    }
+
+    @Override
+    public String[] getConnectionsIds() {
         return customQuicChannel.getStreams();
     }
 
@@ -167,16 +171,11 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
-    public TransmissionType getTransmissionType(Host host) throws NoSuchElementException {
-        return customQuicChannel.getConnectionType(FactoryMethods.toInetSOcketAddress(host));
-    }
-
-    @Override
     public TransmissionType getTransmissionType(String connectionId) {
         return customQuicChannel.getConnectionType(connectionId);
     }
 
-    public void closeLink(String streamId, short proto){
+    public void closeConnection(String streamId, short proto){
         customQuicChannel.closeLink(streamId);
     }
 

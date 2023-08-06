@@ -98,20 +98,20 @@ public class BabelQUIC_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_C
         }
     }
     @Override
-    public void closeLink(String streamId, short proto){
+    public void closeConnection(String streamId, short proto){
         if(proto<0){
             streamChannelsMap.remove(streamId);
-            super.closeLink(streamId,proto);
+            super.closeConnection(streamId,proto);
         }else{
             Set<Short> protosUsingThisStream = streamChannelsMap.get(streamId);
             if (protosUsingThisStream!=null){
                 protosUsingThisStream.remove(proto);
                 if(protosUsingThisStream.isEmpty()){
-                    super.closeLink(streamId,proto);
+                    super.closeConnection(streamId,proto);
                     hostChannelsMap.remove(proto);
                 }
             }else{
-                super.closeLink(streamId,proto);
+                super.closeConnection(streamId,proto);
             }
         }
     }

@@ -434,22 +434,17 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     }
 
     @Override
-    public TransmissionType getConnectionType(InetSocketAddress peer){
-        ConcurrentLinkedQueue<CustomTCPConnection> cons = addressToConnections.get(peer);
-        if(cons==null || cons.isEmpty()){
-            return null;
-        }else{
-            return cons.peek().type;
-        }
-    }
-
-    @Override
     public TransmissionType getConnectionType(String streamId){
         CustomTCPConnection connection = customIdToConnection.get(streamId);
         if(connection==null){
             return null;
         }
         return connection.type;
+    }
+
+    @Override
+    public boolean isConnected(String connectionID) {
+        return customIdToConnection.containsKey(connectionID);
     }
 
     /******************************************* USER EVENTS END ****************************************************/

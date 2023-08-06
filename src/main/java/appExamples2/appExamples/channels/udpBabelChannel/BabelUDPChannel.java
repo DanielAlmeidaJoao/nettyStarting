@@ -169,7 +169,12 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public String[] getLinks() {
+    public boolean isConnected(String connectionID) {
+        return customConIDToAddress.containsKey(connectionID);
+    }
+
+    @Override
+    public String[] getConnectionsIds() {
         return customConIDToAddress.keySet().toArray(new String[customConIDToAddress.size()]);
     }
 
@@ -224,11 +229,6 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public TransmissionType getTransmissionType(Host host) throws NoSuchElementException {
-        return TransmissionType.STRUCTURED_MESSAGE;
-    }
-
-    @Override
     public TransmissionType getTransmissionType(String connectionId) throws NoSuchElementException {
         return TransmissionType.STRUCTURED_MESSAGE;
     }
@@ -240,7 +240,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
 
     @Override
-    public void closeLink(String streamId, short protoId) {
+    public void closeConnection(String streamId, short protoId) {
         customConIDToAddress.remove(streamId);
     }
 }

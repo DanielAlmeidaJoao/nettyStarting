@@ -31,7 +31,7 @@ public interface NettyChannelInterface extends SendBytesInterface {
 
     void shutDown();
 
-    TransmissionType getConnectionType(InetSocketAddress toInetSOcketAddress);
-
     TransmissionType getConnectionType(String streamId);
-    }
+
+    boolean isConnected(String connectionID);
+}

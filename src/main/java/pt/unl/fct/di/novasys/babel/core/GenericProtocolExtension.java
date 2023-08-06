@@ -72,9 +72,6 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
     protected TransmissionType getConnectionType(int channelId, String streamId) throws NoSuchElementException {
         return babel.getConnectionType(channelId,streamId);
     }
-    protected TransmissionType getConnectionType(int channelId, Host host) throws NoSuchElementException {
-        return babel.getConnectionType(channelId,host);
-    }
     protected NetworkProtocol getNetworkProtocol(int channelId){
         return babel.getNetworkProtocol(channelId);
     }

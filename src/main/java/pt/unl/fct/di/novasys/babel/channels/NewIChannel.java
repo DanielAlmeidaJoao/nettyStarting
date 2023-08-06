@@ -15,7 +15,6 @@ public interface NewIChannel<T> {
     void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId);
     void sendMessage(T msg,String linkId,short proto);
     void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
-    TransmissionType getTransmissionType(Host host)  throws NoSuchElementException;
     TransmissionType getTransmissionType(String connectionId)  throws NoSuchElementException;
     void registerChannelInterest(short protoId);
     /**
@@ -24,7 +23,7 @@ public interface NewIChannel<T> {
      * @param linkId
      * @param proto
      */
-    void closeLink(String linkId, short proto);
+    void closeConnection(String linkId, short proto);
     /**
      * removes 'protoId' from the set of the protocols using the connection 'peer'.
      * The connection is closed if the set becomes empty or if protoId is a negative number
@@ -33,7 +32,10 @@ public interface NewIChannel<T> {
      */
     void closeConnection(Host peer, short protoId);
     boolean isConnected(Host peer);
-    String [] getLinks();
+
+    boolean isConnected(String connectionID);
+
+    String [] getConnectionsIds();
     InetSocketAddress [] getConnections();
     int connectedPeers();
     boolean shutDownChannel(short protoId);

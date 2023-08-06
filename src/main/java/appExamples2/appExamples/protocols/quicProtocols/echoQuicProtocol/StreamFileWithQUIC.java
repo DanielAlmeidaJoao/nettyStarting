@@ -107,7 +107,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             }catch (Exception e){
                 e.printStackTrace();
             }
-            System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode()));
         }else{
             uponOutConnectionUp(event, channelId);
         }
@@ -124,8 +123,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }catch (Exception e){
             e.printStackTrace();
         }
-
-        System.out.println("CONNECTION TYPR "+getConnectionType(channelId,event.getNode())+" CON ID "+streamId);
 
         if(myself.getPort()==8081){
             new Thread(() -> {
