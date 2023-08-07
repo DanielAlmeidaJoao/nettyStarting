@@ -73,7 +73,8 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             onAckMessage(msgId,datagramPacket.sender());
         }else{
             content.release();
-            throw new Exception("UNKNOWN MESSAGE CODE: "+msgCode);
+            new Exception("UNKNOWN MESSAGE CODE: "+msgCode).printStackTrace();
+            System.exit(1);
         }
     }
     long count = 0;

@@ -39,7 +39,6 @@ import java.util.Properties;
 
 public final class QuicServerExample {
     private final CustomQuicChannelConsumer consumer;
-    private boolean started;
     private final InetSocketAddress self;
     private final Properties properties;
 
@@ -50,7 +49,6 @@ public final class QuicServerExample {
     public QuicServerExample(String host, int port, CustomQuicChannelConsumer consumer, Properties properties) {
         this.consumer = consumer;
         self = new InetSocketAddress(host,port);
-        started = false;
         this.properties=properties;
         quicChannel =null;
     }
@@ -94,11 +92,6 @@ public final class QuicServerExample {
     }
 
     public void start(SocketBindHandler handler) throws Exception {
-        if(started){
-            logger.info("SERVER STARTED AT host:{} port:{} ",self.getHostName(),self.getPort());
-            handler.execute(true,null);
-            return;
-        }
         QuicSslContext context = getSignedSslContext();
         NioEventLoopGroup group = new NioEventLoopGroup();
         ChannelHandler codec = getChannelHandler(context);
@@ -118,7 +111,6 @@ public final class QuicServerExample {
                         handler.execute(future.isSuccess(),future.cause());
                     })
                     .channel();
-            started=true;
 
             quicChannel.closeFuture().addListener(future -> {
                 System.out.println("QUIC SERVER DOWN");

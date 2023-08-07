@@ -123,8 +123,8 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
 
         //logger.info("OPENING CONNECTION TO {}",myself);
-        //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
-        //sendMessage(message,myself);
+        EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
+        sendMessage(message,myself);
     }
     boolean sendByte = true;
     public static final short HANDLER_ID = 2;
