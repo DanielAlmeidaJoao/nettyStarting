@@ -1,14 +1,13 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
-import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
-import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
@@ -70,7 +69,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             //registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail3);
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
@@ -144,9 +142,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             System.out.println("PORRAS "+streamId);
         }
     }
-    private void uponBytesMessage(BytesMessageInEvent event) {
-        logger.info("Received bytes: {} from {}", new String(event.getMsg()),event.getFrom());
-    }
     long received = 0;
     FileOutputStream fos, fos2;
     boolean notW = true;
@@ -189,27 +184,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
 
     }
-    int gg = 0;
-    private void uponStreamBytes2(BytesMessageInEvent event) {
-        gg += event.getMsg().length;
-        try{
-            fos2.write(event.getMsg());
-            if(gg >= 813782079){
-                fos2.close();
-                logger.info("RECEIVED ALL BYTES");
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        //logger.info("Received 2bytes2: {} from {}",msg.length, from);
-    }
 
-    private void uponMsgFail3(BytesMessageSentOrFail msg, Host host, short destProto,
-                              Throwable throwable, int channelId) {
-        //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
-    }
-    private void uponMsgFail2(BytesMessageSentOrFail msg, Host host, short destProto,
+    private void uponMsgFail2(OnStreamDataSentEvent msg, Host host, short destProto,
                               Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);

@@ -1,14 +1,13 @@
 package quicSupport.channels;
 
-import io.netty.buffer.ByteBuf;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 
-public interface ChannelHandlerMethods {
+public interface ChannelHandlerMethods<T> {
 
     void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId);
 
@@ -16,7 +15,8 @@ public interface ChannelHandlerMethods {
 
     void failedToCloseStream(String streamId, Throwable reason);
 
-    void onMessageSent(byte[] message, InputStream inputStream, int len, Throwable error, InetSocketAddress peer, TransmissionType type);
+    void onMessageSent(T message,Throwable error, InetSocketAddress peer, TransmissionType type,String conID);
+    void onStreamDataSent(InputStream inputStream,byte [] data, int len, Throwable error, InetSocketAddress peer, TransmissionType type,String conID);
 
     void failedToCreateStream(InetSocketAddress peer, Throwable error);
 
@@ -24,7 +24,7 @@ public interface ChannelHandlerMethods {
 
     void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection);
 
-    void onChannelReadDelimitedMessage(String streamId, ByteBuf bytes, InetSocketAddress from);
+    void onChannelReadDelimitedMessage(String streamId, T bytes, InetSocketAddress from);
     void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from, BabelInputStream inputStream);
 
     void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream babelInputStream);

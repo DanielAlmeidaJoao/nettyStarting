@@ -1,8 +1,9 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
-import appExamples2.appExamples.channels.babelQuicChannel.BytesMessageSentOrFail;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
+import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
+import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
@@ -10,14 +11,15 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnOpenConnectionFailed;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
-import pt.unl.fct.di.novasys.babel.internal.BytesMessageInEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import udpSupport.utils.UDPLogics;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -56,7 +58,7 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_QUIC, channelProps);
 
-        }else{
+        }else if(channelName.equalsIgnoreCase("tcp")){
             channelProps = TCPStreamUtils.tcpChannelProperties(address,port);
             System.out.println("TCP ON");
             //channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
@@ -67,6 +69,14 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP, channelProps);
 
 
+        }else{
+            channelProps = TCPStreamUtils.udpChannelProperties(address,port);
+            System.out.println("UDP ON");
+            //channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
+            //channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
+            //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"FALSE");
+
+            channelId = createChannel(BabelUDPChannel.NAME, channelProps);
         }
         return channelId;
     }
@@ -78,9 +88,8 @@ public class EchoProtocol extends GenericProtocolExtension {
         try {
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerBytesMessageHandler(channelId,HANDLER_ID,this::uponBytesMessage,null, this::uponMsgFail3);
+            registerMessageHandler(channelId,BytesToBabelMessage.ID,this::uponBytesMessage,null, this::uponMsgFail3);
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
-            //registerStreamDataHandler(channelId,HANDLER_ID2,this::uponStreamBytes2,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
             //uponOpenConnectionFailed
@@ -125,7 +134,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     public void sendMessage(String message, String stream){
         TransmissionType transmissionType = getConnectionType(channelId,stream);
-        System.out.println("CACCCLED "+transmissionType);
+        //System.out.println("CACCCLED "+transmissionType);
 
         if(TransmissionType.UNSTRUCTURED_STREAM == transmissionType){
             //super.sendStream(channelId,message.getBytes(),message.length(),stream);
@@ -134,7 +143,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             }
         }else{
             if(sendByte){
-                super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId(),HANDLER_ID);
+                super.sendMessage(channelId,message.getBytes(),message.length(),stream,getProtoId(),getProtoId());
             }else {
                 EchoMessage echoMessage = new EchoMessage(myself,message);
                 super.sendMessage(echoMessage,stream);
@@ -158,7 +167,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     public void sendMessage(String message){
         System.out.println(sendByte+" SENDBYTE");
         if(sendByte){
-            super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId(),HANDLER_ID);
+            super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId());
         }else{
             EchoMessage echoMessage = new EchoMessage(myself,message);
             sendMessage(echoMessage,dest);
@@ -258,21 +267,27 @@ public class EchoProtocol extends GenericProtocolExtension {
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION UP: {} {} {}",event.conId,event.inConnection,event.type);
         if(event.inConnection){
-            return;
+            //return;
         }
         cons.add(event.conId);
         if(dest==null){
             dest = event.getNode();
         }
 
-        for (String con : cons) {
-            for (int i = 1; i <= 1; i++) {
-                String m1 = "0".repeat(i) + con;
-                System.out.println();
-                EchoMessage echoMessage = new EchoMessage(myself, m1);
-                System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
-                super.sendMessage(echoMessage, con);
-            }
+        for (int v = 0; v < 10; v++) {
+            new Thread(() -> {
+                for (String con : cons) {
+                    for (int i = 1; i <= 10; i++) {
+                        //+ UDPLogics.MAX_UDP_PAYLOAD_SIZE
+                        String m1 = ("0 ++"+myself).repeat(i+ UDPLogics.MAX_UDP_PAYLOAD_SIZE) + con;
+                        //System.out.println();
+                        //EchoMessage echoMessage = new EchoMessage(myself, m1);
+                        System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
+                        sendMessage(m1,con);
+                        //super.sendMessage(echoMessage, con);
+                    }
+                }
+            }).run();
         }
         /**
         for (String con : cons) {
@@ -288,8 +303,8 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
     }
 
-    private void uponBytesMessage(BytesMessageInEvent event) {
-        logger.info("Received bytes3: {} from {}", (new String(event.getMsg())).hashCode(),event.getFrom());
+    private void uponBytesMessage(BytesToBabelMessage message,Host from, short sourceProto, int channelId, String streamId) {
+        logger.info("Received bytes3: {} from {}", (new String(message.message).hashCode()),from);
     }
     private void uponStreamBytes(BabelStreamDeliveryEvent event) {
         System.out.println("AVAILABLE "+event.babelOutputStream.readableBytes());
@@ -305,9 +320,6 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
         logger.info("CONTAINS ? {}",streams.contains(event.babelInputStream));
     }
-    private void uponStreamBytes2(BytesMessageInEvent event) {
-        logger.info("Received 2bytes2: {} from {}",event.getMsg().length,event.getFrom());
-    }
 
     private void uponFloodMessageQUIC(EchoMessage msg, Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received QUIC {} from {} {}", msg.getMessage().hashCode(), from, streamId);
@@ -319,16 +331,24 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("DATA SENT <{}>",msg.getMessage());
 
     }
-    private void uponMsgFail3(BytesMessageSentOrFail msg, Host host, short destProto,
-                             Throwable throwable, int channelId) {
+    private void uponMsgFail3(BytesToBabelMessage msg, Host host, short destProto,
+                              Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
-        logger.info("SENT MESSAGE <{}>",new String(msg.data));
+        logger.info("SENT MESSAGE <{}>",new String(msg.message));
     }
-    private void uponMsgFail2(BytesMessageSentOrFail msg, Host host, short destProto,
-                             Throwable throwable, int channelId) {
+
+    private void uponMsgFail2(OnStreamDataSentEvent msg, Host host, short destProto,
+                              Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
-        logger.info("GGG SENT MESSAGE <{}>",new String(msg.data));
+        /**
+         try {
+         if(msg.inputStream!=null){
+         logger.info("AVAILABLE {}",msg.inputStream.available());
+         }
+         }catch (Exception e){
+         e.printStackTrace();
+         } **/
     }
 }

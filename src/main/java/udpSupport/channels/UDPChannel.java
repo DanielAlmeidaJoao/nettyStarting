@@ -1,8 +1,10 @@
 package udpSupport.channels;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
@@ -13,7 +15,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
+public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<T>{
     private static final Logger logger = LogManager.getLogger(UDPChannel.class);
     public final static String NAME = "UDP_CHANNEL";
 
@@ -26,15 +28,16 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     private ChannelStats metrics;
     private final InetSocketAddress self;
     private final UDPChannelHandlerMethods channelHandlerMethods;
+    private final BabelMessageSerializerInterface<T> serializer;
 
-    public UDPChannel(Properties properties, boolean singleThreaded, UDPChannelHandlerMethods consumer) throws IOException {
+    public UDPChannel(Properties properties, boolean singleThreaded, UDPChannelHandlerMethods consumer, BabelMessageSerializerInterface<T> serializer) throws IOException {
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
             //addr = Inet4Address.getByName("0.0.0.0");
         else
             throw new IllegalArgumentException(NAME + " requires binding address");
-
+        this.serializer = serializer;
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
         if( properties.getProperty(UDP_METRICS)!=null){
@@ -52,8 +55,15 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     public boolean metricsEnabled(){
         return metrics!=null;
     }
-    public void sendMessage(ByteBuf message, InetSocketAddress dest){
-        udpServer.sendMessage(message.array(),dest,message.readableBytes());
+    public void sendMessage(T message, InetSocketAddress dest){
+        ByteBuf buf = Unpooled.buffer();
+        try{
+            serializer.serialize(message,buf);
+            udpServer.sendMessage(buf,dest);
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
     public InetSocketAddress getSelf(){
         return self;
@@ -65,7 +75,13 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
 
     @Override
     public void deliverMessage(ByteBuf message, InetSocketAddress from){
-        channelHandlerMethods.onDeliverMessage(message,from);
+        try {
+            T babelMessage = serializer.deserialize(message);
+            channelHandlerMethods.onDeliverMessage(babelMessage,from);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
     @Override
     public void messageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){

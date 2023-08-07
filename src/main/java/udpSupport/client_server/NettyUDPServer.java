@@ -2,7 +2,6 @@ package udpSupport.client_server;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
@@ -69,24 +68,28 @@ public class NettyUDPServer {
         }
     }
 
-    private void scheduleRetransmission(byte[] packet, long msgId, InetSocketAddress dest, int count){
+    private void scheduleRetransmission(ByteBuf packet, long msgId, InetSocketAddress dest, int count){
         //NO RETRANSMISSION
         if(MAX_SEND_RETRIES <= 0){
             return;
         }
         channel.eventLoop().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) {
+                packet.release();
                 return;
             }
             if(count > MAX_SEND_RETRIES){
+                packet.release();
                 waitingForAcks.remove(msgId);
                 consumer.peerDown(dest);
                 return;
             }
-            channel.writeAndFlush(new DatagramPacket(channel.alloc().directBuffer().writeBytes(packet),dest)).addListener(future -> {
+            final ByteBuf copy = packet.retainedDuplicate();
+            int len = packet.readableBytes();
+            channel.writeAndFlush(new DatagramPacket(copy,dest)).addListener(future -> {
                 if(future.isSuccess()){
                     if(stats!=null){
-                        stats.addSentBytes(dest,packet.length, NetworkStatsKindEnum.MESSAGE_STATS);
+                        stats.addSentBytes(dest,len, NetworkStatsKindEnum.MESSAGE_STATS);
                     }
                 }else{
                     future.cause().printStackTrace();
@@ -124,38 +127,32 @@ public class NettyUDPServer {
         logger.info("UDP SERVER LISTENING ON : {}",address);
         return server;
     }
-    public void sendMessage(byte[] message, InetSocketAddress peer, int len){
-        if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.length){
+    public void sendMessage(ByteBuf message, InetSocketAddress peer){
+        if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.readableBytes()){
             long streamId = streamIdCounter.incrementAndGet();
-            ByteBuf wholeMessageBuf = Unpooled.wrappedBuffer(message,0,len);
-            int streamCount = ceilDiv(message.length,UDPLogics.MAX_UDP_PAYLOAD_SIZE); //do the %
+            ByteBuf wholeMessageBuf = message; //Unpooled.wrappedBuffer(message);
+            int streamCount = ceilDiv(message.readableBytes(),UDPLogics.MAX_UDP_PAYLOAD_SIZE); //do the %
             for (int i = 0; i < streamCount; i++) {
                 long messageId = datagramPacketCounter.incrementAndGet();
                 int streamLen = Math.min(wholeMessageBuf.readableBytes(), UDPLogics.MAX_UDP_PAYLOAD_SIZE);
-                byte [] stream = new byte[streamLen];
-                wholeMessageBuf.readBytes(stream);
-                ByteBuf byteBuf = Unpooled.buffer(/* Byte.BYTES+Long.BYTES*2+Integer.BYTES+streamLen */);
+
+                ByteBuf byteBuf = channel.alloc().directBuffer();/* Byte.BYTES+Long.BYTES*2+Integer.BYTES+streamLen */;
                 byteBuf.writeByte(UDPLogics.STREAM_MESSAGE);
                 byteBuf.writeLong(messageId);
                 byteBuf.writeLong(streamId);
                 byteBuf.writeInt(streamCount);
-                byteBuf.writeBytes(stream);
-                byte [] toSend = new byte [byteBuf.readableBytes()];
-                byteBuf.readBytes(toSend);
-                byteBuf.release();
-                sendMessageAux(toSend,peer,messageId);
+                byteBuf.writeBytes(wholeMessageBuf,streamLen);
+                sendMessageAux(byteBuf,peer,messageId);
             }
             wholeMessageBuf.release();
         }else{
+            int len = message.readableBytes();
             long messageId = datagramPacketCounter.incrementAndGet();
-            ByteBuf buf = Unpooled.buffer(9+len);
+            ByteBuf buf = channel.alloc().directBuffer(9+len);
             buf.writeByte(UDPLogics.SINGLE_MESSAGE);
             buf.writeLong(messageId);
             buf.writeBytes(message,0, len);
-            byte [] all = new byte [buf.readableBytes()];
-            buf.readBytes(all);
-            buf.release();
-            sendMessageAux(all,peer,messageId);
+            sendMessageAux(buf,peer,messageId);
         }
     }
     private int ceilDiv(int a, int b){
@@ -165,13 +162,14 @@ public class NettyUDPServer {
             return (a/b) + 1;
         }
     }
-    public void sendMessageAux(byte [] all, InetSocketAddress peer,long messageId){
-        channel.writeAndFlush(new DatagramPacket(channel.alloc().directBuffer().writeBytes(all),peer)).addListener(future -> {
+    public void sendMessageAux(ByteBuf all, InetSocketAddress peer, long messageId){
+        final int sent = all.readableBytes();
+        channel.writeAndFlush(new DatagramPacket(all.retainedDuplicate(),peer)).addListener(future -> {
             if(future.isSuccess()){
                 scheduleRetransmission(all,messageId,peer,0);
                 if(stats!=null){
-                    stats.addSentBytes(peer,all.length,NetworkStatsKindEnum.MESSAGE_STATS);
-                    stats.addSentBytes(peer,all.length, NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
+                    stats.addSentBytes(peer,sent,NetworkStatsKindEnum.MESSAGE_STATS);
+                    stats.addSentBytes(peer,sent,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
                 }
             }else{
                 future.cause().printStackTrace();

@@ -25,12 +25,6 @@ public class DummyChannelToProtoForwarder<T> implements ChannelListener<T>{
     public void deliverEvent(ChannelEvent evt) {
 
     }
-
-    @Override
-    public void deliverMessage(byte[] message, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId) {
-
-    }
-
     @Override
     public void deliverStream(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId, BabelInputStream inputStream) {
 

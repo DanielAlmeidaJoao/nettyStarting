@@ -3,6 +3,8 @@ package mainFiles;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQuicInitializer;
 import appExamples2.appExamples.channels.initializers.BabelNewTCPChannelInitializer;
+import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
+import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPInitializer;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.EchoProtocol;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 
@@ -21,6 +23,8 @@ public class Main3 {
         Babel babel = Babel.getInstance();
         babel.registerChannelInitializer(BabelQUIC_TCP_Channel.NAME_QUIC,new BabelQuicInitializer());
         babel.registerChannelInitializer(BabelQUIC_TCP_Channel.NAME_TCP,new BabelNewTCPChannelInitializer());
+        babel.registerChannelInitializer(BabelUDPChannel.NAME,new BabelUDPInitializer());
+
 
 
         //Loads properties from the configuration file, and merges them with

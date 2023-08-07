@@ -15,8 +15,6 @@ public interface ChannelListener<T> {
 
     void deliverEvent(ChannelEvent evt);
 
-    void deliverMessage(byte [] message, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId);
-
     void deliverStream(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId, BabelInputStream inputStream);
 
     int getChannelId();

@@ -8,22 +8,22 @@ import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
-    String openMessageConnection(Host var1, short protoId);
-    String openStreamConnection(Host var1, short protoId);
+    String openMessageConnection(Host host, short protoId);
+    String openStreamConnection(Host host, short protoId);
 
-    void sendMessage(T var1, Host var2, short protoId);
-    void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId);
-    void sendMessage(T msg,String linkId,short proto);
-    void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId);
+    void sendMessage(T message, Host host, short protoId);
+    void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto);
+    void sendMessage(T msg,String connectionID,short proto);
+    void sendMessage(byte[] data,int dataLen, String connectionID, short sourceProto, short destProto);
     TransmissionType getTransmissionType(String connectionId)  throws NoSuchElementException;
     void registerChannelInterest(short protoId);
     /**
      * removes 'proto' from the set of the protocols using this streamId.
      * The stream is closed if the set becomes empty or if proto is a negative number
-     * @param linkId
+     * @param connectionID
      * @param proto
      */
-    void closeConnection(String linkId, short proto);
+    void closeConnection(String connectionID, short proto);
     /**
      * removes 'protoId' from the set of the protocols using the connection 'peer'.
      * The connection is closed if the set becomes empty or if protoId is a negative number

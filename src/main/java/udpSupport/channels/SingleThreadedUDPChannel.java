@@ -2,22 +2,23 @@ package udpSupport.channels;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class SingleThreadedUDPChannel extends UDPChannel {
+public class SingleThreadedUDPChannel<T> extends UDPChannel<T> {
     private final DefaultEventExecutor executor;
 
-    public SingleThreadedUDPChannel(Properties properties, UDPChannelHandlerMethods udpChannelHandlerMethods) throws IOException {
-        super(properties, true,udpChannelHandlerMethods);
+    public SingleThreadedUDPChannel(Properties properties, UDPChannelHandlerMethods udpChannelHandlerMethods, BabelMessageSerializerInterface<T> serializer) throws IOException {
+        super(properties, true,udpChannelHandlerMethods,serializer);
         executor = new DefaultEventExecutor();
     }
 
     @Override
-    public void sendMessage(ByteBuf message, InetSocketAddress dest) {
+    public void sendMessage(T message, InetSocketAddress dest) {
         executor.execute(() -> super.sendMessage(message, dest));
     }
 

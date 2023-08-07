@@ -1,6 +1,5 @@
 package udpSupport.test;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
@@ -25,16 +24,16 @@ import java.util.Scanner;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public class TestUDPChannel implements UDPChannelHandlerMethods {
+public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
     private static final Logger logger = LogManager.getLogger(TestUDPChannel.class);
 
     private FileOutputStream fos;
     private UDPChannelInterface udpChannelInterface;
     public TestUDPChannel(Properties properties) throws Exception {
         if(properties.getProperty("SINLGE_TRHEADED")!=null){
-            udpChannelInterface = new SingleThreadedUDPChannel(properties,this);
+            udpChannelInterface = new SingleThreadedUDPChannel(properties,this,null);
         }else {
-            udpChannelInterface = new UDPChannel(properties,false,this);
+            udpChannelInterface = new UDPChannel(properties,false,this,null);
         }
         fos = new FileOutputStream("UDP_MOVIE_FILE.MP4");
         System.out.println("SERVER STARTED ");
@@ -49,13 +48,14 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
     }
 
     @Override
-    public void onDeliverMessage(ByteBuf message, InetSocketAddress from) {
-
+    public void onDeliverMessage(T message, InetSocketAddress from) {
+        /**
         total += message.readableBytes();
         System.out.println("RECEIVED "+total+" -- "+message.readableBytes());
         /* if(total>0){
             return;
         } */
+        /**
         try{
 
             if(message.readableBytes()==bufferSize){
@@ -75,7 +75,7 @@ public class TestUDPChannel implements UDPChannelHandlerMethods {
         }catch (Exception e){
             e.printStackTrace();
         }
-
+        **/
     }
     private void sumHashes(SortedSet<String> set){
         System.out.println("FILE CLOSEDDDDDDDDDDDD "+total);

@@ -41,11 +41,6 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
             channelConsumer.deliverQuicMessageIn(new QUICMessageInEvent(message, host, channelId,connectionId));
         }**/
     }
-    @Override
-    public void deliverMessage(byte [] message, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId) {
-        GenericProtocol channelConsumer = getConsumer(destProto);
-        channelConsumer.deliverBytesIn(new BytesMessageInEvent(message,host,channelId,quicStreamId,sourceProto,destProto,handlerId));
-    }
 
     public void deliverStream(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId, BabelInputStream inputStream) {
         GenericProtocol channelConsumer = getConsumer(destProto);

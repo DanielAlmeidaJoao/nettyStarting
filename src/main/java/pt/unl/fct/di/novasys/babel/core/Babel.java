@@ -240,12 +240,12 @@ public class Babel {
     void sendMessage(int channelId, short protoId, BabelMessage msg, String streamId) {
         getOrThrow(channelId).getLeft().sendMessage(msg,streamId,protoId);
     }
-    protected void sendMessage(int channelId,byte[] data,int dataLen, Host dest, short sourceProto, short destProto,short handlerId){
-        getOrThrow(channelId).getLeft().sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
+    protected void sendMessage(int channelId,byte[] data,int dataLen, Host dest, short sourceProto, short destProto){
+        getOrThrow(channelId).getLeft().sendMessage(data,dataLen,dest,sourceProto,destProto);
     }
 
-    protected void sendMessage(int channelId,byte[] data,int dataLen, String streamId, short sourceProto, short destProto,short handlerId){
-        getOrThrow(channelId).getLeft().sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
+    protected void sendMessage(int channelId,byte[] data,int dataLen, String streamId, short sourceProto, short destProto){
+        getOrThrow(channelId).getLeft().sendMessage(data,dataLen,streamId,sourceProto,destProto);
     }
 
     private Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> getOrThrow(int channelId){

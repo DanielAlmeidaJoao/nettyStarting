@@ -3,6 +3,7 @@ package quicSupport.channels;
 import io.netty.buffer.ByteBuf;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
+import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.NetworkRole;
@@ -14,11 +15,11 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class SingleThreadedQuicChannel extends NettyQUICChannel {
+public class SingleThreadedQuicChannel<T> extends NettyQUICChannel<T> {
     private final DefaultEventExecutor executor;
 
-    public SingleThreadedQuicChannel(Properties properties, NetworkRole role, ChannelHandlerMethods mom) throws IOException {
-        super(properties,true,role,mom);
+    public SingleThreadedQuicChannel(Properties properties, NetworkRole role, ChannelHandlerMethods mom, BabelMessageSerializerInterface<T> serializer) throws IOException {
+        super(properties,true,role,mom,serializer);
         System.out.println("SINGLE THREADED CHANNEL");
         executor = new DefaultEventExecutor();
     }
@@ -109,13 +110,13 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
     }
 
     @Override
-    public void send(String streamId, ByteBuf message) {
+    public void send(String streamId, T message) {
         executor.submit(() -> {
             super.send(streamId,message);
         });
     }
     @Override
-    public void send(InetSocketAddress peer,ByteBuf message) {
+    public void send(InetSocketAddress peer,T message) {
         executor.submit(() -> {
             super.send(peer,message);
         });

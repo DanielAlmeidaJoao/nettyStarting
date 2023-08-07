@@ -5,6 +5,7 @@ import io.netty.channel.Channel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
@@ -17,15 +18,14 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class SingleThreadedNettyTCPChannel extends NettyTCPChannel {
+public class SingleThreadedNettyTCPChannel<T> extends NettyTCPChannel<T> {
     private static final Logger logger = LogManager.getLogger(SingleThreadedNettyTCPChannel.class);
 
     private final DefaultEventExecutor executor;
-    public SingleThreadedNettyTCPChannel(Properties properties, ChannelHandlerMethods chm, NetworkRole role) throws IOException {
-        super(properties,true,chm,role);
+    public SingleThreadedNettyTCPChannel(Properties properties, ChannelHandlerMethods chm, NetworkRole role,BabelMessageSerializerInterface<T> serializer) throws IOException {
+        super(properties,true,chm,role,serializer);
         executor = new DefaultEventExecutor();
     }
-
     @Override
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, int len) {
         executor.execute(() -> super.onChannelActive(channel,handShakeMessage, type, len));
@@ -65,11 +65,11 @@ public class SingleThreadedNettyTCPChannel extends NettyTCPChannel {
         executor.execute(() -> super.closeLink(connectionId));
     }
     @Override
-    public void send(InetSocketAddress host, ByteBuf message){
+    public void send(InetSocketAddress host, T message){
         executor.execute(() -> super.send(host,message));
     }
     @Override
-    public void send(String conId,ByteBuf message){
+    public void send(String conId,T message){
         executor.execute(() -> super.send(conId,message));
     }
     @Override

@@ -1,13 +1,12 @@
 package quicSupport.channels;
 
-import io.netty.buffer.ByteBuf;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
 
 import java.net.InetSocketAddress;
 
-public interface NettyChannelInterface extends SendBytesInterface {
+public interface NettyChannelInterface<T> extends SendBytesInterface<T> {
 
     String open(InetSocketAddress peer, TransmissionType type);
 
@@ -20,7 +19,7 @@ public interface NettyChannelInterface extends SendBytesInterface {
     void readMetrics(ReadMetricsHandler handler);
 
 
-    void send(InetSocketAddress peer, ByteBuf message);
+    void send(InetSocketAddress peer, T message);
 
     boolean enabledMetrics();
 

@@ -1,18 +1,17 @@
 package udpSupport.channels;
 
-import io.netty.buffer.ByteBuf;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
 
 import java.net.InetSocketAddress;
 
-public interface UDPChannelInterface {
+public interface UDPChannelInterface<T> {
 
 
     void shutDownServerClient();
 
     boolean metricsEnabled();
 
-    void sendMessage(ByteBuf message, InetSocketAddress dest);
+    void sendMessage(T message, InetSocketAddress dest);
 
     InetSocketAddress getSelf();
 

@@ -50,25 +50,25 @@ public class BabelQUIC_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_C
         }
     }
     @Override
-    public void sendMessage(T msg, Host peer, short proto) {
-        addProtoOnSend(peer,proto);
-        super.sendMessage(msg,peer,proto);
+    public void sendMessage(T message, Host host, short proto) {
+        addProtoOnSend(host,proto);
+        super.sendMessage(message, host,proto);
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto, short handlerId){
+    public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto){
         addProtoOnSend(dest,sourceProto);
-        super.sendMessage(data,dataLen,dest,sourceProto,destProto,handlerId);
+        super.sendMessage(data,dataLen,dest,sourceProto,destProto);
     }
 
     @Override
-    public void sendMessage(T msg,String streamId,short proto) {
-        addProtoOnSend(streamId,proto);
-        super.sendMessage(msg,streamId,proto);
+    public void sendMessage(T msg, String connectionID, short proto) {
+        addProtoOnSend(connectionID,proto);
+        super.sendMessage(msg, connectionID,proto);
     }
     @Override
-    public void sendMessage(byte[] data,int dataLen, String streamId, short sourceProto, short destProto, short handlerId){
-        addProtoOnSend(streamId,sourceProto);
-        super.sendMessage(data,dataLen,streamId,sourceProto,destProto,handlerId);
+    public void sendMessage(byte[] data, int dataLen, String connectionID, short sourceProto, short destProto){
+        addProtoOnSend(connectionID,sourceProto);
+        super.sendMessage(data,dataLen, connectionID,sourceProto,destProto);
     }
 
         //////
@@ -98,20 +98,20 @@ public class BabelQUIC_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_C
         }
     }
     @Override
-    public void closeConnection(String streamId, short proto){
+    public void closeConnection(String connectionID, short proto){
         if(proto<0){
-            streamChannelsMap.remove(streamId);
-            super.closeConnection(streamId,proto);
+            streamChannelsMap.remove(connectionID);
+            super.closeConnection(connectionID,proto);
         }else{
-            Set<Short> protosUsingThisStream = streamChannelsMap.get(streamId);
+            Set<Short> protosUsingThisStream = streamChannelsMap.get(connectionID);
             if (protosUsingThisStream!=null){
                 protosUsingThisStream.remove(proto);
                 if(protosUsingThisStream.isEmpty()){
-                    super.closeConnection(streamId,proto);
+                    super.closeConnection(connectionID,proto);
                     hostChannelsMap.remove(proto);
                 }
             }else{
-                super.closeConnection(streamId,proto);
+                super.closeConnection(connectionID,proto);
             }
         }
     }

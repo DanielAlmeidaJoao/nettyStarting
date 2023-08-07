@@ -234,6 +234,7 @@ public abstract class GenericProtocol {
         if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
 
+    /**
     protected final <V extends ProtoMessage> void registerBytesMessageHandler(int cId,short msgHandlerId,
                                                                                BytesMessageInHandler<V> inHandler,
                                                                                MessageSentHandler<V> sentHandler,
@@ -242,7 +243,7 @@ public abstract class GenericProtocol {
         registerHandler(msgHandlerId, inHandler, getChannelOrThrow(cId).bytesMessageInHandlerMap);
         if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
-    }
+    } **/
     protected final <V extends ProtoMessage> void registerMandatoryStreamDataHandler(int cId,StreamBytesInHandler inHandler,
                                                                               MessageSentHandler<V> sentHandler,
                                                                               MessageFailedHandler<V> failHandler)
@@ -614,9 +615,6 @@ public abstract class GenericProtocol {
     final protected void deliverMessageIn(MessageInEvent msgIn) {
         queue.add(msgIn);
     }
-    final protected void deliverBytesIn(BytesMessageInEvent msgIn) {
-        queue.add(msgIn);
-    }
     final protected void deliverBabelInBytesWrapper(BabelStreamDeliveryEvent msgIn) {
         queue.add(msgIn);
     }
@@ -669,10 +667,6 @@ public abstract class GenericProtocol {
                     case MESSAGE_IN_EVENT:
                         metrics.messagesInCount++;
                         this.handleMessageIn((MessageInEvent) pe);
-                        break;
-                    case BYTE_MESSAGE_IN:
-                        metrics.messagesInCount++;
-                        this.handleBytesMessageIn((BytesMessageInEvent) pe);
                         break;
                     case STREAM_BYTES_IN:
                         metrics.messagesInCount++;
@@ -734,14 +728,6 @@ public abstract class GenericProtocol {
             logger.warn("Discarding unexpected message (id " + msg.getMessage().getId() + "): " + m);
     }
 
-    private void handleBytesMessageIn(BytesMessageInEvent m) {
-        byte [] msg = m.getMsg();
-        BytesMessageInHandler h = getChannelOrThrow(m.getChannelId()).bytesMessageInHandlerMap.get(m.handlerId);
-        if (h != null)
-            h.receive(m);
-        else
-            logger.warn("Discarding unexpected Bytes message (handler id " + m.handlerId + "): number of bytes = " + m.getMsg().length);
-    }
     private void handleStreamBytesIn(BabelStreamDeliveryEvent m) {
         StreamBytesInHandler h = getChannelOrThrow(m.getChannelId()).streamBytesInHandlerMap.get(m.handlerId);
         if (h != null)
@@ -810,7 +796,6 @@ public abstract class GenericProtocol {
 
         private final Map<Short, StreamBytesInHandler> streamBytesInHandlerMap;
 
-        private final Map<Short, BytesMessageInHandler<? extends ProtoMessage>> bytesMessageInHandlerMap;
         private final Map<Short, MessageInHandler<? extends ProtoMessage>> messageInHandlers;
         private final Map<Short, MessageSentHandler<? extends ProtoMessage>> messageSentHandlers;
         private final Map<Short, MessageFailedHandler<? extends ProtoMessage>> messageFailedHandlers;
@@ -818,7 +803,6 @@ public abstract class GenericProtocol {
 
         public ChannelHandlers() {
             this.streamBytesInHandlerMap = new HashMap<>();
-            this.bytesMessageInHandlerMap = new HashMap<>();
             this.messageInHandlers = new HashMap<>();
             this.messageSentHandlers = new HashMap<>();
             this.messageFailedHandlers = new HashMap<>();
