@@ -314,7 +314,7 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
-        return channelEntry.getLeft().getTransmissionType(streamId);
+        return channelEntry.getLeft().getConnectionType(streamId);
     }
     NetworkProtocol getNetworkProtocol(int channelId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =

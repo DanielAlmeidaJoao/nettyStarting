@@ -12,10 +12,11 @@ public interface NewIChannel<T> {
     String openStreamConnection(Host host, short protoId);
 
     void sendMessage(T message, Host host, short protoId);
-    void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto);
     void sendMessage(T msg,String connectionID,short proto);
+
+    void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto);
     void sendMessage(byte[] data,int dataLen, String connectionID, short sourceProto, short destProto);
-    TransmissionType getTransmissionType(String connectionId)  throws NoSuchElementException;
+    TransmissionType getConnectionType(String connectionId)  throws NoSuchElementException;
     void registerChannelInterest(short protoId);
     /**
      * removes 'proto' from the set of the protocols using this streamId.

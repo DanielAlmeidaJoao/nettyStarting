@@ -212,7 +212,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public TransmissionType getTransmissionType(String connectionId) throws NoSuchElementException {
+    public TransmissionType getConnectionType(String connectionId) throws NoSuchElementException {
         return TransmissionType.STRUCTURED_MESSAGE;
     }
 
