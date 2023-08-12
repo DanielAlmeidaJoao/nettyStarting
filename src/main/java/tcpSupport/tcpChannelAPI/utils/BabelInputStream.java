@@ -28,49 +28,49 @@ public class BabelInputStream {
         flush = newFlushMode;
     }
 
-    public void sendInt(int value){
+    public void writeInt(int value){
         streamInterface.sendStream(streamId, alloc.directBuffer(Integer.BYTES).writeInt(value),flush);
     }
-    public void sendShort(short value){
+    public void writeShort(short value){
         streamInterface.sendStream(streamId, alloc.directBuffer(Short.BYTES).writeShort(value),flush);
     }
-    public void sendByte(byte value){
+    public void writeByte(byte value){
         streamInterface.sendStream(streamId, alloc.directBuffer(Byte.BYTES).writeByte(value),flush);
     }
-    public void sendBoolean(boolean value){
+    public void writeBoolean(boolean value){
         streamInterface.sendStream(streamId, alloc.directBuffer(1).writeBoolean(value),flush);
     }
-    public void sendLong(long value){
+    public void writeLong(long value){
         streamInterface.sendStream(streamId, alloc.directBuffer(Long.BYTES).writeLong(value),flush);
     }
-    public void sendFloat(float value){
+    public void writeFloat(float value){
         streamInterface.sendStream(streamId, alloc.directBuffer(Float.BYTES).writeFloat(value),flush);
     }
-    public void sendDouble(int value){
+    public void writeDouble(int value){
         streamInterface.sendStream(streamId, alloc.directBuffer(Double.BYTES).writeDouble(value),flush);
     }
-    public void sendBytes(byte [] bytes,int srcIndex,int len){
+    public void writeBytes(byte [] bytes, int srcIndex, int len){
         streamInterface.sendStream(streamId, alloc.directBuffer(len).writeBytes(bytes,srcIndex,len),flush);
     }
-    public boolean sendBabelOutputStream(BabelOutputStream babelOutputStream){
+    public boolean writeBabelOutputStream(BabelOutputStream babelOutputStream){
         if(babelOutputStream.readableBytes()>0){
             streamInterface.sendStream(streamId,babelOutputStream.getBuffer().retainedDuplicate(),flush);
             return true;
         }
         return false;
     }
-    public void sendBytes(byte [] bytes){
+    public void writeBytes(byte [] bytes){
         streamInterface.sendStream(streamId, alloc.directBuffer(bytes.length).writeBytes(bytes),flush);
     }
-    public void sendBytes(ByteBuf buf, int srcIndex, int len){
+    public void writeBytes(ByteBuf buf, int srcIndex, int len){
         streamInterface.sendStream(streamId, alloc.directBuffer(len).writeBytes(buf,srcIndex,len),flush);
     }
-    public void sendFile(File file) throws FileNotFoundException {
+    public void writeFile(File file) throws FileNotFoundException {
         FileInputStream inputStream = new FileInputStream(file);
-        sendInputStream(inputStream,file.length());
+        writeInputStream(inputStream,file.length());
 
     }
-    public void sendInputStream(InputStream inputStream, long len){
+    public void writeInputStream(InputStream inputStream, long len){
         streamInterface.sendInputStream(streamId,inputStream,len);
     }
     public void flushStream(){

@@ -46,7 +46,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     private final boolean triggerSent;
     private final BabelMessageSerializerInterface<T> serializer;
     private final ChannelListener<T> listener;
-    private final NettyChannelInterface customQuicChannel;
+    private final NettyChannelInterface nettyChannelInterface;
     public final short protoToReceiveStreamData;
     //private final Map<String,Triple<Short,Short,Short>> unstructuredStreamHandlers;
 
@@ -55,8 +55,8 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         BabelMessageSerializer aux = (BabelMessageSerializer) serializer;
         aux.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
         this.listener = list;
-        customQuicChannel = getQUIC_TCP(properties,networkProtocol);
-        metrics = customQuicChannel.enabledMetrics();
+        nettyChannelInterface = getQUIC_TCP(properties,networkProtocol);
+        metrics = nettyChannelInterface.enabledMetrics();
 
         if(metrics){
             int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY, DEFAULT_METRICS_INTERVAL));
@@ -70,18 +70,18 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         NettyChannelInterface i;
         if(NetworkProtocol.QUIC==protocol){
             if(properties.getProperty("SINLGE_TRHEADED")!=null){
-                i = new SingleThreadedQuicChannel(properties, NetworkRole.CHANNEL,this,serializer);
+                i = new SingleThreadedQuicChannel(properties, NetworkRole.P2P_CHANNEL,this,serializer);
                 System.out.println("SINGLE THREADED CHANNEL QUIC");
             }else {
-                i = new NettyQUICChannel(properties,false,NetworkRole.CHANNEL,this,serializer);
+                i = new NettyQUICChannel(properties,false,NetworkRole.P2P_CHANNEL,this,serializer);
                 System.out.println("MULTI THREADED CHANNEL QUIC");
             }
         }else if(NetworkProtocol.TCP==protocol){
             if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
-                i = new SingleThreadedNettyTCPChannel(properties,this, NetworkRole.CHANNEL,serializer);
+                i = new SingleThreadedNettyTCPChannel(properties,this, NetworkRole.P2P_CHANNEL,serializer);
                 System.out.println("SINGLE THREADED CHANNEL TCP");
             }else {
-                i = new NettyTCPChannel(properties,false,this,NetworkRole.CHANNEL,serializer);
+                i = new NettyTCPChannel(properties,false,this,NetworkRole.P2P_CHANNEL,serializer);
                 System.out.println("MULTI THREADED CHANNEL TCP");
             }
         }else{
@@ -94,13 +94,13 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         listener.deliverEvent(quicMetricsEvent);
     }
     void triggerMetricsEvent() {
-        customQuicChannel.readMetrics(this::readMetricsMethod);
+        nettyChannelInterface.readMetrics(this::readMetricsMethod);
     }
 
 
     @Override
     public void sendMessage(T message, Host host, short proto) {
-        customQuicChannel.send(FactoryMethods.toInetSOcketAddress(host),message);
+        nettyChannelInterface.send(FactoryMethods.toInetSOcketAddress(host),message);
     }
 
     @Override
@@ -111,37 +111,37 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
     @Override
     public void closeConnection(Host peer, short proto) {
-        customQuicChannel.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
+        nettyChannelInterface.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
     public boolean isConnected(Host peer) {
-        return customQuicChannel.isConnected(FactoryMethods.toInetSOcketAddress(peer));
+        return nettyChannelInterface.isConnected(FactoryMethods.toInetSOcketAddress(peer));
     }
 
     @Override
     public boolean isConnected(String connectionID) {
-        return customQuicChannel.isConnected(connectionID);
+        return nettyChannelInterface.isConnected(connectionID);
     }
 
     @Override
     public String[] getConnectionsIds() {
-        return customQuicChannel.getStreams();
+        return nettyChannelInterface.getStreams();
     }
 
     @Override
     public InetSocketAddress[] getConnections() {
-        return customQuicChannel.getAddressToQUICCons();
+        return nettyChannelInterface.getAddressToQUICCons();
     }
 
     @Override
     public int connectedPeers() {
-        return customQuicChannel.connectedPeers();
+        return nettyChannelInterface.connectedPeers();
     }
 
     @Override
     public boolean shutDownChannel(short protoId) {
-        customQuicChannel.shutDown();
+        nettyChannelInterface.shutDown();
         return true;
     }
 
@@ -156,26 +156,31 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
+    public NetworkRole getNetworkRole() {
+        return nettyChannelInterface.getNetworkRole();
+    }
+
+    @Override
     public String openMessageConnection(Host host, short proto) {
-        return customQuicChannel.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.STRUCTURED_MESSAGE);
+        return nettyChannelInterface.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
     public String openStreamConnection(Host host, short protoId) {
-        return customQuicChannel.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.UNSTRUCTURED_STREAM);
+        return nettyChannelInterface.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.UNSTRUCTURED_STREAM);
     }
 
     @Override
     public TransmissionType getConnectionType(String connectionId) {
-        return customQuicChannel.getConnectionType(connectionId);
+        return nettyChannelInterface.getConnectionType(connectionId);
     }
 
     public void closeConnection(String connectionID, short proto){
-        customQuicChannel.closeLink(connectionID);
+        nettyChannelInterface.closeLink(connectionID);
     }
 
     public void sendMessage(T msg, String connectionID, short proto){
-        customQuicChannel.send(connectionID,msg);
+        nettyChannelInterface.send(connectionID,msg);
     }
     @Override
     public void sendMessage(byte[] data, int dataLen, String connectionID, short sourceProto, short destProto) {

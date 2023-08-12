@@ -6,6 +6,7 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
@@ -74,6 +75,9 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
     }
     protected NetworkProtocol getNetworkProtocol(int channelId){
         return babel.getNetworkProtocol(channelId);
+    }
+    protected NetworkRole getNetworkRole(int channelId){
+        return babel.getNetworkRole(channelId);
     }
     protected void shutDownChannel(int channelId, short protoId){
         getChannelOrThrow(channelId);

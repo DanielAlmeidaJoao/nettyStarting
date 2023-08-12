@@ -75,6 +75,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
     private final BabelMessageSerializerInterface<T> serializer;
 
+    private final NetworkRole networkRole;
 
     public NettyQUICChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom, BabelMessageSerializerInterface<T> serializer)throws IOException {
         this.properties=properties;
@@ -99,8 +100,8 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         addressToQUICCons = TCPStreamUtils.getMapInst(singleThreaded);
         customStreamIdToStream = TCPStreamUtils.getMapInst(singleThreaded);
         connecting= TCPStreamUtils.getMapInst(singleThreaded);
-
-        if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
+        this.networkRole = networkRole;
+        if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.SERVER==networkRole){
             server = new QUICServerEntity(addr.getHostName(), port, this,properties);
             try{
                 server.startServer();
@@ -110,7 +111,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         }else{
             server = new DummyServer();
         }
-        if(NetworkRole.CHANNEL==networkRole||NetworkRole.CLIENT==networkRole){
+        if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.CLIENT==networkRole){
             if(NetworkRole.CLIENT==networkRole){
                 properties.remove(CONNECT_ON_SEND);
             }
@@ -590,6 +591,11 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     @Override
     public boolean isConnected(String connectionID) {
         return customStreamIdToStream.containsKey(connectionID);
+    }
+
+    @Override
+    public NetworkRole getNetworkRole() {
+        return networkRole;
     }
     /*********************************** User Actions **************************************/
 

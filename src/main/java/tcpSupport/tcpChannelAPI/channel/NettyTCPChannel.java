@@ -61,6 +61,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
     private final ChannelHandlerMethods channelHandlerMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
     private Properties properties;
+    public final NetworkRole networkRole;
 
     private final BabelMessageSerializerInterface<T> serializer;
 
@@ -84,7 +85,8 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         addressToConnections = TCPStreamUtils.getMapInst(singleThreaded);
         nettyIdTOConnectingOBJ = TCPStreamUtils.getMapInst(singleThreaded);
         customIdToConnection = TCPStreamUtils.getMapInst(singleThreaded);
-        if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
+        this.networkRole = networkRole;
+        if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.SERVER==networkRole){
             server = new TCPServerEntity(addr.getHostName(),port,this);
             try{
                 server.startServer();
@@ -94,7 +96,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         }else{
             server = new DummyServer();
         }
-        if(NetworkRole.CHANNEL==networkRole||NetworkRole.CLIENT==networkRole){
+        if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.CLIENT==networkRole){
             if(NetworkRole.CLIENT==networkRole){
                 properties.remove(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP);
             }
@@ -486,5 +488,9 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
             logger.error("METRICS NOT ENABLED!");
             handler.readMetrics(null,null);
         }
+    }
+
+    public NetworkRole getNetworkRole(){
+        return networkRole;
     }
 }

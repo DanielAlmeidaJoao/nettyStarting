@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
+import quicSupport.utils.enums.NetworkRole;
 import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
@@ -95,6 +96,11 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
         }else{
             logger.info("METRICS NOT ENABLED. ADD PROPERTY 'metrics=true'");
         }
+    }
+
+    @Override
+    public NetworkRole getNetworkRole() {
+        return NetworkRole.P2P_CHANNEL;
     }
 
 

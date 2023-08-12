@@ -89,7 +89,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);
             registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerMessageHandler(channelId,BytesToBabelMessage.ID,this::uponBytesMessage,null, this::uponMsgFail3);
-            registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
+            registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
             //uponOpenConnectionFailed
@@ -139,7 +139,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         if(TransmissionType.UNSTRUCTURED_STREAM == transmissionType){
             //super.sendStream(channelId,message.getBytes(),message.length(),stream);
             for (BabelInputStream babelInputStream : streams) {
-                babelInputStream.sendBytes(message.getBytes());
+                babelInputStream.writeBytes(message.getBytes());
             }
         }else{
             if(sendByte){
@@ -177,14 +177,14 @@ public class EchoProtocol extends GenericProtocolExtension {
     public void sendStream(String message){
         System.out.println("SENDING "+message.length());
         for (BabelInputStream stream : streams) {
-            stream.sendBytes(message.getBytes());
+            stream.writeBytes(message.getBytes());
         }
         //super.sendStream(channelId,message.getBytes(),message.length(),dest);
     }
     public void sendStream(String message, String streamId){
         System.out.println("SENDING "+message.length());
         for (BabelInputStream stream : streams) {
-            stream.sendBytes(message.getBytes());
+            stream.writeBytes(message.getBytes());
         }
         //super.sendStream(channelId,message.getBytes(),message.length(),streamId);
     }
@@ -256,7 +256,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             if(tp == TransmissionType.UNSTRUCTURED_STREAM){
                 for (int i = 0; i < 10; i++) {
                     for (BabelInputStream stream : streams) {
-                        stream.sendInt(i);
+                        stream.writeInt(i);
                         stream.flushStream();
                     }
                 }
@@ -315,7 +315,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             int read = event.babelOutputStream.readInt();
             logger.info("Received bytes4: {} from {}. ID: {}",read,event.getFrom(),event.conId);
             if(8082==myself.getPort()){
-                event.babelInputStream.sendInt(read*2);
+                event.babelInputStream.writeInt(read*2);
             }
         }
         logger.info("CONTAINS ? {}",streams.contains(event.babelInputStream));

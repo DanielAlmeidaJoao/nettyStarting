@@ -2,6 +2,7 @@ package pt.unl.fct.di.novasys.babel.channels;
 
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
@@ -42,4 +43,5 @@ public interface NewIChannel<T> {
     boolean shutDownChannel(short protoId);
     short getChannelProto();
     NetworkProtocol getNetWorkProtocol();
+    NetworkRole getNetworkRole();
 }

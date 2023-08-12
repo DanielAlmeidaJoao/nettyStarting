@@ -49,8 +49,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         channelId = makeChan(NETWORK_PROTO,address,port);
         System.out.println("PROTO "+NETWORK_PROTO);
 
-        filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-        //filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
+        //filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+        filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
         fileLen = filePath.toFile().length();
         //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
         //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
@@ -87,7 +87,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             registerMessageHandler(channelId, FileBytesCarrier.ID, this::uponFileBytesMessage, this::uponMsgFail);
 
             //registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
+            registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
             registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionEvent);
@@ -235,7 +235,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
 
         int available = event.babelOutputStream.readableBytes();
-        byte [] p = event.babelOutputStream.readRemainingBytes();
+        byte [] p = event.babelOutputStream.readBytes();
         writeToFile(available,p);
         //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
 
@@ -270,7 +270,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 }
             }else{
                 System.out.println("WITH ZERO COPY");
-                babelInputStream.sendFile(filePath.toFile());
+                babelInputStream.writeFile(filePath.toFile());
             }
 
 

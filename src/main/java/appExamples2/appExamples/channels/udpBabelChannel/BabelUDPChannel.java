@@ -14,6 +14,7 @@ import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 import udpSupport.channels.SingleThreadedUDPChannel;
@@ -185,6 +186,11 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     @Override
     public NetworkProtocol getNetWorkProtocol() {
         return NetworkProtocol.UDP;
+    }
+
+    @Override
+    public NetworkRole getNetworkRole() {
+        return udpChannelInterface.getNetworkRole();
     }
 
     public String nextId(){

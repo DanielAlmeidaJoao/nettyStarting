@@ -16,6 +16,7 @@ import pt.unl.fct.di.novasys.babel.internal.NotificationEvent;
 import pt.unl.fct.di.novasys.babel.internal.TimerEvent;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
 import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.io.FileInputStream;
@@ -320,8 +321,15 @@ public class Babel {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
-            throw new AssertionError("getConnections in non-existing channelId " + channelId);
+            throw new AssertionError("getNetworkProtocol in non-existing channelId " + channelId);
         return channelEntry.getLeft().getNetWorkProtocol();
+    }
+    NetworkRole getNetworkRole(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getNetworkRole in non-existing channelId " + channelId);
+        return channelEntry.getLeft().getNetworkRole();
     }
     public boolean closeChannel(int channelId, short protoId) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =

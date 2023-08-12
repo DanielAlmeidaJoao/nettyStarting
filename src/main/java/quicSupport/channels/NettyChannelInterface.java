@@ -1,6 +1,7 @@
 package quicSupport.channels;
 
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
 
@@ -33,4 +34,6 @@ public interface NettyChannelInterface<T> extends SendBytesInterface<T> {
     TransmissionType getConnectionType(String streamId);
 
     boolean isConnected(String connectionID);
+
+    NetworkRole getNetworkRole();
 }
