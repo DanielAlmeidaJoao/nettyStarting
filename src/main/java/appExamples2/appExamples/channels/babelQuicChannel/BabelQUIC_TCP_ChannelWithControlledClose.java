@@ -7,6 +7,7 @@ import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
+import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 
@@ -22,8 +23,8 @@ public class BabelQUIC_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_C
     private Map<String, Set<Short>> streamChannelsMap;
     private Set<Short> registeredProtos;
 
-    public BabelQUIC_TCP_ChannelWithControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId, NetworkProtocol networkProtocol) throws IOException {
-        super(serializer,list,properties,protoId,networkProtocol);
+    public BabelQUIC_TCP_ChannelWithControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
+        super(serializer,list,properties,protoId,networkProtocol,networkRole);
         initMaps(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null);
     }
     private void initMaps(boolean singleThreaded){

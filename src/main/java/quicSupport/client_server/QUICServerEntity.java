@@ -16,13 +16,14 @@
 package quicSupport.client_server;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.handlers.pipeline.QuicStreamInboundHandler;
@@ -44,8 +45,7 @@ public final class QUICServerEntity implements ServerInterface {
 
     private Channel quicChannel;
     private NioEventLoopGroup group;
-    private static final Logger logger = LogManager.getLogger(QUICServerEntity.class);
-
+    //private static final Logger logger = LogManager.getLogger(QUICServerEntity.class);
 
     public QUICServerEntity(String host, int port, CustomQuicChannelConsumer consumer, Properties properties) {
         this.consumer = consumer;
@@ -114,9 +114,9 @@ public final class QUICServerEntity implements ServerInterface {
 
         quicChannel.closeFuture().addListener(future -> {
             group.shutdownGracefully().getNow();
-            logger.info("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
+            //logger.info("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });
-        logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",self.getHostName(),self.getPort());
+        //logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",self.getHostName(),self.getPort());
     }
     public void shutDown(){
         if(quicChannel !=null){

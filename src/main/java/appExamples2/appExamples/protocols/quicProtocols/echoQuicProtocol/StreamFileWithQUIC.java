@@ -1,6 +1,7 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
+import appExamples2.appExamples.channels.babelQuicChannel.quicChannels.BabelQUIC_P2P_Channel;
+import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCP_P2P_Channel;
 import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.FileBytesCarrier;
 import org.apache.logging.log4j.LogManager;
@@ -49,8 +50,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         channelId = makeChan(NETWORK_PROTO,address,port);
         System.out.println("PROTO "+NETWORK_PROTO);
 
-        //filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
-        filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
+        filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+        //filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
         fileLen = filePath.toFile().length();
         //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
         //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
@@ -63,11 +64,11 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
             channelProps = TCPStreamUtils.quicChannelProperty(address,port);
-            channelId = createChannel(BabelQUIC_TCP_Channel.NAME_QUIC, channelProps);
+            channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
         }else if(channelName.equalsIgnoreCase("tcp")){
             System.out.println("TCP ON");
             channelProps = TCPStreamUtils.tcpChannelProperties(address,port);
-            channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP, channelProps);
+            channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps);
         }else{
             System.out.println("UDP ON");
             channelProps = TCPStreamUtils.udpChannelProperties(address,port);

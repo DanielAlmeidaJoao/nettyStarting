@@ -1,7 +1,8 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
+import appExamples2.appExamples.channels.babelQuicChannel.quicChannels.BabelQUIC_P2P_Channel;
+import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCP_P2P_Channel;
 import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
@@ -56,7 +57,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps = TCPStreamUtils.quicChannelProperty(address,port);
             //channelProps.setProperty("metrics_interval","2000");
 
-            channelId = createChannel(BabelQUIC_TCP_Channel.NAME_QUIC, channelProps);
+            channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
 
         }else if(channelName.equalsIgnoreCase("tcp")){
             channelProps = TCPStreamUtils.tcpChannelProperties(address,port);
@@ -66,7 +67,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"FALSE");
 
-            channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP, channelProps);
+            channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps);
 
 
         }else{
@@ -123,8 +124,8 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
 
         //logger.info("OPENING CONNECTION TO {}",myself);
-        EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
-        sendMessage(message,myself);
+        //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
+        //sendMessage(message,myself);
     }
     boolean sendByte = true;
     public static final short HANDLER_ID = 2;
@@ -265,7 +266,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     List<String> cons = new LinkedList<>();
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
-        logger.info("CONNECTION UP: {} {} {}",event.conId,event.inConnection,event.type);
+        logger.info("SELF: {} | CONNECTION UP: {} {} {}",myself,event.conId,event.inConnection,event.type);
         if(event.inConnection){
             //return;
         }
@@ -274,7 +275,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             dest = event.getNode();
         }
 
-        for (int v = 0; v < 10; v++) {
+        for (int v = 0; v < 1; v++) {
             new Thread(() -> {
                 for (String con : cons) {
                     for (int i = 1; i <= 10; i++) {

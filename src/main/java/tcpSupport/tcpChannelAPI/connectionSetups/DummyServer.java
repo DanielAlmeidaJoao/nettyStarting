@@ -8,7 +8,7 @@ public class DummyServer implements ServerInterface{
 
     @Override
     public void startServer() throws Exception {
-        logger.warn("*startServer* OPERATION NOT SUPPORTED ON CLIENT CHANNELS!");
+        logger.warn("*startServer* OPERATION NOT SUPPORTED ON <CLIENT CHANNELS>!");
 
     }
 

@@ -351,7 +351,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             return createStreamLogics(peer,transmissionType,id);
         }
         connecting.put(peer,new QUICConnectingOBJ(id,peer));
-        logger.info("{} CONNECTING TO {}",self,peer);
+        logger.debug("{} CONNECTING TO {}",self,peer);
         try {
             client.connect(peer, transmissionType,id);
         }catch (Exception e){

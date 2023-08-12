@@ -34,11 +34,8 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerMethods<T> {
-    private static final Logger logger = LogManager.getLogger(BabelQUIC_TCP_Channel.class);
+    private final Logger logger;
     public final boolean metrics;
-    public final static String NAME_TCP = "BABEL_TCP_CHANNEL";
-    public final static String NAME_QUIC = "BABEL_QUIC_CHANNEL";
-
     public final static String METRICS_INTERVAL_KEY = "metrics_interval";
     public final static String DEFAULT_METRICS_INTERVAL = "-1";
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
@@ -50,12 +47,13 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     public final short protoToReceiveStreamData;
     //private final Map<String,Triple<Short,Short,Short>> unstructuredStreamHandlers;
 
-    public BabelQUIC_TCP_Channel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId, NetworkProtocol networkProtocol) throws IOException {
+    public BabelQUIC_TCP_Channel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
+        logger = LogManager.getLogger(getClass().getName());
         this.serializer = serializer;
         BabelMessageSerializer aux = (BabelMessageSerializer) serializer;
         aux.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
         this.listener = list;
-        nettyChannelInterface = getQUIC_TCP(properties,networkProtocol);
+        nettyChannelInterface = getQUIC_TCP(properties,networkProtocol,networkRole);
         metrics = nettyChannelInterface.enabledMetrics();
 
         if(metrics){
@@ -64,24 +62,25 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         }
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
         this.protoToReceiveStreamData = protoId;
+        logger.info("CHANNEL <{}> STARTED.",getClass().getName());
         //unstructuredStreamHandlers = new HashMap<>();
     }
-    private NettyChannelInterface getQUIC_TCP(Properties properties, NetworkProtocol protocol) throws IOException {
+    private NettyChannelInterface getQUIC_TCP(Properties properties, NetworkProtocol protocol,NetworkRole networkRole) throws IOException {
         NettyChannelInterface i;
         if(NetworkProtocol.QUIC==protocol){
             if(properties.getProperty("SINLGE_TRHEADED")!=null){
-                i = new SingleThreadedQuicChannel(properties, NetworkRole.P2P_CHANNEL,this,serializer);
+                i = new SingleThreadedQuicChannel(properties,networkRole,this,serializer);
                 System.out.println("SINGLE THREADED CHANNEL QUIC");
             }else {
-                i = new NettyQUICChannel(properties,false,NetworkRole.P2P_CHANNEL,this,serializer);
+                i = new NettyQUICChannel(properties,false,networkRole,this,serializer);
                 System.out.println("MULTI THREADED CHANNEL QUIC");
             }
         }else if(NetworkProtocol.TCP==protocol){
             if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
-                i = new SingleThreadedNettyTCPChannel(properties,this, NetworkRole.P2P_CHANNEL,serializer);
+                i = new SingleThreadedNettyTCPChannel(properties,this,networkRole,serializer);
                 System.out.println("SINGLE THREADED CHANNEL TCP");
             }else {
-                i = new NettyTCPChannel(properties,false,this,NetworkRole.P2P_CHANNEL,serializer);
+                i = new NettyTCPChannel(properties,false,this,networkRole,serializer);
                 System.out.println("MULTI THREADED CHANNEL TCP");
             }
         }else{

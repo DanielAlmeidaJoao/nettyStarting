@@ -1,15 +1,15 @@
 package appExamples2.appExamples.protocols;
 
-import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
+import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCP_P2P_Channel;
 import appExamples2.appExamples.channels.messages.EndOfStreaming;
 import appExamples2.appExamples.channels.messages.StreamMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
+import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -40,7 +40,7 @@ public class SendFileProtocol extends GenericProtocol {
         properties = props;
 
         Properties channelProps = new Properties();
-        channelId = createChannel(BabelQUIC_TCP_Channel.NAME_TCP,props);
+        channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME,props);
         try {
             fos = new FileOutputStream("DANIEL_copy.mp4");
         }catch (Exception e){

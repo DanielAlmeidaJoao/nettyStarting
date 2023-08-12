@@ -11,7 +11,7 @@ public class DummyClient implements ClientInterface{
 
     @Override
     public void connect(InetSocketAddress peer, TransmissionType type, String conId) throws Exception {
-        logger.warn("*connect* OPERATION NOT SUPPORTED ON SERVER CHANNELS!");
+        logger.warn("*connect* OPERATION NOT SUPPORTED ON <SERVER CHANNELS>!");
     }
 
     @Override
