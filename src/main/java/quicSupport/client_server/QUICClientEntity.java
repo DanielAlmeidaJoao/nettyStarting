@@ -15,7 +15,10 @@ package quicSupport.client_server;/*
  */
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.incubator.codec.quic.*;
@@ -29,7 +32,7 @@ import quicSupport.handlers.pipeline.QuicStreamInboundHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
-import quicSupport.utils.metrics.QuicChannelMetrics;
+import tcpSupport.tcpChannelAPI.connectionSetups.ClientInterface;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
 import javax.net.ssl.TrustManagerFactory;
@@ -37,48 +40,44 @@ import java.net.InetSocketAddress;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 
-public final class QuicClientExample {
-    //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QuicServerExample.class);
-    private static final Logger logger = LogManager.getLogger(QuicClientExample.class);
+public final class QUICClientEntity implements ClientInterface {
+    //private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(QUICServerEntity.class);
+    private static final Logger logger = LogManager.getLogger(QUICClientEntity.class);
     private QuicChannel quicChannel;
     private final InetSocketAddress self;
     private final CustomQuicChannelConsumer consumer;
     private NioEventLoopGroup group;
-    private Map<Long,QuicStreamChannel> streams;
-    private QuicChannelMetrics metrics;
     private QuicSslContext context;
+    public final Properties properties;
 
-    public QuicClientExample(InetSocketAddress self, CustomQuicChannelConsumer consumer, NioEventLoopGroup g){
+    public QUICClientEntity(InetSocketAddress self, CustomQuicChannelConsumer consumer, NioEventLoopGroup g, Properties properties){
         this.self = self;
         this.consumer = consumer;
         //
         this.group = g;
-        this.metrics = metrics;
-        streams = new HashMap<>();
         context = null;
+        this.properties = properties;
     }
 
-    private TrustManagerFactory serverTrustManager(Properties properties) throws Exception {
+    private TrustManagerFactory serverTrustManager() throws Exception {
         String s_keystoreFilename = properties.getProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY);//"keystore.jks";
         String s_keystorePassword = properties.getProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY);//"simple";
         return QUICLogics.trustManagerFactory(s_keystoreFilename,s_keystorePassword);
     }
 
-    public ChannelHandler getCodec(Properties properties)throws Exception{
-        String keystoreFilename = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY); //"keystore2.jks";
-        String keystorePassword = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY);//"simple";
-        String alias = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY);//"clientcert";
-        Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
+    private ChannelHandler getCodec()throws Exception{
         if(context==null){
+            String keystoreFilename = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY); //"keystore2.jks";
+            String keystorePassword = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY);//"simple";
+            String alias = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY);//"clientcert";
+            Pair<Certificate, PrivateKey> pair = LoadCertificate.getCertificate(keystoreFilename,keystorePassword,alias);
+
             context = QuicSslContextBuilder.forClient().
                     keyManager(pair.getRight(),null, (X509Certificate) pair.getLeft())
                     //trustManager(InsecureTrustManagerFactory.INSTANCE)
-                    .trustManager(serverTrustManager(properties))
+                    .trustManager(serverTrustManager())
                     .applicationProtocols("QUIC").earlyData(true)
                     .build();
         }
@@ -88,13 +87,13 @@ public final class QuicClientExample {
         clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
     }
-    public void connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType, String id) throws Exception{
+    public void connect(InetSocketAddress remote, TransmissionType transmissionType, String id) throws Exception{
         Bootstrap bs = new Bootstrap();
 
         Channel channel = bs.group(group)
                 .channel(NioDatagramChannel.class)
                 .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
-                .handler(getCodec(properties))
+                .handler(getCodec())
                 .bind(0).sync().channel();
         QuicChannel.newBootstrap(channel)
                 .handler(new QuicClientChannelConHandler(self,remote,consumer, transmissionType))
@@ -115,22 +114,7 @@ public final class QuicClientExample {
         //return channel.id().asShortText();
     }
 
-    private QuicStreamChannel getOrThrow(long id){
-        QuicStreamChannel stream = streams.get(id);
-        if(stream==null){
-            throw new NoSuchElementException(String.format("STREAM <%S> NOT FOUND!",id));
-        }
-        return stream;
-    }
-    /**
-    public void send(long streamId, byte [] data){
-        getOrThrow(streamId).writeAndFlush(Unpooled.copiedBuffer(data));
-    }
-    public void send(long streamId, ByteBuf buf){
-        getOrThrow(streamId).writeAndFlush(buf);
-    } **/
-
-    public void closeClient(){
+    public void shutDown(){
         group.shutdownGracefully();
     }
 }

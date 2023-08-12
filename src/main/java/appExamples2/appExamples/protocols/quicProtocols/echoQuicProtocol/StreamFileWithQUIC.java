@@ -2,17 +2,20 @@ package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_Channel;
 import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
+import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.FileBytesCarrier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
+import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.nio.file.Path;
@@ -28,8 +31,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     private Host dest;
     private Properties properties;
     public final String NETWORK_PROTO;
-    public final long fileLen = 1035368729;
-
+    public final long fileLen;
+    final  Path filePath;
     public StreamFileWithQUIC(Properties properties) throws Exception {
 
         super(EchoProtocol.class.getName(),PROTOCOL_ID);
@@ -45,6 +48,14 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         NETWORK_PROTO = properties.getProperty("NETWORK_PROTO");
         channelId = makeChan(NETWORK_PROTO,address,port);
         System.out.println("PROTO "+NETWORK_PROTO);
+
+        filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+        //filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
+        fileLen = filePath.toFile().length();
+        //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+        //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/text.txt");
+        //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
+        //Path filePath = Paths.get(p);
     }
     private int makeChan(String channelName,String address, String port) throws Exception {
         Properties channelProps;
@@ -62,20 +73,33 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             channelProps = TCPStreamUtils.udpChannelProperties(address,port);
             channelId = createChannel(BabelUDPChannel.NAME,channelProps);
         }
+        if(properties.getProperty(NettyTCPChannel.ZERO_COPY)!=null){
+            channelProps.setProperty(NettyTCPChannel.ZERO_COPY,properties.getProperty(NettyTCPChannel.ZERO_COPY));
+        }
         return channelId;
     }
     @Override
     public void init(Properties props) {
         /*---------------------- Register Message Handlers -------------------------- */
+        boolean messageCon = props.getProperty("CON") !=null;
         try {
+            registerMessageSerializer(channelId, FileBytesCarrier.ID, FileBytesCarrier.serializer);
+            registerMessageHandler(channelId, FileBytesCarrier.ID, this::uponFileBytesMessage, this::uponMsgFail);
+
             //registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerMandatoryStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
+            registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionEvent);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                openStreamConnection(dest,channelId);
+                if(messageCon){
+                    openMessageConnection(dest,channelId);
+                }else {
+                    openStreamConnection(dest,channelId);
+                }
+                System.out.println("OPEN "+messageCon);
             }
         } catch (Exception e) {
             logger.error("Error registering message handler: " + e.getMessage());
@@ -92,6 +116,16 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
     BabelInputStream babelInputStream;
 
+    private void uponFileBytesMessage(FileBytesCarrier msg, Host from, short sourceProto, int channelId, String streamId) {
+        writeToFile(msg.len,msg.data);
+    }
+    private void uponMsgFail(FileBytesCarrier msg, Host host, short destProto,
+                             Throwable throwable, int channelId) {
+        //If a message fails to be sent, for whatever reason, log the message and the reason
+        logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.info("DATA SENT <{}>",msg.len);
+
+    }
     private void uponStreamConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         streamId = event.conId;
         if(event.babelInputStream !=null){
@@ -107,6 +141,26 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             }
         }else{
             uponOutConnectionUp(event, channelId);
+        }
+
+    }
+    private boolean isMessageConnection = false;
+    private void uponMessageConnectionEvent(OnMessageConnectionUpEvent event, int channelId) {
+        isMessageConnection = true;
+        streamId = event.conId;
+        if(event.inConnection){
+            logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type+" SS "+streamId);
+            try{
+                fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.mp4");
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }else{
+            if(myself.getPort()==8081){
+                new Thread(() -> {
+                    startStreaming();
+                }).start();
+            }
         }
 
     }
@@ -147,25 +201,21 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     boolean notW = true;
     long start = 0;
 
-    private void uponStreamBytes(BabelStreamDeliveryEvent event) {
+    private void writeToFile(int available, byte [] data){
+        if(start==0){
+            start = System.currentTimeMillis();
+        }
         FileOutputStream out;
-
         if(myself.getPort()==8082){
             out = fos;
             //babelInputStream.sendBabelOutputStream(event.babelOutputStream);
         }else{
             out = fos2;
         }
-        int available = event.babelOutputStream.readableBytes();
-        byte [] p = event.babelOutputStream.readRemainingBytes();
-
-        if(start==0){
-            start = System.currentTimeMillis();
-        }
         try {
             if(available<=0)return;
             received += available;
-            out.write(p);
+            out.write(data);
             logger.info("RECEIVED ALL BYTES {} . {}",available,received);
         }catch (Exception e){
             e.printStackTrace();
@@ -180,30 +230,27 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
             }
         }
+    }
+    private void uponStreamBytes(BabelStreamDeliveryEvent event) {
 
+
+        int available = event.babelOutputStream.readableBytes();
+        byte [] p = event.babelOutputStream.readRemainingBytes();
+        writeToFile(available,p);
         //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
 
     }
 
     private void uponMsgFail2(OnStreamDataSentEvent msg, Host host, short destProto,
                               Throwable throwable, int channelId) {
-        //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
-        /**
-        try {
-            if(msg.inputStream!=null){
-                logger.info("AVAILABLE {}",msg.inputStream.available());
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        } **/
     }
     int bufferSize = 128*1024; // 8KB buffer size
     public void startStreaming(){
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
-            Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+            //Path filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
             //Path filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
 
             //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
@@ -211,13 +258,25 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
             //Path filePath = Paths.get(p);
             //
-            File f = filePath.toFile();
-            babelInputStream.sendFile(f);
+            if(isMessageConnection){
+                System.out.println("NOT ZERO COPY");
+                FileInputStream inputStream = new FileInputStream(filePath.toFile());
+                int CHUNK = 64*1024;
+                byte [] read = new byte[CHUNK];
+                int ef = 0;
+                while ( (ef = inputStream.read(read))>0){
+                    sendMessage(new FileBytesCarrier(read,ef),streamId);
+                    read = new byte[CHUNK];
+                }
+            }else{
+                System.out.println("WITH ZERO COPY");
+                babelInputStream.sendFile(filePath.toFile());
+            }
 
-            long len = f.length();
+
+            //long len = filePath.toFile().length();
             //sendStream(channelId,fileInputStream,len,streamId);
-            System.out.println("SENT INPUTFILE TO SEND BYTES "+len);
-            if(len>0) return;
+            System.out.println("SENT INPUTFILE TO SEND BYTES "+fileLen);
 
         }catch (Exception e){
             e.printStackTrace();

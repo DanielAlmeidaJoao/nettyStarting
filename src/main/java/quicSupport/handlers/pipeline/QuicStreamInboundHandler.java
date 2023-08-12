@@ -9,11 +9,11 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
-import quicSupport.client_server.QuicServerExample;
+import quicSupport.client_server.QUICServerEntity;
 import quicSupport.utils.customConnections.CustomQUICStreamCon;
 
 public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(QuicServerExample.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(QUICServerEntity.class);
     public static final String HANDLER_NAME="QuicStreamInboundHandler";
     private final String customId;
     private final boolean inConnection;

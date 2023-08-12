@@ -24,11 +24,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
-import quicSupport.handlers.channelFuncHandlers.SocketBindHandler;
 import quicSupport.handlers.pipeline.QuicServerChannelConHandler;
 import quicSupport.handlers.pipeline.QuicStreamInboundHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
+import tcpSupport.tcpChannelAPI.connectionSetups.ServerInterface;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.InetSocketAddress;
@@ -37,16 +37,17 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Properties;
 
-public final class QuicServerExample {
+public final class QUICServerEntity implements ServerInterface {
     private final CustomQuicChannelConsumer consumer;
     private final InetSocketAddress self;
     private final Properties properties;
 
     private Channel quicChannel;
-    private static final Logger logger = LogManager.getLogger(QuicServerExample.class);
+    private NioEventLoopGroup group;
+    private static final Logger logger = LogManager.getLogger(QUICServerEntity.class);
 
 
-    public QuicServerExample(String host, int port, CustomQuicChannelConsumer consumer, Properties properties) {
+    public QUICServerEntity(String host, int port, CustomQuicChannelConsumer consumer, Properties properties) {
         this.consumer = consumer;
         self = new InetSocketAddress(host,port);
         this.properties=properties;
@@ -57,7 +58,7 @@ public final class QuicServerExample {
         String keystorePassword = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_PASSWORD_KEY);
         return QUICLogics.trustManagerFactory(keystoreFilename,keystorePassword);
     }
-    public QuicSslContext getSignedSslContext() throws Exception {
+    private QuicSslContext getSignedSslContext() throws Exception {
         String keystoreFilename = properties.getProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY);//"keystore.jks";
         String keystorePassword = properties.getProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY);//"simple";
         String alias = properties.getProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY);//"quicTestCert";
@@ -91,38 +92,33 @@ public final class QuicServerExample {
         return codec;
     }
 
-    public void start(SocketBindHandler handler) throws Exception {
+    public void startServer() throws Exception {
         QuicSslContext context = getSignedSslContext();
-        NioEventLoopGroup group = new NioEventLoopGroup();
+        group = new NioEventLoopGroup();
         ChannelHandler codec = getChannelHandler(context);
-        try {
-            Bootstrap bs = new Bootstrap();
+        Bootstrap bs = new Bootstrap();
 
-            quicChannel = bs.group(group)
-                    .channel(NioDatagramChannel.class)
-                    /*
-                    Allocates a new receive buffer whose capacity is probably large enough to read all inbound data
-                    and small enough not to waste its space.
-                    */
-                    .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(1024*65))
-                    .handler(codec)
-                    .bind(self).sync()
-                    .addListener(future -> {
-                        handler.execute(future.isSuccess(),future.cause());
-                    })
-                    .channel();
+        quicChannel = bs.group(group)
+                .channel(NioDatagramChannel.class)
+                /*
+                Allocates a new receive buffer whose capacity is probably large enough to read all inbound data
+                and small enough not to waste its space.
+                */
+                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(1024*65))
+                .handler(codec)
+                .bind(self).sync()
+                .addListener(future -> {
+                    consumer.onServerSocketBind(future.isSuccess(),future.cause());
+                })
+                .channel();
 
-            quicChannel.closeFuture().addListener(future -> {
-                System.out.println("QUIC SERVER DOWN");
-                group.shutdownGracefully().getNow();
-                logger.info("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
-            });
-            logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",self.getHostName(),self.getPort());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        quicChannel.closeFuture().addListener(future -> {
+            group.shutdownGracefully().getNow();
+            logger.info("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
+        });
+        logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",self.getHostName(),self.getPort());
     }
-    public void closeServer(){
+    public void shutDown(){
         if(quicChannel !=null){
             quicChannel.close();
             quicChannel.disconnect();

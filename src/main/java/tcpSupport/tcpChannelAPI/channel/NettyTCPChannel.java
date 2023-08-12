@@ -18,8 +18,7 @@ import quicSupport.channels.SendStreamInterface;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.connectionSetups.StreamInConnection;
-import tcpSupport.tcpChannelAPI.connectionSetups.StreamOutConnection;
+import tcpSupport.tcpChannelAPI.connectionSetups.*;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
@@ -47,13 +46,15 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
     public final static String ADDRESS_KEY = "address";
     public final static String PORT_KEY = "port";
 
+    public final static String ZERO_COPY = "ZERO_COPY";
+
     public final static String DEFAULT_PORT = "8574";
     private final Map<String, CustomTCPConnection> nettyIdToConnection;
     private final Map<String, TCPConnectingObject<T>> nettyIdTOConnectingOBJ;
     private final Map<InetSocketAddress, ConcurrentLinkedQueue<CustomTCPConnection>> addressToConnections;
     private final Map<String,CustomTCPConnection> customIdToConnection;
-    private final StreamInConnection server;
-    private final StreamOutConnection client;
+    private final ServerInterface server;
+    private final ClientInterface client;
     private final ConnectionProtocolMetricsManager metricsManager;
     private final boolean connectIfNotConnected;
     private final boolean singleConnectionPerPeer;
@@ -84,22 +85,22 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         nettyIdTOConnectingOBJ = TCPStreamUtils.getMapInst(singleThreaded);
         customIdToConnection = TCPStreamUtils.getMapInst(singleThreaded);
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
-            server = new StreamInConnection(addr.getHostName(),port);
+            server = new TCPServerEntity(addr.getHostName(),port,this);
             try{
-                server.startListening(false,this);
+                server.startServer();
             }catch (Exception e){
                 throw new IOException(e);
             }
         }else{
-            server = null;
+            server = new DummyServer();
         }
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.CLIENT==networkRole){
             if(NetworkRole.CLIENT==networkRole){
                 properties.remove(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP);
             }
-            client = new StreamOutConnection(self,properties);
+            client = new TCPClientEntity(self,properties,this);
         }else{
-            client=null;
+            client=new DummyClient();
         }
 
         connectIfNotConnected = properties.getProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
@@ -238,7 +239,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         nettyIdTOConnectingOBJ.put(conId,new TCPConnectingObject(conId,peer,new LinkedList<>()));
         logger.debug("{} CONNECTING TO {}. CONNECTION ID: ",self,peer,conId);
         try {
-            client.connect(peer,this,type,conId);
+            client.connect(peer,type,conId);
             return conId;
         }catch (Exception e){
             e.printStackTrace();
@@ -269,7 +270,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         }
     }
     public void closeServerSocket(){
-        server.closeServerSocket();
+        server.shutDown();
     }
     public void send(String customConId, T message){
         CustomTCPConnection connection = customIdToConnection.get(customConId);
@@ -358,7 +359,8 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
                 return;
             }
             ChannelFuture c;
-            if(inputStream instanceof FileInputStream){
+
+            if( properties.getProperty(ZERO_COPY) !=null && inputStream instanceof FileInputStream){
                 FileInputStream in = (FileInputStream) inputStream;
                 FileRegion region = new DefaultFileRegion(in.getChannel(), 0,len);
                 c = idConnection.channel.writeAndFlush(region);
@@ -444,7 +446,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
     @Override
     public void shutDown() {
         if(server!=null){
-            server.closeServerSocket();
+            server.shutDown();
         }
         if(client!=null){
             client.shutDown();

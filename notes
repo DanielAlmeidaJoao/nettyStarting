@@ -34,8 +34,8 @@ java -cp target/nettyStart.jar mainFiles.Main5 address=localhost port=10103 send
 java -cp target/nettyStart.jar mainFiles.Main5 address=localhost port=10109 sender=o forwarder=f
 
 QUIC
-java -cp target/nettyStart.jar quicSupport.client_server.QuicServerExample
-java -cp target/nettyStart.jar quicSupport.client_server.QuicClientExample
+java -cp target/nettyStart.jar quicSupport.client_server.QUICServerEntity
+java -cp target/nettyStart.jar quicSupport.client_server.QUICClientEntity
 
 java -cp target/nettyStart.jar quicSupport.testing.TestQuicChannel
 -Dio.netty.maxDirectMemory=2147483648

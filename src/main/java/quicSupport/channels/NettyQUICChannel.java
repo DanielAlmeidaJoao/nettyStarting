@@ -14,8 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import quicSupport.Exceptions.UnknownElement;
-import quicSupport.client_server.QuicClientExample;
-import quicSupport.client_server.QuicServerExample;
+import quicSupport.client_server.QUICClientEntity;
+import quicSupport.client_server.QUICServerEntity;
 import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.pipeline.QUICRawStreamDecoder;
 import quicSupport.handlers.pipeline.QuicDelimitedMessageDecoder;
@@ -27,6 +27,10 @@ import quicSupport.utils.customConnections.CustomQUICStreamCon;
 import quicSupport.utils.entities.QUICConnectingOBJ;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.connectionSetups.ClientInterface;
+import tcpSupport.tcpChannelAPI.connectionSetups.DummyClient;
+import tcpSupport.tcpChannelAPI.connectionSetups.DummyServer;
+import tcpSupport.tcpChannelAPI.connectionSetups.ServerInterface;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
@@ -58,8 +62,8 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     private final Map<String,CustomQUICStreamCon> customStreamIdToStream;
     private final Map<InetSocketAddress, QUICConnectingOBJ<T>> connecting;
 
-    private QuicClientExample client;
-    private QuicServerExample server;
+    private final ClientInterface client;
+    private final ServerInterface server;
     private final Properties properties;
     private final boolean withHeartBeat;
     private final ConnectionProtocolMetricsManager metrics;
@@ -97,18 +101,22 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         connecting= TCPStreamUtils.getMapInst(singleThreaded);
 
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.SERVER==networkRole){
+            server = new QUICServerEntity(addr.getHostName(), port, this,properties);
             try{
-                server = new QuicServerExample(addr.getHostName(), port, this,properties);
-                        server.start(this::onServerSocketBind);
+                server.startServer();
             }catch (Exception e){
                 throw new IOException(e);
             }
+        }else{
+            server = new DummyServer();
         }
         if(NetworkRole.CHANNEL==networkRole||NetworkRole.CLIENT==networkRole){
             if(NetworkRole.CLIENT==networkRole){
                 properties.remove(CONNECT_ON_SEND);
             }
-            client = new QuicClientExample(self,this,new NioEventLoopGroup());
+            client = new QUICClientEntity(self,this,new NioEventLoopGroup(),properties);
+        }else{
+            client = new DummyClient();
         }
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
         singleConnectionPerPeer = properties.getProperty(TCPStreamUtils.SINGLE_CON_PER_PEER)!=null;
@@ -344,7 +352,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         connecting.put(peer,new QUICConnectingOBJ(id,peer));
         logger.info("{} CONNECTING TO {}",self,peer);
         try {
-            client.connect(peer,properties, transmissionType,id);
+            client.connect(peer, transmissionType,id);
         }catch (Exception e){
             e.printStackTrace();
             handleOpenConnectionFailed(peer,e.getCause(),transmissionType, id);
@@ -513,11 +521,18 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
                 streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.parent().eventLoop());
                 return;
             }
-            //
+
             if(streamChannel.streamChannel.pipeline().get("ChunkedWriteHandler")==null){
                 streamChannel.streamChannel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
             }
             ChannelFuture c = streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
+
+            /**
+            ByteBuf buf = streamChannel.streamChannel.alloc().directBuffer();
+            buf.writeBytes(inputStream,inputStream.available());
+
+            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(buf);
+            **/
             InetSocketAddress finalPeer = peer;
             c.addListener(future -> {
                 calcMetricsOnSend(future,conId,len);
@@ -558,11 +573,9 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     @Override
     public void shutDown() {
         if(server!=null){
-            server.closeServer();
+            server.shutDown();
         }
-        if(client!=null){
-            client.closeClient();
-        }
+        client.shutDown();
     }
 
     @Override
@@ -581,11 +594,13 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     /*********************************** User Actions **************************************/
 
     /*********************************** Other Actions *************************************/
-    private void onServerSocketBind(boolean success, Throwable cause) {
+    public void onServerSocketBind(boolean success, Throwable cause) {
         if (success)
             logger.debug("Server socket ready");
-        else
+        else{
             logger.error("Server socket bind failed: " + cause);
+            shutDown();
+        }
     }
 
     public void onServerSocketClose(boolean success, Throwable cause) {

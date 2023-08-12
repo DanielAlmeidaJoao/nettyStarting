@@ -14,5 +14,5 @@ public abstract class ProtoMessage {
     public short getId() {
         return id;
     }
-
+    
 }

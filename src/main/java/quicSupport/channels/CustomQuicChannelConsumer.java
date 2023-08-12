@@ -29,4 +29,6 @@ public interface CustomQuicChannelConsumer {
 
     String nextId();
 
-    }
+    void onServerSocketBind(boolean success, Throwable cause);
+
+}

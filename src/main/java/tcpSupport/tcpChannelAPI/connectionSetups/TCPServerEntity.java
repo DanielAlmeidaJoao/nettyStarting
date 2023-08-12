@@ -5,7 +5,6 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
@@ -13,34 +12,26 @@ import tcpSupport.tcpChannelAPI.pipeline.TCPCustomHandshakeHandler;
 
 import java.net.InetSocketAddress;
 
-public class StreamInConnection {
+public class TCPServerEntity implements ServerInterface{
     //One of the main advantages of using a single thread to
     // execute tasks is that it eliminates the need for
     // synchronization primitives such as locks and semaphores.
 
 
 
-    private static final Logger logger = LogManager.getLogger(StreamInConnection.class);
+    private static final Logger logger = LogManager.getLogger(TCPServerEntity.class);
 
     private final int port;
     private final String hostName;
     private Channel serverChannel;
-    public StreamInConnection(String hostName, int port) {
+    private final StreamingNettyConsumer consumer;
+    public TCPServerEntity(String hostName, int port, StreamingNettyConsumer consumer) {
         this.port = port;
         this.hostName = hostName;
-
+        this.consumer = consumer;
     }
 
-
-    public static DefaultEventExecutor newDefaultEventExecutor(){
-        return new DefaultEventExecutor();
-    }
-    /**
-     *
-     * @param sync whether to block the main thread or not
-     * @throws Exception
-     */
-    public void startListening(boolean sync,StreamingNettyConsumer consumer)
+    public void startServer()
             throws Exception{
         EventLoopGroup parentGroup = createNewWorkerGroup();
         EventLoopGroup childGroup = createNewWorkerGroup();
@@ -62,20 +53,13 @@ public class StreamInConnection {
                 consumer.onServerSocketBind(future.isSuccess(),future.cause())
         );
         serverChannel = f.channel();
-        if(sync){
-            f = serverChannel.closeFuture().sync();
-        }else{
-            f = serverChannel.closeFuture();
-        }
-
-        // Wait for the server channel to close. Blocks.
-        f.addListener(future -> {
+        serverChannel.closeFuture().addListener(future -> {
             parentGroup.shutdownGracefully().getNow();
             childGroup.shutdownGracefully().getNow();
             logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });
     }
-    public void closeServerSocket(){
+    public void shutDown(){
         serverChannel.close();
         serverChannel.disconnect();
     }
