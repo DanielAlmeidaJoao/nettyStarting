@@ -1,10 +1,10 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
-import appExamples2.appExamples.channels.babelQuicChannel.quicChannels.BabelQUIC_P2P_Channel;
-import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCP_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.events.QUICMetricsEvent;
+import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
 import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
-import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
+import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.BabelUDPChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +19,7 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
-import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetAddress;
@@ -54,24 +54,24 @@ public class EchoProtocol extends GenericProtocolExtension {
         Properties channelProps;
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
-            channelProps = TCPStreamUtils.quicChannelProperty(address,port);
+            channelProps = TCPChannelUtils.quicChannelProperty(address,port);
             //channelProps.setProperty("metrics_interval","2000");
 
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
 
         }else if(channelName.equalsIgnoreCase("tcp")){
-            channelProps = TCPStreamUtils.tcpChannelProperties(address,port);
+            channelProps = TCPChannelUtils.tcpChannelProperties(address,port);
             System.out.println("TCP ON");
             //channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
             //channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
-            channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
+            channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"FALSE");
 
             channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps);
 
 
         }else{
-            channelProps = TCPStreamUtils.udpChannelProperties(address,port);
+            channelProps = TCPChannelUtils.udpChannelProperties(address,port);
             System.out.println("UDP ON");
             //channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
             //channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
@@ -267,6 +267,9 @@ public class EchoProtocol extends GenericProtocolExtension {
     List<String> cons = new LinkedList<>();
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
         logger.info("SELF: {} | CONNECTION UP: {} {} {}",myself,event.conId,event.inConnection,event.type);
+        if(event!=null){
+            return;
+        }
         if(event.inConnection){
             //return;
         }
@@ -278,7 +281,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         for (int v = 0; v < 1; v++) {
             new Thread(() -> {
                 for (String con : cons) {
-                    for (int i = 1; i <= 10; i++) {
+                    for (int i = 1; i <= 1; i++) {
                         //+ UDPLogics.MAX_UDP_PAYLOAD_SIZE
                         String m1 = ("0 ++"+myself).repeat(i+ UDPLogics.MAX_UDP_PAYLOAD_SIZE) + con;
                         //System.out.println();

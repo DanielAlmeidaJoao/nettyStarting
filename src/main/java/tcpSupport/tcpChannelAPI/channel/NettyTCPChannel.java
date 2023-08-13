@@ -81,10 +81,10 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         }else{
             metricsManager = null;
         }
-        nettyIdToConnection = TCPStreamUtils.getMapInst(singleThreaded);
-        addressToConnections = TCPStreamUtils.getMapInst(singleThreaded);
-        nettyIdTOConnectingOBJ = TCPStreamUtils.getMapInst(singleThreaded);
-        customIdToConnection = TCPStreamUtils.getMapInst(singleThreaded);
+        nettyIdToConnection = TCPChannelUtils.getMapInst(singleThreaded);
+        addressToConnections = TCPChannelUtils.getMapInst(singleThreaded);
+        nettyIdTOConnectingOBJ = TCPChannelUtils.getMapInst(singleThreaded);
+        customIdToConnection = TCPChannelUtils.getMapInst(singleThreaded);
         this.networkRole = networkRole;
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.SERVER==networkRole){
             server = new TCPServerEntity(addr.getHostName(),port,this);
@@ -98,15 +98,15 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         }
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.CLIENT==networkRole){
             if(NetworkRole.CLIENT==networkRole){
-                properties.remove(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP);
+                properties.remove(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP);
             }
             client = new TCPClientEntity(self,properties,this);
         }else{
             client=new DummyClient();
         }
 
-        connectIfNotConnected = properties.getProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
-        singleConnectionPerPeer = properties.getProperty(TCPStreamUtils.SINGLE_CON_PER_PEER)!=null;
+        connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
+        singleConnectionPerPeer = properties.getProperty(TCPChannelUtils.SINGLE_CON_PER_PEER)!=null;
         this.channelHandlerMethods = chm;
         streamContinuoslyLogics = null;
         this.properties = properties;
@@ -166,7 +166,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
             if(handShakeMessage==null){//out connection
                 listeningAddress = (InetSocketAddress) channel.remoteAddress();
                 inConnection = false;
-                conId = channel.attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY)).toString();
+                conId = channel.attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY)).toString();
             }else {//in connection
                 listeningAddress = handShakeMessage.getAddress();
                 inConnection = true;
@@ -209,7 +209,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         }
     }
     public String nextId(){
-        return "tcpChan"+ TCPStreamUtils.channelIdCounter.getAndIncrement();
+        return "tcpChan"+ TCPChannelUtils.channelIdCounter.getAndIncrement();
     }
     /******************************************* CHANNEL EVENTS ****************************************************/
 
@@ -356,7 +356,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
                 return;
             }
             if(len<=0){
-                if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
+                if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
                 streamContinuoslyLogics.addToStreams(inputStream,idConnection.conId,idConnection.channel.eventLoop());
                 return;
             }

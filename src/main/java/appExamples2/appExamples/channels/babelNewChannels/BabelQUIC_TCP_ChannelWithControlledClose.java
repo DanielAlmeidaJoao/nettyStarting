@@ -1,4 +1,4 @@
-package appExamples2.appExamples.channels.babelQuicChannel;
+package appExamples2.appExamples.channels.babelNewChannels;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import org.apache.logging.log4j.LogManager;

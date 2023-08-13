@@ -15,12 +15,12 @@ import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.pipeline.TCPClientNettyHandler;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
-import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-import static tcpSupport.tcpChannelAPI.utils.TCPStreamUtils.CUSTOM_ID_KEY;
+import static tcpSupport.tcpChannelAPI.utils.TCPChannelUtils.CUSTOM_ID_KEY;
 
 public class TCPClientEntity implements ClientInterface{
 
@@ -33,7 +33,7 @@ public class TCPClientEntity implements ClientInterface{
         group = createNewWorkerGroup();
         this.self = host;
         this.consumer = consumer;
-        connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPStreamUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
+        connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
 
     }
 

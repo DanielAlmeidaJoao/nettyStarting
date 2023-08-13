@@ -7,7 +7,7 @@ import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
-import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 //@ChannelHandler.Sharable
 public class TCPCustomHandshakeHandler extends AbstractMessageDecoderHandler {
@@ -24,7 +24,7 @@ public class TCPCustomHandshakeHandler extends AbstractMessageDecoderHandler {
         in.readBytes(controlData,0,len);
         in.discardReadBytes();
         String gg = new String(controlData);
-        HandShakeMessage handShakeMessage = TCPStreamUtils.g.fromJson(gg, HandShakeMessage.class);
+        HandShakeMessage handShakeMessage = TCPChannelUtils.g.fromJson(gg, HandShakeMessage.class);
         if(TransmissionType.STRUCTURED_MESSAGE==handShakeMessage.type){
             ctx.channel().pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(consumer));
         }else{

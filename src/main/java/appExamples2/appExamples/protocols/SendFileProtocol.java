@@ -1,6 +1,6 @@
 package appExamples2.appExamples.protocols;
 
-import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCP_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
 import appExamples2.appExamples.channels.messages.EndOfStreaming;
 import appExamples2.appExamples.channels.messages.StreamMessage;
 import org.apache.logging.log4j.LogManager;

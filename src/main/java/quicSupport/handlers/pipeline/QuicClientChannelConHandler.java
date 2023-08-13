@@ -13,7 +13,7 @@ import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.net.InetSocketAddress;
 
@@ -35,7 +35,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         logger.debug("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         QuicChannel out = (QuicChannel) ctx.channel();
-        final String customConId = out.attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY)).toString();
+        final String customConId = out.attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY)).toString();
 
         QuicStreamChannel streamChannel = out
                 .createStream(QuicStreamType.BIDIRECTIONAL, new QuicStreamInboundHandler(consumer, customConId, QUICLogics.OUTGOING_CONNECTION))

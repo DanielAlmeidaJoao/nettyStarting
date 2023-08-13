@@ -1,8 +1,8 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.babelQuicChannel.quicChannels.BabelQUIC_P2P_Channel;
-import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCP_P2P_Channel;
-import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
+import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.BabelUDPChannel;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.FileBytesCarrier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,7 +14,7 @@ import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
-import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -63,15 +63,15 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
-            channelProps = TCPStreamUtils.quicChannelProperty(address,port);
+            channelProps = TCPChannelUtils.quicChannelProperty(address,port);
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
         }else if(channelName.equalsIgnoreCase("tcp")){
             System.out.println("TCP ON");
-            channelProps = TCPStreamUtils.tcpChannelProperties(address,port);
+            channelProps = TCPChannelUtils.tcpChannelProperties(address,port);
             channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps);
         }else{
             System.out.println("UDP ON");
-            channelProps = TCPStreamUtils.udpChannelProperties(address,port);
+            channelProps = TCPChannelUtils.udpChannelProperties(address,port);
             channelId = createChannel(BabelUDPChannel.NAME,channelProps);
         }
         if(properties.getProperty(NettyTCPChannel.ZERO_COPY)!=null){

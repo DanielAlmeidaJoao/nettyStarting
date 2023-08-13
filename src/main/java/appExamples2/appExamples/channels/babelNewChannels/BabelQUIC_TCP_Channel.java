@@ -1,7 +1,7 @@
-package appExamples2.appExamples.channels.babelQuicChannel;
+package appExamples2.appExamples.channels.babelNewChannels;
 
 import appExamples2.appExamples.channels.FactoryMethods;
-import appExamples2.appExamples.channels.babelQuicChannel.events.QUICMetricsEvent;
+import appExamples2.appExamples.channels.babelNewChannels.events.QUICMetricsEvent;
 import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;

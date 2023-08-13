@@ -1,6 +1,6 @@
-package appExamples2.appExamples.channels.babelQuicChannel.quicChannels;
+package appExamples2.appExamples.channels.babelNewChannels.quicChannels;
 
-import appExamples2.appExamples.channels.babelQuicChannel.BabelQUIC_TCP_ChannelWithControlledClose;
+import appExamples2.appExamples.channels.babelNewChannels.BabelQUIC_TCP_ChannelWithControlledClose;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import quicSupport.utils.enums.NetworkProtocol;

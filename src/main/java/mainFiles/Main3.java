@@ -1,11 +1,11 @@
 package mainFiles;
 
-import appExamples2.appExamples.channels.babelQuicChannel.quicChannels.BabelQUIC_P2P_Channel;
-import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCP_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
 import appExamples2.appExamples.channels.initializers.BabelQUICChannelInitializer;
 import appExamples2.appExamples.channels.initializers.BabelTCPChannelInitializer;
-import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPChannel;
-import appExamples2.appExamples.channels.udpBabelChannel.BabelUDPInitializer;
+import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.BabelUDPChannel;
+import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.BabelUDPInitializer;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.EchoProtocol;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 import quicSupport.utils.enums.NetworkRole;

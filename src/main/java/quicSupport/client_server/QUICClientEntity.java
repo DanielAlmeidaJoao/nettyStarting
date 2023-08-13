@@ -33,7 +33,7 @@ import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.connectionSetups.ClientInterface;
-import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.InetSocketAddress;
@@ -104,7 +104,7 @@ public final class QUICClientEntity implements ClientInterface {
                     }
                 })
                 .remoteAddress(remote)
-                .attr(AttributeKey.valueOf(TCPStreamUtils.CUSTOM_ID_KEY),id)
+                .attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY),id)
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
                 .connect().addListener(future -> {
                     if(!future.isSuccess()){

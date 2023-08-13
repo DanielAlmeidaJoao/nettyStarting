@@ -1,4 +1,4 @@
-package appExamples2.appExamples.channels.udpBabelChannel;
+package appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel;
 
 import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
@@ -16,7 +16,7 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.channels.UDPChannel;
 import udpSupport.channels.UDPChannelHandlerMethods;
@@ -194,7 +194,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     public String nextId(){
-        return "udpchan"+ TCPStreamUtils.channelIdCounter.getAndIncrement();
+        return "udpchan"+ TCPChannelUtils.channelIdCounter.getAndIncrement();
     }
 
     @Override

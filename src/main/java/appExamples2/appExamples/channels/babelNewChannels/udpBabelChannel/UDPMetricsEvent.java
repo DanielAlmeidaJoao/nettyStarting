@@ -1,4 +1,4 @@
-package appExamples2.appExamples.channels.udpBabelChannel;
+package appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel;
 
 import lombok.Getter;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;

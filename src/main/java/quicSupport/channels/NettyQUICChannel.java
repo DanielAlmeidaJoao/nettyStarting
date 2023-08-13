@@ -36,7 +36,7 @@ import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 import tcpSupport.tcpChannelAPI.utils.SendStreamContinuoslyLogics;
-import tcpSupport.tcpChannelAPI.utils.TCPStreamUtils;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -97,9 +97,9 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         }else{
             metrics = null;
         }
-        addressToQUICCons = TCPStreamUtils.getMapInst(singleThreaded);
-        customStreamIdToStream = TCPStreamUtils.getMapInst(singleThreaded);
-        connecting= TCPStreamUtils.getMapInst(singleThreaded);
+        addressToQUICCons = TCPChannelUtils.getMapInst(singleThreaded);
+        customStreamIdToStream = TCPChannelUtils.getMapInst(singleThreaded);
+        connecting= TCPChannelUtils.getMapInst(singleThreaded);
         this.networkRole = networkRole;
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.SERVER==networkRole){
             server = new QUICServerEntity(addr.getHostName(), port, this,properties);
@@ -120,7 +120,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             client = new DummyClient();
         }
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
-        singleConnectionPerPeer = properties.getProperty(TCPStreamUtils.SINGLE_CON_PER_PEER)!=null;
+        singleConnectionPerPeer = properties.getProperty(TCPChannelUtils.SINGLE_CON_PER_PEER)!=null;
 
         streamContinuoslyLogics = null;
     }
@@ -141,7 +141,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     }
 
     public String nextId(){
-        return "quicchan"+ TCPStreamUtils.channelIdCounter.getAndIncrement();
+        return "quicchan"+ TCPChannelUtils.channelIdCounter.getAndIncrement();
     }
 
     private CustomQUICConnection getCustomQUICConnection(InetSocketAddress inetSocketAddress){
@@ -518,7 +518,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             }
 
             if(len<=0){
-                if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPStreamUtils.READ_STREAM_PERIOD_KEY));
+                if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
                 streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.parent().eventLoop());
                 return;
             }
@@ -617,7 +617,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         if(enabledMetrics()){
             handler.readMetrics(metrics.currentMetrics(),metrics.oldMetrics());
         }else {
-            logger.error("METRICS NOT ENABLED!");
+            logger.warn("METRICS NOT ENABLED!");
             handler.readMetrics(null,null);
         }
     }

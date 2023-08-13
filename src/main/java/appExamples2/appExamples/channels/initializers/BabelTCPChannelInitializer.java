@@ -1,8 +1,8 @@
 package appExamples2.appExamples.channels.initializers;
 
-import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCPClientChannel;
-import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCPServerChannel;
-import appExamples2.appExamples.channels.babelQuicChannel.tcpChannels.BabelTCP_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCPClientChannel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCPServerChannel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;

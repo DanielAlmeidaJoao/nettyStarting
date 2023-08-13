@@ -10,7 +10,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TCPStreamUtils {
+public class TCPChannelUtils {
 
     public static final Gson g = new Gson();
     public static final AtomicInteger channelIdCounter = new AtomicInteger();
@@ -45,7 +45,7 @@ public class TCPStreamUtils {
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
         //channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
         channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
-        channelProps.setProperty(TCPStreamUtils.SINGLE_CON_PER_PEER,"TRUE");
+        channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
         //channelProps.setProperty(QUICLogics.WITH_HEART_BEAT,"true");
         return channelProps;
     }
@@ -54,8 +54,10 @@ public class TCPStreamUtils {
         Properties channelProps = new Properties();
         channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
         channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
-        channelProps.setProperty(TCPStreamUtils.SINGLE_CON_PER_PEER,"TRUE");
-        //channelProps.setProperty(TCPStreamUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
+        channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
+        //channelProps.setProperty(NettyTCPChannel.ZERO_COPY,"TRUE");
+
+        //channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
         //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
         return channelProps;
     }
