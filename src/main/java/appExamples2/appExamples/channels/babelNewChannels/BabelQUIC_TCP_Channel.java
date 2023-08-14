@@ -1,7 +1,7 @@
 package appExamples2.appExamples.channels.babelNewChannels;
 
 import appExamples2.appExamples.channels.FactoryMethods;
-import appExamples2.appExamples.channels.babelNewChannels.events.QUICMetricsEvent;
+import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
@@ -37,7 +37,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     private final Logger logger;
     public final boolean metrics;
     public final static String METRICS_INTERVAL_KEY = "metrics_interval";
-    public final static String DEFAULT_METRICS_INTERVAL = "-1";
+    public final static String DEFAULT_METRICS_INTERVAL = "10000";
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
 
     private final boolean triggerSent;
@@ -89,7 +89,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         return i;
     }
     void readMetricsMethod(List<ConnectionProtocolMetrics> current, List<ConnectionProtocolMetrics> old){
-        QUICMetricsEvent quicMetricsEvent = new QUICMetricsEvent(current,old);
+        ConnectionProtocolChannelMetricsEvent quicMetricsEvent = new ConnectionProtocolChannelMetricsEvent(current,old);
         listener.deliverEvent(quicMetricsEvent);
     }
     void triggerMetricsEvent() {

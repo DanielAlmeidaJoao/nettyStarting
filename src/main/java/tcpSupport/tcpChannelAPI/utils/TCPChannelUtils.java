@@ -23,6 +23,8 @@ public class TCPChannelUtils {
 
     public static final String CONNECT_TIMEOUT_MILLIS = "CONNECT_TIMEOUT_MILLIS";
 
+    public static final String CHANNEL_METRICS = "channel_metrics";
+
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
         if(singleT){
             return new HashMap<>();
@@ -35,7 +37,6 @@ public class TCPChannelUtils {
         Properties channelProps = new Properties();
         channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
         channelProps.setProperty(QUICLogics.PORT_KEY,port);
-        //channelProps.setProperty(QUICLogics.QUIC_METRICS,"true");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
@@ -46,6 +47,7 @@ public class TCPChannelUtils {
         //channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
         channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
         channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
+        channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(QUICLogics.WITH_HEART_BEAT,"true");
         return channelProps;
     }
@@ -55,6 +57,7 @@ public class TCPChannelUtils {
         channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
         channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
         channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
+        channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(NettyTCPChannel.ZERO_COPY,"TRUE");
 
         //channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
@@ -67,7 +70,8 @@ public class TCPChannelUtils {
         //properties.setProperty("UDP_metrics","on");
         properties.setProperty("UDP_port",port);
         properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_RETRANSMISSION_TIMEOUT,"500");
-        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"10");
+        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"100");
+        properties.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_BROADCAST_PROP,"10");
         //properties.setProperty(UDPChannel.UDP_METRICS,"10");
 

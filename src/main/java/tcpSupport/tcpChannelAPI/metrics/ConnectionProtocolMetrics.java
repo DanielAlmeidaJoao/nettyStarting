@@ -10,16 +10,18 @@ import java.net.InetSocketAddress;
 @Setter
 @AllArgsConstructor
 public class ConnectionProtocolMetrics {
-    private InetSocketAddress dest;
+    private final InetSocketAddress hostAddress;
     private long receivedAppBytes, sentAppBytes, receivedControlBytes, sentControlBytes;
     private long receivedAppMessages, sentAppMessages, receivedControlMessages, sentControlMessages;
 
     private long sentKeepAliveMessages, receivedKeepAliveMessages;
 
-    private int streamCount;
-    private int createdStreamCount;
+    //private int streamCount;
+    //private int createdStreamCount;
 
     private boolean isIncoming;
+
+    private final String connectionId;
 
 
 

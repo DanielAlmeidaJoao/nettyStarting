@@ -43,12 +43,11 @@ public class ConnectionProtocolMetricsManager {
     public void initConnectionMetrics(String connectionId, InetSocketAddress dest, boolean incoming, int len){
         logger.info("SELF: {}. METRICS TO {} ADDED.",self,connectionId);
         ConnectionProtocolMetrics m = new ConnectionProtocolMetrics(
-                null,0,0,0,0,
+                dest,0,0,0,0,
                 0,0,
-                0,0,0,0,0,0,false
+                0,0,0,0,false,connectionId
         );
         m.setIncoming(incoming);
-        m.setDest(dest);
         currentConnections.put(connectionId,m);
         if(incoming){
             m.setReceivedControlBytes(len);

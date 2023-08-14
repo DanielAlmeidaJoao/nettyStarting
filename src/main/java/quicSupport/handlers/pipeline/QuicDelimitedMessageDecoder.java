@@ -11,10 +11,9 @@ import quicSupport.channels.NettyQUICChannel;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.util.List;
-
-import static quicSupport.utils.QUICLogics.gson;
 
 public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     private static final Logger logger = LogManager.getLogger(NettyQUICChannel.class);
@@ -64,7 +63,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
                 byte [] data = new byte[length];
                 aux.readBytes(data);
-                QuicHandShakeMessage handShakeMessage = gson.fromJson(new String(data), QuicHandShakeMessage.class);
+                QuicHandShakeMessage handShakeMessage = TCPChannelUtils.g.fromJson(new String(data), QuicHandShakeMessage.class);
                 if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
                     ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, true, customId));
                 }

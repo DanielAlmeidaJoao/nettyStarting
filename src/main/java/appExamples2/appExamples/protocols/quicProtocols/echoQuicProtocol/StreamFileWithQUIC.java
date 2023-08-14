@@ -1,8 +1,10 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
+import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
 import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.BabelUDPChannel;
+import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.UDPMetricsEvent;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.FileBytesCarrier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,9 +14,12 @@ import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
+import quicSupport.utils.enums.NetworkProtocol;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import udpSupport.metrics.NetworkStatsWrapper;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -87,11 +92,14 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             registerMessageSerializer(channelId, FileBytesCarrier.ID, FileBytesCarrier.serializer);
             registerMessageHandler(channelId, FileBytesCarrier.ID, this::uponFileBytesMessage, this::uponMsgFail);
 
-            //registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
+            //registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
             registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
             registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionEvent);
+
+            registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
+            registerChannelEventHandler(channelId, UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
@@ -112,12 +120,37 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
         //sendMessage(message,myself);
     }
+    private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
+        System.out.println("METRICS TRIGGERED!!!");
+        for (ConnectionProtocolMetrics metrics : event.getCurrent()) {
+            System.out.println("HOST ++ "+metrics.getHostAddress());
+            System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(metrics));
+
+        }
+        //System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(event.getCurrent()));
+        System.out.println("OLD: "+TCPChannelUtils.g.toJson(event.getOld()));
+    }
+
+    private void uponUDPChannelMetrics(UDPMetricsEvent event, int channelId) {
+        System.out.println("UDP METRICS TRIGGERED!!!");
+        for (NetworkStatsWrapper stat : event.getStats()) {
+            System.out.printf("HOST: %s\n",stat.getDest());
+            System.out.println(TCPChannelUtils.g.toJson(stat.ackStats));
+            System.out.println(TCPChannelUtils.g.toJson(stat.totalMessageStats));
+            System.out.println(TCPChannelUtils.g.toJson(stat.sentAckedMessageStats));
+        }
+    }
     public static final short HANDLER_ID = 2;
     public static final short HANDLER_ID2 = 43;
 
     BabelInputStream babelInputStream;
 
     private void uponFileBytesMessage(FileBytesCarrier msg, Host from, short sourceProto, int channelId, String streamId) {
+        if(NetworkProtocol.UDP==getNetworkProtocol(channelId)){
+            received += msg.len;
+            logger.info("RECEIVED ALL BYTES {} . {}",msg.len,received);
+            return;
+        }
         writeToFile(msg.len,msg.data);
     }
     private void uponMsgFail(FileBytesCarrier msg, Host host, short destProto,

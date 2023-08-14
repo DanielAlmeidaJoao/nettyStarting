@@ -1,6 +1,5 @@
 package quicSupport.utils;
 
-import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.incubator.codec.quic.QuicCodecBuilder;
@@ -25,7 +24,6 @@ public class QUICLogics {
 
     public final static String ADDRESS_KEY = "QUIC_ADDRESS";
     public final static String PORT_KEY = "QUIC_PORT";
-    public final static String QUIC_METRICS="QUIC_METRICS";
     public final static String WITH_HEART_BEAT="TRUE";
     public static final String MAX_IDLE_TIMEOUT_IN_SECONDS = "QUIC_maxIdleTimeoutInSeconds";
     public static final String INITIAL_MAX_DATA = "QUIC_initialMaxData";
@@ -43,9 +41,6 @@ public class QUICLogics {
 
     public static boolean INCOMING_CONNECTION = true;
     public static boolean OUTGOING_CONNECTION = false;
-
-
-    public static final Gson gson = new Gson();
 
     public static final long maxIdleTimeoutInSeconds=180;
     private static final String initialMaxData="10000000";

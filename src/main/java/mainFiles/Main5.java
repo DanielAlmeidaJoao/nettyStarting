@@ -1,6 +1,10 @@
 package mainFiles;
 
+import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUICClientChannel;
+import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUICServerChannel;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCPClientChannel;
+import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCPServerChannel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
 import appExamples2.appExamples.channels.initializers.BabelQUICChannelInitializer;
 import appExamples2.appExamples.channels.initializers.BabelTCPChannelInitializer;
@@ -25,7 +29,11 @@ public class Main5 {
         //Get the (singleton) pt.unl.fct.di.novasys.babel instance
         Babel babel = Babel.getInstance();
         babel.registerChannelInitializer(BabelQUIC_P2P_Channel.CHANNEL_NAME,new BabelQUICChannelInitializer(NetworkRole.P2P_CHANNEL));
+        babel.registerChannelInitializer(BabelQUICClientChannel.CHANNEL_NAME,new BabelQUICChannelInitializer(NetworkRole.CLIENT));
+        babel.registerChannelInitializer(BabelQUICServerChannel.CHANNEL_NAME,new BabelQUICChannelInitializer(NetworkRole.SERVER));
         babel.registerChannelInitializer(BabelTCP_P2P_Channel.CHANNEL_NAME,new BabelTCPChannelInitializer(NetworkRole.P2P_CHANNEL));
+        babel.registerChannelInitializer(BabelTCPClientChannel.CHANNEL_NAME,new BabelTCPChannelInitializer(NetworkRole.CLIENT));
+        babel.registerChannelInitializer(BabelTCPServerChannel.CHANNEL_NAME,new BabelTCPChannelInitializer(NetworkRole.SERVER));
         babel.registerChannelInitializer(BabelUDPChannel.NAME,new BabelUDPInitializer());
 
 

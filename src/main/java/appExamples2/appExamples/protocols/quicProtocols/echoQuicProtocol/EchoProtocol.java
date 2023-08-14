@@ -1,10 +1,11 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.babelNewChannels.events.QUICMetricsEvent;
+import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
-import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.BabelUDPChannel;
+import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.UDPMetricsEvent;
+import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
@@ -16,10 +17,10 @@ import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
-import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import udpSupport.metrics.NetworkStatsWrapper;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetAddress;
@@ -88,7 +89,9 @@ public class EchoProtocol extends GenericProtocolExtension {
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);
-            registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
+            registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
+            registerChannelEventHandler(channelId, UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
+
             registerMessageHandler(channelId,BytesToBabelMessage.ID,this::uponBytesMessage,null, this::uponMsgFail3);
             registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
@@ -233,10 +236,21 @@ public class EchoProtocol extends GenericProtocolExtension {
             cancelTimer(id);
         }
     }
-    private void uponChannelMetrics(QUICMetricsEvent event, int channelId) {
+    private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");
-        System.out.println("CURRENT: "+QUICLogics.gson.toJson(event.getCurrent()));
-        System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
+        System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(event.getCurrent()));
+        System.out.println("OLD: "+TCPChannelUtils.g.toJson(event.getOld()));
+    }
+
+
+    private void uponUDPChannelMetrics(UDPMetricsEvent event, int channelId) {
+        System.out.println("UDP METRICS TRIGGERED!!!");
+        for (NetworkStatsWrapper stat : event.getStats()) {
+            System.out.printf("HOST: %s\n",stat.getDest());
+            System.out.println(TCPChannelUtils.g.toJson(stat.ackStats));
+            System.out.println(TCPChannelUtils.g.toJson(stat.totalMessageStats));
+            System.out.println(TCPChannelUtils.g.toJson(stat.sentAckedMessageStats));
+        }
     }
     public List<BabelInputStream> streams = new LinkedList<>();
     private void uponStreamConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
@@ -267,9 +281,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     List<String> cons = new LinkedList<>();
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
         logger.info("SELF: {} | CONNECTION UP: {} {} {}",myself,event.conId,event.inConnection,event.type);
-        if(event!=null){
-            return;
-        }
+
         if(event.inConnection){
             //return;
         }

@@ -3,32 +3,40 @@ package udpSupport.metrics;
 import lombok.Getter;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Getter
 public class NetworkStatsWrapper {
     private InetSocketAddress dest;
+    public final NetworkStats totalMessageStats;
+    public final NetworkStats sentAckedMessageStats;
+    public final NetworkStats ackStats;
 
-    private Map<NetworkStatsKindEnum,NetworkStats> statsMap;
     public NetworkStatsWrapper(InetSocketAddress host){
-        statsMap = new HashMap<>(3);
-        statsMap.put(NetworkStatsKindEnum.MESSAGE_STATS,new NetworkStats("totalMessageStats"));
-        statsMap.put(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED, new NetworkStats("effectiveMessageStats"));
-        statsMap.put(NetworkStatsKindEnum.ACK_STATS,new NetworkStats("ackStats"));
+        totalMessageStats = new NetworkStats("totalMessageStats");
+        sentAckedMessageStats = new NetworkStats("sentAckedMessageStats");
+        ackStats = new NetworkStats("ackStats");
         dest=host;
+    }
+
+    public NetworkStatsWrapper(InetSocketAddress host, NetworkStatsWrapper networkStatsWrapper){
+        dest=host;
+        totalMessageStats = networkStatsWrapper.totalMessageStats;
+        sentAckedMessageStats = networkStatsWrapper.sentAckedMessageStats;
+        ackStats = networkStatsWrapper.ackStats;
     }
 
     public NetworkStats getStats(NetworkStatsKindEnum key) {
-        return statsMap.get(key);
+        switch (key){
+            case MESSAGE_STATS: return totalMessageStats;
+            case EFFECTIVE_SENT_DELIVERED: return sentAckedMessageStats;
+            case ACK_STATS: return ackStats;
+            default: throw new RuntimeException("UNKNOWN NetworkStatsKindEnum: "+key);
+        }
     }
-    public Collection<NetworkStats> statsCollection(){
-        return statsMap.values();
+    public NetworkStats [] statsCollection(){
+        NetworkStats stats [] = {totalMessageStats, sentAckedMessageStats,ackStats};
+        return stats;
     }
-    public NetworkStatsWrapper(InetSocketAddress host, Map<NetworkStatsKindEnum,NetworkStats> statsMap){
-        this.statsMap=statsMap;
-        dest=host;
-    }
+
 
 }

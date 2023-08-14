@@ -42,7 +42,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
                 .sync()
                 .getNow();
         final QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(), transmissionType);
-        byte [] hs = QUICLogics.gson.toJson(handShakeMessage).getBytes();
+        byte [] hs = TCPChannelUtils.g.toJson(handShakeMessage).getBytes();
         ByteBuf byteBuf = ctx.alloc().directBuffer(hs.length+1);
         byteBuf.writeInt(hs.length);
         byteBuf.writeByte(QUICLogics.HANDSHAKE_MESSAGE);

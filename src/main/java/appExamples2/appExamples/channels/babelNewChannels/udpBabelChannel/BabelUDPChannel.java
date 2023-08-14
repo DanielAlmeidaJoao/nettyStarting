@@ -21,14 +21,11 @@ import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.channels.UDPChannel;
 import udpSupport.channels.UDPChannelHandlerMethods;
 import udpSupport.channels.UDPChannelInterface;
-import udpSupport.metrics.ChannelStats;
+import udpSupport.metrics.NetworkStatsWrapper;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -37,7 +34,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     public final boolean metrics;
     public final static String NAME = "BABEL_UDP_CHANNEL";
     public final static String METRICS_INTERVAL_KEY = "metrics_interval";
-    public final static String DEFAULT_METRICS_INTERVAL = "-1";
+    public final static String DEFAULT_METRICS_INTERVAL = "10000";
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
 
     private final boolean triggerSent;
@@ -76,11 +73,11 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
         this.ownerProto = ownerProto;
     }
-    void readMetricsMethod(ChannelStats stats){
+    void readMetricsMethod(List<NetworkStatsWrapper> stats){
         listener.deliverEvent(new UDPMetricsEvent(stats));
     }
     void triggerMetricsEvent() {
-        udpChannelInterface.readMetrics(this::readMetricsMethod);
+        udpChannelInterface.readMetrics(stats -> readMetricsMethod(stats));
     }
 
     @Override

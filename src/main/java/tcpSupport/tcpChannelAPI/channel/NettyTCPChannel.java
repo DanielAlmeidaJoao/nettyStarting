@@ -75,7 +75,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         this.serializer = serializer;
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        boolean metricsOn = properties.containsKey("metrics");
+        boolean metricsOn = properties.containsKey(TCPChannelUtils.CHANNEL_METRICS);
         if(metricsOn){
             metricsManager = new ConnectionProtocolMetricsManager(self,singleThreaded);
         }else{
@@ -138,7 +138,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         if(connection==null){
             logger.debug("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
         }else {
-            calcMetricsOnReceived(connection.conId,bytes.readableBytes()+4);
+            calcMetricsOnReceived(connection.conId,bytes.readableBytes()+Integer.BYTES);
             try {
                 T babelMessage = serializer.deserialize(bytes);
                 channelHandlerMethods.onChannelReadDelimitedMessage(connection.conId,babelMessage,connection.host);
@@ -300,8 +300,8 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
 
                 ByteBuf byteBuf = connection.channel.alloc().directBuffer().writeInt(0);
                 serializer.serialize(message,byteBuf);
-                final int len = byteBuf.readableBytes()-Integer.BYTES;
-                byteBuf.setInt(0,len);
+                final int len = byteBuf.readableBytes();
+                byteBuf.setInt(0,len-Integer.BYTES);
                 ChannelFuture f = connection.channel.writeAndFlush(byteBuf);
                 f.addListener(future -> {
                     calcMetricsOnSend(future,connection.conId,len);

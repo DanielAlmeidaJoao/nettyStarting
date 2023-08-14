@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import quicSupport.utils.enums.NetworkRole;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
@@ -24,7 +25,6 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
     public final static String PORT_KEY = "UDP_port";
 
     public final static String DEFAULT_PORT = "8578";
-    public static final String UDP_METRICS = "UDP_metrics";
     private final NettyUDPServer udpServer;
     private ChannelStats metrics;
     private final InetSocketAddress self;
@@ -41,7 +41,7 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
         this.serializer = serializer;
         int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        if( properties.getProperty(UDP_METRICS)!=null){
+        if( properties.getProperty(TCPChannelUtils.CHANNEL_METRICS)!=null){
             metrics = new ChannelStats(singleThreaded);
         }
         udpServer=new NettyUDPServer(this,metrics,self,properties);
@@ -90,7 +90,6 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
     }
 
     public void readMetrics(OnReadMetricsFunc onReadMetricsFunc){
-        System.out.println("SUPPER METRICS CALLED "+metrics.getStatsMap().size());
         if(metricsEnabled()){
             onReadMetricsFunc.execute(metrics.cloneChannelMetric());
         }else{

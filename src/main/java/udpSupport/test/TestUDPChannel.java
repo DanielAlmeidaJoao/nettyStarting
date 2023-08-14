@@ -12,7 +12,6 @@ import udpSupport.channels.UDPChannelInterface;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStats;
 import udpSupport.metrics.NetworkStatsWrapper;
-import udpSupport.utils.UDPLogics;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -125,7 +124,7 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
             System.out.println("TOTAL SENT "+totalSent+" COUNT -- "+cc);
             sumHashes(sentHashes);
             Thread.sleep(10000);
-            udpChannelInterface.readMetrics(this::onReadMetrics);
+            //udpChannelInterface.readMetrics(stats -> onReadMetrics(stats));
             System.out.println("METRICS OUT ?");
         }catch (Exception e){
             e.printStackTrace();
@@ -138,7 +137,7 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
             System.out.println("ENTER SOMETHING COMMAND:");
             input = scanner.nextLine();
             if("m".equalsIgnoreCase(input)){
-                udpChannelInterface.readMetrics(this::onReadMetrics);
+                //udpChannelInterface.readMetrics(stats -> onReadMetrics(stats));
             } else if ("send".equalsIgnoreCase(input)) {
                 System.out.println("Enter data:");
                 input = scanner.nextLine();
@@ -154,10 +153,9 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
         }
     }
     public void onReadMetrics(ChannelStats stats){
-        System.out.println("SUPPER METRICS CALLED ++++++++");
         for (NetworkStatsWrapper value : stats.getStatsMap().values()) {
             for (NetworkStats networkStats : value.statsCollection()) {
-                System.out.println(UDPLogics.gson.toJson(networkStats));
+                //System.out.println(UDPLogics.gson.toJson(networkStats));
             }
         }
     }

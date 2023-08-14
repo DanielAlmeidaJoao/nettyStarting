@@ -1,14 +1,14 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.babelNewChannels.events.QUICMetricsEvent;
+import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage2;
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import quicSupport.utils.QUICLogics;
+import pt.unl.fct.di.novasys.network.data.Host;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -44,7 +44,7 @@ public class EchoProtocol2 extends GenericProtocol {
         registerMessageSerializer(channelId, EchoMessage2.MSG_ID, EchoMessage2.serializer);
         /*---------------------- Register Message Handlers -------------------------- */
         try {
-            //registerChannelEventHandler(channelId, QUICMetricsEvent.EVENT_ID, this::uponChannelMetrics);
+            //registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             //registerMessageHandler(channelId, EchoMessage2.MSG_ID, this::uponFloodMessage, this::uponMsgFail);
 
             if(myself.getPort()==8081){
@@ -82,10 +82,10 @@ public class EchoProtocol2 extends GenericProtocol {
             cancelTimer(id);
         }
     }
-    private void uponChannelMetrics(QUICMetricsEvent event, int channelId) {
+    private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");
-        System.out.println("CURRENT: "+QUICLogics.gson.toJson(event.getCurrent()));
-        System.out.println("OLD: "+QUICLogics.gson.toJson(event.getOld()));
+        System.out.println("CURRENT: "+ TCPChannelUtils.g.toJson(event.getCurrent()));
+        System.out.println("OLD: "+TCPChannelUtils.g.toJson(event.getOld()));
     }
     private void uponInConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());

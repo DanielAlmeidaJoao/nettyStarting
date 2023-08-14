@@ -53,6 +53,7 @@ import static quicSupport.utils.enums.TransmissionType.STRUCTURED_MESSAGE;
 
 public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChannelInterface<T>, SendStreamInterface{
     private static final Logger logger = LogManager.getLogger(NettyQUICChannel.class);
+    public static final int HEADER_LENGTH = 5;
 
     private final InetSocketAddress self;
     private static boolean enableMetrics;
@@ -89,7 +90,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
 
         int port = Integer.parseInt(properties.getProperty(QUICLogics.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        enableMetrics = properties.containsKey(QUICLogics.QUIC_METRICS);
+        enableMetrics = properties.containsKey(TCPChannelUtils.CHANNEL_METRICS);
         withHeartBeat = properties.get(QUICLogics.WITH_HEART_BEAT)!=null;
         heartBeatTimeout = Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+""));
         if(enableMetrics){
@@ -201,7 +202,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     public void onReceivedDelimitedMessage(String customId, ByteBuf bytes){
         CustomQUICStreamCon streamCon = customStreamIdToStream.get(customId);
         if(streamCon!=null){
-            calcMetricsOnReceived(streamCon.customStreamId,bytes.readableBytes());
+            calcMetricsOnReceived(streamCon.customStreamId,bytes.readableBytes()+HEADER_LENGTH);
             if(withHeartBeat && streamCon.inConnection){streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();}
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
             try {
@@ -468,8 +469,8 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             ByteBuf buf = streamChannel.streamChannel.alloc().directBuffer();
             buf = buf.writeInt(0).writeByte(APP_DATA);
             serializer.serialize(message,buf);
-            final int len = buf.readableBytes()-5;
-            buf.setInt(0,len);
+            final int len = buf.readableBytes();
+            buf.setInt(0,len-HEADER_LENGTH);
             ChannelFuture c = streamChannel.streamChannel.writeAndFlush(buf);
             c.addListener(future -> {
                 if(future.isSuccess()){

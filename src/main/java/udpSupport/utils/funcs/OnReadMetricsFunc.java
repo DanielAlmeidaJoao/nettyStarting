@@ -1,8 +1,10 @@
 package udpSupport.utils.funcs;
 
-import udpSupport.metrics.ChannelStats;
+import udpSupport.metrics.NetworkStatsWrapper;
+
+import java.util.List;
 
 @FunctionalInterface
 public interface OnReadMetricsFunc {
-    void execute(ChannelStats stats);
+    void execute(List<NetworkStatsWrapper> stats);
 }
