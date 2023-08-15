@@ -1,5 +1,6 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
@@ -52,7 +53,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
         NETWORK_PROTO = properties.getProperty("NETWORK_PROTO");
-        channelId = makeChan(NETWORK_PROTO,address,port);
+        boolean singleThreaded = properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null;
+        channelId = makeChan(NETWORK_PROTO,address,port,singleThreaded);
         System.out.println("PROTO "+NETWORK_PROTO);
 
         filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
@@ -63,26 +65,35 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
         //Path filePath = Paths.get(p);
     }
-    private int makeChan(String channelName,String address, String port) throws Exception {
+    private int makeChan(String channelName, String address, String port, boolean singleThreaded) throws Exception {
         Properties channelProps;
+        boolean zeroCopy = properties.getProperty(NettyTCPChannel.ZERO_COPY)!=null;
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
             channelProps = TCPChannelUtils.quicChannelProperty(address,port);
+            addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
         }else if(channelName.equalsIgnoreCase("tcp")){
             System.out.println("TCP ON");
             channelProps = TCPChannelUtils.tcpChannelProperties(address,port);
+            addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps);
         }else{
             System.out.println("UDP ON");
             channelProps = TCPChannelUtils.udpChannelProperties(address,port);
+            addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelUDPChannel.NAME,channelProps);
         }
-        if(properties.getProperty(NettyTCPChannel.ZERO_COPY)!=null){
-            channelProps.setProperty(NettyTCPChannel.ZERO_COPY,properties.getProperty(NettyTCPChannel.ZERO_COPY));
-        }
         return channelId;
+    }
+    private void addExtraProps(boolean singleThreade,boolean zeroCopy, Properties channelProps){
+        if(zeroCopy){
+            channelProps.setProperty(NettyTCPChannel.ZERO_COPY,"ZERO_copy");
+        }
+        if(singleThreade){
+            channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
+        }
     }
     @Override
     public void init(Properties props) {
@@ -303,7 +314,6 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                     read = new byte[CHUNK];
                 }
             }else{
-                System.out.println("WITH ZERO COPY");
                 babelInputStream.writeFile(filePath.toFile());
             }
 

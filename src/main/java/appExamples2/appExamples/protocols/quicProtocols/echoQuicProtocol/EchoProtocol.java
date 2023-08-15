@@ -296,9 +296,9 @@ public class EchoProtocol extends GenericProtocolExtension {
     List<String> cons = new LinkedList<>();
     private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
         logger.info("SELF: {} | CONNECTION UP: {} {} {}",myself,event.conId,event.inConnection,event.type);
-
-        if(event.inConnection){
-            //return;
+        dest = event.getNode();
+        if(event != null){
+            return;
         }
         cons.add(event.conId);
         if(dest==null){
