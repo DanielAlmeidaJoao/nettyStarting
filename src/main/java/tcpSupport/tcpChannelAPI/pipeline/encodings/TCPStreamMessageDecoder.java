@@ -44,4 +44,9 @@ public class TCPStreamMessageDecoder extends ByteToMessageDecoder {
         consumer.onChannelStreamRead(ctx.channel().id().asShortText(),babelOutputStream);
     }
     **/
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        consumer.onChannelInactive(ctx.channel().id().asShortText());
+    }
 }

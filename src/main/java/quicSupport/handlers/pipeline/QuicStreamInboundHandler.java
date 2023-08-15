@@ -40,10 +40,7 @@ public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
         //cp.addLast(QuicStructuredMessageEncoder.HANDLER_NAME,new QuicStructuredMessageEncoder());
         cp.addLast(QuicDelimitedMessageDecoder.HANDLER_NAME,new QuicDelimitedMessageDecoder(consumer,inConnection,customId));
     }
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
-        consumer.streamInactiveHandler((QuicStreamChannel) ctx.channel(),customId);
-    }
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
@@ -59,5 +56,10 @@ public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
                 //ctx.close();
             }
         }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        consumer.streamInactiveHandler((QuicStreamChannel) ctx.channel(),customId);
     }
 }

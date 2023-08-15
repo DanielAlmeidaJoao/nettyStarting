@@ -1,5 +1,6 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
@@ -20,7 +21,7 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
-import udpSupport.metrics.NetworkStatsWrapper;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 import udpSupport.utils.UDPLogics;
 
 import java.net.InetAddress;
@@ -236,16 +237,30 @@ public class EchoProtocol extends GenericProtocolExtension {
             cancelTimer(id);
         }
     }
+    int countMetricsTime = 0;
     private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
+        countMetricsTime ++;
         System.out.println("METRICS TRIGGERED!!!");
         System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(event.getCurrent()));
         System.out.println("OLD: "+TCPChannelUtils.g.toJson(event.getOld()));
+        if(countMetricsTime==2){
+            var p =event.getCurrent();
+            if(p != null && p.size()>0){
+                //if(myself.getPort()==8081){
+                    closeConnection(FactoryMethods.toBabelHost(p.get(0).getHostAddress()));
+                    System.out.println("CLOSED CONNECTIONNN");
+                //}
+            }
+        }
+        if(countMetricsTime>4){
+            System.exit(1);
+        }
     }
 
 
     private void uponUDPChannelMetrics(UDPMetricsEvent event, int channelId) {
         System.out.println("UDP METRICS TRIGGERED!!!");
-        for (NetworkStatsWrapper stat : event.getStats()) {
+        for (UDPNetworkStatsWrapper stat : event.getStats()) {
             System.out.printf("HOST: %s\n",stat.getDest());
             System.out.println(TCPChannelUtils.g.toJson(stat.ackStats));
             System.out.println(TCPChannelUtils.g.toJson(stat.totalMessageStats));

@@ -16,12 +16,13 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.channels.UDPChannel;
 import udpSupport.channels.UDPChannelHandlerMethods;
 import udpSupport.channels.UDPChannelInterface;
-import udpSupport.metrics.NetworkStatsWrapper;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -73,7 +74,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
         this.ownerProto = ownerProto;
     }
-    void readMetricsMethod(List<NetworkStatsWrapper> stats){
+    void readMetricsMethod(List<UDPNetworkStatsWrapper> stats){
         listener.deliverEvent(new UDPMetricsEvent(stats));
     }
     void triggerMetricsEvent() {
@@ -180,6 +181,22 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         return ownerProto;
     }
 
+    @Override
+    public List<ConnectionProtocolMetrics> currentMetrics() {
+        logger.warn("SUPPORTED ONLY BY QUIC AND TCP");
+        return null;
+    }
+
+    @Override
+    public List<ConnectionProtocolMetrics> oldMetrics() {
+        logger.warn("SUPPORTED ONLY BY QUIC AND TCP");
+        return null;
+    }
+
+    @Override
+    public List<UDPNetworkStatsWrapper> getUDPMetrics(){
+        return udpChannelInterface.getMetrics();
+    }
     @Override
     public NetworkProtocol getNetWorkProtocol() {
         return NetworkProtocol.UDP;

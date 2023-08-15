@@ -5,24 +5,35 @@ import lombok.Getter;
 import java.net.InetSocketAddress;
 
 @Getter
-public class NetworkStatsWrapper {
+public class UDPNetworkStatsWrapper {
     private InetSocketAddress dest;
     public final NetworkStats totalMessageStats;
     public final NetworkStats sentAckedMessageStats;
     public final NetworkStats ackStats;
 
-    public NetworkStatsWrapper(InetSocketAddress host){
+    @Override
+    public UDPNetworkStatsWrapper clone(){
+        return new UDPNetworkStatsWrapper(dest,totalMessageStats.clone(),sentAckedMessageStats.clone(),ackStats.clone());
+    }
+
+    public UDPNetworkStatsWrapper(InetSocketAddress host){
         totalMessageStats = new NetworkStats("totalMessageStats");
         sentAckedMessageStats = new NetworkStats("sentAckedMessageStats");
         ackStats = new NetworkStats("ackStats");
         dest=host;
     }
 
-    public NetworkStatsWrapper(InetSocketAddress host, NetworkStatsWrapper networkStatsWrapper){
+    public UDPNetworkStatsWrapper(InetSocketAddress host, UDPNetworkStatsWrapper UDPNetworkStatsWrapper){
         dest=host;
-        totalMessageStats = networkStatsWrapper.totalMessageStats;
-        sentAckedMessageStats = networkStatsWrapper.sentAckedMessageStats;
-        ackStats = networkStatsWrapper.ackStats;
+        totalMessageStats = UDPNetworkStatsWrapper.totalMessageStats;
+        sentAckedMessageStats = UDPNetworkStatsWrapper.sentAckedMessageStats;
+        ackStats = UDPNetworkStatsWrapper.ackStats;
+    }
+    private UDPNetworkStatsWrapper(InetSocketAddress host, NetworkStats totalMessageStats, NetworkStats sentAckedMessageStats, NetworkStats ackStats){
+        this.dest=host;
+        this.totalMessageStats = totalMessageStats;
+        this.sentAckedMessageStats = sentAckedMessageStats;
+        this.ackStats = ackStats;
     }
 
     public NetworkStats getStats(NetworkStatsKindEnum key) {

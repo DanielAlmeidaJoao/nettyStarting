@@ -4,8 +4,11 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
@@ -42,6 +45,11 @@ public interface NewIChannel<T> {
     int connectedPeers();
     boolean shutDownChannel(short protoId);
     short getChannelProto();
+
+    List<ConnectionProtocolMetrics> currentMetrics();
+    List<ConnectionProtocolMetrics> oldMetrics();
+    List<UDPNetworkStatsWrapper> getUDPMetrics();
+
     NetworkProtocol getNetWorkProtocol();
     NetworkRole getNetworkRole();
 }

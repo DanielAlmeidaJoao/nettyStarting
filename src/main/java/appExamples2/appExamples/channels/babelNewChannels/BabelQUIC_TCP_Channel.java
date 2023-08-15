@@ -25,6 +25,7 @@ import tcpSupport.tcpChannelAPI.channel.SingleThreadedNettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,7 +69,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     private NettyChannelInterface getQUIC_TCP(Properties properties, NetworkProtocol protocol,NetworkRole networkRole) throws IOException {
         NettyChannelInterface i;
         if(NetworkProtocol.QUIC==protocol){
-            if(properties.getProperty("SINLGE_TRHEADED")!=null){
+            if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
                 i = new SingleThreadedQuicChannel(properties,networkRole,this,serializer);
                 System.out.println("SINGLE THREADED CHANNEL QUIC");
             }else {
@@ -186,6 +187,21 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         BabelMessage babelMessage = new BabelMessage(new BytesToBabelMessage(data,dataLen),sourceProto,destProto);
         sendMessage((T) babelMessage,connectionID,sourceProto);
     }
+    @Override
+    public List<ConnectionProtocolMetrics> currentMetrics() {
+        return nettyChannelInterface.currentMetrics();
+    }
+
+    @Override
+    public List<ConnectionProtocolMetrics> oldMetrics() {
+        return nettyChannelInterface.oldMetrics();
+    }
+
+    @Override
+    public List<UDPNetworkStatsWrapper> getUDPMetrics() {
+        logger.warn("getUDPMetrics SUPPORTED ONLY BY UDP");
+        return null;
+    }
 
     @Override
     public void registerChannelInterest(short protoId) {
@@ -269,5 +285,6 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         logger.info("STREAM {} OF {} CONNECTION CLOSED.",streamId,peer);
         listener.deliverEvent(new OnConnectionDownEvent(FactoryMethods.toBabelHost(peer),null,streamId,inConnection));
     }
+
 
 }

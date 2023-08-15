@@ -24,7 +24,11 @@ public class SingleThreadedUDPChannel<T> extends UDPChannel<T> {
 
     @Override
     public void deliverMessage(ByteBuf message, InetSocketAddress from) {
-        executor.execute(() -> super.deliverMessage(message, from));
+        final ByteBuf copy = message.retainedDuplicate();
+        executor.execute(() -> {
+            super.deliverMessage(copy, from);
+            copy.release();
+        });
     }
 
     @Override

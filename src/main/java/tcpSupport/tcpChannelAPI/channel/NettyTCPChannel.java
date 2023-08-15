@@ -15,12 +15,12 @@ import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.NettyChannelInterface;
 import quicSupport.channels.SendStreamInterface;
-import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.connectionSetups.*;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
 import tcpSupport.tcpChannelAPI.utils.*;
 
@@ -31,6 +31,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -116,9 +117,9 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
     public  void onChannelInactive(String channelId){
         channelInactiveLogics(channelId);
     }
-    private void channelInactiveLogics(String channelId){
-        nettyIdTOConnectingOBJ.remove(channelId);
-        CustomTCPConnection connection = nettyIdToConnection.remove(channelId);
+    private void channelInactiveLogics(String nettyId){
+        nettyIdTOConnectingOBJ.remove(nettyId);
+        CustomTCPConnection connection = nettyIdToConnection.remove(nettyId);
         if(connection == null){
             return;
         }
@@ -250,18 +251,13 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         return null;
     }
     public void closeConnection(InetSocketAddress peer) {
-        logger.info("CLOSING ALL CONNECTIONS TO {}", peer);
+        logger.debug("CLOSING ALL CONNECTIONS TO {}", peer);
         ConcurrentLinkedQueue<CustomTCPConnection> connections = addressToConnections.remove(peer);
         if(connections!=null){
             for (CustomTCPConnection connection : connections) {
                 connection.close();
             }
         }
-    }
-
-    @Override
-    public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler) {
-        new Exception("TO DO").printStackTrace();
     }
 
     @Override
@@ -492,5 +488,15 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
 
     public NetworkRole getNetworkRole(){
         return networkRole;
+    }
+
+    @Override
+    public List<ConnectionProtocolMetrics> currentMetrics() {
+        return metricsManager == null ? null : metricsManager.currentMetrics();
+    }
+
+    @Override
+    public List<ConnectionProtocolMetrics> oldMetrics() {
+        return metricsManager == null ? null : metricsManager.oldMetrics();
     }
 }

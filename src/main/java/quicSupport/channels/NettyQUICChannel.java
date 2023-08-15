@@ -16,7 +16,6 @@ import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QUICClientEntity;
 import quicSupport.client_server.QUICServerEntity;
-import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.handlers.pipeline.QUICRawStreamDecoder;
 import quicSupport.handlers.pipeline.QuicDelimitedMessageDecoder;
 import quicSupport.handlers.pipeline.QuicStreamInboundHandler;
@@ -32,6 +31,7 @@ import tcpSupport.tcpChannelAPI.connectionSetups.DummyClient;
 import tcpSupport.tcpChannelAPI.connectionSetups.DummyServer;
 import tcpSupport.tcpChannelAPI.connectionSetups.ServerInterface;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
@@ -163,10 +163,9 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         }
     }
     public void streamInactiveHandler(QuicStreamChannel channel, String customId) {
-        logger.info("{}. STREAM {} CLOSED",self,customId);
         CustomQUICStreamCon streamCon = customStreamIdToStream.remove(customId);
-
         if(streamCon!=null){
+            logger.debug("{}. STREAM {} CLOSED",self,customId);
             if(enabledMetrics()){
                 metrics.onConnectionClosed(streamCon.customStreamId);
             }
@@ -212,6 +211,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
                 //FactoryMethods.deserialize(bytes,serializer,listener,from,connectionId);
             } catch (Exception e) {
                 e.printStackTrace();
+                System.exit(1);
                 throw new RuntimeException(e);
             }
         }
@@ -315,11 +315,12 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         CustomQUICStreamCon aux = customStreamIdToStream.remove(parentNettyId);
         if(aux == null)return;
         CustomQUICConnection customQUICConnection = aux.customParentConnection;
+        customQUICConnection.closeAll();
         ConcurrentLinkedQueue<CustomQUICConnection> connections = addressToQUICCons.get(customQUICConnection.getRemote());
         if(connections !=null && connections.remove(customQUICConnection) && connections.isEmpty()){
             addressToQUICCons.remove(customQUICConnection.getRemote());
         }
-        logger.info("{} CONNECTION TO {} IS DOWN.",self,customQUICConnection.getRemote());
+        logger.debug("{} CONNECTION TO {} IS DOWN.",self,customQUICConnection.getRemote());
     }
 
     /*********************************** Channel Handlers **********************************/
@@ -370,12 +371,6 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             closeConnections(connections);
         }
     }
-
-    @Override
-    public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler) {
-
-    }
-
     private boolean isEnableMetrics(){
         if(!enableMetrics){
             Exception e = new Exception("METRICS IS NOT ENABLED!");
@@ -640,6 +635,16 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
                 metrics.calcMetricsOnSend(future.isSuccess(),connectionId,length);
             }
         }
+    }
+
+    @Override
+    public List<ConnectionProtocolMetrics> currentMetrics() {
+        return metrics == null ? null : metrics.currentMetrics();
+    }
+
+    @Override
+    public List<ConnectionProtocolMetrics> oldMetrics() {
+        return metrics == null ? null : metrics.oldMetrics();
     }
 
 

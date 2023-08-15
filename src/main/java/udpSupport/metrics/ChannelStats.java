@@ -1,7 +1,6 @@
 package udpSupport.metrics;
 
 import lombok.Getter;
-import org.modelmapper.ModelMapper;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -13,9 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChannelStats {
 
     @Getter
-    private Map<InetSocketAddress,NetworkStatsWrapper> statsMap;
+    private Map<InetSocketAddress, UDPNetworkStatsWrapper> statsMap;
 
-    public final ModelMapper modelMapper;
 
     public ChannelStats(boolean singleThreaded){
         if(singleThreaded){
@@ -23,35 +21,32 @@ public class ChannelStats {
         }else {
             statsMap = new ConcurrentHashMap<>();
         }
-        modelMapper = new ModelMapper();
     }
 
     public void addSentBytes(InetSocketAddress peer, long bytes, NetworkStatsKindEnum message_code){
-        NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper(peer));
+        UDPNetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer, address -> new UDPNetworkStatsWrapper(peer));
         networkStats.getStats(message_code).addBytesSent(bytes);
     }
     public void addTransmissionRTT(InetSocketAddress peer, long timeElapsedMillis){
-        NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper(peer));
+        UDPNetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer, address -> new UDPNetworkStatsWrapper(peer));
         networkStats.getStats(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED).addRTT(timeElapsedMillis);
     }
     public void addReceivedBytes(InetSocketAddress peer, long bytes,NetworkStatsKindEnum message_code){
-        NetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer,address -> new NetworkStatsWrapper(peer));
+        UDPNetworkStatsWrapper networkStats = statsMap.computeIfAbsent(peer, address -> new UDPNetworkStatsWrapper(peer));
         networkStats.getStats(message_code).addBytesReceived(bytes);
     }
-    private NetworkStatsWrapper clone(NetworkStatsWrapper stats){
-        return modelMapper.map(stats,NetworkStatsWrapper.class);
-    }
-    public List<NetworkStatsWrapper> cloneChannelMetric(){
-        List<NetworkStatsWrapper> networkStatsWrapperList = new LinkedList<>();
-        for (NetworkStatsWrapper value : statsMap.values()) {
+
+    public List<UDPNetworkStatsWrapper> cloneChannelMetric(){
+        List<UDPNetworkStatsWrapper> UDPNetworkStatsWrapperList = new LinkedList<>();
+        for (UDPNetworkStatsWrapper value : statsMap.values()) {
             /**
             Map<NetworkStatsKindEnum,NetworkStats> statsMap = new HashMap<>(3);
             statsMap.put(NetworkStatsKindEnum.MESSAGE_STATS,clone(value.getStats(NetworkStatsKindEnum.MESSAGE_STATS)));
             statsMap.put(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED,clone(value.getStats(NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED)));
             statsMap.put(NetworkStatsKindEnum.ACK_STATS,clone(value.getStats((NetworkStatsKindEnum.ACK_STATS))));
             **/
-            networkStatsWrapperList.add(new NetworkStatsWrapper(value.getDest(),clone(value)));
+            UDPNetworkStatsWrapperList.add(new UDPNetworkStatsWrapper(value.getDest(),value.clone()));
         }
-        return networkStatsWrapperList;
+        return UDPNetworkStatsWrapperList;
     }
 }

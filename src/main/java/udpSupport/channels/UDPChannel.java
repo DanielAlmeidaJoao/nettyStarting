@@ -9,12 +9,14 @@ import quicSupport.utils.enums.NetworkRole;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Properties;
 
 public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<T>{
@@ -97,6 +99,9 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
         }
     }
 
+    public List<UDPNetworkStatsWrapper> getMetrics(){
+        return metrics == null ? null : metrics.cloneChannelMetric();
+    }
     @Override
     public NetworkRole getNetworkRole() {
         return NetworkRole.P2P_CHANNEL;

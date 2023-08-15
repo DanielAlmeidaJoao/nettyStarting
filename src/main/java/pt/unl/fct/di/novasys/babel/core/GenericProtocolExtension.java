@@ -2,14 +2,17 @@ package pt.unl.fct.di.novasys.babel.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
+import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 public abstract class GenericProtocolExtension extends GenericProtocol {
@@ -78,6 +81,17 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
     }
     protected NetworkRole getNetworkRole(int channelId){
         return babel.getNetworkRole(channelId);
+    }
+
+    protected List<ConnectionProtocolMetrics> getCurrentMetrics(int channelId){
+        return babel.getCurrentMetrics(channelId);
+    }
+
+    protected List<ConnectionProtocolMetrics> getOldMetrics(int channelId){
+        return babel.getOldMetrics(channelId);
+    }
+    protected List<UDPNetworkStatsWrapper> getUDPMetrics(int channelId){
+        return babel.getUDPMetrics(channelId);
     }
     protected void shutDownChannel(int channelId, short protoId){
         getChannelOrThrow(channelId);

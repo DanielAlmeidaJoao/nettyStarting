@@ -19,7 +19,7 @@ import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
-import udpSupport.metrics.NetworkStatsWrapper;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -133,7 +133,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
     private void uponUDPChannelMetrics(UDPMetricsEvent event, int channelId) {
         System.out.println("UDP METRICS TRIGGERED!!!");
-        for (NetworkStatsWrapper stat : event.getStats()) {
+        for (UDPNetworkStatsWrapper stat : event.getStats()) {
             System.out.printf("HOST: %s\n",stat.getDest());
             System.out.println(TCPChannelUtils.g.toJson(stat.ackStats));
             System.out.println(TCPChannelUtils.g.toJson(stat.totalMessageStats));
@@ -307,6 +307,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 babelInputStream.writeFile(filePath.toFile());
             }
 
+            System.out.println(TCPChannelUtils.g.toJson(getCurrentMetrics(channelId)));
+            System.out.println(TCPChannelUtils.g.toJson(getOldMetrics(channelId)));
+            System.out.println(TCPChannelUtils.g.toJson(getUDPMetrics(channelId)));
 
             //long len = filePath.toFile().length();
             //sendStream(channelId,fileInputStream,len,streamId);

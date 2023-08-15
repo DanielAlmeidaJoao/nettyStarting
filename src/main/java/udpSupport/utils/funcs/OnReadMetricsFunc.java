@@ -1,10 +1,10 @@
 package udpSupport.utils.funcs;
 
-import udpSupport.metrics.NetworkStatsWrapper;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.util.List;
 
 @FunctionalInterface
 public interface OnReadMetricsFunc {
-    void execute(List<NetworkStatsWrapper> stats);
+    void execute(List<UDPNetworkStatsWrapper> stats);
 }

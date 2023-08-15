@@ -1,5 +1,6 @@
 package tcpSupport.tcpChannelAPI.utils;
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import com.google.gson.Gson;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
@@ -49,6 +50,8 @@ public class TCPChannelUtils {
         channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
         channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(QUICLogics.WITH_HEART_BEAT,"true");
+        channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
+
         return channelProps;
     }
 
@@ -61,7 +64,7 @@ public class TCPChannelUtils {
         //channelProps.setProperty(NettyTCPChannel.ZERO_COPY,"TRUE");
 
         //channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
-        //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
+        channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
         return channelProps;
     }
     public static Properties udpChannelProperties(String address, String port){
@@ -72,6 +75,7 @@ public class TCPChannelUtils {
         properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_RETRANSMISSION_TIMEOUT,"500");
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"100");
         properties.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
+        properties.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
         //properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_BROADCAST_PROP,"10");
         //properties.setProperty(UDPChannel.UDP_METRICS,"10");
 

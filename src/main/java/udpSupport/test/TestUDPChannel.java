@@ -11,7 +11,7 @@ import udpSupport.channels.UDPChannelHandlerMethods;
 import udpSupport.channels.UDPChannelInterface;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStats;
-import udpSupport.metrics.NetworkStatsWrapper;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -153,7 +153,7 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
         }
     }
     public void onReadMetrics(ChannelStats stats){
-        for (NetworkStatsWrapper value : stats.getStatsMap().values()) {
+        for (UDPNetworkStatsWrapper value : stats.getStatsMap().values()) {
             for (NetworkStats networkStats : value.statsCollection()) {
                 //System.out.println(UDPLogics.gson.toJson(networkStats));
             }

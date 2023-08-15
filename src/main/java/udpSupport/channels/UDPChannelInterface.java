@@ -1,9 +1,11 @@
 package udpSupport.channels;
 
 import quicSupport.utils.enums.NetworkRole;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 public interface UDPChannelInterface<T> {
 
@@ -19,5 +21,7 @@ public interface UDPChannelInterface<T> {
     void readMetrics(OnReadMetricsFunc onReadMetricsFunc);
 
     NetworkRole getNetworkRole();
+    List<UDPNetworkStatsWrapper> getMetrics();
+
 
 }

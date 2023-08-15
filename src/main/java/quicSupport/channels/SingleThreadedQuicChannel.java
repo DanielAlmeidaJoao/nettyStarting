@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
-import quicSupport.handlers.channelFuncHandlers.QuicConnectionMetricsHandler;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
@@ -46,8 +45,10 @@ public class SingleThreadedQuicChannel<T> extends NettyQUICChannel<T> {
     }
     @Override
     public void onReceivedDelimitedMessage(String streamId, ByteBuf bytes){
+        final ByteBuf copy = bytes.retainedDuplicate();
         executor.submit(() -> {
-            super.onReceivedDelimitedMessage(streamId, bytes);
+            super.onReceivedDelimitedMessage(streamId, copy);
+            copy.release();
         });
     }
     @Override
@@ -93,12 +94,6 @@ public class SingleThreadedQuicChannel<T> extends NettyQUICChannel<T> {
     public void closeConnection(InetSocketAddress peer){
         executor.submit(() -> {
             super.closeConnection(peer);
-        });
-    }
-    @Override
-    public void getStats(InetSocketAddress peer, QuicConnectionMetricsHandler handler){
-        executor.submit(() -> {
-            super.getStats(peer,handler);
         });
     }
 

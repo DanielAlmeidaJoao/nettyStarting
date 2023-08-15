@@ -18,6 +18,8 @@ import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
+import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -330,6 +332,29 @@ public class Babel {
         if (channelEntry == null)
             throw new AssertionError("getNetworkRole in non-existing channelId " + channelId);
         return channelEntry.getLeft().getNetworkRole();
+    }
+
+    List<ConnectionProtocolMetrics> getCurrentMetrics(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getCurrentMetrics in non-existing channelId " + channelId);
+        return channelEntry.getLeft().currentMetrics();
+    }
+
+    List<ConnectionProtocolMetrics> getOldMetrics(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getOldMetrics in non-existing channelId " + channelId);
+        return channelEntry.getLeft().oldMetrics();
+    }
+    List<UDPNetworkStatsWrapper> getUDPMetrics(int channelId){
+        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+                channelMap.get(channelId);
+        if (channelEntry == null)
+            throw new AssertionError("getUDPMetrics in non-existing channelId " + channelId);
+        return channelEntry.getLeft().getUDPMetrics();
     }
     public boolean closeChannel(int channelId, short protoId) {
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =

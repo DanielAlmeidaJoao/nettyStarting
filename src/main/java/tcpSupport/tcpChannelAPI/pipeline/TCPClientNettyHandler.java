@@ -57,4 +57,8 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
         ctx.close();
         logger.error(cause.getLocalizedMessage());
     }
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        consumer.onChannelInactive(ctx.channel().id().asShortText());
+    }
 }

@@ -85,6 +85,11 @@ public class CustomQUICConnection {
         connection.disconnect();
         connection.close();
     }
+    public void closeAll(){
+        for (CustomQUICStreamCon value : nettyIdToCustomStreamCon.values()) {
+            value.close();
+        }
+    }
 
     private void serverStartScheduling(){
         if(inComing){

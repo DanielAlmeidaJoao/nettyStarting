@@ -3,7 +3,6 @@ package tcpSupport.tcpChannelAPI.metrics;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.modelmapper.ModelMapper;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -18,8 +17,6 @@ public class ConnectionProtocolMetricsManager {
 
     @Getter
     private final Map<String, ConnectionProtocolMetrics> currentConnections;
-    private final ModelMapper modelMapper;
-
 
     @Getter
     private final Queue<ConnectionProtocolMetrics> oldConnections;
@@ -36,7 +33,6 @@ public class ConnectionProtocolMetricsManager {
             currentConnections=new ConcurrentHashMap<>();
             oldConnections= new ConcurrentLinkedQueue<>();
         }
-        modelMapper = new ModelMapper();
         logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }
 
@@ -72,20 +68,18 @@ public class ConnectionProtocolMetricsManager {
         return currentConnections.get(conId);
     }
 
-    private ConnectionProtocolMetrics cloneChannelMetric(ConnectionProtocolMetrics chanMetrics){
-        return modelMapper.map(chanMetrics, ConnectionProtocolMetrics.class);
-    }
+
     public List<ConnectionProtocolMetrics> oldMetrics(){
         var copy = new LinkedList<ConnectionProtocolMetrics>();
         for (ConnectionProtocolMetrics oldConnection : oldConnections) {
-            copy.add(cloneChannelMetric(oldConnection));
+            copy.add(oldConnection.toBuilder().build());
         }
         return copy;
     }
     public List<ConnectionProtocolMetrics> currentMetrics(){
         var copy = new LinkedList<ConnectionProtocolMetrics>();
         for (ConnectionProtocolMetrics value : currentConnections.values()) {
-            copy.add(cloneChannelMetric(value));
+            copy.add(value.toBuilder().build());
         }
         return copy;
     }

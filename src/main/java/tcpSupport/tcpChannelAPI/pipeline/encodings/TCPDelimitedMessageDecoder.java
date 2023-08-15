@@ -31,4 +31,9 @@ public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
         buf.release();
         return true;
     }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        consumer.onChannelInactive(ctx.channel().id().asShortText());
+    }
 }

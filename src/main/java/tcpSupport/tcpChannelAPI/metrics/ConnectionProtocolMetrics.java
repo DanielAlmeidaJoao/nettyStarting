@@ -1,6 +1,7 @@
 package tcpSupport.tcpChannelAPI.metrics;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import java.net.InetSocketAddress;
 
 @Getter
 @Setter
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class ConnectionProtocolMetrics {
     private final InetSocketAddress hostAddress;
