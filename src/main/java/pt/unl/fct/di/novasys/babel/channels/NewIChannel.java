@@ -46,8 +46,8 @@ public interface NewIChannel<T> {
     boolean shutDownChannel(short protoId);
     short getChannelProto();
 
-    List<ConnectionProtocolMetrics> currentMetrics();
-    List<ConnectionProtocolMetrics> oldMetrics();
+    List<ConnectionProtocolMetrics> activeConnectionsMetrics();
+    List<ConnectionProtocolMetrics> closedConnectionsMetrics();
     List<UDPNetworkStatsWrapper> getUDPMetrics();
 
     NetworkProtocol getNetWorkProtocol();

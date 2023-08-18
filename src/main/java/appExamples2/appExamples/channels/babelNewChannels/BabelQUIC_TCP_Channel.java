@@ -188,12 +188,12 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         sendMessage((T) babelMessage,connectionID,sourceProto);
     }
     @Override
-    public List<ConnectionProtocolMetrics> currentMetrics() {
+    public List<ConnectionProtocolMetrics> activeConnectionsMetrics() {
         return nettyChannelInterface.currentMetrics();
     }
 
     @Override
-    public List<ConnectionProtocolMetrics> oldMetrics() {
+    public List<ConnectionProtocolMetrics> closedConnectionsMetrics() {
         return nettyChannelInterface.oldMetrics();
     }
 

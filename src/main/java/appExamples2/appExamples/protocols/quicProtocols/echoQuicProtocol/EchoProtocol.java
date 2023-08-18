@@ -90,6 +90,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);
+
             registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerChannelEventHandler(channelId, UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
 

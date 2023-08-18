@@ -3,6 +3,7 @@ package tcpSupport.tcpChannelAPI.metrics;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -36,14 +37,12 @@ public class ConnectionProtocolMetricsManager {
         logger.info("{} IS GOING TO REGISTER METRICS.",host);
     }
 
-    public void initConnectionMetrics(String connectionId, InetSocketAddress dest, boolean incoming, int len){
+    public void initConnectionMetrics(String connectionId, InetSocketAddress dest, boolean incoming, int len, TransmissionType type){
         logger.info("SELF: {}. METRICS TO {} ADDED.",self,connectionId);
-        ConnectionProtocolMetrics m = new ConnectionProtocolMetrics(
-                dest,0,0,0,0,
-                0,0,
-                0,0,0,0,false,connectionId
-        );
-        m.setIncoming(incoming);
+        ConnectionProtocolMetrics m = new ConnectionProtocolMetrics(0,0,0,
+                0,0,0,0,
+                0,0,0
+                ,dest,connectionId,incoming,type);
         currentConnections.put(connectionId,m);
         if(incoming){
             m.setReceivedControlBytes(len);

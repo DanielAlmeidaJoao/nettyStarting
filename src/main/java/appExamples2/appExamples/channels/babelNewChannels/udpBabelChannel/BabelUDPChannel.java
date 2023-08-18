@@ -182,13 +182,13 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public List<ConnectionProtocolMetrics> currentMetrics() {
+    public List<ConnectionProtocolMetrics> activeConnectionsMetrics() {
         logger.warn("SUPPORTED ONLY BY QUIC AND TCP");
         return null;
     }
 
     @Override
-    public List<ConnectionProtocolMetrics> oldMetrics() {
+    public List<ConnectionProtocolMetrics> closedConnectionsMetrics() {
         logger.warn("SUPPORTED ONLY BY QUIC AND TCP");
         return null;
     }

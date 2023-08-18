@@ -339,7 +339,7 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getCurrentMetrics in non-existing channelId " + channelId);
-        return channelEntry.getLeft().currentMetrics();
+        return channelEntry.getLeft().activeConnectionsMetrics();
     }
 
     List<ConnectionProtocolMetrics> getOldMetrics(int channelId){
@@ -347,7 +347,7 @@ public class Babel {
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getOldMetrics in non-existing channelId " + channelId);
-        return channelEntry.getLeft().oldMetrics();
+        return channelEntry.getLeft().closedConnectionsMetrics();
     }
     List<UDPNetworkStatsWrapper> getUDPMetrics(int channelId){
         Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =

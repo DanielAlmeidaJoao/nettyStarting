@@ -175,7 +175,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
             }
 
             if(metricsManager !=null){
-                metricsManager.initConnectionMetrics(conId,listeningAddress,inConnection,len);
+                metricsManager.initConnectionMetrics(conId,listeningAddress,inConnection,len, type);
             }
 
             BabelInputStream babelInputStream = BabelInputStream.toBabelStream(conId,this,type, channel.alloc());
