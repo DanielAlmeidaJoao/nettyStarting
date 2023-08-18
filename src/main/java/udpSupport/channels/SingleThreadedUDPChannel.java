@@ -32,7 +32,7 @@ public class SingleThreadedUDPChannel<T> extends UDPChannel<T> {
     }
 
     @Override
-    public void messageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest) {
+    public void messageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest) {
         executor.execute(() -> super.messageSentHandler(success, error, message, dest));
     }
 

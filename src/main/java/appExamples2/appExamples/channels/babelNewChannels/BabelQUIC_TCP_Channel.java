@@ -57,9 +57,9 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         nettyChannelInterface = getQUIC_TCP(properties,networkProtocol,networkRole);
         metrics = nettyChannelInterface.enabledMetrics();
 
-        if(metrics){
-            int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY, DEFAULT_METRICS_INTERVAL));
-            new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.MILLISECONDS);
+        if(metrics && properties.getProperty(METRICS_INTERVAL_KEY)!=null){
+            int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY));
+            new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.SECONDS);
         }
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
         this.protoToReceiveStreamData = protoId;

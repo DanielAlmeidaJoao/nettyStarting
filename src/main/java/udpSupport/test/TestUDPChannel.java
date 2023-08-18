@@ -85,7 +85,7 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
         System.out.println(" SUMM "+sum);
     }
     @Override
-    public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest) {
+    public void onMessageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest) {
         if(!success){
             error.printStackTrace();
         }

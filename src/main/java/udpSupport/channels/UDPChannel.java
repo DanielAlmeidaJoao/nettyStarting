@@ -63,6 +63,7 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
         try{
             serializer.serialize(message,buf);
             udpServer.sendMessage(buf,dest);
+            messageSentHandler(true,null,message,dest);
         }catch (Exception e){
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -87,7 +88,7 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
         }
     }
     @Override
-    public void messageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
+    public void messageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest){
         channelHandlerMethods.onMessageSentHandler(success,error,message,dest);
     }
 

@@ -30,12 +30,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static tcpSupport.tcpChannelAPI.utils.TCPChannelUtils.METRICS_INTERVAL_KEY;
+
 public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMethods<T> {
     private static final Logger logger = LogManager.getLogger(BabelUDPChannel.class);
     public final boolean metrics;
     public final static String NAME = "BABEL_UDP_CHANNEL";
-    public final static String METRICS_INTERVAL_KEY = "metrics_interval";
-    public final static String DEFAULT_METRICS_INTERVAL = "10000";
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
 
     private final boolean triggerSent;
@@ -67,9 +67,9 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
             System.out.println("UDP MULTITHREADED");
         }
         metrics = udpChannelInterface.metricsEnabled();
-        if(metrics){
-            int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY, DEFAULT_METRICS_INTERVAL));
-            new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.MILLISECONDS);
+        if(metrics && properties.getProperty(METRICS_INTERVAL_KEY)!=null ){
+            int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY));
+            new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.SECONDS);
         }
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
         this.ownerProto = ownerProto;
@@ -130,8 +130,8 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         sendMessage(data,dataLen,host,sourceProto,destProto);
     }
     @Override
-    public void onMessageSentHandler(boolean success, Throwable error, byte[] message, InetSocketAddress dest){
-
+    public void onMessageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest){
+        if (triggerSent) listener.messageSent(message,FactoryMethods.toBabelHost(dest),TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override
