@@ -26,7 +26,7 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
     public final static String ADDRESS_KEY = "UDP_address";
     public final static String PORT_KEY = "UDP_port";
 
-    public final static String DEFAULT_PORT = "8578";
+    public final static String DEFAULT_PORT = "8579";
     private final NettyUDPServer udpServer;
     private ChannelStats metrics;
     private final InetSocketAddress self;

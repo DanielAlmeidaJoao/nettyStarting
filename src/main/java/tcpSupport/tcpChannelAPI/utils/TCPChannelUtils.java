@@ -80,8 +80,8 @@ public class TCPChannelUtils {
         //properties.setProperty("UDP_metrics","on");
         properties.setProperty("UDP_port",port);
         properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_RETRANSMISSION_TIMEOUT,"500");
-        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"100");
-        properties.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
+        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"20");
+        //properties.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         properties.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
         //properties.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
         //properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_BROADCAST_PROP,"10");

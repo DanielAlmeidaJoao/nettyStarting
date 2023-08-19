@@ -131,7 +131,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         if(enabledMetrics()){
             metricsManager.onConnectionClosed(connection.conId);
         }
-        channelHandlerMethods.onStreamClosedHandler(connection.host,connection.conId,connection.inConnection);
+        channelHandlerMethods.onStreamClosedHandler(connection.host,connection.conId,connection.inConnection,connection.type);
     }
 
     public void onChannelMessageRead(String channelId, ByteBuf bytes){

@@ -171,7 +171,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             }
             customStreamIdToStream.remove(streamCon.customStreamId);
             streamCon.customParentConnection.closeStream(channel.id().asShortText());
-            overridenMethods.onStreamClosedHandler(streamCon.customParentConnection.getRemote(),streamCon.customStreamId,streamCon.inConnection);
+            overridenMethods.onStreamClosedHandler(streamCon.customParentConnection.getRemote(),streamCon.customStreamId,streamCon.inConnection,streamCon.type);
         }
     }
 
@@ -569,9 +569,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
 
     @Override
     public void shutDown() {
-        if(server!=null){
-            server.shutDown();
-        }
+        server.shutDown();
         client.shutDown();
     }
 

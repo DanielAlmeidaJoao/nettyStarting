@@ -11,10 +11,7 @@ import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.message
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnOpenConnectionFailed;
-import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.*;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
@@ -101,6 +98,8 @@ public class EchoProtocol extends GenericProtocolExtension {
             //uponOpenConnectionFailed
             registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionUp);
             registerChannelEventHandler(channelId, OnOpenConnectionFailed.EVENT_ID, this::uponOpenConnectionFailed);
+
+            registerChannelEventHandler(channelId, OnConnectionDownEvent.EVENT_ID, this::uponConnectionDown);
 
 
             //registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
@@ -335,6 +334,9 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
     }
 
+    private void uponConnectionDown(OnConnectionDownEvent event, int channelId) {
+        logger.info("CONNECTION DOWN: {} {} {}",event.connectionId,event.getNode(),event.type);
+    }
     private void uponBytesMessage(BytesToBabelMessage message,Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received bytes3: {} from {}", (new String(message.message).hashCode()),from);
     }

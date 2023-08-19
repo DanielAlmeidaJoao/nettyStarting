@@ -281,9 +281,9 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         logger.info("FAILED TO GET METRICS. REASON: {}",cause.getLocalizedMessage());
     }
 
-    public void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection) {
-        logger.info("STREAM {} OF {} CONNECTION CLOSED.",streamId,peer);
-        listener.deliverEvent(new OnConnectionDownEvent(FactoryMethods.toBabelHost(peer),null,streamId,inConnection));
+    public void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection, TransmissionType type) {
+        //logger.debug("STREAM {} OF {} CONNECTION CLOSED.",streamId,peer);
+        listener.deliverEvent(new OnConnectionDownEvent(FactoryMethods.toBabelHost(peer),null,streamId,inConnection,type));
     }
 
 

@@ -83,12 +83,11 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void onPeerDown(InetSocketAddress peer) {
-       Host host = FactoryMethods.toBabelHost(peer);
-        for (Map.Entry<String,Host> entry : customConIDToAddress.entrySet()) {
-            if(entry.getValue().equals(host)){
-                listener.deliverEvent(new OnConnectionDownEvent(host,new Throwable("PEER DISCONNECTED!"),entry.getKey(),true));
-            }
-            return;
+        Host host = FactoryMethods.toBabelHost(peer);
+        String conId = hostStringMap.remove(host);
+        if(conId!=null){
+            customConIDToAddress.remove(conId);
+            listener.deliverEvent(new OnConnectionDownEvent(host,new Throwable("PEER DISCONNECTED!"),conId,true,TransmissionType.STRUCTURED_MESSAGE));
         }
     }
 
@@ -142,7 +141,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
             }
         }
         hostStringMap.remove(peer);
-        listener.deliverEvent(new OnConnectionDownEvent(peer,null, "",true));
+        listener.deliverEvent(new OnConnectionDownEvent(peer,null, "",true,TransmissionType.STRUCTURED_MESSAGE));
     }
 
     @Override
