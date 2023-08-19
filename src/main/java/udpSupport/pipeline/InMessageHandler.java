@@ -74,7 +74,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         }else{
             content.release();
             new Exception("UNKNOWN MESSAGE CODE: "+msgCode).printStackTrace();
-            System.exit(1);
+            //System.exit(1);
         }
     }
     long count = 0;

@@ -50,8 +50,8 @@ public class TCPChannelUtils {
         //channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
         channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
         channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
-        channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
-        channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
+        //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
+        //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
 
         //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(QUICLogics.WITH_HEART_BEAT,"true");
@@ -65,8 +65,8 @@ public class TCPChannelUtils {
         channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
         channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
         channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
-        channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
-        channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
+        //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
+        //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
 
         //channelProps.setProperty(NettyTCPChannel.ZERO_COPY,"TRUE");
 
@@ -82,7 +82,7 @@ public class TCPChannelUtils {
         properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_RETRANSMISSION_TIMEOUT,"500");
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"20");
         //properties.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
-        properties.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
+        //properties.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
         //properties.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
         //properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_BROADCAST_PROP,"10");
         //properties.setProperty(UDPChannel.UDP_METRICS,"10");

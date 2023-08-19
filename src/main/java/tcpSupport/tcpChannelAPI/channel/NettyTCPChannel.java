@@ -409,7 +409,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
                 String conId = openConnectionLogics(peer,STRUCTURED_MESSAGE,null);
                 nettyIdTOConnectingOBJ.get(conId).pendingMessages.add(message);
             }else{
-                channelHandlerMethods.onMessageSent(message,new Throwable("Unknown Peer : "+peer),peer, STRUCTURED_MESSAGE,connection.conId);
+                channelHandlerMethods.onMessageSent(message,new Throwable("Unknown Peer : "+peer),peer, STRUCTURED_MESSAGE,null);
             }
         }else {
             sendAux(message,connection);
