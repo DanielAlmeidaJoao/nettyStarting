@@ -120,11 +120,11 @@ public class NettyUDPServer {
                 });
         server = b.bind(address).sync().channel();
         server.closeFuture().addListener(future -> {
-            System.out.println("UDP SERVER DOWN");
+            //System.out.println("UDP SERVER DOWN");
             group.shutdownGracefully().getNow();
             logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });
-        logger.info("UDP SERVER LISTENING ON : {}",address);
+        logger.debug("UDP SERVER LISTENING ON : {}",address);
         return server;
     }
     public void sendMessage(ByteBuf message, InetSocketAddress peer){

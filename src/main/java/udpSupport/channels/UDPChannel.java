@@ -96,7 +96,7 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
         if(metricsEnabled()){
             onReadMetricsFunc.execute(metrics.cloneChannelMetric());
         }else{
-            logger.info("METRICS NOT ENABLED. ADD PROPERTY 'metrics=true'");
+            logger.debug("METRICS NOT ENABLED. ADD PROPERTY 'metrics=true'");
         }
     }
 

@@ -33,8 +33,8 @@ public class TCPServerEntity implements ServerInterface{
 
     public void startServer()
             throws Exception{
-        EventLoopGroup parentGroup = createNewWorkerGroup();
-        EventLoopGroup childGroup = createNewWorkerGroup();
+        EventLoopGroup parentGroup = createNewWorkerGroup(1);
+        EventLoopGroup childGroup = createNewWorkerGroup(-1);
         ServerBootstrap b = new ServerBootstrap();
         b.group(parentGroup,childGroup).channel(socketChannel())
                 .option(ChannelOption.SO_BACKLOG, 128)
@@ -68,10 +68,14 @@ public class TCPServerEntity implements ServerInterface{
         serverChannel.config().setOption(option,value);
     }
 
-    public static EventLoopGroup createNewWorkerGroup() {
+    public static EventLoopGroup createNewWorkerGroup(int numberOfThreads) {
         //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
         //else
-        return new NioEventLoopGroup();
+        if(numberOfThreads>0){
+            return new NioEventLoopGroup(numberOfThreads);
+        }else{
+            return new NioEventLoopGroup();
+        }
     }
     private Class<? extends ServerChannel> socketChannel(){
         /**if (Epoll.isAvailable()) {

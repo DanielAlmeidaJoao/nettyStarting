@@ -15,11 +15,15 @@ public class ReadResults {
 
     public ReadResults(){
         results = initMap2();
-        start();
+        String [] protos = {"udp","tcp","quic","oldTcp"};
+        for (String proto : protos) {
+            start(proto);
+        }
     }
-    private void start(){
-        String protocol = "oldTcp";
-        File folder = new File("/home/tsunami/Desktop/thesis_projects/experimentsResults/results/"+protocol+"Results"); // replace with actual folder path
+    private void start(String protocol){
+        //String protocol = "udp";
+        System.out.println("#"+protocol+"-- RESULTS");
+        File folder = new File("/home/tsunami/Desktop/thesis_projects/experimentsResults/results1000/"+protocol+"Results"); // replace with actual folder path
         for (File file : folder.listFiles()) {
             if (file.isFile()) {
                 //System.out.println(file.getName());
@@ -27,14 +31,14 @@ public class ReadResults {
                     String line;
                     Float value;
                     String name;
-                    if(file.getName().contains("sleep12")){
-                        name = protocol+"_sleep12";
-                    } else if (file.getName().contains("sleep24")) {
-                        name = protocol+"_sleep24";
+                    if(file.getName().contains("faults_run_0")){
+                        name = protocol+"faults_run_0";
+                    } else if (file.getName().contains("faults_run_24")) {
+                        name = protocol+"faults_run_24";
                     } else {
-                        name = protocol+"_sleep52";
+                        name = protocol+"faults_run_52";
                     }
-                    System.out.printf(" %s = [ ",name);
+                    System.out.printf("%s = [ ",name);
                     int n = 0;
                     List<Integer> integerList = new LinkedList<>();
 
@@ -48,8 +52,8 @@ public class ReadResults {
                         System.out.printf("%s,",value);
                         br.readLine();
                     }
-                    System.out.printf(" ] ; \n");
-                    System.out.printf("time_%s = %s \n",name,integerList);
+                    System.out.printf(" ];\n");
+                    System.out.printf("time_%s = %s\n",name,integerList);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
