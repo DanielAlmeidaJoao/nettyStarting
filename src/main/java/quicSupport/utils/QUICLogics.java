@@ -3,6 +3,7 @@ package quicSupport.utils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.incubator.codec.quic.QuicCodecBuilder;
+import io.netty.incubator.codec.quic.QuicCongestionControlAlgorithm;
 import org.apache.commons.codec.binary.Hex;
 
 import javax.net.ssl.TrustManagerFactory;
@@ -50,7 +51,7 @@ public class QUICLogics {
     private static final String initialMaxStreamsBidirectional="200";
     private static final String initialMaxStreamsUnidirectional="200";
 
-    private static final String maxAckDelay = "250";
+    private static final String maxAckDelay = "200";
 
     public static final String SERVER_KEYSTORE_FILE_KEY = "QUIC_SERVER_KEYSTORE_FILE";
     public static final String SERVER_KEYSTORE_PASSWORD_KEY = "QUIC_SERVER_KEYSTORE_PASSWORD";
@@ -71,7 +72,7 @@ public class QUICLogics {
     public static ByteBuf bufToWrite(int data, byte msgCode,ByteBufAllocator alloc){
         //return new DelimitedMessageWrapper(4,Unpooled.buffer(4).writeInt(data).array(),msgCode);
 
-        ByteBuf buf = alloc.directBuffer(4+1);
+        ByteBuf buf = alloc.directBuffer(WRT_OFFSET);
         buf.writeInt(4);
         buf.writeByte(msgCode);
         buf.writeInt(data);
@@ -90,7 +91,9 @@ public class QUICLogics {
                 .initialMaxStreamsUnidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_UNIDIRECTIONAL,initialMaxStreamsUnidirectional)))
                 .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MILLISECONDS)
                 //.activeMigration(true);
-                .maxRecvUdpPayloadSize(1024*1024).maxSendUdpPayloadSize(1024*1024);
+                .maxRecvUdpPayloadSize(1024*1024).maxSendUdpPayloadSize(1024*1024)
+                .congestionControlAlgorithm(QuicCongestionControlAlgorithm.RENO)
+                .hystart(true);
     }
 
     public static byte[] appendOpToHash(byte[] hash, byte[] op) {

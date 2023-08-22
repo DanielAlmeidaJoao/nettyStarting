@@ -23,7 +23,7 @@ public class ReadResults {
     private void start(String protocol){
         //String protocol = "udp";
         System.out.println("#"+protocol+"-- RESULTS");
-        File folder = new File("/home/tsunami/Desktop/thesis_projects/experimentsResults/results1000/"+protocol+"Results"); // replace with actual folder path
+        File folder = new File("/home/tsunami/Desktop/thesis_projects/experimentsResults/results500/"+protocol+"Results"); // replace with actual folder path
         for (File file : folder.listFiles()) {
             if (file.isFile()) {
                 //System.out.println(file.getName());

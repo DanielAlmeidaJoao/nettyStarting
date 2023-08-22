@@ -14,12 +14,15 @@ import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStatsKindEnum;
 import udpSupport.pipeline.InMessageHandler;
 import udpSupport.utils.UDPLogics;
+import udpSupport.utils.UDPWaitForAckWrapper;
 import udpSupport.utils.funcs.OnAckFunction;
 
 import java.net.InetSocketAddress;
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -27,6 +30,7 @@ public class NettyUDPServer {
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
     public static final int BUFFER_SIZE = 1024 * 65;
     public static final String UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
+    public static final int ONE_MINUTE = 60000;
     public int RETRANSMISSION_TIMEOUT;
     public final int MAX_SEND_RETRIES;
     public static final String MAX_SEND_RETRIES_KEY = "UPD_MAX_SEND_RETRIES";
@@ -34,7 +38,7 @@ public class NettyUDPServer {
 
 
 
-    private Map<Long,Long> waitingForAcks;
+    private Map<Long,UDPWaitForAckWrapper> waitingForAcks;
     private final AtomicLong datagramPacketCounter;
     private final AtomicLong streamIdCounter;
 
@@ -43,6 +47,7 @@ public class NettyUDPServer {
     private final InetSocketAddress address;
     private final ChannelStats stats;
     private final Properties properties;
+    private final SecureRandom random;
 
     public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address, Properties properties){
         this.properties=properties;
@@ -60,11 +65,13 @@ public class NettyUDPServer {
             e.printStackTrace();
             throw new RuntimeException("UDP LISTENER COULD NOT START!");
         }
+        random = new SecureRandom();
     }
     public void onAckReceived(long msgId, InetSocketAddress sender){
-        Long timeMillis = waitingForAcks.remove(msgId);
+        UDPWaitForAckWrapper timeMillis = waitingForAcks.remove(msgId);
         if(stats!=null&&timeMillis!=null){
-            stats.addTransmissionRTT(sender,(System.currentTimeMillis() - timeMillis));
+            timeMillis.scheduledFuture.cancel(true);
+            stats.addTransmissionRTT(sender,(System.currentTimeMillis() - timeMillis.timeStart));
         }
     }
 
@@ -73,7 +80,8 @@ public class NettyUDPServer {
         if(MAX_SEND_RETRIES <= 0){
             return;
         }
-        channel.eventLoop().schedule(() -> {
+        UDPWaitForAckWrapper udpWaitForAckWrapper = waitingForAcks.get(msgId);
+        ScheduledFuture scheduledFuture = channel.eventLoop().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) {
                 packet.release();
                 return;
@@ -84,6 +92,9 @@ public class NettyUDPServer {
                 consumer.peerDown(dest);
                 return;
             }
+            if(count>(MAX_SEND_RETRIES/2)){
+                System.out.println("RETRYING "+msgId+" "+count+" "+MAX_SEND_RETRIES);
+            }
             final ByteBuf copy = packet.retainedDuplicate();
             int len = packet.readableBytes();
             channel.writeAndFlush(new DatagramPacket(copy,dest)).addListener(future -> {
@@ -91,17 +102,30 @@ public class NettyUDPServer {
                     if(stats!=null){
                         stats.addSentBytes(dest,len, NetworkStatsKindEnum.MESSAGE_STATS);
                     }
+                    scheduleRetransmission(packet,msgId,dest,count+1);
                 }else{
                     future.cause().printStackTrace();
                 }
-                scheduleRetransmission(packet,msgId,dest,count+1);
             });
-        }, RETRANSMISSION_TIMEOUT,TimeUnit.MILLISECONDS);
+        }, RETRANSMISSION_TIMEOUT + (int)nextFloat(count),TimeUnit.MILLISECONDS);
         if(count==0){
-            waitingForAcks.put(msgId,System.currentTimeMillis());
+            waitingForAcks.put(msgId,new UDPWaitForAckWrapper(scheduledFuture));
+        }else if(udpWaitForAckWrapper==null){
+            scheduledFuture.cancel(true);
+        }else{
+            udpWaitForAckWrapper.scheduledFuture=scheduledFuture;
         }
     }
 
+    private float nextFloat(int count){
+        float stella = 1 + random.nextInt(1+random.nextInt(5000));
+        if(random.nextBoolean()){
+            stella += random.nextFloat()*stella/2;
+        }else{
+            stella -= random.nextFloat()*stella;
+        }
+        return stella;
+    }
     private Channel start() throws Exception{
         OnAckFunction onAckReceived = this::onAckReceived;
         Channel server;
@@ -173,7 +197,7 @@ public class NettyUDPServer {
                 }
             }else{
                 future.cause().printStackTrace();
-                logger.info("NOT SUCCESS SENDING THE MESSAGE {}"+future.cause());
+                logger.debug("NOT SUCCESS SENDING THE MESSAGE {}"+future.cause());
             }
         });
     }

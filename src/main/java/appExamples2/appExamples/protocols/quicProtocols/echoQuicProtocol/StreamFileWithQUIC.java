@@ -134,8 +134,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");
         for (ConnectionProtocolMetrics metrics : event.getCurrent()) {
-            System.out.println("HOST ++ "+metrics.getHostAddress());
-            System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(metrics));
+            //System.out.println("HOST ++ "+metrics.getHostAddress());
+            //System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(metrics));
 
         }
         //System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(event.getCurrent()));
@@ -317,9 +317,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 babelInputStream.writeFile(filePath.toFile());
             }
 
-            System.out.println(TCPChannelUtils.g.toJson(getCurrentMetrics(channelId)));
-            System.out.println(TCPChannelUtils.g.toJson(getOldMetrics(channelId)));
-            System.out.println(TCPChannelUtils.g.toJson(getUDPMetrics(channelId)));
+            //System.out.println(TCPChannelUtils.g.toJson(getCurrentMetrics(channelId)));
+            //System.out.println(TCPChannelUtils.g.toJson(getOldMetrics(channelId)));
+            //System.out.println(TCPChannelUtils.g.toJson(getUDPMetrics(channelId)));
 
             //long len = filePath.toFile().length();
             //sendStream(channelId,fileInputStream,len,streamId);

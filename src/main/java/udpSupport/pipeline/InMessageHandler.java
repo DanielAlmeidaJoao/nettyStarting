@@ -52,17 +52,18 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         byte msgCode = content.readByte();
         long msgId = content.readLong();
         //logger.info("RECEIVED MESSAGE CODE: {}",(msgCode==UDPLogics.APP_ACK?"APP_MESSAGE":"ACK"));
-        byte [] message = null;
         Channel channel = channelHandlerContext.channel();
 
         if(UDPLogics.STREAM_MESSAGE==msgCode){
+            sendAck(channel, msgId,datagramPacket.sender());
             long streamId = content.readLong();
             int streamCount = content.readInt();
-            message = new byte[content.readableBytes()];
+            byte [] message = new byte[content.readableBytes()];
             content.readBytes(message);
             content.release();
             onStreamRead(channel,streamId,message,streamCount,datagramPacket.sender(),msgId,availableBytes);
         }else if(UDPLogics.SINGLE_MESSAGE==msgCode){
+            sendAck(channel, msgId,datagramPacket.sender());
             //message = new byte[content.readableBytes()];
             //content.readBytes(message);
             //content.release();
@@ -83,7 +84,6 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         return sender+""+msgId;
     }
     private void onStreamRead(Channel channel, long streamId, byte [] message , int streamCount, InetSocketAddress sender, long msgId, int availableBytes){
-        sendAck(channel, msgId, sender);
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
@@ -115,7 +115,6 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         }
     }
     private void onSingleMessage(Channel channel, long msgId, ByteBuf message, InetSocketAddress sender, int availableBytes){
-        sendAck(channel, msgId, sender);
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }

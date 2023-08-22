@@ -189,7 +189,8 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             return;
         }
         if(metrics !=null){
-            metrics.initConnectionMetrics(customId,firstStreamOfThisCon.customParentConnection.getRemote(),inConnection,HEADER_LENGTH+4,type);
+            metrics.initConnectionMetrics(customId,firstStreamOfThisCon.customParentConnection.getRemote(),inConnection,HEADER_LENGTH+4,type
+                    );
         }
         CustomQUICStreamCon con = new CustomQUICStreamCon(channel,customId,type,firstStreamOfThisCon.customParentConnection,inConnection, babelInputStream);
         con.customParentConnection.addStream(con);

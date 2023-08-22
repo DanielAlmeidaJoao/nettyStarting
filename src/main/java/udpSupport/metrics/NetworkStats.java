@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class NetworkStats {
     private long bytesReceived, bytesSent;
-    private int messagesReceived, messagesSent, messagesAcked;
+    private long messagesReceived, messagesSent, messagesAcked;
     private long sumRTT;
     private final String name;
     @Override
