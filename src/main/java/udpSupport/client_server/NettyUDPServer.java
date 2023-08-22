@@ -92,9 +92,6 @@ public class NettyUDPServer {
                 consumer.peerDown(dest);
                 return;
             }
-            if(count>(MAX_SEND_RETRIES/2)){
-                System.out.println("RETRYING "+msgId+" "+count+" "+MAX_SEND_RETRIES);
-            }
             final ByteBuf copy = packet.retainedDuplicate();
             int len = packet.readableBytes();
             channel.writeAndFlush(new DatagramPacket(copy,dest)).addListener(future -> {
