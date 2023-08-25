@@ -29,9 +29,12 @@ import java.util.concurrent.atomic.AtomicLong;
 public class NettyUDPServer {
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
     public static final int BUFFER_SIZE = 1024 * 65;
-    public static final String UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
+    public static final String MIN_UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
+    public static final String MAX_UDP_RETRANSMISSION_TIMEOUT = "MAX_UDP_RETRANSMISSION_TIMEOUT";
+
     public static final int ONE_MINUTE = 60000;
     public int RETRANSMISSION_TIMEOUT;
+    private final int MAX_RETRANSMISSION_TIMEOUT;
     public final int MAX_SEND_RETRIES;
     public static final String MAX_SEND_RETRIES_KEY = "UPD_MAX_SEND_RETRIES";
     public static final String UDP_BROADCAST_PROP="broadcast";
@@ -58,7 +61,8 @@ public class NettyUDPServer {
         datagramPacketCounter = new AtomicLong(0);
         streamIdCounter = new AtomicLong(0);
         MAX_SEND_RETRIES = Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"5"));
-        RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(UDP_RETRANSMISSION_TIMEOUT,"500"));
+        RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MIN_UDP_RETRANSMISSION_TIMEOUT,"250"));
+        MAX_RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MAX_UDP_RETRANSMISSION_TIMEOUT,"0"));
         try {
             channel = start();
         }catch (Exception e){
@@ -104,7 +108,7 @@ public class NettyUDPServer {
                     future.cause().printStackTrace();
                 }
             });
-        }, RETRANSMISSION_TIMEOUT + (int)nextFloat(count),TimeUnit.MILLISECONDS);
+        }, RETRANSMISSION_TIMEOUT +  (int)nextFloat() ,TimeUnit.MILLISECONDS);
         if(count==0){
             waitingForAcks.put(msgId,new UDPWaitForAckWrapper(scheduledFuture));
         }else if(udpWaitForAckWrapper==null){
@@ -114,14 +118,18 @@ public class NettyUDPServer {
         }
     }
 
-    private float nextFloat(int count){
-        float stella = 1 + random.nextInt(1+random.nextInt(5000));
-        if(random.nextBoolean()){
-            stella += random.nextFloat()*stella/2;
+    private float nextFloat(){
+        if(MAX_RETRANSMISSION_TIMEOUT>0){
+            float stella = 1 + random.nextInt(1+random.nextInt(MAX_RETRANSMISSION_TIMEOUT));
+            if(random.nextBoolean()){
+                stella += random.nextFloat()*stella/2;
+            }else{
+                stella -= random.nextFloat()*stella;
+            }
+            return stella;
         }else{
-            stella -= random.nextFloat()*stella;
+            return 0;
         }
-        return stella;
     }
     private Channel start() throws Exception{
         OnAckFunction onAckReceived = this::onAckReceived;
