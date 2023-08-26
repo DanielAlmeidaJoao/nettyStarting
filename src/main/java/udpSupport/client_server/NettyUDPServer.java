@@ -32,7 +32,6 @@ public class NettyUDPServer {
     public static final String MIN_UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
     public static final String MAX_UDP_RETRANSMISSION_TIMEOUT = "MAX_UDP_RETRANSMISSION_TIMEOUT";
 
-    public static final int ONE_MINUTE = 60000;
     public int RETRANSMISSION_TIMEOUT;
     private final int MAX_RETRANSMISSION_TIMEOUT;
     public final int MAX_SEND_RETRIES;
@@ -202,7 +201,7 @@ public class NettyUDPServer {
                 }
             }else{
                 future.cause().printStackTrace();
-                logger.debug("NOT SUCCESS SENDING THE MESSAGE {}"+future.cause());
+                logger.info("NOT SUCCESS SENDING THE MESSAGE TO {}. ERROR: {}",peer,future.cause());
             }
         });
     }

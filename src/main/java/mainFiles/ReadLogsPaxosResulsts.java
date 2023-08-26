@@ -103,8 +103,8 @@ public class ReadLogsPaxosResulsts {
                 throughputs.add(Float.parseFloat(result));
             }else if(( result = line.replace("[CLEANUP], Operations,","")).length()<line.length()){
                 clients.add(Float.parseFloat(result));
-            }else if((result = line.replace(updateOrInsert+" Operations, ","")).length()<line.length()){
-                operations.add(100000f);
+            }else if((result = line.replace("[OVERALL], RunTime(ms),","")).length()<line.length()){
+                operations.add(Float.parseFloat(result));
             }else if((result = line.replace(updateOrInsert+" AverageLatency(us), ","")).length()<line.length()){
                 latencies.add(Float.parseFloat(result));
             }

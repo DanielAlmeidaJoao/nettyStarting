@@ -83,6 +83,7 @@ public class TCPChannelUtils {
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_UDP_RETRANSMISSION_TIMEOUT,"100");
 
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"20");
+        //properties.setProperty(NettyUDPServer.UDP_BROADCAST_PROP,"20");
         //properties.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //properties.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
         //properties.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
