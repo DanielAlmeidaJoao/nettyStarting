@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class NettyUDPServer {
+    public static SecureRandom randomInstance;
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
     public static final int BUFFER_SIZE = 1024 * 65;
     public static final String MIN_UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
@@ -39,7 +40,6 @@ public class NettyUDPServer {
     public static final String UDP_BROADCAST_PROP="broadcast";
 
 
-
     private Map<Long,UDPWaitForAckWrapper> waitingForAcks;
     private final AtomicLong datagramPacketCounter;
     private final AtomicLong streamIdCounter;
@@ -50,6 +50,8 @@ public class NettyUDPServer {
     private final ChannelStats stats;
     private final Properties properties;
     private final SecureRandom random;
+
+
 
     public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address, Properties properties){
         this.properties=properties;
@@ -68,7 +70,7 @@ public class NettyUDPServer {
             e.printStackTrace();
             throw new RuntimeException("UDP LISTENER COULD NOT START!");
         }
-        random = new SecureRandom();
+        random = RETRANSMISSION_TIMEOUT>0 ? getRandomInstance():null;
     }
     public void onAckReceived(long msgId, InetSocketAddress sender){
         UDPWaitForAckWrapper timeMillis = waitingForAcks.remove(msgId);
@@ -208,5 +210,11 @@ public class NettyUDPServer {
     public void shutDownServerClient(){
         channel.close();
         channel.disconnect();
+    }
+    private static SecureRandom getRandomInstance(){
+        if(randomInstance==null){
+            return new SecureRandom();
+        }
+        return randomInstance;
     }
 }
