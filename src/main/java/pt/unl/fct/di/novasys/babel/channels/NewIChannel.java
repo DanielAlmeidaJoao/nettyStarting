@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 public interface NewIChannel<T> {
-    String openMessageConnection(Host host, short protoId);
-    String openStreamConnection(Host host, short protoId);
+    String openMessageConnection(Host host, short protoId, boolean always);
+    String openStreamConnection(Host host, short protoId,short destProto, boolean always);
 
     void sendMessage(T message, Host host, short protoId);
     void sendMessage(T msg,String connectionID,short proto);

@@ -6,6 +6,6 @@ import java.net.InetSocketAddress;
 
 public interface ClientInterface {
 
-    void connect(InetSocketAddress peer, TransmissionType type, String conId) throws Exception;
+    void connect(InetSocketAddress peer, TransmissionType type, String conId, short destProto) throws Exception;
     void shutDown();
 }

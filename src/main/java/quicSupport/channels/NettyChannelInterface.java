@@ -1,5 +1,6 @@
 package quicSupport.channels;
 
+import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.handlerFunctions.ReadMetricsHandler;
@@ -10,7 +11,7 @@ import java.util.List;
 
 public interface NettyChannelInterface<T> extends SendBytesInterface<T> {
 
-    String open(InetSocketAddress peer, TransmissionType type);
+    String open(InetSocketAddress peer, TransmissionType type, short sourceProto, short destProto, boolean always);
 
     void closeConnection(InetSocketAddress peer);
 
@@ -39,4 +40,6 @@ public interface NettyChannelInterface<T> extends SendBytesInterface<T> {
     List<ConnectionProtocolMetrics> currentMetrics();
 
     List<ConnectionProtocolMetrics> oldMetrics();
+
+    NetworkProtocol getNetworkProtocol();
 }

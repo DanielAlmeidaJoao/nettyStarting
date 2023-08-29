@@ -87,7 +87,7 @@ public final class QUICClientEntity implements ClientInterface {
         clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
     }
-    public void connect(InetSocketAddress remote, TransmissionType transmissionType, String id) throws Exception{
+    public void connect(InetSocketAddress remote, TransmissionType transmissionType, String id, short destProto) throws Exception{
         Bootstrap bs = new Bootstrap();
 
         Channel channel = bs.group(group)
@@ -95,8 +95,8 @@ public final class QUICClientEntity implements ClientInterface {
                 .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
                 .handler(getCodec())
                 .bind(0).sync().channel();
-        QuicChannel.newBootstrap(channel)
-                .handler(new QuicClientChannelConHandler(self,remote,consumer, transmissionType))
+        QuicChannelBootstrap b = QuicChannel.newBootstrap(channel)
+                .handler(new QuicClientChannelConHandler(self,remote,consumer,transmissionType,destProto))
                 .streamHandler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
@@ -105,8 +105,10 @@ public final class QUICClientEntity implements ClientInterface {
                 })
                 .remoteAddress(remote)
                 .attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY),id)
+                .attr(AttributeKey.valueOf(TCPChannelUtils.DEST_STREAM_PROTO),destProto);
+
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
-                .connect().addListener(future -> {
+                b.connect().addListener(future -> {
                     if(!future.isSuccess()){
                         consumer.handleOpenConnectionFailed(remote,future.cause(), transmissionType,id);
                     }

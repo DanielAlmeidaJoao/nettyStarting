@@ -38,7 +38,7 @@ public class TCPClientEntity implements ClientInterface{
     }
 
     //    public void connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType, String id) throws Exception{
-    public void connect(InetSocketAddress peer, TransmissionType type, String conId) throws Exception{
+    public void connect(InetSocketAddress peer, TransmissionType type, String conId, short destProto) throws Exception{
         Bootstrap b = new Bootstrap();
         b.group(group)
                 .channel(socketChannel())
@@ -52,7 +52,7 @@ public class TCPClientEntity implements ClientInterface{
                         }else{
                             ch.pipeline().addLast(TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(consumer));
                         }
-                        ch.pipeline().addLast( new TCPClientNettyHandler(new HandShakeMessage(self,type),consumer,type));
+                        ch.pipeline().addLast( new TCPClientNettyHandler(new HandShakeMessage(self,type,destProto),consumer,type));
                     }
                 }).attr(AttributeKey.valueOf(CUSTOM_ID_KEY),conId);
 

@@ -37,10 +37,10 @@ public class SingleThreadedQuicChannel<T> extends NettyQUICChannel<T> {
         });
     }
     @Override
-    public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type,String customId, boolean inConnection) {
+    public void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, String customId, boolean inConnection, short sourceProto) {
         executor.submit(() ->
         {
-            super.streamCreatedHandler(channel, type, customId, inConnection);
+            super.streamCreatedHandler(channel, type, customId, inConnection, sourceProto);
         });
     }
     @Override
@@ -83,10 +83,10 @@ public class SingleThreadedQuicChannel<T> extends NettyQUICChannel<T> {
     /*********************************** Channel Handlers **********************************/
 
     /*********************************** User Actions **************************************/
-    public String open(InetSocketAddress peer, TransmissionType type) {
+    public String open(InetSocketAddress peer, TransmissionType type, short sourceProto, short destProto, boolean always) {
         final String id = nextId();
         executor.submit(() -> {
-            super.openLogics(peer,type,id);
+            super.openLogics(peer,type,id, sourceProto, destProto, always);
         });
         return id;
     }

@@ -1,6 +1,5 @@
 package quicSupport.utils.entities;
 
-import org.apache.commons.lang3.tuple.Pair;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
@@ -11,21 +10,24 @@ public class QUICConnectingOBJ<T> {
     public final List<T> msgWithLen;
     public final String conId;
     public final InetSocketAddress peer;
+    public final short sourceProto, destProto;
     //public final String operation; //sendMessage or createStream
-    public List<Pair<String,TransmissionType>> connectionsToOpen;
+    public List<ConnectinOBJArgs> connectionsToOpen;
 
-    public QUICConnectingOBJ(String conId, InetSocketAddress peer) {
+    public QUICConnectingOBJ(String conId, InetSocketAddress peer, short sourceProto, short destProto) {
         this.msgWithLen = new LinkedList<>();
         this.conId = conId;
         this.peer = peer;
         connectionsToOpen = null;
+        this.sourceProto = sourceProto;
+        this.destProto = destProto;
     }
 
-    public void addToQueue(String customConId, TransmissionType type){
+    public void addToQueue(String customConId, TransmissionType type, short sourceProto, short destProto){
         if(connectionsToOpen == null){
             connectionsToOpen = new LinkedList<>();
         }
-        connectionsToOpen.add(Pair.of(customConId,type));
+        connectionsToOpen.add(new ConnectinOBJArgs(customConId,type,sourceProto,destProto));
     }
 
 }

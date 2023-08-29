@@ -17,7 +17,7 @@ public interface CustomQuicChannelConsumer {
 
     void onKeepAliveMessage(String parentId, int i);
 
-    void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type,String customId, boolean inConnection);
+    void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, String customId, boolean inConnection, short sourceProto);
 
     void onReceivedDelimitedMessage(String streamId, ByteBuf bytes);
 

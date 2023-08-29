@@ -51,6 +51,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }else if(QUICLogics.STREAM_CREATED==msgType){
                 //msg = Unpooled.wrappedBuffer(data);
                 int ordinal = aux.readInt();
+                short streamProto = aux.readShort();
                 //msg.discardReadBytes();
                 TransmissionType type;
                 if(TransmissionType.UNSTRUCTURED_STREAM.ordinal() == ordinal){
@@ -59,7 +60,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 }else{
                     type = TransmissionType.STRUCTURED_MESSAGE;
                 }
-                consumer.streamCreatedHandler(ch,type,customId,true);
+                consumer.streamCreatedHandler(ch,type,customId,true,streamProto);
             }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
                 byte [] data = new byte[length];
                 aux.readBytes(data);
@@ -67,7 +68,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
                 if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
                     ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, true, customId));
                 }
-                consumer.channelActive(ch,handShakeMessage,null, TransmissionType.STRUCTURED_MESSAGE,length, customId);
+                consumer.channelActive(ch,handShakeMessage,null, TransmissionType.STRUCTURED_MESSAGE,length,customId);
             }else{
                 throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
             }

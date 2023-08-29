@@ -248,10 +248,9 @@ public abstract class GenericProtocol {
                                                                             MessageSentHandler<V> sentHandler,
                                                                             MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        short msgHandlerId = babel.protoToReceiveStreamData(cId);
-        registerHandler(msgHandlerId, inHandler, getChannelOrThrow(cId).streamBytesInHandlerMap);
-        if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
-        if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+        registerHandler(this.protoId, inHandler, getChannelOrThrow(cId).streamBytesInHandlerMap);
+        if (sentHandler != null) registerHandler(this.protoId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
+        if (failHandler != null) registerHandler(this.protoId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     }
     /**
      * Register an handler to process a channel-specific event
@@ -468,10 +467,22 @@ public abstract class GenericProtocol {
      * @param channelId the channel to create the connection in
      */
     protected final String openMessageConnection(Host peer, int channelId) {
-        return babel.openConnection(channelId, peer, protoId);
+        return babel.openConnection(channelId, peer, protoId,false);
+    }
+    protected final String openMessageConnectionEvenIfItsConnected(Host peer, int channelId) {
+        return babel.openConnection(channelId, peer, protoId,true);
     }
     protected final String openStreamConnection(Host peer, int channelId) {
-        return babel.openStreamConnection(channelId, peer, protoId);
+        return babel.openStreamConnection(channelId, peer, protoId,protoId,false);
+    }
+    protected final String openStreamConnectionEvenIfItsConnected(Host peer, int channelId) {
+        return babel.openStreamConnection(channelId, peer, protoId,protoId,true);
+    }
+    protected final String openStreamConnection(Host peer, int channelId, short sourceProto, short destProto) {
+        return babel.openStreamConnection(channelId, peer,sourceProto,destProto,false);
+    }
+    protected final String openStreamConnection(Host peer, int channelId, short sourceProto, short destProto,boolean evenIfConnectedAlready) {
+        return babel.openStreamConnection(channelId, peer,sourceProto,destProto,evenIfConnectedAlready);
     }
 
     /**

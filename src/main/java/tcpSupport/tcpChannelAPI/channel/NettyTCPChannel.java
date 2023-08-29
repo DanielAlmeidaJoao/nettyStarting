@@ -15,6 +15,7 @@ import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.channels.NettyChannelInterface;
 import quicSupport.channels.SendStreamInterface;
+import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.connectionSetups.*;
@@ -47,7 +48,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
     public final static String ADDRESS_KEY = "address";
     public final static String PORT_KEY = "port";
 
-    public final static String ZERO_COPY = "ZERO_COPY";
+    public final static String NOT_ZERO_COPY = "NOT_ZERO_COPY";
 
     public final static String DEFAULT_PORT = "8574";
     private final Map<String, CustomTCPConnection> nettyIdToConnection;
@@ -156,7 +157,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
             logger.debug("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
         }else {
             calcMetricsOnReceived(connection.conId,babelOutputStream.readableBytes());
-            channelHandlerMethods.onChannelReadFlowStream(connection.conId,babelOutputStream,connection.host,connection.inputStream);
+            channelHandlerMethods.onChannelReadFlowStream(connection.conId,babelOutputStream,connection.host,connection.inputStream,connection.streamProto);
         }
     }
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, int len){
@@ -164,14 +165,17 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
             boolean inConnection;
             InetSocketAddress listeningAddress;
             String conId;
+            short streamProto;
             if(handShakeMessage==null){//out connection
                 listeningAddress = (InetSocketAddress) channel.remoteAddress();
                 inConnection = false;
-                conId = channel.attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY)).toString();
+                conId = channel.attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY)).getAndSet(null).toString();
+                streamProto = nettyIdTOConnectingOBJ.get(conId).streamProto;
             }else {//in connection
                 listeningAddress = handShakeMessage.getAddress();
                 inConnection = true;
                 conId = nextId();
+                streamProto  = handShakeMessage.destProto;
             }
 
             if(metricsManager !=null){
@@ -179,7 +183,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
             }
 
             BabelInputStream babelInputStream = BabelInputStream.toBabelStream(conId,this,type, channel.alloc());
-            CustomTCPConnection connection = new CustomTCPConnection(channel,type,listeningAddress,conId,inConnection,babelInputStream);
+            CustomTCPConnection connection = new CustomTCPConnection(channel,type,listeningAddress,conId,inConnection,babelInputStream,streamProto);
             nettyIdToConnection.put(channel.id().asShortText(),connection);
             customIdToConnection.put(conId,connection);
             synchronized (this){
@@ -215,8 +219,8 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
     /******************************************* CHANNEL EVENTS ****************************************************/
 
     /******************************************* USER EVENTS ****************************************************/
-    public String open(InetSocketAddress peer, TransmissionType type) {
-        return openConnectionLogics(peer,type,null);
+    public String open(InetSocketAddress peer, TransmissionType type, short sourceProto, short destProto, boolean always) {
+        return openConnectionLogics(peer,type,null,sourceProto,destProto,always);
     }
     private String isConnecting(InetSocketAddress peer){
         for (TCPConnectingObject value : nettyIdTOConnectingOBJ.values()) {
@@ -226,8 +230,9 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         }
         return null;
     }
-    public String openConnectionLogics(InetSocketAddress peer, TransmissionType type, String conId) {
-        if(singleConnectionPerPeer){
+    public String openConnectionLogics(InetSocketAddress peer, TransmissionType type, String conId, short sourceProto, short destProto, boolean always) {
+        boolean singleConPerPeer = (always==false);
+        if(singleConPerPeer){
             String connectionId = isConnecting(peer);
             if(connectionId!=null) return connectionId;
             try{
@@ -239,10 +244,10 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         if(conId == null ){
             conId = nextId();
         }
-        nettyIdTOConnectingOBJ.put(conId,new TCPConnectingObject(conId,peer,new LinkedList<>()));
+        nettyIdTOConnectingOBJ.put(conId,new TCPConnectingObject(conId,peer,new LinkedList<>(),sourceProto));
         logger.debug("{} CONNECTING TO {}. CONNECTION ID: ",self,peer,conId);
         try {
-            client.connect(peer,type,conId);
+            client.connect(peer,type,conId,destProto);
             return conId;
         }catch (Exception e){
             e.printStackTrace();
@@ -358,7 +363,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
             }
             ChannelFuture c;
 
-            if( properties.getProperty(ZERO_COPY) !=null && inputStream instanceof FileInputStream){
+            if( properties.getProperty(NOT_ZERO_COPY) == null && inputStream instanceof FileInputStream){
                 FileInputStream in = (FileInputStream) inputStream;
                 FileRegion region = new DefaultFileRegion(in.getChannel(), 0,len);
                 c = idConnection.channel.writeAndFlush(region);
@@ -406,7 +411,8 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
                 pendingMessages.pendingMessages.add(message);
                 logger.debug("{}. MESSAGE TO {} ARCHIVED.",self,peer);
             }else if(connectIfNotConnected){
-                String conId = openConnectionLogics(peer,STRUCTURED_MESSAGE,null);
+                short p = -1;
+                String conId = openConnectionLogics(peer,STRUCTURED_MESSAGE,null,p,p,false);
                 nettyIdTOConnectingOBJ.get(conId).pendingMessages.add(message);
             }else{
                 channelHandlerMethods.onMessageSent(message,new Throwable("Unknown Peer : "+peer),peer, STRUCTURED_MESSAGE,null);
@@ -498,5 +504,10 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
     @Override
     public List<ConnectionProtocolMetrics> oldMetrics() {
         return metricsManager == null ? null : metricsManager.oldMetrics();
+    }
+
+    @Override
+    public NetworkProtocol getNetworkProtocol() {
+        return NetworkProtocol.TCP;
     }
 }

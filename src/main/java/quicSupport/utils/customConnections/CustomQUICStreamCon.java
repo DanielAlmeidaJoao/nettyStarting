@@ -12,14 +12,16 @@ public class CustomQUICStreamCon {
     public CustomQUICConnection customParentConnection;
     public final boolean inConnection;
     public final BabelInputStream inputStream;
+    public final short streamProto;
 
-    public CustomQUICStreamCon(QuicStreamChannel streamChannel, String customStreamId, TransmissionType type, CustomQUICConnection customParentConnection, boolean inConnection, BabelInputStream babelInputStream) {
+    public CustomQUICStreamCon(QuicStreamChannel streamChannel, String customStreamId, TransmissionType type, CustomQUICConnection customParentConnection, boolean inConnection, BabelInputStream babelInputStream, short streamProto) {
         this.streamChannel = streamChannel;
         this.customStreamId = customStreamId;
         this.type = type;
         this.customParentConnection = customParentConnection;
         this.inConnection = inConnection;
         this.inputStream = babelInputStream;
+        this.streamProto = streamProto;
         
     }
     public void close(){

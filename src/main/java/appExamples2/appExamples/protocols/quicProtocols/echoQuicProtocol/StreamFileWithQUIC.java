@@ -67,7 +67,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     }
     private int makeChan(String channelName, String address, String port, boolean singleThreaded) throws Exception {
         Properties channelProps;
-        boolean zeroCopy = properties.getProperty(NettyTCPChannel.ZERO_COPY)!=null;
+        boolean zeroCopy = properties.getProperty(NettyTCPChannel.NOT_ZERO_COPY)!=null;
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
@@ -89,7 +89,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     }
     private void addExtraProps(boolean singleThreade,boolean zeroCopy, Properties channelProps){
         if(zeroCopy){
-            channelProps.setProperty(NettyTCPChannel.ZERO_COPY,"ZERO_copy");
+            channelProps.setProperty(NettyTCPChannel.NOT_ZERO_COPY,"ZERO_copy");
         }
         if(singleThreade){
             channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");

@@ -55,9 +55,9 @@ public class SingleThreadedNettyTCPChannel<T> extends NettyTCPChannel<T> {
         executor.execute(() -> super.onConnectionFailed(channelId,cause, type));
     }
 
-    public String open(InetSocketAddress peer, TransmissionType type) {
+    public String open(InetSocketAddress peer, TransmissionType type, short sourceProto, short destProto, boolean always) {
         final String conId = nextId();
-        executor.execute(() -> super.openConnectionLogics(peer, type,conId));
+        executor.execute(() -> super.openConnectionLogics(peer, type,conId, sourceProto, destProto, always));
         return conId;
     }
     @Override

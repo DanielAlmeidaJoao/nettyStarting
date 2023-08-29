@@ -211,7 +211,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public String openMessageConnection(Host host, short proto) {
+    public String openMessageConnection(Host host, short proto,boolean always) {
         String oldID = hostStringMap.get(host);
         if(oldID!=null){
             return oldID;
@@ -225,7 +225,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public String openStreamConnection(Host host, short protoId) {
+    public String openStreamConnection(Host host, short sourceProto,short destProto, boolean always) {
         new Exception("UNSUPPORTED OPERATION").printStackTrace();
         return "";
     }

@@ -71,18 +71,18 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         if(NetworkProtocol.QUIC==protocol){
             if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
                 i = new SingleThreadedQuicChannel(properties,networkRole,this,serializer);
-                System.out.println("SINGLE THREADED CHANNEL QUIC");
+                System.out.println("SINGLE THREADED CHANNEL QUIC ");
             }else {
                 i = new NettyQUICChannel(properties,false,networkRole,this,serializer);
-                System.out.println("MULTI THREADED CHANNEL QUIC");
+                System.out.println("MULTI THREADED CHANNEL QUIC ");
             }
         }else if(NetworkProtocol.TCP==protocol){
             if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
                 i = new SingleThreadedNettyTCPChannel(properties,this,networkRole,serializer);
-                System.out.println("SINGLE THREADED CHANNEL TCP");
+                System.out.println("SINGLE THREADED CHANNEL TCP ");
             }else {
                 i = new NettyTCPChannel(properties,false,this,networkRole,serializer);
-                System.out.println("MULTI THREADED CHANNEL TCP");
+                System.out.println("MULTI THREADED CHANNEL TCP ");
             }
         }else{
             throw new RuntimeException("UNSUPPORTED PROTOCOL BY THIS CLASS: "+protocol);
@@ -152,7 +152,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
     @Override
     public NetworkProtocol getNetWorkProtocol() {
-        return NetworkProtocol.QUIC;
+        return nettyChannelInterface.getNetworkProtocol();
     }
 
     @Override
@@ -161,13 +161,13 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
-    public String openMessageConnection(Host host, short proto) {
-        return nettyChannelInterface.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.STRUCTURED_MESSAGE);
+    public String openMessageConnection(Host host, short proto, boolean always) {
+        return nettyChannelInterface.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.STRUCTURED_MESSAGE,proto,proto,always);
     }
 
     @Override
-    public String openStreamConnection(Host host, short protoId) {
-        return nettyChannelInterface.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.UNSTRUCTURED_STREAM);
+    public String openStreamConnection(Host host, short sourceProto,short destProto, boolean always) {
+        return nettyChannelInterface.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.UNSTRUCTURED_STREAM,sourceProto,destProto,always);
     }
 
     @Override
@@ -221,8 +221,12 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         listener.deliverMessage(message,FactoryMethods.toBabelHost(from),connectionId);
     }
     @Override
-    public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from, BabelInputStream inputStream) {
-        short d = protoToReceiveStreamData;
+    public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from, BabelInputStream inputStream, short streamProto) {
+        short d = streamProto;
+        if(streamProto!=327){
+            logger.info("PROTOTOOTOTOT DIFFERENT {}",d);
+            System.exit(0);
+        }
         listener.deliverStream(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d,inputStream);
     }
 

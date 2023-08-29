@@ -69,13 +69,14 @@ public class QUICLogics {
         buf.writeBytes(data);
         return buf;
     }
-    public static ByteBuf bufToWrite(int data, byte msgCode,ByteBufAllocator alloc){
+    public static ByteBuf bufToWrite(int data, short destProto, byte msgCode, ByteBufAllocator alloc){
         //return new DelimitedMessageWrapper(4,Unpooled.buffer(4).writeInt(data).array(),msgCode);
 
-        ByteBuf buf = alloc.directBuffer(WRT_OFFSET);
-        buf.writeInt(4);
+        ByteBuf buf = alloc.directBuffer(WRT_OFFSET+2);
+        buf.writeInt(4+2);
         buf.writeByte(msgCode);
         buf.writeInt(data);
+        buf.writeShort(destProto);
         return buf;
     }
     public static boolean sameAddress(InetSocketAddress address, InetSocketAddress socketAddress){

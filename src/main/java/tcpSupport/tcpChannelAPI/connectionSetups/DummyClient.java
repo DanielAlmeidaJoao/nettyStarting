@@ -10,7 +10,7 @@ public class DummyClient implements ClientInterface{
     private static final Logger logger = LogManager.getLogger(DummyClient.class);
 
     @Override
-    public void connect(InetSocketAddress peer, TransmissionType type, String conId) throws Exception {
+    public void connect(InetSocketAddress peer, TransmissionType type, String conId, short destProto) throws Exception {
         logger.warn("*connect* OPERATION NOT SUPPORTED ON <SERVER CHANNELS>!");
     }
 

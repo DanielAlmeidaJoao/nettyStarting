@@ -14,18 +14,21 @@ public class HandShakeMessage {
     private int port;
     //private final Map<String,Object> properties;
     public final TransmissionType type;
-
+    public final short destProto;
+    /**
     public HandShakeMessage(String hostName, int port, TransmissionType type) {
         //this.properties = new HashMap<>();
         this.hostName=hostName;
         this.port=port;
         this.type=type;
-    }
-    public HandShakeMessage(InetSocketAddress host, TransmissionType type) {
+        this.destProto = -1;
+    } **/
+    public HandShakeMessage(InetSocketAddress host, TransmissionType type, short destProto) {
         //this.properties = new HashMap<>();
         this.hostName=host.getHostName();
         this.port=host.getPort();
         this.type=type;
+        this.destProto = destProto;
     }
 
     public InetSocketAddress getAddress() throws UnknownHostException {

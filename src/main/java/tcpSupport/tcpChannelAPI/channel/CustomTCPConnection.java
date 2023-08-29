@@ -13,13 +13,15 @@ public class CustomTCPConnection {
     public final String conId;
     public final boolean inConnection;
     public final BabelInputStream inputStream;
-    public CustomTCPConnection(Channel channel, TransmissionType type, InetSocketAddress listeningAddress, String conId, boolean inConnection, BabelInputStream babelInputStream){
+    public final short streamProto;
+    public CustomTCPConnection(Channel channel, TransmissionType type, InetSocketAddress listeningAddress, String conId, boolean inConnection, BabelInputStream babelInputStream, short streamProto){
         this.channel=channel;
         this.type=type;
         this.host = listeningAddress;
         this.conId = conId;
         this.inConnection=inConnection;
         this.inputStream = babelInputStream;
+        this.streamProto = streamProto;
     }
 
     public void close(){
