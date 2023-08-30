@@ -1,6 +1,7 @@
 package tcpSupport.tcpChannelAPI.utils;
 
 import com.google.gson.Gson;
+import io.netty.channel.Channel;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 
@@ -94,5 +95,10 @@ public class TCPChannelUtils {
         //properties.setProperty(UDPChannel.UDP_METRICS,"10");
 
         return properties;
+    }
+
+    public static void closeOnError(Channel channel){
+        channel.disconnect();
+        channel.close();
     }
 }

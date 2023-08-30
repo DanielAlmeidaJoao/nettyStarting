@@ -20,4 +20,6 @@ public interface StreamingNettyConsumer {
     void onServerSocketBind(boolean success, Throwable cause);
     void handleOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType type, String conId);
 
+    void channelError(InetSocketAddress address, Throwable throwable, String nettyID);
+
 }

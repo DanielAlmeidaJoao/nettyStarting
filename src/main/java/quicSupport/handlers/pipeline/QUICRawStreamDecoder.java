@@ -3,10 +3,12 @@ package quicSupport.handlers.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(QUICRawStreamDecoder.class);
@@ -31,7 +33,9 @@ public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        logger.error(cause.getMessage());
+        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,customId);
+        TCPChannelUtils.closeOnError(ctx.channel());
     }
 
 }

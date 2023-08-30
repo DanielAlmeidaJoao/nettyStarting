@@ -2,9 +2,11 @@ package quicSupport.handlers.pipeline;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     private final CustomQuicChannelConsumer consumer;
@@ -21,7 +23,9 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        LOGGER.error(cause.getMessage());
+        TCPChannelUtils.closeOnError(ctx.channel());
+        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,null);
     }
 
     @Override

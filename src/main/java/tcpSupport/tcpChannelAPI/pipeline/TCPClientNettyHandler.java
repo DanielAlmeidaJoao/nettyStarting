@@ -53,9 +53,8 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
         consumer.onConnectionFailed(ctx.channel().id().asShortText(),cause,type);
-        //cause.printStackTrace();
-        ctx.close();
-        logger.error(cause.getLocalizedMessage());
+        logger.error(cause.getMessage());
+        TCPChannelUtils.closeOnError(ctx.channel());
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {

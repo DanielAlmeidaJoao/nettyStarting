@@ -9,6 +9,7 @@ import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.UDPMet
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.FileBytesCarrier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.channels.events.OnChannelError;
 import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
@@ -109,6 +110,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
             registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionEvent);
 
+            registerChannelEventHandler(channelId, OnChannelError.EVENT_ID, this::uponChannelError);
+
+
             registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerChannelEventHandler(channelId, UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
 
@@ -159,7 +163,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     private void uponFileBytesMessage(FileBytesCarrier msg, Host from, short sourceProto, int channelId, String streamId) {
         if(NetworkProtocol.UDP==getNetworkProtocol(channelId)){
             received += msg.len;
-            logger.info("RECEIVED ALL BYTES {} . {}",msg.len,received);
+            //logger.info("RECEIVED ALL BYTES {} . {}",msg.len,received);
             return;
         }
         writeToFile(msg.len,msg.data);
@@ -208,6 +212,10 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             }
         }
 
+    }
+
+    private void uponChannelError(OnChannelError event, int channelId) {
+        System.out.println("ERROR: "+event);
     }
     String streamId;
     private void uponOutConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
@@ -261,7 +269,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             if(available<=0)return;
             received += available;
             out.write(data);
-            logger.info("RECEIVED ALL BYTES {} . {}",available,received);
+            //logger.info("RECEIVED ALL BYTES {} . {}",available,received);
         }catch (Exception e){
             e.printStackTrace();
         }

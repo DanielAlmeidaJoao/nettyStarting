@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.pipeline.AbstractMessageDecoderHandler;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
     public final TransmissionType type;
@@ -19,8 +20,9 @@ public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
-        //cause.printStackTrace();
-        ctx.close();
+        System.out.println(getClass().getName()+": "+cause.getMessage());
+        consumer.channelError(null,cause,ctx.channel().id().asShortText());
+        TCPChannelUtils.closeOnError(ctx.channel());
     }
 
     @Override

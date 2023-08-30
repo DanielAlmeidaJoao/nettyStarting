@@ -77,9 +77,12 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             //ctx.fireChannelRead(msg);
         }
 
-    }    @Override
+    }
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        logger.error(cause.getMessage());
+        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,customId);
+        TCPChannelUtils.closeOnError(ctx.channel());
     }
 
 }

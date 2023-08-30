@@ -26,7 +26,11 @@ public class SingleThreadedNettyTCPChannel<T> extends NettyTCPChannel<T> {
         super(properties,true,chm,role,serializer);
         executor = new DefaultEventExecutor();
     }
-    @Override
+    public void channelError(InetSocketAddress address, Throwable throwable, String nettyID){
+        executor.submit(()-> super.channelError(address,throwable,nettyID));
+    }
+
+        @Override
     public void onChannelActive(Channel channel, HandShakeMessage handShakeMessage, TransmissionType type, int len) {
         executor.execute(() -> super.onChannelActive(channel,handShakeMessage, type, len));
     }

@@ -26,14 +26,6 @@ public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
         this.customId = id;
         this.inConnection = incommingCon;
     }
-    public void setStreamCon(CustomQUICStreamCon con ){
-        if(streamCon==null){
-            streamCon = con;
-        }else{
-            System.out.println("PORRRRRRRRRRRRRRRRRAS");
-            System.exit(1);
-        }
-    }
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ChannelPipeline cp = ctx.channel().pipeline();
@@ -44,6 +36,7 @@ public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
+        logger.error(cause.getMessage());
         consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,customId);
     }
     @Override

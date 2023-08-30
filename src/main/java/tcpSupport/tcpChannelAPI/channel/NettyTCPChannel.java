@@ -510,4 +510,15 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
     public NetworkProtocol getNetworkProtocol() {
         return NetworkProtocol.TCP;
     }
+
+    public void channelError(InetSocketAddress address, Throwable throwable, String nettyID){
+        CustomTCPConnection customTCPConnection = nettyIdToConnection.get(nettyID);
+        if(customTCPConnection!=null){
+            address = customTCPConnection.host;
+            nettyID = customTCPConnection.conId;
+        }else{
+            nettyID = null;
+        }
+        channelHandlerMethods.onStreamErrorHandler(address,throwable,nettyID);
+    }
 }

@@ -73,6 +73,8 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         //consumer.handleOpenConnectionFailed((InetSocketAddress) ctx.channel().remoteAddress(),cause, transmissionType, id);
-        cause.printStackTrace();
+        logger.error(cause.getMessage());
+        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,null);
+        TCPChannelUtils.closeOnError(ctx.channel());
     }
 }

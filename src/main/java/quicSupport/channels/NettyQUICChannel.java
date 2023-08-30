@@ -140,6 +140,8 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
         CustomQUICStreamCon streamCon = customStreamIdToStream.get(customId);
         if(streamCon!=null){
             overridenMethods.onStreamErrorHandler(streamCon.customParentConnection.getRemote(), throwable,customId);
+        }else{
+            overridenMethods.onStreamErrorHandler(null,throwable,null);
         }
     }
 
@@ -294,7 +296,6 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             BabelInputStream babelInputStream = BabelInputStream.toBabelStream(customConId,this,type, streamChannel.alloc());
             CustomQUICStreamCon quicStreamChannel = new CustomQUICStreamCon(streamChannel,customConId,type,null,inConnection,babelInputStream,streamProto);
             CustomQUICStreamCon firstStreamOfThisCon = customStreamIdToStream.get(streamChannel.parent().id().asShortText());
-            getQuicStreamReadHandler(streamChannel).setStreamCon(quicStreamChannel);
 
             if(firstStreamOfThisCon==null){
                 parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type,metrics);

@@ -213,7 +213,9 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
     /******************************** CHANNEL HANDLER METHODS *************************************/
     public void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId) {
-        logger.info("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getLocalizedMessage());
+        logger.error("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getMessage());
+        Host h  = peer == null ? null : FactoryMethods.toBabelHost(peer);
+        listener.deliverEvent(new OnChannelError(h,null,streamId,false,error));
     }
 
 
@@ -223,10 +225,6 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     @Override
     public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from, BabelInputStream inputStream, short streamProto) {
         short d = streamProto;
-        if(streamProto!=327){
-            logger.info("PROTOTOOTOTOT DIFFERENT {}",d);
-            System.exit(0);
-        }
         listener.deliverStream(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d,inputStream);
     }
 
