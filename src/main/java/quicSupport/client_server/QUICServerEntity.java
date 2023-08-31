@@ -15,13 +15,9 @@
  */
 package quicSupport.client_server;
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.FixedRecvByteBufAllocator;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.*;
 import io.netty.incubator.codec.quic.*;
 import org.apache.commons.lang3.tuple.Pair;
 import quicSupport.channels.CustomQuicChannelConsumer;
@@ -30,6 +26,8 @@ import quicSupport.handlers.pipeline.QuicStreamInboundHandler;
 import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpChannelAPI.connectionSetups.ServerInterface;
+import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
+import udpSupport.client_server.NettyUDPServer;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.InetSocketAddress;
@@ -44,7 +42,7 @@ public final class QUICServerEntity implements ServerInterface {
     private final Properties properties;
 
     private Channel quicChannel;
-    private NioEventLoopGroup group;
+    private EventLoopGroup group;
     //private static final Logger logger = LogManager.getLogger(QUICServerEntity.class);
 
     public QUICServerEntity(String host, int port, CustomQuicChannelConsumer consumer, Properties properties) {
@@ -94,12 +92,13 @@ public final class QUICServerEntity implements ServerInterface {
 
     public void startServer() throws Exception {
         QuicSslContext context = getSignedSslContext();
-        group = new NioEventLoopGroup();
+        int serverThreads = FactoryMethods.serverThreads(properties);
+        group = TCPServerEntity.createNewWorkerGroup(serverThreads);
         ChannelHandler codec = getChannelHandler(context);
         Bootstrap bs = new Bootstrap();
 
         quicChannel = bs.group(group)
-                .channel(NioDatagramChannel.class)
+                .channel(NettyUDPServer.socketChannel())
                 /*
                 Allocates a new receive buffer whose capacity is probably large enough to read all inbound data
                 and small enough not to waste its space.

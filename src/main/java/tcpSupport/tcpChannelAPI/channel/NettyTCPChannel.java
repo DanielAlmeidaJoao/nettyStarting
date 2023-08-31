@@ -89,7 +89,7 @@ public class NettyTCPChannel<T> implements StreamingNettyConsumer, NettyChannelI
         customIdToConnection = TCPChannelUtils.getMapInst(singleThreaded);
         this.networkRole = networkRole;
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.SERVER==networkRole){
-            server = new TCPServerEntity(addr.getHostName(),port,this);
+            server = new TCPServerEntity(addr.getHostName(),port,this,properties);
             try{
                 server.startServer();
             }catch (Exception e){

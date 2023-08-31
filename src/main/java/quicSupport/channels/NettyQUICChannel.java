@@ -118,7 +118,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             if(NetworkRole.CLIENT==networkRole){
                 properties.remove(CONNECT_ON_SEND);
             }
-            client = new QUICClientEntity(self,this,new NioEventLoopGroup(),properties);
+            client = new QUICClientEntity(self,this,properties);
         }else{
             client = new DummyClient();
         }

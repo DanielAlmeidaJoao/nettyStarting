@@ -1,11 +1,13 @@
 package tcpSupport.tcpChannelAPI.connectionSetups;
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
@@ -30,7 +32,7 @@ public class TCPClientEntity implements ClientInterface{
     private final int connectionTimeout;
     private final StreamingNettyConsumer consumer;
     public TCPClientEntity(InetSocketAddress host, Properties properties, StreamingNettyConsumer consumer) {
-        group = createNewWorkerGroup();
+        group = TCPServerEntity.createNewWorkerGroup(FactoryMethods.clientThreads(properties));
         this.self = host;
         this.consumer = consumer;
         connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
@@ -68,17 +70,13 @@ public class TCPClientEntity implements ClientInterface{
          updateConfiguration(ChannelOption.AUTO_READ,Boolean.TRUE);**/
     }
 
-    private static EventLoopGroup createNewWorkerGroup() {
-        //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
-        //else
-        return new NioEventLoopGroup();
-    }
+
     private Class<? extends Channel> socketChannel(){
-        /**
         if (Epoll.isAvailable()) {
             return EpollSocketChannel.class;
-        }**/
-        return NioSocketChannel.class;
+        }else{
+            return NioSocketChannel.class;
+        }
     }
     public void shutDown(){
         group.shutdownGracefully();

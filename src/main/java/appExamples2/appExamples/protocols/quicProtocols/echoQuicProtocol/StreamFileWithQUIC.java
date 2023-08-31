@@ -288,6 +288,10 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
 
         int available = event.babelOutputStream.readableBytes();
+        if(available>0){
+            System.out.println("RECEIVED "+available);
+            return;
+        }
         byte [] p = event.babelOutputStream.readBytes();
         writeToFile(available,p);
         //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
@@ -300,6 +304,16 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     }
     int bufferSize = 128*1024; // 8KB buffer size
     public void startStreaming(){
+        if(babelInputStream!=null){
+
+            while (true){
+                babelInputStream.writeBytes("OLA".getBytes());
+                try {
+                    Thread.sleep(1000);
+                }catch (Exception e){}
+            }
+
+        }
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";

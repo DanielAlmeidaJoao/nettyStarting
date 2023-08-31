@@ -1,7 +1,11 @@
 package tcpSupport.tcpChannelAPI.connectionSetups;
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -11,6 +15,7 @@ import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.pipeline.TCPCustomHandshakeHandler;
 
 import java.net.InetSocketAddress;
+import java.util.Properties;
 
 public class TCPServerEntity implements ServerInterface{
     //One of the main advantages of using a single thread to
@@ -25,16 +30,19 @@ public class TCPServerEntity implements ServerInterface{
     private final String hostName;
     private Channel serverChannel;
     private final StreamingNettyConsumer consumer;
-    public TCPServerEntity(String hostName, int port, StreamingNettyConsumer consumer) {
+    private Properties properties;
+    public TCPServerEntity(String hostName, int port, StreamingNettyConsumer consumer, Properties properties) {
         this.port = port;
         this.hostName = hostName;
         this.consumer = consumer;
+        this.properties = properties;
     }
 
     public void startServer()
             throws Exception{
+        int serverThreads = FactoryMethods.serverThreads(properties);
         EventLoopGroup parentGroup = createNewWorkerGroup(1);
-        EventLoopGroup childGroup = createNewWorkerGroup(-1);
+        EventLoopGroup childGroup = createNewWorkerGroup(serverThreads);
         ServerBootstrap b = new ServerBootstrap();
         b.group(parentGroup,childGroup).channel(socketChannel())
                 .option(ChannelOption.SO_BACKLOG, 128)
@@ -71,17 +79,18 @@ public class TCPServerEntity implements ServerInterface{
     public static EventLoopGroup createNewWorkerGroup(int numberOfThreads) {
         //if (Epoll.isAvailable()) return new EpollEventLoopGroup(nThreads);
         //else
-        if(numberOfThreads>0){
-            return new NioEventLoopGroup(numberOfThreads);
+        if(Epoll.isAvailable()){
+            return new EpollEventLoopGroup(numberOfThreads);
         }else{
-            return new NioEventLoopGroup();
+            return new NioEventLoopGroup(numberOfThreads);
         }
     }
     private Class<? extends ServerChannel> socketChannel(){
-        /**if (Epoll.isAvailable()) {
+        if (Epoll.isAvailable()) {
             return EpollServerSocketChannel.class;
-        }**/
-        return NioServerSocketChannel.class;
+        }else{
+            return NioServerSocketChannel.class;
+        }
     }
 
 }

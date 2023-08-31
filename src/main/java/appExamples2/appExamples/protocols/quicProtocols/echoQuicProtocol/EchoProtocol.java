@@ -1,6 +1,5 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
@@ -247,7 +246,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             var p =event.getCurrent();
             if(p != null && p.size()>0){
                 //if(myself.getPort()==8081){
-                    closeConnection(FactoryMethods.toBabelHost(p.get(0).getHostAddress()));
+                    closeConnection(Host.toBabelHost(p.get(0).getHostAddress()));
                     System.out.println("CLOSED CONNECTIONNN");
                 //}
             }

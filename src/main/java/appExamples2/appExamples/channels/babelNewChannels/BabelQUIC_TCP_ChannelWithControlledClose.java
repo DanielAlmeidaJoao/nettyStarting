@@ -75,7 +75,7 @@ public class BabelQUIC_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_C
         //////
     @Override
     public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream babelInputStream){
-        hostChannelsMap.computeIfAbsent(FactoryMethods.toBabelHost(peer),host1 -> new HashSet<>());
+        hostChannelsMap.computeIfAbsent(Host.toBabelHost(peer),host1 -> new HashSet<>());
         streamChannelsMap.computeIfAbsent(customConId,s -> new HashSet<>());
         super.onConnectionUp(incoming,peer, type, customConId, babelInputStream);
     }

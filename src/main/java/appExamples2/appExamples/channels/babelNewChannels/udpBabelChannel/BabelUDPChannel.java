@@ -83,7 +83,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
 
     @Override
     public void onPeerDown(InetSocketAddress peer) {
-        Host host = FactoryMethods.toBabelHost(peer);
+        Host host = Host.toBabelHost(peer);
         String conId = hostStringMap.remove(host);
         if(conId!=null){
             customConIDToAddress.remove(conId);
@@ -95,12 +95,12 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     public void onDeliverMessage(T message, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
-        listener.deliverMessage(message,FactoryMethods.toBabelHost(from),null);
+        listener.deliverMessage(message,Host.toBabelHost(from),null);
     }
 
     @Override
     public void sendMessage(T message, Host host, short proto) {
-        udpChannelInterface.sendMessage(message,FactoryMethods.toInetSOcketAddress(host));
+        udpChannelInterface.sendMessage(message,host.address);
     }
 
     @Override
@@ -130,7 +130,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
     @Override
     public void onMessageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest){
-        if (triggerSent) listener.messageSent(message,FactoryMethods.toBabelHost(dest),TransmissionType.STRUCTURED_MESSAGE);
+        if (triggerSent) listener.messageSent(message,Host.toBabelHost(dest),TransmissionType.STRUCTURED_MESSAGE);
     }
 
     @Override

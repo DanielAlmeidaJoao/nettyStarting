@@ -100,7 +100,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
     @Override
     public void sendMessage(T message, Host host, short proto) {
-        nettyChannelInterface.send(FactoryMethods.toInetSOcketAddress(host),message);
+        nettyChannelInterface.send(host.address,message);
     }
 
     @Override
@@ -111,12 +111,12 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
     @Override
     public void closeConnection(Host peer, short proto) {
-        nettyChannelInterface.closeConnection(FactoryMethods.toInetSOcketAddress(peer));
+        nettyChannelInterface.closeConnection(peer.address);
     }
 
     @Override
     public boolean isConnected(Host peer) {
-        return nettyChannelInterface.isConnected(FactoryMethods.toInetSOcketAddress(peer));
+        return nettyChannelInterface.isConnected(peer.address);
     }
 
     @Override
@@ -162,12 +162,12 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
     @Override
     public String openMessageConnection(Host host, short proto, boolean always) {
-        return nettyChannelInterface.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.STRUCTURED_MESSAGE,proto,proto,always);
+        return nettyChannelInterface.open(host.address,TransmissionType.STRUCTURED_MESSAGE,proto,proto,always);
     }
 
     @Override
     public String openStreamConnection(Host host, short sourceProto,short destProto, boolean always) {
-        return nettyChannelInterface.open(FactoryMethods.toInetSOcketAddress(host),TransmissionType.UNSTRUCTURED_STREAM,sourceProto,destProto,always);
+        return nettyChannelInterface.open(host.address,TransmissionType.UNSTRUCTURED_STREAM,sourceProto,destProto,always);
     }
 
     @Override
@@ -214,22 +214,22 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     /******************************** CHANNEL HANDLER METHODS *************************************/
     public void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId) {
         logger.error("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getMessage());
-        Host h  = peer == null ? null : FactoryMethods.toBabelHost(peer);
+        Host h  = peer == null ? null : Host.toBabelHost(peer);
         listener.deliverEvent(new OnChannelError(h,null,streamId,false,error));
     }
 
 
     public void onChannelReadDelimitedMessage(String connectionId, T message, InetSocketAddress from) {
-        listener.deliverMessage(message,FactoryMethods.toBabelHost(from),connectionId);
+        listener.deliverMessage(message,Host.toBabelHost(from),connectionId);
     }
     @Override
     public void onChannelReadFlowStream(String streamId, BabelOutputStream bytes, InetSocketAddress from, BabelInputStream inputStream, short streamProto) {
         short d = streamProto;
-        listener.deliverStream(bytes,FactoryMethods.toBabelHost(from),streamId,d,d,d,inputStream);
+        listener.deliverStream(bytes,Host.toBabelHost(from),streamId,d,d,d,inputStream);
     }
 
     public void onConnectionUp(boolean incoming, InetSocketAddress peer, TransmissionType type, String customConId, BabelInputStream babelInputStream) {
-        Host host = FactoryMethods.toBabelHost(peer);
+        Host host = Host.toBabelHost(peer);
         logger.debug("OnStreamConnectionUpEvent " + host);
         if(TransmissionType.STRUCTURED_MESSAGE==type){
             listener.deliverEvent(new OnMessageConnectionUpEvent(host,customConId,incoming));
@@ -239,7 +239,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     public void onOpenConnectionFailed(InetSocketAddress peer, Throwable cause, TransmissionType transmissionType, String conId) {
-        Host h = FactoryMethods.toBabelHost(peer);
+        Host h = Host.toBabelHost(peer);
         listener.deliverEvent(new OnOpenConnectionFailed(h,conId,transmissionType,cause));
         logger.debug("FAILED TO OPEN CONNECTION TO {}. REASON: {}",peer,cause.getLocalizedMessage());
     }
@@ -252,7 +252,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     public void onMessageSent(T message, Throwable error, InetSocketAddress peer, TransmissionType type,String conID) {
         Host dest = null;
         if(peer!=null){
-            dest = FactoryMethods.toBabelHost(peer);
+            dest = Host.toBabelHost(peer);
         }
         if (error == null && triggerSent) listener.messageSent(message,dest,TransmissionType.STRUCTURED_MESSAGE);
         else if (error != null) listener.messageFailed(message,dest,error,TransmissionType.STRUCTURED_MESSAGE);
@@ -262,7 +262,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     public void onStreamDataSent(InputStream inputStream, byte[] data, int len, Throwable error, InetSocketAddress peer, TransmissionType type, String conID) {
         Host dest=null;
         if(peer!=null){
-            dest = FactoryMethods.toBabelHost(peer);
+            dest = Host.toBabelHost(peer);
         }
         if(error==null&&triggerSent){
             OnStreamDataSentEvent dataSentEvent = new OnStreamDataSentEvent(data,inputStream,len,error,conID,dest);
@@ -285,7 +285,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
     public void onStreamClosedHandler(InetSocketAddress peer, String streamId, boolean inConnection, TransmissionType type) {
         //logger.debug("STREAM {} OF {} CONNECTION CLOSED.",streamId,peer);
-        listener.deliverEvent(new OnConnectionDownEvent(FactoryMethods.toBabelHost(peer),null,streamId,inConnection,type));
+        listener.deliverEvent(new OnConnectionDownEvent(Host.toBabelHost(peer),null,streamId,inConnection,type));
     }
 
 

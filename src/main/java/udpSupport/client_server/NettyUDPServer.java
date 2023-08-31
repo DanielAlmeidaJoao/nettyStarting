@@ -1,14 +1,17 @@
 package udpSupport.client_server;
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStatsKindEnum;
@@ -132,13 +135,21 @@ public class NettyUDPServer {
             return 0;
         }
     }
+    public static Class<? extends Channel> socketChannel(){
+        if (Epoll.isAvailable()) {
+            return EpollDatagramChannel.class;
+        }else{
+            return NioDatagramChannel.class;
+        }
+    }
     private Channel start() throws Exception{
+        int serverThreads = FactoryMethods.serverThreads(properties);
         OnAckFunction onAckReceived = this::onAckReceived;
         Channel server;
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup group = TCPServerEntity.createNewWorkerGroup(serverThreads);
         Bootstrap b = new Bootstrap();
         b.group(group)
-                .channel(NioDatagramChannel.class)
+                .channel(socketChannel())
                 .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(BUFFER_SIZE))
                 .option(ChannelOption.SO_BROADCAST, properties.getProperty(UDP_BROADCAST_PROP)!=null)
                 .handler(new ChannelInitializer<DatagramChannel>() {

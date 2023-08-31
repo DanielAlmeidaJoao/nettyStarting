@@ -14,13 +14,9 @@ package quicSupport.client_server;/*
  * under the License.
  */
 
+import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.FixedRecvByteBufAllocator;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.*;
 import io.netty.incubator.codec.quic.*;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,7 +29,9 @@ import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.connectionSetups.ClientInterface;
+import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import udpSupport.client_server.NettyUDPServer;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.InetSocketAddress;
@@ -48,15 +46,15 @@ public final class QUICClientEntity implements ClientInterface {
     private QuicChannel quicChannel;
     private final InetSocketAddress self;
     private final CustomQuicChannelConsumer consumer;
-    private NioEventLoopGroup group;
+    private EventLoopGroup group;
     private QuicSslContext context;
     public final Properties properties;
 
-    public QUICClientEntity(InetSocketAddress self, CustomQuicChannelConsumer consumer, NioEventLoopGroup g, Properties properties){
+    public QUICClientEntity(InetSocketAddress self, CustomQuicChannelConsumer consumer, Properties properties){
         this.self = self;
         this.consumer = consumer;
         //
-        this.group = g;
+        this.group = TCPServerEntity.createNewWorkerGroup(FactoryMethods.clientThreads(properties));
         context = null;
         this.properties = properties;
     }
@@ -91,7 +89,7 @@ public final class QUICClientEntity implements ClientInterface {
         Bootstrap bs = new Bootstrap();
 
         Channel channel = bs.group(group)
-                .channel(NioDatagramChannel.class)
+                .channel(NettyUDPServer.socketChannel())
                 .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
                 .handler(getCodec())
                 .bind(0).sync().channel();
