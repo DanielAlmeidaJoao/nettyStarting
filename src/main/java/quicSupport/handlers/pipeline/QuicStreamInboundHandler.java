@@ -34,12 +34,6 @@ public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
-        logger.error(cause.getMessage());
-        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,customId);
-    }
-    @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent e = (IdleStateEvent) evt;
@@ -54,5 +48,12 @@ public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         consumer.streamInactiveHandler((QuicStreamChannel) ctx.channel(),customId);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+        logger.error(cause.getMessage());
+        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,customId);
     }
 }

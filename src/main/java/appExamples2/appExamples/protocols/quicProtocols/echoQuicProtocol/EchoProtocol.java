@@ -38,6 +38,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         String address = properties.getProperty("address");
         String port = properties.getProperty("port");
         logger.info("Receiver on {}:{}", address, port);
+        logger.error("STARTED THE APPP");
         this.myself = new Host(InetAddress.getByName(address), Integer.parseInt(port));
 
         //channelProps.setProperty("metrics_interval","2000");

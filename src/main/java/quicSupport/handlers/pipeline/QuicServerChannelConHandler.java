@@ -21,12 +21,7 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) {
         consumer.channelInactive(ctx.channel().id().asShortText());
     }
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        LOGGER.error(cause.getMessage());
-        TCPChannelUtils.closeOnError(ctx.channel());
-        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,null);
-    }
+
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
@@ -35,5 +30,12 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     @Override
     public boolean isSharable() {
         return true;
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        LOGGER.error(cause.getMessage());
+        TCPChannelUtils.closeOnError(ctx.channel());
+        consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,null);
     }
 }

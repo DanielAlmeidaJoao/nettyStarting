@@ -3,7 +3,6 @@ package quicSupport.channels;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -546,7 +545,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             c.addListener(future -> {
                 calcMetricsOnSend(future,conId,len);
                 if(!future.isSuccess()){
-                    future.cause().printStackTrace();
+                    logger.error(future.cause().getMessage());
                     overridenMethods.onStreamDataSent(inputStream,null,inputStream.available(),future.cause(), finalPeer,TransmissionType.UNSTRUCTURED_STREAM,conId);
                 }
             });
