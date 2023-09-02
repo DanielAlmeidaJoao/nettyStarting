@@ -48,9 +48,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             QuicStreamChannel ch = (QuicStreamChannel) ctx.channel();
             if(QUICLogics.APP_DATA==msgType){
                 try {
-                    ByteBuf aux = msg.readRetainedSlice(length);
-                    BabelMessage babelMessage = serializer.deserialize(aux);
-                    aux.release();
+                    BabelMessage babelMessage = serializer.deserialize(msg.readSlice(length));
                     consumer.onReceivedDelimitedMessage(customId,babelMessage,length+1);
                     //FactoryMethods.deserialize(bytes,serializer,listener,from,connectionId);
                 } catch (Exception e) {
