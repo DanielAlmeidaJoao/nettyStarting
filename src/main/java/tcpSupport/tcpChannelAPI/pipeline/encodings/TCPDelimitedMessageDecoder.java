@@ -28,13 +28,12 @@ public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
         consumer.channelError(null,cause,ctx.channel().id().asShortText());
         TCPChannelUtils.closeOnError(ctx.channel());
     }
-
     @Override
     public boolean handleReceivedMessage(ChannelHandlerContext ctx, ByteBuf in, int len) {
         try{
-            in = in.readBytes(len);
-            BabelMessage babelMessage = serializer.deserialize(in);
-            in.release();
+            ByteBuf buf = in.readRetainedSlice(len);
+            BabelMessage babelMessage = serializer.deserialize(buf);
+            buf.release();
             consumer.onChannelMessageRead(ctx.channel().id().asShortText(),babelMessage,len+1);
         }catch (Exception e){
             e.printStackTrace();
