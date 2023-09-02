@@ -6,6 +6,7 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.DummyChannelToProtoForwarder;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
 import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
@@ -38,10 +39,7 @@ public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
 
     private final boolean triggerSent;
-
-
-    private final BabelMessageSerializer serializer;
-    private final ChannelListener listener;
+    private ChannelListener listener;
     private final UDPChannelInterface udpChannelInterface;
     private final Map<String,Host> customConIDToAddress;
     private final Map<Host,String> hostStringMap;
@@ -49,10 +47,7 @@ public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
     public short ownerProto;
 
     public BabelUDPChannel(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short ownerProto) throws IOException {
-        //super(properties);
-        this.serializer = serializer;
-        BabelMessageSerializer aux = (BabelMessageSerializer) serializer;
-        aux.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
+        serializer.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
         this.listener = list;
         if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
             udpChannelInterface = new SingleThreadedUDPChannel(properties,this,serializer);
@@ -170,6 +165,7 @@ public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
 
     @Override
     public boolean shutDownChannel(short protoId) {
+        listener = new DummyChannelToProtoForwarder();
         udpChannelInterface.shutDownServerClient();
         return true;
     }

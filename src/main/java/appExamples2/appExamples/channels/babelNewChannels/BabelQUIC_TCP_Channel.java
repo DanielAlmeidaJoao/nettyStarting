@@ -7,6 +7,7 @@ import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.channels.DummyChannelToProtoForwarder;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.*;
 import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
@@ -42,7 +43,7 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
 
     private final boolean triggerSent;
     private final BabelMessageSerializer serializer;
-    private final ChannelListener listener;
+    private ChannelListener listener;
     private final NettyChannelInterface nettyChannelInterface;
     public final short protoToReceiveStreamData;
     //private final Map<String,Triple<Short,Short,Short>> unstructuredStreamHandlers;
@@ -140,6 +141,7 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
 
     @Override
     public boolean shutDownChannel(short protoId) {
+        listener = new DummyChannelToProtoForwarder();
         nettyChannelInterface.shutDown();
         return true;
     }
