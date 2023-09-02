@@ -45,11 +45,9 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
         });
     }
     @Override
-    public void onReceivedDelimitedMessage(String streamId, ByteBuf bytes){
-        final ByteBuf copy = bytes.retainedDuplicate();
+    public void onReceivedDelimitedMessage(String streamId, BabelMessage babelMessage, int receivedData){
         executor.submit(() -> {
-            super.onReceivedDelimitedMessage(streamId, copy);
-            copy.release();
+            super.onReceivedDelimitedMessage(streamId,babelMessage,receivedData);
         });
     }
     @Override

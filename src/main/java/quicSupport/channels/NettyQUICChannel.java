@@ -206,22 +206,13 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         overridenMethods.onConnectionUp(inConnection,con.customParentConnection.getRemote(),type,customId, babelInputStream);
     }
 
-    public void onReceivedDelimitedMessage(String customId, ByteBuf bytes){
+    public void onReceivedDelimitedMessage(String customId, BabelMessage babelMessage,int len){
         CustomQUICStreamCon streamCon = customStreamIdToStream.get(customId);
         if(streamCon!=null){
-            calcMetricsOnReceived(streamCon.customStreamId,bytes.readableBytes()+HEADER_LENGTH);
+            calcMetricsOnReceived(streamCon.customStreamId,len+HEADER_LENGTH);
             if(withHeartBeat && streamCon.inConnection){streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();}
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
-            try {
-                BabelMessage babelMessage = serializer.deserialize(bytes);
-                overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,babelMessage,streamCon.customParentConnection.getRemote());
-
-                //FactoryMethods.deserialize(bytes,serializer,listener,from,connectionId);
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(1);
-                throw new RuntimeException(e);
-            }
+            overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,babelMessage,streamCon.customParentConnection.getRemote());
         }
     }
     public void onReceivedStream(String customId, BabelOutputStream babelOutputStream){
@@ -613,6 +604,10 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             logger.error("Server socket bind failed: " + cause);
             shutDown();
         }
+    }
+    @Override
+    public BabelMessageSerializer getSerializer() {
+        return serializer;
     }
 
     public void onServerSocketClose(boolean success, Throwable cause) {

@@ -1,7 +1,8 @@
 package quicSupport.channels;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
+import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
@@ -19,7 +20,7 @@ public interface CustomQuicChannelConsumer {
 
     void streamCreatedHandler(QuicStreamChannel channel, TransmissionType type, String customId, boolean inConnection, short sourceProto);
 
-    void onReceivedDelimitedMessage(String streamId, ByteBuf bytes);
+    void onReceivedDelimitedMessage(String streamId, BabelMessage babelMessage,int len);
 
     void onReceivedStream(String streamId, BabelOutputStream bytes);
 
@@ -30,5 +31,6 @@ public interface CustomQuicChannelConsumer {
     String nextId();
 
     void onServerSocketBind(boolean success, Throwable cause);
+    BabelMessageSerializer getSerializer();
 
 }

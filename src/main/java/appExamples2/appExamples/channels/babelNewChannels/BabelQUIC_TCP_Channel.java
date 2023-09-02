@@ -212,7 +212,7 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
 
     /******************************** CHANNEL HANDLER METHODS *************************************/
     public void onStreamErrorHandler(InetSocketAddress peer, Throwable error, String streamId) {
-        logger.error("ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getMessage());
+        logger.error("CONNECTION CLOSED. ERROR ON STREAM {} BELONGING TO CONNECTION {}. REASON: {}",streamId,peer,error.getMessage());
         Host h  = peer == null ? null : Host.toBabelHost(peer);
         listener.deliverEvent(new OnChannelError(h,null,streamId,false,error));
     }

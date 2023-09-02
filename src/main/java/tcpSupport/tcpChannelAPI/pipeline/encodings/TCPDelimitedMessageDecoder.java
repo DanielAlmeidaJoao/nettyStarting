@@ -2,6 +2,8 @@ package tcpSupport.tcpChannelAPI.pipeline.encodings;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.pipeline.AbstractMessageDecoderHandler;
@@ -10,10 +12,12 @@ import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
     public final TransmissionType type;
     public static final String NAME = "TCPDelimitedMessageDecoder";
+    private final BabelMessageSerializer serializer;
 
     public TCPDelimitedMessageDecoder(StreamingNettyConsumer consumer) {
         super(consumer);
         type = TransmissionType.STRUCTURED_MESSAGE;
+        serializer = consumer.getSerializer();
     }
 
 
@@ -27,10 +31,15 @@ public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
 
     @Override
     public boolean handleReceivedMessage(ChannelHandlerContext ctx, ByteBuf in, int len) {
-        ByteBuf buf = in.readBytes(len);
-        in.discardReadBytes();
-        consumer.onChannelMessageRead(ctx.channel().id().asShortText(),buf);
-        buf.release();
+        try{
+            in = in.readBytes(len);
+            BabelMessage babelMessage = serializer.deserialize(in);
+            in.release();
+            consumer.onChannelMessageRead(ctx.channel().id().asShortText(),babelMessage,len+1);
+        }catch (Exception e){
+            e.printStackTrace();
+            System.exit(0);
+        }
         return true;
     }
 

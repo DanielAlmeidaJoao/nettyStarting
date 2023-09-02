@@ -136,20 +136,13 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         channelHandlerMethods.onStreamClosedHandler(connection.host,connection.conId,connection.inConnection,connection.type);
     }
 
-    public void onChannelMessageRead(String channelId, ByteBuf bytes){
+    public void onChannelMessageRead(String channelId, BabelMessage babelMessage, int bytes){
         CustomTCPConnection connection = nettyIdToConnection.get(channelId);
         if(connection==null){
             logger.debug("RECEIVED MESSAGE FROM A DISCONNECTED PEER!");
         }else {
-            calcMetricsOnReceived(connection.conId,bytes.readableBytes()+Integer.BYTES);
-            try {
-                BabelMessage babelMessage = serializer.deserialize(bytes);
-                channelHandlerMethods.onChannelReadDelimitedMessage(connection.conId,babelMessage,connection.host);
-                //FactoryMethods.deserialize(bytes,serializer,listener,from,connectionId);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
+            calcMetricsOnReceived(connection.conId,bytes+Integer.BYTES);
+            channelHandlerMethods.onChannelReadDelimitedMessage(connection.conId,babelMessage,connection.host);
         }
     }
     public void onChannelStreamRead(String channelId, BabelOutputStream babelOutputStream){
@@ -521,5 +514,10 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             nettyID = null;
         }
         channelHandlerMethods.onStreamErrorHandler(address,throwable,nettyID);
+    }
+
+    @Override
+    public BabelMessageSerializer getSerializer() {
+        return serializer;
     }
 }

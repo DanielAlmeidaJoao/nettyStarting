@@ -173,6 +173,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
         logger.info("DATA SENT <{}>",msg.len);
+        System.out.println("TIMES "+count);
+        System.exit(0);
 
     }
     private void uponStreamConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
@@ -303,17 +305,17 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
     }
     int bufferSize = 128*1024; // 8KB buffer size
+    int count = 0;
     public void startStreaming(){
+        /**
         if(babelInputStream!=null){
-
             while (true){
                 babelInputStream.writeBytes("OLA".getBytes());
                 try {
                     Thread.sleep(1000);
                 }catch (Exception e){}
             }
-
-        }
+        } **/
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
@@ -334,6 +336,10 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 while ( (ef = inputStream.read(read))>0){
                     sendMessage(new FileBytesCarrier(read,ef),streamId);
                     read = new byte[CHUNK];
+                    count++;
+                    if(count>2){
+                        //return;
+                    }
                 }
             }else{
                 babelInputStream.writeFile(filePath.toFile());

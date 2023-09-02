@@ -37,11 +37,9 @@ public class SingleThreadedNettyTCPChannel<T> extends NettyTCPChannel {
     }
 
     @Override
-    public void onChannelMessageRead(String channelId, ByteBuf bytes) {
-        final ByteBuf copy = bytes.retainedDuplicate();
+    public void onChannelMessageRead(String channelId, BabelMessage babelMessage,int len) {
         executor.execute(() -> {
-            super.onChannelMessageRead(channelId,copy);
-            copy.release();
+            super.onChannelMessageRead(channelId,babelMessage,len);
         });
     }
 
