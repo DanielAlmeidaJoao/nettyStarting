@@ -134,7 +134,7 @@ public class NettyUDPServer {
             }
             return stella;
         }else{
-            return 0;
+            return random.nextInt(1+RETRANSMISSION_TIMEOUT);
         }
     }
     public static Class<? extends Channel> socketChannel(){
