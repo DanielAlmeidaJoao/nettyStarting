@@ -30,6 +30,9 @@ public class TCPChannelUtils {
 
     public final static String METRICS_INTERVAL_KEY = "metrics_interval";
 
+    public static final String BUFF_ALOC_SIZE = "RCV_BUFF_ALOC_SIZE";
+
+
 
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
         if(singleT){

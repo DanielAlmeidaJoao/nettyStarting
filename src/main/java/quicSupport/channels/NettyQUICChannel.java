@@ -231,7 +231,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();
             }
             InetSocketAddress remote = streamCon.customParentConnection.getRemote();
-            logger.info("SELF:{} -- HEART BEAT RECEIVED -- {}",self,remote);
+            logger.debug("SELF:{} -- HEART BEAT RECEIVED -- {}",self,remote);
             if(enabledMetrics()){
                 metrics.calcControlMetricsOnReceived(streamCon.customStreamId,i);
             }

@@ -49,6 +49,7 @@ public final class QUICClientEntity implements ClientInterface {
     private EventLoopGroup group;
     private QuicSslContext context;
     public final Properties properties;
+    final int bufferSize;
 
     public QUICClientEntity(InetSocketAddress self, CustomQuicChannelConsumer consumer, Properties properties){
         this.self = self;
@@ -57,6 +58,8 @@ public final class QUICClientEntity implements ClientInterface {
         this.group = TCPServerEntity.createNewWorkerGroup(FactoryMethods.clientThreads(properties));
         context = null;
         this.properties = properties;
+        bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"16384"));
+
     }
 
     private TrustManagerFactory serverTrustManager() throws Exception {
@@ -87,10 +90,9 @@ public final class QUICClientEntity implements ClientInterface {
     }
     public void connect(InetSocketAddress remote, TransmissionType transmissionType, String id, short destProto) throws Exception{
         Bootstrap bs = new Bootstrap();
-
         Channel channel = bs.group(group)
                 .channel(NettyUDPServer.socketChannel())
-                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
+                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(bufferSize))
                 .handler(getCodec())
                 .bind(0).sync().channel();
         QuicChannelBootstrap b = QuicChannel.newBootstrap(channel)

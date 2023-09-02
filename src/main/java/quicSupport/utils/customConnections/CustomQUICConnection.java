@@ -105,7 +105,7 @@ public class CustomQUICConnection {
             }
             if(stream==null || TransmissionType.UNSTRUCTURED_STREAM == stream.type)return;
             scheduledFuture = stream.streamChannel.eventLoop().schedule(() -> {
-                logger.info("HEART BEAT SENT TO {}",remote);
+                logger.debug("HEART BEAT SENT TO {}",remote);
                 ByteBuf byteBuf = stream.streamChannel.alloc().directBuffer(4+1);
                 byteBuf.writeInt(4);
                 byteBuf.writeByte(QUICLogics.KEEP_ALIVE);

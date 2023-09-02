@@ -73,6 +73,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
             channelProps = TCPChannelUtils.quicChannelProperty(address,port);
+            channelProps.setProperty("RCV_BUFF_ALOC_SIZE",properties.getProperty("RCV_BUFF_ALOC_SIZE"));
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
         }else if(channelName.equalsIgnoreCase("tcp")){
@@ -83,6 +84,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }else{
             System.out.println("UDP ON");
             channelProps = TCPChannelUtils.udpChannelProperties(address,port);
+            channelProps.setProperty("BUFF_ALOC",properties.getProperty("BUFF_ALOC"));
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelUDPChannel.NAME,channelProps);
         }
@@ -163,7 +165,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     private void uponFileBytesMessage(FileBytesCarrier msg, Host from, short sourceProto, int channelId, String streamId) {
         if(NetworkProtocol.UDP==getNetworkProtocol(channelId)){
             received += msg.len;
-            //logger.info("RECEIVED ALL BYTES {} . {}",msg.len,received);
+            logger.info("RECEIVED ALL BYTES {} . {}",msg.len,received);
             return;
         }
         writeToFile(msg.len,msg.data);
@@ -287,13 +289,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }
     }
     private void uponStreamBytes(BabelStreamDeliveryEvent event) {
-
-
         int available = event.babelOutputStream.readableBytes();
-        if(available>0){
-            System.out.println("RECEIVED "+available);
-            return;
-        }
         byte [] p = event.babelOutputStream.readBytes();
         writeToFile(available,p);
         //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);

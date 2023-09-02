@@ -12,6 +12,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStatsKindEnum;
@@ -32,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class NettyUDPServer {
     public static SecureRandom randomInstance;
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
-    public static final int BUFFER_SIZE = 1024 * 65;
+    public final int BUFFER_SIZE;
     public static final String MIN_UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
     public static final String MAX_UDP_RETRANSMISSION_TIMEOUT = "MAX_UDP_RETRANSMISSION_TIMEOUT";
 
@@ -67,13 +68,14 @@ public class NettyUDPServer {
         MAX_SEND_RETRIES = Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"5"));
         RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MIN_UDP_RETRANSMISSION_TIMEOUT,"250"));
         MAX_RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MAX_UDP_RETRANSMISSION_TIMEOUT,"0"));
+        BUFFER_SIZE = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"66560"));
+        random = RETRANSMISSION_TIMEOUT>0 ? getRandomInstance():null;
         try {
             channel = start();
         }catch (Exception e){
             e.printStackTrace();
             throw new RuntimeException("UDP LISTENER COULD NOT START!");
         }
-        random = RETRANSMISSION_TIMEOUT>0 ? getRandomInstance():null;
     }
     public void onAckReceived(long msgId, InetSocketAddress sender){
         UDPWaitForAckWrapper timeMillis = waitingForAcks.remove(msgId);
@@ -136,11 +138,7 @@ public class NettyUDPServer {
         }
     }
     public static Class<? extends Channel> socketChannel(){
-        if (Epoll.isAvailable()) {
-            return EpollDatagramChannel.class;
-        }else{
-            return NioDatagramChannel.class;
-        }
+        return Epoll.isAvailable() ? EpollDatagramChannel.class:NioDatagramChannel.class;
     }
     private Channel start() throws Exception{
         int serverThreads = FactoryMethods.serverThreads(properties);

@@ -8,7 +8,6 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.pipeline.ClientHandler;
 
-import static udpSupport.client_server.NettyUDPServer.BUFFER_SIZE;
 
 public class NettyUDPClient {
 
@@ -18,7 +17,7 @@ public class NettyUDPClient {
             Bootstrap b = new Bootstrap();
             b.group(group)
                     .channel(NioDatagramChannel.class)
-                    .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(BUFFER_SIZE))
+                    .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(1024 * 65))
                     .option(ChannelOption.SO_BROADCAST, true)
                     .handler(new ChannelInitializer<DatagramChannel>() {
                         @Override

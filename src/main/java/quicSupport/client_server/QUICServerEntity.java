@@ -27,6 +27,7 @@ import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpChannelAPI.connectionSetups.ServerInterface;
 import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.client_server.NettyUDPServer;
 
 import javax.net.ssl.TrustManagerFactory;
@@ -69,7 +70,7 @@ public final class QUICServerEntity implements ServerInterface {
                 .build();
     }
 
-    public ChannelHandler getChannelHandler(QuicSslContext context) {
+    public ChannelHandler getChannelHandler(QuicSslContext context, int bufferSize) {
         QuicServerCodecBuilder serverCodecBuilder =  new QuicServerCodecBuilder()
                 .sslContext(context);
         serverCodecBuilder = (QuicServerCodecBuilder) QUICLogics.addConfigs(serverCodecBuilder,properties);
@@ -79,7 +80,7 @@ public final class QUICServerEntity implements ServerInterface {
                 .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                 // ChannelHandler that is added into QuicChannel pipeline.
                 .handler(new QuicServerChannelConHandler(consumer))
-                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(65*1024))
+                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(bufferSize))
                 .streamHandler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
@@ -94,7 +95,8 @@ public final class QUICServerEntity implements ServerInterface {
         QuicSslContext context = getSignedSslContext();
         int serverThreads = FactoryMethods.serverThreads(properties);
         group = TCPServerEntity.createNewWorkerGroup(serverThreads);
-        ChannelHandler codec = getChannelHandler(context);
+        final int bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"16384"));
+        ChannelHandler codec = getChannelHandler(context,bufferSize);
         Bootstrap bs = new Bootstrap();
 
         quicChannel = bs.group(group)
@@ -103,7 +105,8 @@ public final class QUICServerEntity implements ServerInterface {
                 Allocates a new receive buffer whose capacity is probably large enough to read all inbound data
                 and small enough not to waste its space.
                 */
-                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(1024*65))
+                //.option(EpollChannelOption.MAX_DATAGRAM_PAYLOAD_SIZE,2048)
+                .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(bufferSize))
                 .handler(codec)
                 .bind(self).sync()
                 .addListener(future -> {
@@ -113,9 +116,7 @@ public final class QUICServerEntity implements ServerInterface {
 
         quicChannel.closeFuture().addListener(future -> {
             group.shutdownGracefully().getNow();
-            //logger.info("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });
-        //logger.info("LISTENING ON {}:{} FOR INCOMING CONNECTIONS",self.getHostName(),self.getPort());
     }
     public void shutDown(){
         if(quicChannel !=null){
