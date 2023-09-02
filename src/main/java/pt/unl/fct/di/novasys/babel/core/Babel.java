@@ -93,10 +93,10 @@ public class Babel {
     private final AtomicLong timersCounter;
 
     //Channels
-    private final Map<String, ChannelInitializer<? extends NewIChannel<BabelMessage>>> initializers;
+    private final Map<String, ChannelInitializer> initializers;
 
     private final Map<Integer,
-            Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer>> channelMap;
+            Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer>> channelMap;
     private final AtomicInteger channelIdGenerator;
 
     private long startTime;
@@ -188,8 +188,8 @@ public class Babel {
      * @param initializer the channel initializer
      */
     public void registerChannelInitializer(String name,
-                                           ChannelInitializer<? extends NewIChannel<BabelMessage>> initializer) {
-        ChannelInitializer<? extends NewIChannel<BabelMessage>> old = initializers.putIfAbsent(name, initializer);
+                                           ChannelInitializer initializer) {
+        ChannelInitializer old = initializers.putIfAbsent(name, initializer);
         if (old != null) {
             throw new IllegalArgumentException("Initializer for channel with name " + name +
                     " already registered: " + old);
@@ -208,14 +208,14 @@ public class Babel {
      */
     int createChannel(String channelName, short protoId, Properties props)
             throws IOException {
-        ChannelInitializer<? extends NewIChannel<?>> initializer = initializers.get(channelName);
+        ChannelInitializer initializer = initializers.get(channelName);
         if (initializer == null)
             throw new IllegalArgumentException("Channel initializer not registered: " + channelName);
 
         int channelId = channelIdGenerator.incrementAndGet();
         BabelMessageSerializer serializer = new BabelMessageSerializer(new ConcurrentHashMap<>());
         ChannelToProtoForwarder forwarder = new ChannelToProtoForwarder(channelId);
-        NewIChannel<BabelMessage> newChannel = initializer.initialize(serializer, forwarder, props, protoId);
+        NewIChannel newChannel = initializer.initialize(serializer, forwarder, props, protoId);
         channelMap.put(channelId, Triple.of(newChannel, forwarder, serializer));
         return channelId;
     }
@@ -227,7 +227,7 @@ public class Babel {
      *                      Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
     void registerChannelInterest(int channelId, short protoId, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumerProto) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         channelEntry.getMiddle().addConsumer(protoId, consumerProto);
         channelEntry.getLeft().registerChannelInterest(protoId);
@@ -251,8 +251,8 @@ public class Babel {
         getOrThrow(channelId).getLeft().sendMessage(data,dataLen,streamId,sourceProto,destProto);
     }
 
-    private Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> getOrThrow(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+    private Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> getOrThrow(int channelId){
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Sending message to non-existing channelId " + channelId);
@@ -260,14 +260,14 @@ public class Babel {
         return channelEntry;
     }
     void closeStream(int channelId, short protoId,String streamId) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Creating stream message to non-existing channelId " + channelId);
         channelEntry.getLeft().closeConnection(streamId,protoId);
     }
     protected short getChannelCreator(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Unknown channelId " + channelId);
@@ -278,56 +278,56 @@ public class Babel {
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
     void closeConnection(int channelId, Host target, short protoId) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Closing connection in non-existing channelId " + channelId);
         channelEntry.getLeft().closeConnection(target, protoId);
     }
     boolean isConnected(int channelId,Host peer){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("isConnected in non-existing channelId " + channelId);
         return channelEntry.getLeft().isConnected(peer);
     }
     String [] getStreams(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getStreams in non-existing channelId " + channelId);
         return channelEntry.getLeft().getConnectionsIds();
     }
     InetSocketAddress[] getConnections(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
         return channelEntry.getLeft().getConnections();
     }
     int connectedPeers(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
         return channelEntry.getLeft().connectedPeers();
     }
     TransmissionType getConnectionType(int channelId, String streamId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getConnections in non-existing channelId " + channelId);
         return channelEntry.getLeft().getConnectionType(streamId);
     }
     NetworkProtocol getNetworkProtocol(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getNetworkProtocol in non-existing channelId " + channelId);
         return channelEntry.getLeft().getNetWorkProtocol();
     }
     NetworkRole getNetworkRole(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getNetworkRole in non-existing channelId " + channelId);
@@ -335,7 +335,7 @@ public class Babel {
     }
 
     List<ConnectionProtocolMetrics> getCurrentMetrics(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getCurrentMetrics in non-existing channelId " + channelId);
@@ -343,21 +343,21 @@ public class Babel {
     }
 
     List<ConnectionProtocolMetrics> getOldMetrics(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getOldMetrics in non-existing channelId " + channelId);
         return channelEntry.getLeft().closedConnectionsMetrics();
     }
     List<UDPNetworkStatsWrapper> getUDPMetrics(int channelId){
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("getUDPMetrics in non-existing channelId " + channelId);
         return channelEntry.getLeft().getUDPMetrics();
     }
     public boolean closeChannel(int channelId, short protoId) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("closeChannel in non-existing channelId " + channelId);
@@ -372,14 +372,14 @@ public class Babel {
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
     String openConnection(int channelId, Host target, short proto,boolean evenIfItsConnected) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Opening connection in non-existing channelId " + channelId);
         return channelEntry.getLeft().openMessageConnection(target,proto,evenIfItsConnected);
     }
     String openStreamConnection(int channelId, Host target, short source, short dest,boolean evenIfItsConnected) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Opening connection in non-existing channelId " + channelId);
@@ -391,7 +391,7 @@ public class Babel {
      * Called by {@link pt.unl.fct.di.novasys.babel.core.GenericProtocol}. Do not evoke directly.
      */
     void registerSerializer(int channelId, short msgCode, ISerializer<? extends ProtoMessage> serializer) {
-        Triple<NewIChannel<BabelMessage>, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
+        Triple<NewIChannel, ChannelToProtoForwarder, BabelMessageSerializer> channelEntry =
                 channelMap.get(channelId);
         if (channelEntry == null)
             throw new AssertionError("Registering serializer in non-existing channelId " + channelId);

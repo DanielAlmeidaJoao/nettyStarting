@@ -5,7 +5,6 @@ import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.OnConnectionDownEvent;
@@ -32,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import static tcpSupport.tcpChannelAPI.utils.TCPChannelUtils.METRICS_INTERVAL_KEY;
 
-public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMethods<T> {
+public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
     private static final Logger logger = LogManager.getLogger(BabelUDPChannel.class);
     public final boolean metrics;
     public final static String NAME = "BABEL_UDP_CHANNEL";
@@ -41,15 +40,15 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     private final boolean triggerSent;
 
 
-    private final BabelMessageSerializerInterface<T> serializer;
-    private final ChannelListener<T> listener;
+    private final BabelMessageSerializer serializer;
+    private final ChannelListener listener;
     private final UDPChannelInterface udpChannelInterface;
     private final Map<String,Host> customConIDToAddress;
     private final Map<Host,String> hostStringMap;
 
     public short ownerProto;
 
-    public BabelUDPChannel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short ownerProto) throws IOException {
+    public BabelUDPChannel(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short ownerProto) throws IOException {
         //super(properties);
         this.serializer = serializer;
         BabelMessageSerializer aux = (BabelMessageSerializer) serializer;
@@ -92,25 +91,25 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
     }
 
     @Override
-    public void onDeliverMessage(T message, InetSocketAddress from) {
+    public void onDeliverMessage(BabelMessage message, InetSocketAddress from) {
         //logger.info("MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",channelId,from,bytes.length);
         //logger.info("{}. MESSAGE FROM {} STREAM. FROM PEER {}. SIZE {}",getSelf(),channelId,from,bytes.length);
         listener.deliverMessage(message,Host.toBabelHost(from),null);
     }
 
     @Override
-    public void sendMessage(T message, Host host, short proto) {
+    public void sendMessage(BabelMessage message, Host host, short proto) {
         udpChannelInterface.sendMessage(message,host.address);
     }
 
     @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto) {
         BabelMessage babelMessage = new BabelMessage(new BytesToBabelMessage(data,dataLen),sourceProto,destProto);
-        sendMessage((T) babelMessage,dest,sourceProto);
+        sendMessage(babelMessage,dest,sourceProto);
     }
 
     @Override
-    public void sendMessage(T msg, String connectionID, short proto) {
+    public void sendMessage(BabelMessage msg, String connectionID, short proto) {
         if(connectionID ==null){
             listener.messageFailed(msg,null,new Throwable("UNKNOWN ID"),TransmissionType.STRUCTURED_MESSAGE);
             return;
@@ -129,7 +128,7 @@ public class BabelUDPChannel<T> implements NewIChannel<T>, UDPChannelHandlerMeth
         sendMessage(data,dataLen,host,sourceProto,destProto);
     }
     @Override
-    public void onMessageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest){
+    public void onMessageSentHandler(boolean success, Throwable error, BabelMessage message, InetSocketAddress dest){
         if (triggerSent) listener.messageSent(message,Host.toBabelHost(dest),TransmissionType.STRUCTURED_MESSAGE);
     }
 

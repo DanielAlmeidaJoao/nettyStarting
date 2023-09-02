@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
@@ -11,12 +12,12 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public interface NewIChannel<T> {
+public interface NewIChannel {
     String openMessageConnection(Host host, short protoId, boolean always);
     String openStreamConnection(Host host, short protoId,short destProto, boolean always);
 
-    void sendMessage(T message, Host host, short protoId);
-    void sendMessage(T msg,String connectionID,short proto);
+    void sendMessage(BabelMessage message, Host host, short protoId);
+    void sendMessage(BabelMessage msg,String connectionID,short proto);
 
     void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto);
     void sendMessage(byte[] data,int dataLen, String connectionID, short sourceProto, short destProto);

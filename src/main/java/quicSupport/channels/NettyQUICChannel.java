@@ -11,7 +11,8 @@ import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
+import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.Exceptions.UnknownElement;
 import quicSupport.client_server.QUICClientEntity;
 import quicSupport.client_server.QUICServerEntity;
@@ -52,7 +53,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static quicSupport.utils.QUICLogics.*;
 import static quicSupport.utils.enums.TransmissionType.STRUCTURED_MESSAGE;
 
-public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChannelInterface<T>, SendStreamInterface{
+public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannelInterface, SendStreamInterface{
     private static final Logger logger = LogManager.getLogger(NettyQUICChannel.class);
     public static final int HEADER_LENGTH = 5;
 
@@ -62,7 +63,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     public final static String DEFAULT_PORT = "8575";
     private final Map<InetSocketAddress, ConcurrentLinkedQueue<CustomQUICConnection>> addressToQUICCons;
     private final Map<String,CustomQUICStreamCon> customStreamIdToStream;
-    private final Map<InetSocketAddress, QUICConnectingOBJ<T>> connecting;
+    private final Map<InetSocketAddress, QUICConnectingOBJ> connecting;
 
     private final ClientInterface client;
     private final ServerInterface server;
@@ -75,11 +76,11 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
 
     private final ChannelHandlerMethods overridenMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
-    private final BabelMessageSerializerInterface<T> serializer;
+    private final BabelMessageSerializer serializer;
 
     private final NetworkRole networkRole;
 
-    public NettyQUICChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom, BabelMessageSerializerInterface<T> serializer)throws IOException {
+    public NettyQUICChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom, BabelMessageSerializer serializer)throws IOException {
         this.properties=properties;
         this.overridenMethods = mom;
         this.serializer = serializer;
@@ -212,7 +213,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             if(withHeartBeat && streamCon.inConnection){streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();}
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
             try {
-                T babelMessage = serializer.deserialize(bytes);
+                BabelMessage babelMessage = serializer.deserialize(bytes);
                 overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,babelMessage,streamCon.customParentConnection.getRemote());
 
                 //FactoryMethods.deserialize(bytes,serializer,listener,from,connectionId);
@@ -248,14 +249,14 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
     }
 
     private void sendPendingMessages(CustomQUICStreamCon quicStreamChannel, InetSocketAddress peer, TransmissionType type){
-        QUICConnectingOBJ<T> QUICConnectingOBJ = connecting.remove(peer);
+        QUICConnectingOBJ QUICConnectingOBJ = connecting.remove(peer);
         if(QUICConnectingOBJ == null){
             return;
         }
-        List<T> messages = QUICConnectingOBJ.msgWithLen;
+        List<BabelMessage> messages = QUICConnectingOBJ.msgWithLen;
         if(messages!=null && STRUCTURED_MESSAGE==type){
             logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",getSelf(),messages.size(),peer);
-            for (T message : messages) {
+            for (BabelMessage message : messages) {
                 sendMessage(quicStreamChannel,message, peer);
             }
         }
@@ -440,7 +441,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             overridenMethods.failedToCloseStream(customId,e.getCause());
         }
     }
-    public void send(String customId,T message) {
+    public void send(String customId,BabelMessage message) {
         CustomQUICStreamCon streamCon = customStreamIdToStream.get(customId);
         if(streamCon==null){
             overridenMethods.onMessageSent(message,new Throwable("UNKNOWN STREAM ID: "+customId), null,STRUCTURED_MESSAGE,customId);
@@ -448,7 +449,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             sendMessage(streamCon,message,streamCon.customParentConnection.getRemote());
         }
     }
-    public void send(InetSocketAddress peer, T message){
+    public void send(InetSocketAddress peer, BabelMessage message){
         CustomQUICConnection customQUICConnection = getCustomQUICConnection(peer);
         if(customQUICConnection==null){
             QUICConnectingOBJ pendingMessages = connecting.get(peer);
@@ -466,7 +467,7 @@ public class NettyQUICChannel<T> implements CustomQuicChannelConsumer, NettyChan
             sendMessage(customQUICConnection.getDefaultStream(),message, peer);
         }
     }
-    protected void sendMessage(CustomQUICStreamCon streamChannel, T message, InetSocketAddress peer){
+    protected void sendMessage(CustomQUICStreamCon streamChannel, BabelMessage message, InetSocketAddress peer){
         if(streamChannel.type!=STRUCTURED_MESSAGE){
             throw new RuntimeException("WRONG MESSAGE. EXPECTED TYPE: "+STRUCTURED_MESSAGE+" VS RECEIVED TYPE: "+streamChannel.type);
         }

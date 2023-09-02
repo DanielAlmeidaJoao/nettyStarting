@@ -6,7 +6,6 @@ import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
 import pt.unl.fct.di.novasys.babel.channels.events.*;
@@ -34,7 +33,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerMethods<T> {
+public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods {
     private final Logger logger;
     public final boolean metrics;
     public final static String METRICS_INTERVAL_KEY = "metrics_interval";
@@ -42,13 +41,13 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
 
     private final boolean triggerSent;
-    private final BabelMessageSerializerInterface<T> serializer;
-    private final ChannelListener<T> listener;
+    private final BabelMessageSerializer serializer;
+    private final ChannelListener listener;
     private final NettyChannelInterface nettyChannelInterface;
     public final short protoToReceiveStreamData;
     //private final Map<String,Triple<Short,Short,Short>> unstructuredStreamHandlers;
 
-    public BabelQUIC_TCP_Channel(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
+    public BabelQUIC_TCP_Channel(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
         logger = LogManager.getLogger(getClass().getName());
         this.serializer = serializer;
         BabelMessageSerializer aux = (BabelMessageSerializer) serializer;
@@ -99,14 +98,14 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
 
 
     @Override
-    public void sendMessage(T message, Host host, short proto) {
+    public void sendMessage(BabelMessage message, Host host, short proto) {
         nettyChannelInterface.send(host.address,message);
     }
 
     @Override
     public void sendMessage(byte[] data,int dataLen, Host dest, short sourceProto, short destProto) {
         BabelMessage babelMessage = new BabelMessage(new BytesToBabelMessage(data,dataLen),sourceProto,destProto);
-        sendMessage((T) babelMessage,dest,sourceProto);
+        sendMessage(babelMessage,dest,sourceProto);
     }
 
     @Override
@@ -179,13 +178,13 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         nettyChannelInterface.closeLink(connectionID);
     }
 
-    public void sendMessage(T msg, String connectionID, short proto){
+    public void sendMessage(BabelMessage msg, String connectionID, short proto){
         nettyChannelInterface.send(connectionID,msg);
     }
     @Override
     public void sendMessage(byte[] data, int dataLen, String connectionID, short sourceProto, short destProto) {
         BabelMessage babelMessage = new BabelMessage(new BytesToBabelMessage(data,dataLen),sourceProto,destProto);
-        sendMessage((T) babelMessage,connectionID,sourceProto);
+        sendMessage(babelMessage,connectionID,sourceProto);
     }
     @Override
     public List<ConnectionProtocolMetrics> activeConnectionsMetrics() {
@@ -219,7 +218,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
 
-    public void onChannelReadDelimitedMessage(String connectionId, T message, InetSocketAddress from) {
+    public void onChannelReadDelimitedMessage(String connectionId, BabelMessage message, InetSocketAddress from) {
         listener.deliverMessage(message,Host.toBabelHost(from),connectionId);
     }
     @Override
@@ -249,7 +248,7 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
     }
 
     @Override
-    public void onMessageSent(T message, Throwable error, InetSocketAddress peer, TransmissionType type,String conID) {
+    public void onMessageSent(BabelMessage message, Throwable error, InetSocketAddress peer, TransmissionType type,String conID) {
         Host dest = null;
         if(peer!=null){
             dest = Host.toBabelHost(peer);
@@ -266,11 +265,11 @@ public class BabelQUIC_TCP_Channel<T> implements NewIChannel<T>, ChannelHandlerM
         }
         if(error==null&&triggerSent){
             OnStreamDataSentEvent dataSentEvent = new OnStreamDataSentEvent(data,inputStream,len,error,conID,dest);
-            T babelMessage = (T) new BabelMessage(dataSentEvent,protoToReceiveStreamData,protoToReceiveStreamData);
+            BabelMessage babelMessage = new BabelMessage(dataSentEvent,protoToReceiveStreamData,protoToReceiveStreamData);
             listener.messageSent(babelMessage,dest,type);
         }else if(error!=null){
             OnStreamDataSentEvent dataSentEvent = new OnStreamDataSentEvent(data,inputStream,len,error,conID,dest);
-            T babelMessage = (T) new BabelMessage(dataSentEvent,protoToReceiveStreamData,protoToReceiveStreamData);
+            BabelMessage babelMessage = new BabelMessage(dataSentEvent,protoToReceiveStreamData,protoToReceiveStreamData);
             listener.messageFailed(babelMessage,dest,error,type);
         }
     }

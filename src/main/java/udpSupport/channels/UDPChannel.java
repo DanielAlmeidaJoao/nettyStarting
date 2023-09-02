@@ -5,6 +5,8 @@ import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
+import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.NetworkRole;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.client_server.NettyUDPServer;
@@ -19,7 +21,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Properties;
 
-public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<T>{
+public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     private static final Logger logger = LogManager.getLogger(UDPChannel.class);
     public final static String NAME = "UDP_CHANNEL";
 
@@ -31,9 +33,9 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
     private ChannelStats metrics;
     private final InetSocketAddress self;
     private final UDPChannelHandlerMethods channelHandlerMethods;
-    private final BabelMessageSerializerInterface<T> serializer;
+    private final BabelMessageSerializer serializer;
 
-    public UDPChannel(Properties properties, boolean singleThreaded, UDPChannelHandlerMethods consumer, BabelMessageSerializerInterface<T> serializer) throws IOException {
+    public UDPChannel(Properties properties, boolean singleThreaded, UDPChannelHandlerMethods consumer, BabelMessageSerializer serializer) throws IOException {
         InetAddress addr;
         if (properties.containsKey(ADDRESS_KEY))
             addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
@@ -58,7 +60,7 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
     public boolean metricsEnabled(){
         return metrics!=null;
     }
-    public void sendMessage(T message, InetSocketAddress dest){
+    public void sendMessage(BabelMessage message, InetSocketAddress dest){
         ByteBuf buf = Unpooled.buffer();
         try{
             serializer.serialize(message,buf);
@@ -80,7 +82,7 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
     @Override
     public void deliverMessage(ByteBuf message, InetSocketAddress from){
         try {
-            T babelMessage = serializer.deserialize(message);
+            BabelMessage babelMessage = serializer.deserialize(message);
             channelHandlerMethods.onDeliverMessage(babelMessage,from);
         } catch (IOException e) {
             e.printStackTrace();
@@ -88,7 +90,7 @@ public class UDPChannel<T> implements UDPChannelConsumer<T>,UDPChannelInterface<
         }
     }
     @Override
-    public void messageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest){
+    public void messageSentHandler(boolean success, Throwable error, BabelMessage message, InetSocketAddress dest){
         channelHandlerMethods.onMessageSentHandler(success,error,message,dest);
     }
 

@@ -3,8 +3,9 @@ package appExamples2.appExamples.channels.babelNewChannels;
 import appExamples2.appExamples.channels.FactoryMethods;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
+import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
@@ -17,13 +18,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-public class BabelQUIC_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_Channel<T> {
+public class BabelQUIC_TCP_ChannelWithControlledClose extends BabelQUIC_TCP_Channel {
     private static final Logger logger = LogManager.getLogger(BabelQUIC_TCP_ChannelWithControlledClose.class);
     private Map<Host, Set<Short>> hostChannelsMap;
     private Map<String, Set<Short>> streamChannelsMap;
     private Set<Short> registeredProtos;
 
-    public BabelQUIC_TCP_ChannelWithControlledClose(BabelMessageSerializerInterface<T> serializer, ChannelListener<T> list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
+    public BabelQUIC_TCP_ChannelWithControlledClose(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
         super(serializer,list,properties,protoId,networkProtocol,networkRole);
         initMaps(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null);
     }
@@ -51,7 +52,7 @@ public class BabelQUIC_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_C
         }
     }
     @Override
-    public void sendMessage(T message, Host host, short proto) {
+    public void sendMessage(BabelMessage message, Host host, short proto) {
         addProtoOnSend(host,proto);
         super.sendMessage(message, host,proto);
     }
@@ -62,7 +63,7 @@ public class BabelQUIC_TCP_ChannelWithControlledClose<T> extends BabelQUIC_TCP_C
     }
 
     @Override
-    public void sendMessage(T msg, String connectionID, short proto) {
+    public void sendMessage(BabelMessage msg, String connectionID, short proto) {
         addProtoOnSend(connectionID,proto);
         super.sendMessage(msg, connectionID,proto);
     }

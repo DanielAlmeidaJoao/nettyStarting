@@ -5,7 +5,8 @@ import io.netty.channel.Channel;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
+import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.channels.ChannelHandlerMethods;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
@@ -18,11 +19,11 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class SingleThreadedNettyTCPChannel<T> extends NettyTCPChannel<T> {
+public class SingleThreadedNettyTCPChannel<T> extends NettyTCPChannel {
     private static final Logger logger = LogManager.getLogger(SingleThreadedNettyTCPChannel.class);
 
     private final DefaultEventExecutor executor;
-    public SingleThreadedNettyTCPChannel(Properties properties, ChannelHandlerMethods chm, NetworkRole role,BabelMessageSerializerInterface<T> serializer) throws IOException {
+    public SingleThreadedNettyTCPChannel(Properties properties, ChannelHandlerMethods chm, NetworkRole role, BabelMessageSerializer serializer) throws IOException {
         super(properties,true,chm,role,serializer);
         executor = new DefaultEventExecutor();
     }
@@ -73,11 +74,11 @@ public class SingleThreadedNettyTCPChannel<T> extends NettyTCPChannel<T> {
         executor.execute(() -> super.closeLink(connectionId));
     }
     @Override
-    public void send(InetSocketAddress host, T message){
+    public void send(InetSocketAddress host, BabelMessage message){
         executor.execute(() -> super.send(host,message));
     }
     @Override
-    public void send(String conId,T message){
+    public void send(String conId,BabelMessage message){
         executor.execute(() -> super.send(conId,message));
     }
     @Override

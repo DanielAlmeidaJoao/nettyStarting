@@ -2,23 +2,24 @@ package udpSupport.channels;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.DefaultEventExecutor;
-import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
+import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import udpSupport.utils.funcs.OnReadMetricsFunc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
-public class SingleThreadedUDPChannel<T> extends UDPChannel<T> {
+public class SingleThreadedUDPChannel extends UDPChannel {
     private final DefaultEventExecutor executor;
 
-    public SingleThreadedUDPChannel(Properties properties, UDPChannelHandlerMethods udpChannelHandlerMethods, BabelMessageSerializerInterface<T> serializer) throws IOException {
+    public SingleThreadedUDPChannel(Properties properties, UDPChannelHandlerMethods udpChannelHandlerMethods, BabelMessageSerializer serializer) throws IOException {
         super(properties, true,udpChannelHandlerMethods,serializer);
         executor = new DefaultEventExecutor();
     }
 
     @Override
-    public void sendMessage(T message, InetSocketAddress dest) {
+    public void sendMessage(BabelMessage message, InetSocketAddress dest) {
         executor.execute(() -> super.sendMessage(message, dest));
     }
 
@@ -32,7 +33,7 @@ public class SingleThreadedUDPChannel<T> extends UDPChannel<T> {
     }
 
     @Override
-    public void messageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest) {
+    public void messageSentHandler(boolean success, Throwable error, BabelMessage message, InetSocketAddress dest) {
         executor.execute(() -> super.messageSentHandler(success, error, message, dest));
     }
 

@@ -1,5 +1,6 @@
 package quicSupport.channels;
 
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
@@ -9,7 +10,7 @@ import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-public interface NettyChannelInterface<T> extends SendBytesInterface<T> {
+public interface NettyChannelInterface extends SendBytesInterface {
 
     String open(InetSocketAddress peer, TransmissionType type, short sourceProto, short destProto, boolean always);
 
@@ -20,7 +21,7 @@ public interface NettyChannelInterface<T> extends SendBytesInterface<T> {
     void readMetrics(ReadMetricsHandler handler);
 
 
-    void send(InetSocketAddress peer, T message);
+    void send(InetSocketAddress peer, BabelMessage message);
 
     boolean enabledMetrics();
 

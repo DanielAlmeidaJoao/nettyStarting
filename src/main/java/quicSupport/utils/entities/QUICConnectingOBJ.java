@@ -1,13 +1,14 @@
 package quicSupport.utils.entities;
 
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.TransmissionType;
 
 import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
 
-public class QUICConnectingOBJ<T> {
-    public final List<T> msgWithLen;
+public class QUICConnectingOBJ {
+    public final List<BabelMessage> msgWithLen;
     public final String conId;
     public final InetSocketAddress peer;
     public final short sourceProto, destProto;

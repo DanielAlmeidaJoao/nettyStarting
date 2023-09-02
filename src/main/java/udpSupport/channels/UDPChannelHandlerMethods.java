@@ -1,9 +1,11 @@
 package udpSupport.channels;
 
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
+
 import java.net.InetSocketAddress;
 
-public interface UDPChannelHandlerMethods<T> {
+public interface UDPChannelHandlerMethods {
     void onPeerDown(InetSocketAddress peer);
-    void onDeliverMessage(T message, InetSocketAddress from);
-    void onMessageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest);
+    void onDeliverMessage(BabelMessage message, InetSocketAddress from);
+    void onMessageSentHandler(boolean success, Throwable error, BabelMessage message, InetSocketAddress dest);
 }

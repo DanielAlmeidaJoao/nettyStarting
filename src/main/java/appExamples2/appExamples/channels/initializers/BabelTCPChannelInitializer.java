@@ -3,9 +3,9 @@ package appExamples2.appExamples.channels.initializers;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCPClientChannel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCPServerChannel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
-import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
 import pt.unl.fct.di.novasys.babel.channels.NewIChannel;
+import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
 import pt.unl.fct.di.novasys.babel.initializers.ChannelInitializer;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.NetworkRole;
@@ -13,13 +13,13 @@ import quicSupport.utils.enums.NetworkRole;
 import java.io.IOException;
 import java.util.Properties;
 
-public class BabelTCPChannelInitializer implements ChannelInitializer<NewIChannel<BabelMessage>> {
+public class BabelTCPChannelInitializer implements ChannelInitializer {
     private final NetworkRole networkRole;
     public BabelTCPChannelInitializer(NetworkRole role){
         networkRole = role;
     }
     @Override
-    public NewIChannel<BabelMessage> initialize(BabelMessageSerializerInterface<BabelMessage> serializer, ChannelListener<BabelMessage> list, Properties properties, short protoId) throws IOException {
+    public NewIChannel initialize(BabelMessageSerializer serializer, ChannelListener<BabelMessage> list, Properties properties, short protoId) throws IOException {
         switch (networkRole){
             case CLIENT: return new BabelTCPClientChannel(serializer, list, properties,protoId);
             case SERVER: return new BabelTCPServerChannel(serializer, list, properties,protoId);

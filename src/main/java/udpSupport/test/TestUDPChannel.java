@@ -1,9 +1,9 @@
 package udpSupport.test;
 
-import io.netty.buffer.Unpooled;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.QUICLogics;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.channels.UDPChannel;
@@ -23,7 +23,7 @@ import java.util.Scanner;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
+public class TestUDPChannel implements UDPChannelHandlerMethods {
     private static final Logger logger = LogManager.getLogger(TestUDPChannel.class);
 
     private FileOutputStream fos;
@@ -47,7 +47,7 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
     }
 
     @Override
-    public void onDeliverMessage(T message, InetSocketAddress from) {
+    public void onDeliverMessage(BabelMessage message, InetSocketAddress from) {
         /**
         total += message.readableBytes();
         System.out.println("RECEIVED "+total+" -- "+message.readableBytes());
@@ -85,7 +85,7 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
         System.out.println(" SUMM "+sum);
     }
     @Override
-    public void onMessageSentHandler(boolean success, Throwable error, T message, InetSocketAddress dest) {
+    public void onMessageSentHandler(boolean success, Throwable error, BabelMessage message, InetSocketAddress dest) {
         if(!success){
             error.printStackTrace();
         }
@@ -116,7 +116,8 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
                 }else {
                     System.out.println("EXPECTED ONCE!!! "+read);
                 }
-                udpChannelInterface.sendMessage(Unpooled.copiedBuffer(bytes,0,read),peer);
+                //Unpooled.copiedBuffer(bytes,0,read)
+                udpChannelInterface.sendMessage(null,peer);
                 cc++;
                 //Thread.sleep(1000);
                 bytes = new byte[bufferSize];
@@ -147,7 +148,8 @@ public class TestUDPChannel<T> implements UDPChannelHandlerMethods<T> {
                 int p = scanner.nextInt();
                 scanner.nextLine();
                 InetSocketAddress address = new InetSocketAddress(host, p);
-                udpChannelInterface.sendMessage(Unpooled.copiedBuffer(input.getBytes()),address);
+                //Unpooled.copiedBuffer(input.getBytes())
+                udpChannelInterface.sendMessage(null,address);
                 System.out.println("SENT "+input);
             }
         }
