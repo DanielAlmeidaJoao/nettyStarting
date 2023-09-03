@@ -193,8 +193,8 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     private void sendPendingMessages(CustomTCPConnection customTCPConnection, TransmissionType type){
         TCPConnectingObject connectingObject = nettyIdTOConnectingOBJ.remove(customTCPConnection.conId);
         if(connectingObject!=null && STRUCTURED_MESSAGE==type){
-            logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self
-                    ,connectingObject.pendingMessages.size(),customTCPConnection.host);
+            /*logger.debug("{}. THERE ARE {} PENDING MESSAGES TO BE SENT TO {}",self
+                    ,connectingObject.pendingMessages.size(),customTCPConnection.host);*/
             for (BabelMessage message : connectingObject.pendingMessages) {
                 sendAux(message,customTCPConnection);
             }
