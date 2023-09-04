@@ -13,6 +13,6 @@ public class FactoryMethods {
         return Integer.parseInt((String) properties.getOrDefault(SERVER_THREADS,"0"));
     }
     public static int clientThreads(Properties properties){
-        return Integer.parseInt((String) properties.getOrDefault(CLIENT_THREADS,"0"));
+        return Integer.parseInt((String) properties.getOrDefault(CLIENT_THREADS,"1"));
     }
 }
