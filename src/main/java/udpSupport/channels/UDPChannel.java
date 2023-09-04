@@ -1,10 +1,8 @@
 package udpSupport.channels;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.NetworkRole;
@@ -61,8 +59,13 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
         return metrics!=null;
     }
     public void sendMessage(BabelMessage message, InetSocketAddress dest){
-        ByteBuf buf = Unpooled.buffer();
         try{
+            /**
+             * buf.writeByte(UDPLogics.SINGLE_MESSAGE);
+             * buf.writeLong(messageId);
+             * buf.writeBytes(message,0, len);
+             */
+            ByteBuf buf = udpServer.alloc().writeByte(0).writeLong(0);
             serializer.serialize(message,buf);
             udpServer.sendMessage(buf,dest);
             messageSentHandler(true,null,message,dest);

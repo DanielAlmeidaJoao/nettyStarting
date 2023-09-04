@@ -168,6 +168,8 @@ public class NettyUDPServer {
     }
     public void sendMessage(ByteBuf message, InetSocketAddress peer){
         if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.readableBytes()){
+            message.readByte();
+            message.readLong();
             long streamId = streamIdCounter.incrementAndGet();
             ByteBuf wholeMessageBuf = message; //Unpooled.wrappedBuffer(message);
             int streamCount = ceilDiv(message.readableBytes(),UDPLogics.MAX_UDP_PAYLOAD_SIZE); //do the %
@@ -185,14 +187,18 @@ public class NettyUDPServer {
             }
             wholeMessageBuf.release();
         }else{
-            int len = message.readableBytes();
+            //int len = message.readableBytes();
             long messageId = datagramPacketCounter.incrementAndGet();
-            ByteBuf buf = channel.alloc().directBuffer(9+len);
-            buf.writeByte(UDPLogics.SINGLE_MESSAGE);
-            buf.writeLong(messageId);
-            buf.writeBytes(message,0, len);
-            sendMessageAux(buf,peer,messageId);
+            //ByteBuf buf = channel.alloc().directBuffer(9+len);
+            message.setByte(0,UDPLogics.SINGLE_MESSAGE);
+            message.setLong(1,messageId);
+            //buf.writeBytes(message,0, len);
+            sendMessageAux(message,peer,messageId);
         }
+    }
+
+    public ByteBuf alloc(){
+        return channel.alloc().directBuffer();
     }
     private int ceilDiv(int a, int b){
         if(a%b==0){

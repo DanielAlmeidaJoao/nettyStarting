@@ -8,7 +8,6 @@ public class UDPLogics {
     //public static final Gson gson = new Gson();
     public static final int MAX_UDP_PAYLOAD_SIZE = 60000;
 
-
     /*** MESSAGE CODES ***/
     //public final static byte APP_MESSAGE = 'M';
     public final static byte SINGLE_MESSAGE = 'S';
