@@ -133,7 +133,11 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             buf.writeByte(UDPLogics.APP_ACK);
             buf.writeLong(msgId);
             DatagramPacket datagramPacket = new DatagramPacket(buf, sender);
-            channel.writeAndFlush(datagramPacket).addListener(future -> {
+            channel.writeAndFlush(datagramPacket);
+            if(channelStats!=null){
+                channelStats.addSentBytes(sender,9, NetworkStatsKindEnum.ACK_STATS);
+            }
+            /**.addListener(future -> {
                 if(future.isSuccess()){
                     if(channelStats!=null){
                         channelStats.addSentBytes(sender,9, NetworkStatsKindEnum.ACK_STATS);
@@ -141,7 +145,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
                 }else{
                     future.cause().printStackTrace();
                 }
-            });
+            });**/
         }
     }
 
