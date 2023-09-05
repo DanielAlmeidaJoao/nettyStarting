@@ -170,7 +170,10 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
     }
     public void sendMessage(String message){
-        System.out.println(sendByte+" SENDBYTE");
+        if(message.length()==2){
+            message = message.repeat(UDPLogics.MAX_UDP_PAYLOAD_SIZE+10);
+        }
+        System.out.println(sendByte+" SENDBYTE"+" HASH: "+message.hashCode()+" "+message.length());
         if(sendByte){
             super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId());
         }else{

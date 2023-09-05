@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(InMessageHandler.class);
-    private final Map<Long, SortedMap<Long,byte []>> streams;
+    private final Map<String, SortedMap<Long,byte []>> streams;
     private final Set<String> receivedMessages;
 
     private final UDPChannelConsumer consumer;
@@ -78,8 +78,8 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             //System.exit(1);
         }
     }
-    long count = 0;
-    int msgs = 0;
+    //long count = 0;
+    //int msgs = 0;
     private String getStrID(InetSocketAddress sender,long msgId){
         return sender+""+msgId;
     }
@@ -90,11 +90,15 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         if(!receivedMessages.add(getStrID(sender,msgId))){
             return;
         }
-        count += message.length;
-        SortedMap<Long,byte []> compute = streams.get(streamId);
+        //count += message.length;
+        String strStreamId = getStrID(sender,streamId);
+        SortedMap<Long,byte []> compute = streams.get(strStreamId);
         if(compute == null){
             compute = new TreeMap<>();
-            streams.put(streamId,compute);
+            streams.put(strStreamId,compute);
+            channel.eventLoop().schedule(() -> {
+                streams.remove(strStreamId);
+            },1*streamCount, TimeUnit.MINUTES);
         }
         compute.put(msgId,message);
         if(compute.size()==streamCount){
@@ -105,10 +109,10 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             //message = new byte[all.readableBytes()];
             //all.readBytes(message);
             //all.release();
-            streams.remove(streamId);
+            streams.remove(strStreamId);
             consumer.deliverMessage(all,sender);
             all.release();
-            msgs++;
+            //msgs++;
         }
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);

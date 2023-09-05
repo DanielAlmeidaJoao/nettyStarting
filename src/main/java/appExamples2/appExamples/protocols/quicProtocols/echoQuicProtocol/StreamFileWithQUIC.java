@@ -16,7 +16,6 @@ import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
-import quicSupport.utils.enums.NetworkProtocol;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
@@ -84,7 +83,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }else{
             System.out.println("UDP ON");
             channelProps = TCPChannelUtils.udpChannelProperties(address,port);
-            channelProps.setProperty("BUFF_ALOC",properties.getProperty("BUFF_ALOC"));
+            channelProps.setProperty("RCV_BUFF_ALOC_SIZE",properties.getProperty("RCV_BUFF_ALOC_SIZE"));
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelUDPChannel.NAME,channelProps);
         }
@@ -161,11 +160,17 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     public static final short HANDLER_ID2 = 43;
 
     BabelInputStream babelInputStream;
-
+    int receivedPP = 0;
     private void uponFileBytesMessage(FileBytesCarrier msg, Host from, short sourceProto, int channelId, String streamId) {
+        receivedPP++;
+        /**
         if(NetworkProtocol.UDP==getNetworkProtocol(channelId)){
             received += msg.len;
             logger.info("RECEIVED ALL BYTES {} . {}",msg.len,received);
+            return;
+        } **/
+        if(msg==null){
+            System.out.println("GOTCHA "+msg.len+" "+receivedPP);
             return;
         }
         writeToFile(msg.len,msg.data);
@@ -290,6 +295,11 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     }
     private void uponStreamBytes(BabelStreamDeliveryEvent event) {
         int available = event.babelOutputStream.readableBytes();
+        if(available<0){
+            event.babelOutputStream.release();
+            System.out.println(" RECEIVED "+available);
+            return;
+        }
         byte [] p = event.babelOutputStream.readBytes();
         writeToFile(available,p);
         //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
@@ -303,15 +313,21 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     int bufferSize = 128*1024; // 8KB buffer size
     int count = 0;
     public void startStreaming(){
-        /**
-        if(babelInputStream!=null){
+
+        if(myself==null){
             while (true){
-                babelInputStream.writeBytes("OLA".getBytes());
+                byte [] data = "r".repeat(1024*67).getBytes();
+                if(isMessageConnection){
+                    int len = data.length;
+                    sendMessage(new FileBytesCarrier(data,len),streamId);
+                }else{
+                    babelInputStream.writeBytes(data);
+                }
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 }catch (Exception e){}
             }
-        } **/
+        }
         System.out.println("STREAMING STARTED!!!");
         try{
             //String p = "/home/tsunami/Downloads/Avatar The Way Of Water (2022) [1080p] [WEBRip] [5.1] [YTS.MX]/Avatar.The.Way.Of.Water.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4";
