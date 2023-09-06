@@ -66,9 +66,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private final ClientInterface client;
     private final ServerInterface server;
     private final Properties properties;
-    private final boolean withHeartBeat;
+    private final int idleTimeoutPercentageHB;
     private final ConnectionProtocolMetricsManager metrics;
-    private static long heartBeatTimeout;
+    private static int heartBeatTimeout;
     private final boolean connectIfNotConnected;
     private final boolean singleConnectionPerPeer;
 
@@ -91,8 +91,8 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         int port = Integer.parseInt(properties.getProperty(QUICLogics.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
         enableMetrics = properties.containsKey(TCPChannelUtils.CHANNEL_METRICS);
-        withHeartBeat = properties.get(QUICLogics.WITH_HEART_BEAT)!=null;
-        heartBeatTimeout = Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+""));
+        idleTimeoutPercentageHB = Integer.parseInt((String)properties.getOrDefault(QUICLogics.idleTimeoutPercentageHB,"0"));
+        heartBeatTimeout = Integer.parseInt(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+""));
         if(enableMetrics){
             metrics = new ConnectionProtocolMetricsManager(self,singleThreaded);
         }else{
@@ -208,7 +208,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         CustomQUICStreamCon streamCon = customStreamIdToStream.get(customId);
         if(streamCon!=null){
             calcMetricsOnReceived(streamCon.customStreamId,len+HEADER_LENGTH);
-            if(withHeartBeat && streamCon.inConnection){streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();}
+            if(idleTimeoutPercentageHB>0 && streamCon.inConnection){streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();}
             //logger.info("SELF:{} - STREAM_ID:{} REMOTE:{}. RECEIVED {} DATA BYTES.",self,streamId,remote,bytes.length);
             overridenMethods.onChannelReadDelimitedMessage(streamCon.customStreamId,babelMessage,streamCon.customParentConnection.getRemote());
         }
@@ -225,10 +225,10 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     public void onKeepAliveMessage(String parentId, int i){
         CustomQUICStreamCon streamCon = customStreamIdToStream.get(parentId);
         if(streamCon!=null){
-            if(withHeartBeat){
+            if(idleTimeoutPercentageHB>0){
                 streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();
             }
-            InetSocketAddress remote = streamCon.customParentConnection.getRemote();
+            //InetSocketAddress remote = streamCon.customParentConnection.getRemote();
             //logger.info("SELF:{} -- HEART BEAT RECEIVED -- {}",self,remote);
             if(enabledMetrics()){
                 metrics.calcControlMetricsOnReceived(streamCon.customStreamId,i);
@@ -286,7 +286,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             CustomQUICStreamCon firstStreamOfThisCon = customStreamIdToStream.get(streamChannel.parent().id().asShortText());
 
             if(firstStreamOfThisCon==null){
-                parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection,withHeartBeat,heartBeatTimeout,type,metrics);
+                parentConnection = new CustomQUICConnection(quicStreamChannel,listeningAddress,inConnection, idleTimeoutPercentageHB,heartBeatTimeout,type,metrics);
                 synchronized (addressToQUICCons){
                     addressToQUICCons.computeIfAbsent(listeningAddress, k -> new ConcurrentLinkedQueue<>()).add(parentConnection);
                 }

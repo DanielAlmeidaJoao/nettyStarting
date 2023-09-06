@@ -107,8 +107,8 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                //System.out.println(openMessageConnection(dest,channelId));
-                System.out.println(openStreamConnection(dest,channelId));
+                System.out.println(openMessageConnection(dest,channelId));
+                //System.out.println(openStreamConnection(dest,channelId));
 
                 //registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
                 //setupPeriodicTimer(new SampleTimer(),8000L,5000L);

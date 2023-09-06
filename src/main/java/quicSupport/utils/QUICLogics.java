@@ -25,7 +25,7 @@ public class QUICLogics {
 
     public final static String ADDRESS_KEY = "QUIC_ADDRESS";
     public final static String PORT_KEY = "QUIC_PORT";
-    public final static String WITH_HEART_BEAT="TRUE";
+    public final static String idleTimeoutPercentageHB ="idleTimeoutPercentageHB";
     public static final String MAX_IDLE_TIMEOUT_IN_SECONDS = "QUIC_maxIdleTimeoutInSeconds";
     public static final String INITIAL_MAX_DATA = "QUIC_initialMaxData";
     public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL = "QUIC_initialMaxStreamDataBidirectionalLocal";
