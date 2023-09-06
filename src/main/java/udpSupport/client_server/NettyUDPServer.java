@@ -209,18 +209,12 @@ public class NettyUDPServer {
     }
     public void sendMessageAux(ByteBuf all, InetSocketAddress peer, long messageId){
         final int sent = all.readableBytes();
-        channel.writeAndFlush(new DatagramPacket(all.retainedDuplicate(),peer)).addListener(future -> {
-            if(future.isSuccess()){
-                scheduleRetransmission(all,messageId,peer,0);
-                if(stats!=null){
-                    stats.addSentBytes(peer,sent,NetworkStatsKindEnum.MESSAGE_STATS);
-                    stats.addSentBytes(peer,sent,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
-                }
-            }else{
-                future.cause().printStackTrace();
-                logger.info("NOT SUCCESS SENDING THE MESSAGE TO {}. ERROR: {}",peer,future.cause());
-            }
-        });
+        channel.writeAndFlush(new DatagramPacket(all.retainedDuplicate(),peer));
+        scheduleRetransmission(all,messageId,peer,0);
+        if(stats!=null){
+            stats.addSentBytes(peer,sent,NetworkStatsKindEnum.MESSAGE_STATS);
+            stats.addSentBytes(peer,sent,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
+        }
     }
     public void shutDownServerClient(){
         channel.close();

@@ -17,7 +17,7 @@ public interface ChannelHandlerMethods{
     void failedToCloseStream(String streamId, Throwable reason);
 
     void onMessageSent(BabelMessage message,Throwable error, InetSocketAddress peer, TransmissionType type,String conID);
-    void onStreamDataSent(InputStream inputStream,byte [] data, int len, Throwable error, InetSocketAddress peer, TransmissionType type,String conID);
+    void onStreamDataSent(InputStream inputStream, byte [] data, long len, Throwable error, InetSocketAddress peer, TransmissionType type, String conID);
 
     void failedToCreateStream(InetSocketAddress peer, Throwable error);
 

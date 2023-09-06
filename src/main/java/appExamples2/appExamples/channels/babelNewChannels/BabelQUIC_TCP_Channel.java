@@ -259,16 +259,19 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
     }
 
     @Override
-    public void onStreamDataSent(InputStream inputStream, byte[] data, int len, Throwable error, InetSocketAddress peer, TransmissionType type, String conID) {
+    public void onStreamDataSent(InputStream inputStream, byte[] data, long len, Throwable error, InetSocketAddress peer, TransmissionType type, String conID) {
         Host dest=null;
-        if(peer!=null){
-            dest = Host.toBabelHost(peer);
-        }
         if(error==null&&triggerSent){
-            OnStreamDataSentEvent dataSentEvent = new OnStreamDataSentEvent(data,inputStream,len,error,conID,dest);
+            if(peer!=null){
+                dest = Host.toBabelHost(peer);
+            }
+            OnStreamDataSentEvent dataSentEvent = new OnStreamDataSentEvent(data,inputStream,len,null,conID,dest);
             BabelMessage babelMessage = new BabelMessage(dataSentEvent,protoToReceiveStreamData,protoToReceiveStreamData);
             listener.messageSent(babelMessage,dest,type);
         }else if(error!=null){
+            if(peer!=null){
+                dest = Host.toBabelHost(peer);
+            }
             OnStreamDataSentEvent dataSentEvent = new OnStreamDataSentEvent(data,inputStream,len,error,conID,dest);
             BabelMessage babelMessage = new BabelMessage(dataSentEvent,protoToReceiveStreamData,protoToReceiveStreamData);
             listener.messageFailed(babelMessage,dest,error,type);

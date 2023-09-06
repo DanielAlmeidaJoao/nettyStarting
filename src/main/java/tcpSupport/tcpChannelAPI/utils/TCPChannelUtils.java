@@ -61,8 +61,9 @@ public class TCPChannelUtils {
         //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
 
         //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
-        //channelProps.setProperty(QUICLogics.WITH_HEART_BEAT,"true");
+        channelProps.setProperty(QUICLogics.WITH_HEART_BEAT,"true");
         //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
+        channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"10");
 
         return channelProps;
     }
@@ -75,7 +76,7 @@ public class TCPChannelUtils {
         //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
 
-        //channelProps.setProperty(NettyTCPChannel.ZERO_COPY,"TRUE");
+        //channelProps.setProperty(NettyTCPChannel.NOT_ZERO_COPY,"TRUE");
 
         //channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
         //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");

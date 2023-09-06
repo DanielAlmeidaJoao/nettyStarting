@@ -63,7 +63,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             System.out.println("TCP ON");
             //channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
             //channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
-            channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
+            //channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"FALSE");
 
             channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps);
@@ -107,8 +107,8 @@ public class EchoProtocol extends GenericProtocolExtension {
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
-                System.out.println(openMessageConnection(dest,channelId));
-                //System.out.println(openStreamConnection(dest,channelId));
+                //System.out.println(openMessageConnection(dest,channelId));
+                System.out.println(openStreamConnection(dest,channelId));
 
                 //registerTimerHandler(SampleTimer.TIMER_ID,this::handTimer);
                 //setupPeriodicTimer(new SampleTimer(),8000L,5000L);
@@ -170,17 +170,22 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
     }
     public void sendMessage(String message){
-        if(message.length()==2){
-            message = message.repeat(UDPLogics.MAX_UDP_PAYLOAD_SIZE+10);
+        String aux = message;
+        for (int i = 0; i < 1; i++) {
+            message = aux;
+            if(message.length()%2==0){
+                message = message.repeat(message.length()*UDPLogics.MAX_UDP_PAYLOAD_SIZE+10);
+            }
+            System.out.println(sendByte+" SENDBYTE"+" HASH: "+message.hashCode()+" "+message.length());
+            if(sendByte){
+                super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId());
+            }else{
+                EchoMessage echoMessage = new EchoMessage(myself,message);
+                sendMessage(echoMessage,dest);
+            }
+            sendByte =!sendByte;
+            //super.closeConnection(dest);
         }
-        System.out.println(sendByte+" SENDBYTE"+" HASH: "+message.hashCode()+" "+message.length());
-        if(sendByte){
-            super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId());
-        }else{
-            EchoMessage echoMessage = new EchoMessage(myself,message);
-            sendMessage(echoMessage,dest);
-        }
-        sendByte =!sendByte;
     }
     public void sendStream(String message){
         System.out.println("SENDING "+message.length());
@@ -275,6 +280,9 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}. id: {}",event.getNode(),event.type,event.conId);
         streams.add(event.babelInputStream);
         event.babelInputStream.setFlushMode(true);
+        if(event != null){
+            return;
+        }
         if(event.inConnection){
             if(dest==null){
                 dest = event.getNode();
@@ -342,6 +350,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
     private void uponBytesMessage(BytesToBabelMessage message,Host from, short sourceProto, int channelId, String streamId) {
         logger.info("Received bytes3: {} from {}", (new String(message.message).hashCode()),from);
+        //System.exit(0);
     }
     private void uponStreamBytes(BabelStreamDeliveryEvent event) {
         System.out.println("AVAILABLE "+event.babelOutputStream.readableBytes());
@@ -372,7 +381,7 @@ public class EchoProtocol extends GenericProtocolExtension {
                               Throwable throwable, int channelId) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
-        logger.info("SENT MESSAGE <{}>",new String(msg.message));
+        //logger.info("SENT MESSAGE <{}>",new String(msg.message));
     }
 
     private void uponMsgFail2(OnStreamDataSentEvent msg, Host host, short destProto,

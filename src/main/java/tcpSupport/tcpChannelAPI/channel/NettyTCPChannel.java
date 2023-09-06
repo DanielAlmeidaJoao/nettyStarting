@@ -2,13 +2,11 @@ package tcpSupport.tcpChannelAPI.channel;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.channel.FileRegion;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AttributeKey;
-import io.netty.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
@@ -282,11 +280,9 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             metricsManager.calcMetricsOnReceived(conId,bytes);
         }
     }
-    private void calcMetricsOnSend(Future future, String connectionId, long length){
-        if(future.isSuccess()){
-            if(enabledMetrics()){
-                metricsManager.calcMetricsOnSend(future.isSuccess(),connectionId,length);
-            }
+    private void calcMetricsOnSend(String connectionId, long length){
+        if(enabledMetrics()){
+            metricsManager.calcMetricsOnSend(true,connectionId,length);
         }
     }
     private void sendAux(BabelMessage message, CustomTCPConnection connection){
@@ -297,11 +293,12 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
                 serializer.serialize(message,byteBuf);
                 final int len = byteBuf.readableBytes();
                 byteBuf.setInt(0,len-Integer.BYTES);
-                ChannelFuture f = connection.channel.writeAndFlush(byteBuf);
+                connection.channel.writeAndFlush(byteBuf);
+                calcMetricsOnSend(connection.conId,len);
+                channelHandlerMethods.onMessageSent(message,null,connection.host,STRUCTURED_MESSAGE,connection.conId);
+                /**
                 f.addListener(future -> {
-                    calcMetricsOnSend(future,connection.conId,len);
-                    channelHandlerMethods.onMessageSent(message,future.cause(),connection.host,STRUCTURED_MESSAGE,connection.conId);
-                });
+                    });**/
             }else{
                 channelHandlerMethods.onMessageSent(message,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND EXPECTING "+ STRUCTURED_MESSAGE+" DATA TYPE"),connection.host, STRUCTURED_MESSAGE,connection.conId);
             }
@@ -317,16 +314,17 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             channelHandlerMethods.onStreamDataSent(null,new byte[0],byteBuf.readableBytes(),new Throwable("Unknown Connection ID : "+customConId),null,TransmissionType.UNSTRUCTURED_STREAM,customConId);
         }else{
             final int toSend = byteBuf.readableBytes();
-            ChannelFuture f;
+            //ChannelFuture f;
             if(flush){
-                f = connection.channel.writeAndFlush(byteBuf);
+                connection.channel.writeAndFlush(byteBuf);
             }else{
-                f = connection.channel.write(byteBuf);
+                connection.channel.write(byteBuf);
             }
+            calcMetricsOnSend(connection.conId,toSend);
+            //channelHandlerMethods.onStreamDataSent(null,new byte[0],toSend,future.cause(),connection.host,TransmissionType.UNSTRUCTURED_STREAM,customConId);
+            /**
             f.addListener(future -> {
-                calcMetricsOnSend(future,connection.conId,toSend);
-                channelHandlerMethods.onStreamDataSent(null,new byte[0],toSend,future.cause(),connection.host,TransmissionType.UNSTRUCTURED_STREAM,customConId);
-            });
+                });**/
         }
     }
     @Override
@@ -355,24 +353,25 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
                 streamContinuoslyLogics.addToStreams(inputStream,idConnection.conId,idConnection.channel.eventLoop());
                 return;
             }
-            ChannelFuture c;
+            //ChannelFuture c;
 
             if( properties.getProperty(NOT_ZERO_COPY) == null && inputStream instanceof FileInputStream){
                 FileInputStream in = (FileInputStream) inputStream;
                 FileRegion region = new DefaultFileRegion(in.getChannel(), 0,len);
-                c = idConnection.channel.writeAndFlush(region);
+                idConnection.channel.writeAndFlush(region);
             }else{
                 if(idConnection.channel.pipeline().get("ChunkedWriteHandler")==null){
                     idConnection.channel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
                 }
-                c = idConnection.channel.writeAndFlush(new ChunkedStream(inputStream));
+                idConnection.channel.writeAndFlush(new ChunkedStream(inputStream));
             }
 
-            CustomTCPConnection finalIdConnection = idConnection;
+            //CustomTCPConnection finalIdConnection = idConnection;
+            calcMetricsOnSend(conId,len);
+            /**
             c.addListener(future -> {
-                calcMetricsOnSend(future,conId,len);
                 channelHandlerMethods.onStreamDataSent(inputStream,null,(int) len, future.cause(),finalIdConnection.host,TransmissionType.UNSTRUCTURED_STREAM,conId);
-            });
+            }); **/
         }catch (Exception e){
             channelHandlerMethods.onStreamDataSent(inputStream,null,(int) len,e.getCause(),null,TransmissionType.UNSTRUCTURED_STREAM,conId);
         }

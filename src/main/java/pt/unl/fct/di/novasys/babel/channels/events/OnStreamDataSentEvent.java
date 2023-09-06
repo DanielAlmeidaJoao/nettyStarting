@@ -9,11 +9,11 @@ public class OnStreamDataSentEvent extends ProtoMessage {
     public static final short ID = 503;
     public final byte [] sentBytes;
     public final InputStream inputStream;
-    public final int dataLen;
+    public final long dataLen;
     public final Throwable error;
     public final String connectionID;
     public final Host host;
-    public OnStreamDataSentEvent(byte []data, InputStream inputStream, int dataLen, Throwable error, String conID, Host host) {
+    public OnStreamDataSentEvent(byte []data, InputStream inputStream, long dataLen, Throwable error, String conID, Host host) {
         super(ID);
         this.sentBytes = data;
         this.inputStream = inputStream;

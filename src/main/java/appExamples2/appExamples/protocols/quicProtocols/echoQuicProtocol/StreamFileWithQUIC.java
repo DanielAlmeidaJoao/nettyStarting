@@ -181,8 +181,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
         logger.info("DATA SENT <{}>",msg.len);
         System.out.println("TIMES "+count);
-        System.exit(0);
-
+        //System.exit(0);
     }
     private void uponStreamConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         streamId = event.conId;

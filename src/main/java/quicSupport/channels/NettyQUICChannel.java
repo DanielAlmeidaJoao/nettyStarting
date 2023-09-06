@@ -1,14 +1,12 @@
 package quicSupport.channels;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.incubator.codec.quic.QuicStreamType;
 import io.netty.util.AttributeKey;
-import io.netty.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
@@ -231,11 +229,10 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 streamCon.customParentConnection.scheduleSendHeartBeat_KeepAlive();
             }
             InetSocketAddress remote = streamCon.customParentConnection.getRemote();
-            logger.debug("SELF:{} -- HEART BEAT RECEIVED -- {}",self,remote);
+            //logger.info("SELF:{} -- HEART BEAT RECEIVED -- {}",self,remote);
             if(enabledMetrics()){
                 metrics.calcControlMetricsOnReceived(streamCon.customStreamId,i);
             }
-
         }
     }
 
@@ -469,15 +466,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             serializer.serialize(message,buf);
             final int len = buf.readableBytes();
             buf.setInt(0,len-HEADER_LENGTH);
-            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(buf);
-            c.addListener(future -> {
-                if(future.isSuccess()){
-                    calcMetricsOnSend(future,streamChannel.customStreamId,len);
-                    overridenMethods.onMessageSent(message,null,peer,STRUCTURED_MESSAGE,conID);
-                }else{
-                    overridenMethods.onMessageSent(message,future.cause(),peer,STRUCTURED_MESSAGE,conID);
-                }
-            });
+            streamChannel.streamChannel.writeAndFlush(buf);
+            calcMetricsOnSend(streamChannel.customStreamId,len);
+            overridenMethods.onMessageSent(message,null,peer,STRUCTURED_MESSAGE,conID);
         }catch (Exception e){
             e.printStackTrace();
             throw new RuntimeException("SERIALIZER WAS NOT SET");
@@ -490,16 +481,13 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             overridenMethods.onStreamDataSent(null,new byte[0], byteBuf.readableBytes(),new Throwable("Unknown Connection ID : "+customConId),null,TransmissionType.UNSTRUCTURED_STREAM,customConId);
         }else{
             final int toSend = byteBuf.readableBytes();
-            ChannelFuture f;
             if(flush){
-                f = connection.streamChannel.writeAndFlush(byteBuf);
+                connection.streamChannel.writeAndFlush(byteBuf);
             }else{
-                f = connection.streamChannel.write(byteBuf);
+                connection.streamChannel.write(byteBuf);
             }
-            f.addListener(future -> {
-                calcMetricsOnSend(future,connection.customStreamId,toSend);
-                overridenMethods.onStreamDataSent(null,new byte[0],toSend,future.cause(),connection.customParentConnection.getRemote(),TransmissionType.UNSTRUCTURED_STREAM,customConId);
-            });
+            calcMetricsOnSend(connection.customStreamId,toSend);
+            overridenMethods.onStreamDataSent(null,null,toSend,null,connection.customParentConnection.getRemote(),TransmissionType.UNSTRUCTURED_STREAM,customConId);
         }
     }
     public void sendInputStream(String conId, InputStream inputStream, long len)  {
@@ -515,32 +503,17 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                 overridenMethods.onStreamDataSent(inputStream,null,inputStream.available(),t,peer,TransmissionType.UNSTRUCTURED_STREAM,null);
                 return;
             }
-
             if(len<=0){
                 if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
                 streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.parent().eventLoop());
                 return;
             }
-
             if(streamChannel.streamChannel.pipeline().get("ChunkedWriteHandler")==null){
                 streamChannel.streamChannel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
             }
-            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
-
-            /**
-            ByteBuf buf = streamChannel.streamChannel.alloc().directBuffer();
-            buf.writeBytes(inputStream,inputStream.available());
-
-            ChannelFuture c = streamChannel.streamChannel.writeAndFlush(buf);
-            **/
-            InetSocketAddress finalPeer = peer;
-            c.addListener(future -> {
-                calcMetricsOnSend(future,conId,len);
-                if(!future.isSuccess()){
-                    logger.error(future.cause().getMessage());
-                    overridenMethods.onStreamDataSent(inputStream,null,inputStream.available(),future.cause(), finalPeer,TransmissionType.UNSTRUCTURED_STREAM,conId);
-                }
-            });
+            streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
+            calcMetricsOnSend(conId,len);
+            overridenMethods.onStreamDataSent(inputStream,null,len,null,peer,TransmissionType.UNSTRUCTURED_STREAM,conId);
         }catch (Exception e){
             e.printStackTrace();
             overridenMethods.onStreamDataSent(inputStream,null,0,e.getCause(),null,TransmissionType.UNSTRUCTURED_STREAM,conId);
@@ -634,11 +607,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             metrics.calcMetricsOnReceived(conId,bytes);
         }
     }
-    private void calcMetricsOnSend(Future future, String connectionId, long length){
-        if(future.isSuccess()){
-            if(enabledMetrics()){
-                metrics.calcMetricsOnSend(future.isSuccess(),connectionId,length);
-            }
+    private void calcMetricsOnSend(String connectionId, long length){
+        if(enabledMetrics()){
+            metrics.calcMetricsOnSend(true,connectionId,length);
         }
     }
 
