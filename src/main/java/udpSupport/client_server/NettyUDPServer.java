@@ -65,7 +65,7 @@ public class NettyUDPServer {
         waitingForAcks = new ConcurrentHashMap<>();
         datagramPacketCounter = new AtomicLong(0);
         streamIdCounter = new AtomicLong(0);
-        MAX_SEND_RETRIES = Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"5"));
+        MAX_SEND_RETRIES = (properties.getProperty(UDP_BROADCAST_PROP)!=null ? 0: ( Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"20"))));
         RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MIN_UDP_RETRANSMISSION_TIMEOUT,"250"));
         MAX_RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MAX_UDP_RETRANSMISSION_TIMEOUT,"0"));
         BUFFER_SIZE = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"66560"));
