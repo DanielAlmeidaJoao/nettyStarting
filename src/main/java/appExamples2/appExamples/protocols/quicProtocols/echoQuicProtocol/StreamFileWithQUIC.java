@@ -1,6 +1,7 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
 import appExamples2.appExamples.channels.FactoryMethods;
+import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
 import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
 import appExamples2.appExamples.channels.babelNewChannels.tcpChannels.BabelTCP_P2P_Channel;
@@ -19,6 +20,7 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.metrics.UDPNetworkStatsWrapper;
 
@@ -54,7 +56,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         this.properties = properties;
         NETWORK_PROTO = properties.getProperty("NETWORK_PROTO");
         boolean singleThreaded = properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null;
-        channelId = makeChan(NETWORK_PROTO,address,port,singleThreaded);
+        channelId = makeChan(NETWORK_PROTO,address,port,singleThreaded,properties);
         System.out.println("PROTO "+NETWORK_PROTO);
 
         filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
@@ -65,30 +67,35 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         //Path filePath = Paths.get("C:\\Users\\Quim\\Documents\\danielJoao\\THESIS_PROJECT\\diehart.mp4");
         //Path filePath = Paths.get(p);
     }
-    private int makeChan(String channelName, String address, String port, boolean singleThreaded) throws Exception {
+    private int makeChan(String channelName, String address, String port, boolean singleThreaded, Properties properties) throws Exception {
         Properties channelProps;
-        boolean zeroCopy = properties.getProperty(NettyTCPChannel.NOT_ZERO_COPY)!=null;
+        StreamDeliveredHandlerFunction f=null;
+        if(properties.getProperty("NETTY_HANDLER")!=null){
+            f = this::execute;
+        }
+        boolean zeroCopy = this.properties.getProperty(NettyTCPChannel.NOT_ZERO_COPY)!=null;
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
             channelProps = TCPChannelUtils.quicChannelProperty(address,port);
-            channelProps.setProperty("RCV_BUFF_ALOC_SIZE",properties.getProperty("RCV_BUFF_ALOC_SIZE"));
+            channelProps.setProperty("RCV_BUFF_ALOC_SIZE", this.properties.getProperty("RCV_BUFF_ALOC_SIZE"));
             addExtraProps(singleThreaded,zeroCopy,channelProps);
-            channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
+            channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps,f);
         }else if(channelName.equalsIgnoreCase("tcp")){
             System.out.println("TCP ON");
             channelProps = TCPChannelUtils.tcpChannelProperties(address,port);
             addExtraProps(singleThreaded,zeroCopy,channelProps);
-            channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps);
+            channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps,f);
         }else{
             System.out.println("UDP ON");
             channelProps = TCPChannelUtils.udpChannelProperties(address,port);
-            channelProps.setProperty("RCV_BUFF_ALOC_SIZE",properties.getProperty("RCV_BUFF_ALOC_SIZE"));
+            channelProps.setProperty("RCV_BUFF_ALOC_SIZE", this.properties.getProperty("RCV_BUFF_ALOC_SIZE"));
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelUDPChannel.NAME,channelProps);
         }
         return channelId;
     }
+
     private void addExtraProps(boolean singleThreade,boolean zeroCopy, Properties channelProps){
         if(zeroCopy){
             channelProps.setProperty(NettyTCPChannel.NOT_ZERO_COPY,"ZERO_copy");
@@ -192,7 +199,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         if(event.inConnection){
             logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}",event.getNode(),event.type+" SS "+streamId);
             try{
-                fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.mp4");
+                synchronized (this){
+                    fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.mp4");
+                }
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -292,6 +301,24 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             }
         }
     }
+    void execute(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short destProto, int channelId, BabelInputStream inputStream){
+        if(fos==null){
+            try{
+                synchronized (this){
+                    fos = new FileOutputStream(myself.getPort()+NETWORK_PROTO+"_STREAM.mp4");
+                }
+            }catch (Exception e){}
+        }
+        int available = babelOutputStream.readableBytes();
+        if(available<0){
+            babelOutputStream.release();
+            System.out.println(" RECEIVED "+available);
+            return;
+        }
+        byte [] p = babelOutputStream.readBytes();
+        writeToFile(available,p);
+    }
+
     private void uponStreamBytes(BabelStreamDeliveryEvent event) {
         int available = event.babelOutputStream.readableBytes();
         if(available<0){

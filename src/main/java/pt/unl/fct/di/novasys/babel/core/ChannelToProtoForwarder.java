@@ -1,11 +1,12 @@
 package pt.unl.fct.di.novasys.babel.core;
 
+import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
-import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.internal.*;
+import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
@@ -19,10 +20,15 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
 
     final int channelId;
     final Map<Short, pt.unl.fct.di.novasys.babel.core.GenericProtocol> consumers;
+    public final StreamDeliveredHandlerFunction streamDeliverHandlerFunction;
 
     public ChannelToProtoForwarder(int channelId) {
+        this(channelId,null);
+    }
+    public ChannelToProtoForwarder(int channelId, StreamDeliveredHandlerFunction handlerFunction) {
         this.channelId = channelId;
         consumers = new ConcurrentHashMap<>();
+        this.streamDeliverHandlerFunction = handlerFunction;
     }
 
     public void addConsumer(short protoId, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumer) {
@@ -43,8 +49,12 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
     }
 
     public void deliverStream(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId, BabelInputStream inputStream) {
-        GenericProtocol channelConsumer = getConsumer(destProto);
-        channelConsumer.deliverBabelInBytesWrapper(new BabelStreamDeliveryEvent(babelOutputStream,host,channelId,quicStreamId,sourceProto,destProto,handlerId,inputStream));
+        if(streamDeliverHandlerFunction==null){
+            GenericProtocol channelConsumer = getConsumer(destProto);
+            channelConsumer.deliverBabelInBytesWrapper(new BabelStreamDeliveryEvent(babelOutputStream,host,channelId,quicStreamId,sourceProto,destProto,handlerId,inputStream));
+        }else{
+            streamDeliverHandlerFunction.execute(babelOutputStream,host,quicStreamId,sourceProto,channelId,inputStream);
+        }
     }
 
     @Override

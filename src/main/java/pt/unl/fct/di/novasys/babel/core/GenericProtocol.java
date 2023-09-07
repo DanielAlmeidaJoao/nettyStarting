@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.core;
 
+import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
@@ -331,10 +332,14 @@ public abstract class GenericProtocol {
      * @param props       channel-specific properties. See the documentation for each channel.
      * @return the id of the newly created channel
      */
-    protected final int createChannel(String channelName, Properties props) throws IOException {
-        int channelId = babel.createChannel(channelName, this.protoId, props);
+    protected final int createChannel(String channelName, Properties props, StreamDeliveredHandlerFunction function) throws IOException {
+        int channelId = babel.createChannel(channelName, this.protoId, props,function);
         registerSharedChannel(channelId);
         return channelId;
+    }
+
+    protected final int createChannel(String channelName, Properties props) throws IOException {
+        return createChannel(channelName,props,null);
     }
 
     protected final void registerSharedChannel(int channelId) {

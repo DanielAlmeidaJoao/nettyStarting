@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.core;
 
+import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
 import org.apache.commons.lang3.tuple.Triple;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -206,7 +207,7 @@ public class Babel {
      * @return the channel Id
      * @throws IOException if channel creation fails
      */
-    int createChannel(String channelName, short protoId, Properties props)
+    int createChannel(String channelName, short protoId, Properties props, StreamDeliveredHandlerFunction function)
             throws IOException {
         ChannelInitializer initializer = initializers.get(channelName);
         if (initializer == null)
@@ -214,7 +215,7 @@ public class Babel {
 
         int channelId = channelIdGenerator.incrementAndGet();
         BabelMessageSerializer serializer = new BabelMessageSerializer(new ConcurrentHashMap<>());
-        ChannelToProtoForwarder forwarder = new ChannelToProtoForwarder(channelId);
+        ChannelToProtoForwarder forwarder = new ChannelToProtoForwarder(channelId,function);
         NewIChannel newChannel = initializer.initialize(serializer, forwarder, props, protoId);
         channelMap.put(channelId, Triple.of(newChannel, forwarder, serializer));
         return channelId;
