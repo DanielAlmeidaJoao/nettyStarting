@@ -35,7 +35,7 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOGGER.error(cause.getMessage());
-        TCPChannelUtils.closeOnError(ctx.channel());
         consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,null);
+        TCPChannelUtils.closeOnError(ctx.channel());
     }
 }
