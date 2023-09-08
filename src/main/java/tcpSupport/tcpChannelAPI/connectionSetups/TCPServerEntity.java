@@ -1,6 +1,5 @@
 package tcpSupport.tcpChannelAPI.connectionSetups;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
@@ -13,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.pipeline.TCPCustomHandshakeHandler;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
@@ -31,20 +31,30 @@ public class TCPServerEntity implements ServerInterface{
     private Channel serverChannel;
     private final StreamingNettyConsumer consumer;
     private Properties properties;
+    private EventLoopGroup childrenGroup;
     public TCPServerEntity(String hostName, int port, StreamingNettyConsumer consumer, Properties properties) {
         this.port = port;
         this.hostName = hostName;
         this.consumer = consumer;
         this.properties = properties;
+        int serverThreads = TCPChannelUtils.serverThreads(properties);
+        this.childrenGroup = createNewWorkerGroup(serverThreads);
+        logger.debug("Using {} server threads",serverThreads);
     }
 
     public void startServer()
             throws Exception{
-        int serverThreads = FactoryMethods.serverThreads(properties);
-        EventLoopGroup parentGroup = createNewWorkerGroup(1);
-        EventLoopGroup childGroup = createNewWorkerGroup(serverThreads);
         ServerBootstrap b = new ServerBootstrap();
-        b.group(parentGroup,childGroup).channel(socketChannel())
+        final EventLoopGroup parent;
+        if(properties.getProperty(TCPChannelUtils.useBossThreadTCP)!=null){
+            parent = createNewWorkerGroup(1);
+            b.group(parent,childrenGroup);
+            logger.debug("Using boss EventLoopGroup");
+        }else{
+            parent=null;
+            b = b.group(childrenGroup);
+        }
+        b.channel(socketChannel())
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childOption(ChannelOption.TCP_NODELAY, true)
@@ -62,14 +72,22 @@ public class TCPServerEntity implements ServerInterface{
         );
         serverChannel = f.channel();
         serverChannel.closeFuture().addListener(future -> {
-            parentGroup.shutdownGracefully().getNow();
-            childGroup.shutdownGracefully().getNow();
+            if(parent !=null){
+                parent.shutdownGracefully().getNow();
+            }
+            childrenGroup.shutdownGracefully().getNow();
+            //childGroup.shutdownGracefully().getNow();
             logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });
     }
     public void shutDown(){
         serverChannel.close();
         serverChannel.disconnect();
+    }
+
+    @Override
+    public EventLoopGroup getEventLoopGroup() {
+        return childrenGroup;
     }
 
     public <T> void updateConfiguration(ChannelOption<T> option, T value) {

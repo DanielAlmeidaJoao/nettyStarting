@@ -1,6 +1,5 @@
 package tcpSupport.tcpChannelAPI.connectionSetups;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -32,7 +31,7 @@ public class TCPClientEntity implements ClientInterface{
     private final int connectionTimeout;
     private final StreamingNettyConsumer consumer;
     public TCPClientEntity(InetSocketAddress host, Properties properties, StreamingNettyConsumer consumer) {
-        group = TCPServerEntity.createNewWorkerGroup(FactoryMethods.clientThreads(properties));
+        group = TCPServerEntity.createNewWorkerGroup(TCPChannelUtils.clientThreads(properties));
         this.self = host;
         this.consumer = consumer;
         connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
@@ -80,6 +79,11 @@ public class TCPClientEntity implements ClientInterface{
     }
     public void shutDown(){
         group.shutdownGracefully();
+    }
+
+    @Override
+    public EventLoopGroup getEventLoopGroup() {
+        return group;
     }
 
 }

@@ -62,8 +62,14 @@ public class BabelInputStream {
     public void writeBytes(byte [] bytes){
         streamInterface.sendStream(streamId, alloc.directBuffer(bytes.length).writeBytes(bytes),flush);
     }
-    public void writeBytes(ByteBuf buf, int srcIndex, int len){
-        streamInterface.sendStream(streamId, alloc.directBuffer(len).writeBytes(buf,srcIndex,len),flush);
+    public void writeBytes(ByteBuf buf){
+        streamInterface.sendStream(streamId,buf,flush);
+    }
+    public ByteBuf allocate(int size){
+        return alloc.directBuffer(size);
+    }
+    public ByteBuf allocate(){
+        return alloc.directBuffer();
     }
     public void writeFile(File file) throws FileNotFoundException {
         FileInputStream inputStream = new FileInputStream(file);

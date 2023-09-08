@@ -15,8 +15,8 @@
  */
 package quicSupport.client_server;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.incubator.codec.quic.*;
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,7 +43,7 @@ public final class QUICServerEntity implements ServerInterface {
     private final Properties properties;
 
     private Channel quicChannel;
-    private EventLoopGroup group;
+    private final EventLoopGroup group;
     //private static final Logger logger = LogManager.getLogger(QUICServerEntity.class);
 
     public QUICServerEntity(String host, int port, CustomQuicChannelConsumer consumer, Properties properties) {
@@ -51,6 +51,11 @@ public final class QUICServerEntity implements ServerInterface {
         self = new InetSocketAddress(host,port);
         this.properties=properties;
         quicChannel =null;
+        int serverThreads = TCPChannelUtils.serverThreads(properties);
+        group = TCPServerEntity.createNewWorkerGroup(serverThreads);
+    }
+    public EventLoopGroup getEventLoopGroup(){
+        return group;
     }
     private TrustManagerFactory clientTrustManager() throws Exception {
         String keystoreFilename = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY);
@@ -92,10 +97,9 @@ public final class QUICServerEntity implements ServerInterface {
     }
 
     public void startServer() throws Exception {
+        ByteBufAllocator allocator = QUICClientEntity.getAllocator();
         QuicSslContext context = getSignedSslContext();
-        int serverThreads = FactoryMethods.serverThreads(properties);
-        group = TCPServerEntity.createNewWorkerGroup(serverThreads);
-        final int bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"16384"));
+        final int bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,QUICLogics.NEW_B_SIZE));
         ChannelHandler codec = getChannelHandler(context,bufferSize);
         Bootstrap bs = new Bootstrap();
 
@@ -107,6 +111,8 @@ public final class QUICServerEntity implements ServerInterface {
                 */
                 //.option(EpollChannelOption.MAX_DATAGRAM_PAYLOAD_SIZE,2048)
                 .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(bufferSize))
+                //.option(ChannelOption.AUTO_READ, autoRead)
+                .option(ChannelOption.ALLOCATOR,allocator)
                 .handler(codec)
                 .bind(self).sync()
                 .addListener(future -> {
@@ -117,6 +123,8 @@ public final class QUICServerEntity implements ServerInterface {
         quicChannel.closeFuture().addListener(future -> {
             group.shutdownGracefully().getNow();
         });
+
+
     }
     public void shutDown(){
         if(quicChannel !=null){

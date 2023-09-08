@@ -1,6 +1,5 @@
 package udpSupport.client_server;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -11,6 +10,7 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.channels.UDPChannelConsumer;
@@ -34,13 +34,13 @@ public class NettyUDPServer {
     public static SecureRandom randomInstance;
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
     public final int BUFFER_SIZE;
-    public static final String MIN_UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
-    public static final String MAX_UDP_RETRANSMISSION_TIMEOUT = "MAX_UDP_RETRANSMISSION_TIMEOUT";
+    public static final String MIN_UDP_RETRANSMISSION_TIMEOUT = "retransmissionTimeout";
+    public static final String MAX_UDP_RETRANSMISSION_TIMEOUT = "maxRetransmissionTimeout";
 
     public int RETRANSMISSION_TIMEOUT;
     private final int MAX_RETRANSMISSION_TIMEOUT;
     public final int MAX_SEND_RETRIES;
-    public static final String MAX_SEND_RETRIES_KEY = "UPD_MAX_SEND_RETRIES";
+    public static final String MAX_SEND_RETRIES_KEY = "maxSendRetries";
     public static final String UDP_BROADCAST_PROP="broadcast";
 
 
@@ -55,7 +55,9 @@ public class NettyUDPServer {
     private final Properties properties;
     private final SecureRandom random;
 
+    private final EventLoopGroup group;
 
+    private final long ID;
 
     public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address, Properties properties){
         this.properties=properties;
@@ -70,12 +72,18 @@ public class NettyUDPServer {
         MAX_RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MAX_UDP_RETRANSMISSION_TIMEOUT,"0"));
         BUFFER_SIZE = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"66560"));
         random = RETRANSMISSION_TIMEOUT>0 ? getRandomInstance():null;
+        int serverThreads = TCPChannelUtils.serverThreads(properties);
+        group = TCPServerEntity.createNewWorkerGroup(serverThreads);
+        ID = System.currentTimeMillis();
         try {
             channel = start();
         }catch (Exception e){
             e.printStackTrace();
-            throw new RuntimeException("UDP LISTENER COULD NOT START!");
+            throw new RuntimeException("UDP LISTENER COULD NOT START: "+e.getMessage());
         }
+    }
+    public EventLoop getLoop(){
+        return group.next();
     }
     public void onAckReceived(long msgId, InetSocketAddress sender){
         UDPWaitForAckWrapper timeMillis = waitingForAcks.remove(msgId);
@@ -88,10 +96,11 @@ public class NettyUDPServer {
     private void scheduleRetransmission(ByteBuf packet, long msgId, InetSocketAddress dest, int count){
         //NO RETRANSMISSION
         if(MAX_SEND_RETRIES <= 0){
+            packet.release();
             return;
         }
         UDPWaitForAckWrapper udpWaitForAckWrapper = waitingForAcks.get(msgId);
-        ScheduledFuture scheduledFuture = channel.eventLoop().schedule(() -> {
+        ScheduledFuture scheduledFuture = group.next().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) {
                 packet.release();
                 return;
@@ -141,15 +150,14 @@ public class NettyUDPServer {
         return Epoll.isAvailable() ? EpollDatagramChannel.class:NioDatagramChannel.class;
     }
     private Channel start() throws Exception{
-        int serverThreads = FactoryMethods.serverThreads(properties);
         OnAckFunction onAckReceived = this::onAckReceived;
         Channel server;
-        EventLoopGroup group = TCPServerEntity.createNewWorkerGroup(serverThreads);
         Bootstrap b = new Bootstrap();
         b.group(group)
                 .channel(socketChannel())
                 .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(BUFFER_SIZE))
                 .option(ChannelOption.SO_BROADCAST, properties.getProperty(UDP_BROADCAST_PROP)!=null)
+                .option(ChannelOption.ALLOCATOR, QUICLogics.getAllocator(true))
                 .handler(new ChannelInitializer<DatagramChannel>() {
                     @Override
                     protected void initChannel(DatagramChannel ch) throws Exception {
@@ -170,6 +178,7 @@ public class NettyUDPServer {
         if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.readableBytes()){
             message.readByte();
             message.readLong();
+            message.readLong();
             long streamId = streamIdCounter.incrementAndGet();
             ByteBuf wholeMessageBuf = message; //Unpooled.wrappedBuffer(message);
             int streamCount = ceilDiv(message.readableBytes(),UDPLogics.MAX_UDP_PAYLOAD_SIZE); //do the %
@@ -182,6 +191,7 @@ public class NettyUDPServer {
                 byteBuf.writeLong(messageId);
                 byteBuf.writeLong(streamId);
                 byteBuf.writeInt(streamCount);
+                byteBuf.writeLong(ID);
                 byteBuf.writeBytes(wholeMessageBuf,streamLen);
                 sendMessageAux(byteBuf,peer,messageId);
             }
@@ -192,9 +202,14 @@ public class NettyUDPServer {
             //ByteBuf buf = channel.alloc().directBuffer(9+len);
             message.setByte(0,UDPLogics.SINGLE_MESSAGE);
             message.setLong(1,messageId);
+            //message.setLong(9,ID);
             //buf.writeBytes(message,0, len);
             sendMessageAux(message,peer,messageId);
         }
+    }
+
+    public long getId(){
+        return ID;
     }
 
     public ByteBuf alloc(){

@@ -1,6 +1,5 @@
 package appExamples2.appExamples.channels.babelNewChannels;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelListener;
@@ -11,6 +10,7 @@ import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -26,7 +26,7 @@ public class BabelQUIC_TCP_ChannelWithControlledClose extends BabelQUIC_TCP_Chan
 
     public BabelQUIC_TCP_ChannelWithControlledClose(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
         super(serializer,list,properties,protoId,networkProtocol,networkRole);
-        initMaps(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null);
+        initMaps(properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null);
     }
     private void initMaps(boolean singleThreaded){
         if(singleThreaded){

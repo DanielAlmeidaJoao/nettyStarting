@@ -1,7 +1,6 @@
 package quicSupport.utils;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.*;
 import io.netty.incubator.codec.quic.QuicCodecBuilder;
 import io.netty.incubator.codec.quic.QuicCongestionControlAlgorithm;
 import org.apache.commons.codec.binary.Hex;
@@ -23,18 +22,16 @@ public class QUICLogics {
     public final static byte KEEP_ALIVE = 'C';
     public final static byte STREAM_CREATED = 'D';
 
-    public final static String ADDRESS_KEY = "QUIC_ADDRESS";
-    public final static String PORT_KEY = "QUIC_PORT";
     public final static String idleTimeoutPercentageHB ="idleTimeoutPercentageHB";
-    public static final String MAX_IDLE_TIMEOUT_IN_SECONDS = "QUIC_maxIdleTimeoutInSeconds";
-    public static final String INITIAL_MAX_DATA = "QUIC_initialMaxData";
-    public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL = "QUIC_initialMaxStreamDataBidirectionalLocal";
-    public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE = "QUIC_initialMaxStreamDataBidirectionalRemote";
-    public static final String INITIAL_MAX_STREAMS_BIDIRECTIONAL = "QUIC_initialMaxStreamsBidirectional";
-    public static final String INITIAL_MAX_STREAMS_UNIDIRECTIONAL = "QUIC_initialMaxStreamsUnidirectional";
+    public static final String MAX_IDLE_TIMEOUT_IN_SECONDS = "maxIdleTimeoutInSeconds";
+    public static final String INITIAL_MAX_DATA = "initialMaxData";
+    public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL = "initialMaxStreamDataBidirectionalLocal";
+    public static final String INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE = "initialMaxStreamDataBidirectionalRemote";
+    public static final String INITIAL_MAX_STREAMS_BIDIRECTIONAL = "initialMaxStreamsBidirectional";
+    public static final String INITIAL_MAX_STREAMS_UNIDIRECTIONAL = "initialMaxStreamsUnidirectional";
 
-    public static final String CONNECT_ON_SEND = "AUTO_CONNECT";
-    public static final String MAX_ACK_DELAY = "QUIC_maxAckDelay";
+    //public static final String CONNECT_ON_SEND = "AUTO_CONNECT";
+    public static final String MAX_ACK_DELAY = "maxAckDelay";
 
 
 
@@ -53,13 +50,17 @@ public class QUICLogics {
 
     private static final String maxAckDelay = "200";
 
-    public static final String SERVER_KEYSTORE_FILE_KEY = "QUIC_SERVER_KEYSTORE_FILE";
-    public static final String SERVER_KEYSTORE_PASSWORD_KEY = "QUIC_SERVER_KEYSTORE_PASSWORD";
-    public static final String SERVER_KEYSTORE_ALIAS_KEY = "QUIC_SERVER_KEYSTORE_ALIAS_KEY";
+    public static final String SERVER_KEYSTORE_FILE_KEY = "serverKeystoreFile";
+    public static final String SERVER_KEYSTORE_PASSWORD_KEY = "serverKeyStorePassword";
+    public static final String SERVER_KEYSTORE_ALIAS_KEY = "serverKeyStoreAlias";
 
-    public static final String CLIENT_KEYSTORE_FILE_KEY = "QUIC_CLIENT_KEYSTORE_FILE";
-    public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_CLIENT_KEYSTORE_PASSWORD";
-    public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_CLIENT_KEYSTORE_ALIAS_KEY";
+    public static final String CLIENT_KEYSTORE_FILE_KEY = "clientKeystoreFile";
+    public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "clientKeyStorePassword";
+    public static final String CLIENT_KEYSTORE_ALIAS_KEY = "clientKeyStoreAlias";
+
+    public static final String MAX_UDP_RCV_SND_PAYLOD_SIZE = "maxUdpPayloadSize";
+    public static final String CongestionControlAlgorithm = "congestionControlAlgorithm";
+
 
     public static ByteBuf bufToWrite(ByteBuf data, byte msgCode, ByteBufAllocator alloc){
         //return new DelimitedMessageWrapper(len,data,msgCode);
@@ -82,7 +83,10 @@ public class QUICLogics {
     public static boolean sameAddress(InetSocketAddress address, InetSocketAddress socketAddress){
         return address.getHostName().equals(socketAddress.getHostName())&&address.getPort()==socketAddress.getPort();
     }
+    public static final String NEW_B_SIZE = "65536"; //1024*64
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
+        int payloadSize = Integer.parseInt((String) properties.getOrDefault(MAX_UDP_RCV_SND_PAYLOD_SIZE,NEW_B_SIZE));
+        String congAlgo = (String) properties.getOrDefault(CongestionControlAlgorithm,"RENO");
         return codecBuilder
                 .maxIdleTimeout(Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+"")) , TimeUnit.SECONDS)
                 .initialMaxData(Long.parseLong(properties.getProperty(INITIAL_MAX_DATA,initialMaxData)))
@@ -92,9 +96,10 @@ public class QUICLogics {
                 .initialMaxStreamsUnidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_UNIDIRECTIONAL,initialMaxStreamsUnidirectional)))
                 .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MILLISECONDS)
                 //.activeMigration(true);
-                .maxRecvUdpPayloadSize(1024*1024).maxSendUdpPayloadSize(1024*1024)
-                .congestionControlAlgorithm(QuicCongestionControlAlgorithm.RENO)
-                .hystart(true);
+                //.sslTaskExecutor(ImmediateExecutor.INSTANCE)
+                .maxRecvUdpPayloadSize(payloadSize).maxSendUdpPayloadSize(payloadSize)
+                .congestionControlAlgorithm(QuicCongestionControlAlgorithm.valueOf(congAlgo))
+                .hystart(false);
     }
 
     public static byte[] appendOpToHash(byte[] hash, byte[] op) {
@@ -140,5 +145,44 @@ public class QUICLogics {
         int comp = one.compareTo(two);
         //System.out.println(self.getPort()+" COMP "+other.getPort()+" "+comp);
         return comp;
+    }
+    public static ByteBufAllocator getAllocator(boolean directBuffer) {
+        if (directBuffer) {
+            return new PooledByteBufAllocator(true);
+        } else {
+            // Force usage of heap buffers and also ensure memoryAddress() is not not supported.
+            return new AbstractByteBufAllocator(false) {
+
+                @Override
+                public ByteBuf ioBuffer() {
+                    return heapBuffer();
+                }
+
+                @Override
+                public ByteBuf ioBuffer(int initialCapacity) {
+                    return heapBuffer(initialCapacity);
+                }
+
+                @Override
+                public ByteBuf ioBuffer(int initialCapacity, int maxCapacity) {
+                    return heapBuffer(initialCapacity, maxCapacity);
+                }
+
+                @Override
+                protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
+                    return new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
+                }
+
+                @Override
+                protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
+                    return new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity);
+                }
+
+                @Override
+                public boolean isDirectBufferPooled() {
+                    return false;
+                }
+            };
+        }
     }
 }

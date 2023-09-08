@@ -3,7 +3,6 @@ package tcpSupport.tcpChannelAPI.utils;
 import com.google.gson.Gson;
 import io.netty.channel.Channel;
 import quicSupport.utils.QUICLogics;
-import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,22 +15,29 @@ public class TCPChannelUtils {
     public static final Gson g = new Gson();
     public static final AtomicInteger channelIdCounter = new AtomicInteger();
 
-    public static final String AUTO_CONNECT_ON_SEND_PROP = "AUTO_CONNECT";
+    public static final String AUTO_CONNECT_ON_SEND_PROP = "autoConnect";
     public static final String CUSTOM_ID_KEY = "CON_ID";
     public static final String DEST_STREAM_PROTO = "STREAM_PROTO";
 
 
-    public static final String READ_STREAM_PERIOD_KEY = "READ_STREAM_PERIOD_KEY";
-    public static final String SINGLE_CON_PER_PEER = "SINGLE_PEER_CONNECTION";
+    public static final String READ_STREAM_PERIOD_KEY = "readInputStreamPeriod";
+    public static final String CONNECT_TIMEOUT_MILLIS = "connectTimeout";
 
-    public static final String CONNECT_TIMEOUT_MILLIS = "CONNECT_TIMEOUT_MILLIS";
+    public static final String CHANNEL_METRICS = "metrics";
 
-    public static final String CHANNEL_METRICS = "channel_metrics";
+    public final static String METRICS_INTERVAL_KEY = "metricsInterval";
 
-    public final static String METRICS_INTERVAL_KEY = "metrics_interval";
+    public static final String BUFF_ALOC_SIZE = "rcvBuffAlocSize";
+    public static final String useBossThreadTCP = "tcpServerBossThread";
 
-    public static final String BUFF_ALOC_SIZE = "RCV_BUFF_ALOC_SIZE";
+    public final static String SINGLE_THREADED_PROP="singleThreaded";
+    public final static String SERVER_THREADS = "serverThreads";
+    public final static String CLIENT_THREADS = "clientThreads";
 
+    public final static String ADDRESS_KEY = "address";
+    public final static String PORT_KEY = "port";
+
+    public final static String CHUNK_SIZE = "chunkSize";
 
 
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
@@ -44,8 +50,8 @@ public class TCPChannelUtils {
 
     public static Properties quicChannelProperty(String address, String port){
         Properties channelProps = new Properties();
-        channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
-        channelProps.setProperty(QUICLogics.PORT_KEY,port);
+        channelProps.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
+        channelProps.setProperty(TCPChannelUtils.PORT_KEY,port);
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
@@ -55,8 +61,9 @@ public class TCPChannelUtils {
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
         //channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
         channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
-        channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
+        //channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
         channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"0");
+        //channelProps.setProperty(TCPChannelUtils.BUFF_ALOC_SIZE, QUICLogics.NEW_B_SIZE+"");
         //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
 
@@ -70,9 +77,9 @@ public class TCPChannelUtils {
 
     public static Properties tcpChannelProperties(String address, String port){
         Properties channelProps = new Properties();
-        channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
-        channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
-        channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
+        channelProps.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
+        channelProps.setProperty(TCPChannelUtils.PORT_KEY,port);
+        //channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
         //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
 
@@ -84,9 +91,8 @@ public class TCPChannelUtils {
     }
     public static Properties udpChannelProperties(String address, String port){
         Properties properties = new Properties();
-        properties.setProperty("UDP_address",address);
-        //properties.setProperty("UDP_metrics","on");
-        properties.setProperty("UDP_port",port);
+        properties.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
+        properties.setProperty(TCPChannelUtils.PORT_KEY,port);
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MIN_UDP_RETRANSMISSION_TIMEOUT,"200");
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_UDP_RETRANSMISSION_TIMEOUT,"100");
 
@@ -104,5 +110,14 @@ public class TCPChannelUtils {
     public static void closeOnError(Channel channel){
         channel.disconnect();
         channel.close();
+    }
+
+
+
+    public static int serverThreads(Properties properties){
+        return Integer.parseInt((String) properties.getOrDefault(SERVER_THREADS,"0"));
+    }
+    public static int clientThreads(Properties properties){
+        return Integer.parseInt((String) properties.getOrDefault(CLIENT_THREADS,"1"));
     }
 }

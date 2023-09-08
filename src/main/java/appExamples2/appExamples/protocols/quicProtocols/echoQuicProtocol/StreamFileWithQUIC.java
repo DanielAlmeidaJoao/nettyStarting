@@ -1,6 +1,5 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
 import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
@@ -10,10 +9,7 @@ import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.UDPMet
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.FileBytesCarrier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.events.OnChannelError;
-import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.*;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
@@ -54,11 +50,11 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
         NETWORK_PROTO = properties.getProperty("NETWORK_PROTO");
-        boolean singleThreaded = properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null;
+        boolean singleThreaded = properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null;
         channelId = makeChan(NETWORK_PROTO,address,port,singleThreaded,properties);
         System.out.println("PROTO "+NETWORK_PROTO);
 
-        filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/Plane.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
+        filePath = Paths.get("/home/tsunami/Downloads/Plane (2023) [720p] [WEBRip] [YTS.MX]/movie.mp4");
         //filePath = Paths.get("/home/tsunami/Downloads/Guardians Of The Galaxy Vol. 3 (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]/Guardians.Of.The.Galaxy.Vol..3.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4");
         fileLen = filePath.toFile().length();
         //Path filePath = Paths.get("/home/tsunami/Downloads/dieHart/Die.Hart.The.Movie.2023.720p.WEBRip.x264.AAC-[YTS.MX].mp4");
@@ -73,22 +69,26 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             f = this::execute;
         }
         boolean zeroCopy = this.properties.getProperty(NettyTCPChannel.NOT_ZERO_COPY)!=null;
+        String chunkSize = this.properties.getProperty(TCPChannelUtils.CHUNK_SIZE,"0");
+        System.out.println("CHUNKSIZE "+chunkSize);
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
             channelProps = TCPChannelUtils.quicChannelProperty(address,port);
-            channelProps.setProperty("RCV_BUFF_ALOC_SIZE", this.properties.getProperty("RCV_BUFF_ALOC_SIZE"));
+            channelProps.setProperty("rcvBuffAlocSize", this.properties.getProperty("rcvBuffAlocSize"));
+            channelProps.setProperty(TCPChannelUtils.CHUNK_SIZE,chunkSize);
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps,f);
         }else if(channelName.equalsIgnoreCase("tcp")){
             System.out.println("TCP ON");
             channelProps = TCPChannelUtils.tcpChannelProperties(address,port);
             addExtraProps(singleThreaded,zeroCopy,channelProps);
+            channelProps.setProperty(TCPChannelUtils.CHUNK_SIZE,chunkSize);
             channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps,f);
         }else{
             System.out.println("UDP ON");
             channelProps = TCPChannelUtils.udpChannelProperties(address,port);
-            channelProps.setProperty("RCV_BUFF_ALOC_SIZE", this.properties.getProperty("RCV_BUFF_ALOC_SIZE"));
+            channelProps.setProperty("rcvBuffAlocSize", this.properties.getProperty("rcvBuffAlocSize"));
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelUDPChannel.NAME,channelProps);
         }
@@ -100,7 +100,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             channelProps.setProperty(NettyTCPChannel.NOT_ZERO_COPY,"ZERO_copy");
         }
         if(singleThreade){
-            channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
+            channelProps.setProperty(TCPChannelUtils.SINGLE_THREADED_PROP,"as");
         }
     }
     @Override
@@ -122,6 +122,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
             registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerChannelEventHandler(channelId, UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
+            registerChannelEventHandler(channelId, OnConnectionDownEvent.EVENT_ID, this::uponConnectionDown);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
@@ -141,6 +142,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         //logger.info("OPENING CONNECTION TO {}",myself);
         //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
         //sendMessage(message,myself);
+    }
+    private void uponConnectionDown(OnConnectionDownEvent event, int channelId) {
+        logger.info("CONNECTION DOWN: {} {} {}",event.connectionId,event.getNode(),event.type);
     }
     private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");

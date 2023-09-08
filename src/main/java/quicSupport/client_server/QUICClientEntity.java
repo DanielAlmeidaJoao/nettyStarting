@@ -14,8 +14,8 @@ package quicSupport.client_server;/*
  * under the License.
  */
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.incubator.codec.quic.*;
 import io.netty.util.AttributeKey;
@@ -55,10 +55,10 @@ public final class QUICClientEntity implements ClientInterface {
         this.self = self;
         this.consumer = consumer;
         //
-        this.group = TCPServerEntity.createNewWorkerGroup(FactoryMethods.clientThreads(properties));
+        this.group = TCPServerEntity.createNewWorkerGroup(TCPChannelUtils.clientThreads(properties));
         context = null;
         this.properties = properties;
-        bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"16384"));
+        bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,QUICLogics.NEW_B_SIZE));
 
     }
 
@@ -67,7 +67,7 @@ public final class QUICClientEntity implements ClientInterface {
         String s_keystorePassword = properties.getProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY);//"simple";
         return QUICLogics.trustManagerFactory(s_keystoreFilename,s_keystorePassword);
     }
-
+    QuicClientCodecBuilder clientCodecBuilder;
     private ChannelHandler getCodec()throws Exception{
         if(context==null){
             String keystoreFilename = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY); //"keystore2.jks";
@@ -81,18 +81,27 @@ public final class QUICClientEntity implements ClientInterface {
                     .trustManager(serverTrustManager())
                     .applicationProtocols("QUIC").earlyData(true)
                     .build();
+            clientCodecBuilder =  new QuicClientCodecBuilder()
+                    .sslContext(context);
+            clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         }
 
-        QuicClientCodecBuilder clientCodecBuilder =  new QuicClientCodecBuilder()
-                .sslContext(context);
-        clientCodecBuilder = (QuicClientCodecBuilder) QUICLogics.addConfigs(clientCodecBuilder,properties);
         return clientCodecBuilder.build();
+    }
+    static ByteBufAllocator byteBufAllocator;
+
+    public static ByteBufAllocator getAllocator(){
+        if(byteBufAllocator==null){
+            byteBufAllocator =  QUICLogics.getAllocator(true);
+        }
+        return byteBufAllocator;
     }
     public void connect(InetSocketAddress remote, TransmissionType transmissionType, String id, short destProto) throws Exception{
         Bootstrap bs = new Bootstrap();
         Channel channel = bs.group(group)
                 .channel(NettyUDPServer.socketChannel())
                 .option(QuicChannelOption.RCVBUF_ALLOCATOR,new FixedRecvByteBufAllocator(bufferSize))
+                .option(ChannelOption.ALLOCATOR,getAllocator())
                 .handler(getCodec())
                 .bind(0).sync().channel();
         QuicChannelBootstrap b = QuicChannel.newBootstrap(channel)
@@ -103,6 +112,7 @@ public final class QUICClientEntity implements ClientInterface {
                         ch.pipeline().addLast(new QuicStreamInboundHandler(consumer,id, QUICLogics.OUTGOING_CONNECTION));
                     }
                 })
+                .option(ChannelOption.ALLOCATOR,getAllocator())
                 .remoteAddress(remote)
                 .attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY),id)
                 .attr(AttributeKey.valueOf(TCPChannelUtils.DEST_STREAM_PROTO),destProto);
@@ -118,5 +128,10 @@ public final class QUICClientEntity implements ClientInterface {
 
     public void shutDown(){
         group.shutdownGracefully();
+    }
+
+    @Override
+    public EventLoopGroup getEventLoopGroup() {
+        return group;
     }
 }
