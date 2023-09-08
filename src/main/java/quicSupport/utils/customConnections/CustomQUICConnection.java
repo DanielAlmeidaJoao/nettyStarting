@@ -52,6 +52,7 @@ public class CustomQUICConnection {
         transmissionType = type;
         this.metricsManager = metrics;
         if(inComing&&this.heartBeatTimeout>0){
+            logger.info("HB ENABLED !!!");
             serverStartScheduling();
         }
         //logger.info("CONNECTION TO {} ON. DEFAULT STREAM: {} .",remote,defaultStream.id().asShortText());

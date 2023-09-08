@@ -49,11 +49,12 @@ public class ChannelToProtoForwarder implements ChannelListener<BabelMessage> {
     }
 
     public void deliverStream(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short sourceProto, short destProto, short handlerId, BabelInputStream inputStream) {
+        BabelStreamDeliveryEvent e = new BabelStreamDeliveryEvent(babelOutputStream,host,channelId,quicStreamId,sourceProto,destProto,handlerId,inputStream);
         if(streamDeliverHandlerFunction==null){
             GenericProtocol channelConsumer = getConsumer(destProto);
-            channelConsumer.deliverBabelInBytesWrapper(new BabelStreamDeliveryEvent(babelOutputStream,host,channelId,quicStreamId,sourceProto,destProto,handlerId,inputStream));
+            channelConsumer.deliverBabelInBytesWrapper(e);
         }else{
-            streamDeliverHandlerFunction.execute(babelOutputStream,host,quicStreamId,sourceProto,channelId,inputStream);
+            streamDeliverHandlerFunction.execute(e);
         }
     }
 

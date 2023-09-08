@@ -2,7 +2,7 @@ package quicSupport.handlers.pipeline;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,7 +10,9 @@ import quicSupport.channels.CustomQuicChannelConsumer;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
-public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
+import java.util.List;
+
+public class QUICRawStreamDecoder extends ByteToMessageDecoder {
     private static final Logger logger = LogManager.getLogger(QUICRawStreamDecoder.class);
 
     public static final String HANDLER_NAME = "QUICRawStreamDecoder";
@@ -22,12 +24,25 @@ public class QUICRawStreamDecoder extends ChannelInboundHandlerAdapter {
         this.customId = customId;
     }
 
+    /**
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object in) throws Exception {
         ByteBuf msg = (ByteBuf) in;
         int readAble = msg.readableBytes();
-        BabelOutputStream babelOutputStream = new BabelOutputStream(msg.duplicate(),readAble);
-        msg.readerIndex(readAble);
+        BabelOutputStream babelOutputStream = new BabelOutputStream(msg.retainedDuplicate(),readAble);
+        //msg.discardReadBytes();
+        msg.release();
+        consumer.onReceivedStream(customId,babelOutputStream);
+    }
+    **/
+
+
+
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        int available = in.readableBytes();
+        BabelOutputStream babelOutputStream = new BabelOutputStream(in.retainedDuplicate(),available);
+        in.readerIndex(available);
         consumer.onReceivedStream(customId,babelOutputStream);
     }
 

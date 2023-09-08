@@ -20,7 +20,6 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
-import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.metrics.UDPNetworkStatsWrapper;
 
@@ -301,7 +300,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             }
         }
     }
-    void execute(BabelOutputStream babelOutputStream, Host host, String quicStreamId, short destProto, int channelId, BabelInputStream inputStream){
+    void execute(BabelStreamDeliveryEvent event){
         if(fos==null){
             try{
                 synchronized (this){
@@ -309,13 +308,13 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 }
             }catch (Exception e){}
         }
-        int available = babelOutputStream.readableBytes();
+        int available = event.babelOutputStream.readableBytes();
         if(available<0){
-            babelOutputStream.release();
+            event.babelOutputStream.release();
             System.out.println(" RECEIVED "+available);
             return;
         }
-        byte [] p = babelOutputStream.readBytes();
+        byte [] p = event.babelOutputStream.readBytes();
         writeToFile(available,p);
     }
 

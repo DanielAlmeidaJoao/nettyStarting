@@ -226,10 +226,14 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         boolean singleConPerPeer = (always==false);
         if(singleConPerPeer){
             String connectionId = isConnecting(peer);
-            if(connectionId!=null) return connectionId;
+            if(connectionId!=null){
+                logger.info("Opening more than one connection to a connected peer when <always> open flag is false!");
+                return connectionId;
+            }
             try{
                 CustomTCPConnection con = addressToConnections.get(peer).peek();
-                //channelHandlerMethods.onConnectionUp(con.inConnection,peer,con.type,con.conId,con.inputStream);
+                logger.info("Opening more than one connection to a connected peer when <always> open flag is false!");
+                channelHandlerMethods.onConnectionUp(con.inConnection,peer,con.type,con.conId,con.inputStream);
                 return con.conId;
             }catch (Exception e){};
         }

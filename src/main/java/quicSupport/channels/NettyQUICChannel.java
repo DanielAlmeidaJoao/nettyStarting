@@ -333,11 +333,13 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         if(singleConPerPeer){
             QUICConnectingOBJ connectingOBJ = connecting.get(peer);
             if(connectingOBJ!=null){
+                logger.info("Opening more than one connection to a connected peer when <always> open flag is false!");
                 return connectingOBJ.conId;
             }
             try{
                 CustomQUICStreamCon con = addressToQUICCons.get(peer).peek().getDefaultStream();
-                //overridenMethods.onConnectionUp(con.inConnection,peer,con.type,con.customStreamId,con.inputStream);
+                logger.info("Opening more than one connection to a connected peer when <always> open flag is false!");
+                overridenMethods.onConnectionUp(con.inConnection,peer,con.type,con.customStreamId,con.inputStream);
                 return con.customStreamId;
             }catch (Exception e){}
         }
