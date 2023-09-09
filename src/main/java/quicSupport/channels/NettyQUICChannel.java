@@ -460,22 +460,25 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     }
     protected void sendMessage(CustomQUICStreamCon streamChannel, BabelMessage message, InetSocketAddress peer){
         if(streamChannel.type!=STRUCTURED_MESSAGE){
-            throw new RuntimeException("WRONG MESSAGE. EXPECTED TYPE: "+STRUCTURED_MESSAGE+" VS RECEIVED TYPE: "+streamChannel.type);
+            Throwable t = new RuntimeException("WRONG MESSAGE. EXPECTED TYPE: "+STRUCTURED_MESSAGE+" VS RECEIVED TYPE: "+streamChannel.type);
+            overridenMethods.onMessageSent(message,t,peer,STRUCTURED_MESSAGE,streamChannel.customStreamId);
         }
         final String conID = streamChannel.customStreamId;
-        try{
-            ByteBuf buf = streamChannel.streamChannel.alloc().directBuffer();
-            buf = buf.writeInt(0).writeByte(APP_DATA);
-            serializer.serialize(message,buf);
-            final int len = buf.readableBytes();
-            buf.setInt(0,len-HEADER_LENGTH);
-            streamChannel.streamChannel.writeAndFlush(buf);
-            calcMetricsOnSend(streamChannel.customStreamId,len);
-            overridenMethods.onMessageSent(message,null,peer,STRUCTURED_MESSAGE,conID);
-        }catch (Exception e){
-            e.printStackTrace();
-            throw new RuntimeException("SERIALIZER WAS NOT SET");
-        }
+        streamChannel.streamChannel.eventLoop().execute(() -> {
+            try{
+                ByteBuf buf = streamChannel.streamChannel.alloc().directBuffer();
+                buf = buf.writeInt(0).writeByte(APP_DATA);
+                serializer.serialize(message,buf);
+                final int len = buf.readableBytes();
+                buf.setInt(0,len-HEADER_LENGTH);
+                streamChannel.streamChannel.writeAndFlush(buf);
+                calcMetricsOnSend(streamChannel.customStreamId,len);
+                overridenMethods.onMessageSent(message,null,peer,STRUCTURED_MESSAGE,conID);
+            }catch (Exception e){
+                e.printStackTrace();
+                throw new RuntimeException("SERIALIZER WAS NOT SET");
+            }
+        });
     }
     @Override
     public void sendStream(String customConId ,ByteBuf byteBuf,boolean flush){
@@ -483,32 +486,34 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         if(connection == null ){
             overridenMethods.onStreamDataSent(null,new byte[0], byteBuf.readableBytes(),new Throwable("Unknown Connection ID : "+customConId),null,TransmissionType.UNSTRUCTURED_STREAM,customConId);
         }else{
-            final int toSend = byteBuf.readableBytes();
-            if(flush){
-                connection.streamChannel.writeAndFlush(byteBuf);
-            }else{
-                connection.streamChannel.write(byteBuf);
-            }
-            calcMetricsOnSend(connection.customStreamId,toSend);
-            overridenMethods.onStreamDataSent(null,null,toSend,null,connection.customParentConnection.getRemote(),TransmissionType.UNSTRUCTURED_STREAM,customConId);
+            connection.streamChannel.eventLoop().execute(() -> {
+                final int toSend = byteBuf.readableBytes();
+                if(flush){
+                    connection.streamChannel.writeAndFlush(byteBuf);
+                }else{
+                    connection.streamChannel.write(byteBuf);
+                }
+                calcMetricsOnSend(connection.customStreamId,toSend);
+                overridenMethods.onStreamDataSent(null,null,toSend,null,connection.customParentConnection.getRemote(),TransmissionType.UNSTRUCTURED_STREAM,customConId);
+            });
         }
     }
     public void sendInputStream(String conId, InputStream inputStream, long len)  {
-        try {
-            CustomQUICStreamCon streamChannel = customStreamIdToStream.get(conId);
-            if(streamChannel==null){
-                overridenMethods.onStreamDataSent(inputStream,null,inputStream.available(),new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+conId),null,TransmissionType.UNSTRUCTURED_STREAM,null);
-                return;
-            }
-            InetSocketAddress peer = streamChannel.customParentConnection.getRemote();
-            if(streamChannel.type!=TransmissionType.UNSTRUCTURED_STREAM){
-                Throwable t = new Throwable("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
-                overridenMethods.onStreamDataSent(inputStream,null,inputStream.available(),t,peer,TransmissionType.UNSTRUCTURED_STREAM,null);
-                return;
-            }
+        CustomQUICStreamCon streamChannel = customStreamIdToStream.get(conId);
+        if(streamChannel==null){
+            overridenMethods.onStreamDataSent(inputStream,null,-1,new Throwable("FAILED TO SEND INPUTSTREAM. UNKNOWN PEER AND CONID: "+conId),null,TransmissionType.UNSTRUCTURED_STREAM,null);
+            return;
+        }
+        InetSocketAddress peer = streamChannel.customParentConnection.getRemote();
+        if(streamChannel.type!=TransmissionType.UNSTRUCTURED_STREAM){
+            Throwable t = new Throwable("INPUTSTREAM CAN ONLY BE SENT WITH UNSTRUCTURED STREAM TRANSMISSION TYPE");
+            overridenMethods.onStreamDataSent(inputStream,null,-1,t,peer,TransmissionType.UNSTRUCTURED_STREAM,null);
+            return;
+        }
+        streamChannel.streamChannel.eventLoop().execute(() -> {
             if(len<=0){
                 if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
-                streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.parent().eventLoop());
+                streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.eventLoop());
                 return;
             }
             if(streamChannel.streamChannel.pipeline().get("ChunkedWriteHandler")==null){
@@ -517,10 +522,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
             calcMetricsOnSend(conId,len);
             overridenMethods.onStreamDataSent(inputStream,null,len,null,peer,TransmissionType.UNSTRUCTURED_STREAM,conId);
-        }catch (Exception e){
-            e.printStackTrace();
-            overridenMethods.onStreamDataSent(inputStream,null,0,e.getCause(),null,TransmissionType.UNSTRUCTURED_STREAM,conId);
-        }
+        });
     }
 
     @Override

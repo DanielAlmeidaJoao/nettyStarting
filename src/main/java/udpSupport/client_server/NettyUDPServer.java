@@ -55,6 +55,8 @@ public class NettyUDPServer {
     private final Properties properties;
     private final SecureRandom random;
 
+    private final EventLoopGroup group;
+
 
 
     public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address, Properties properties){
@@ -70,12 +72,17 @@ public class NettyUDPServer {
         MAX_RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MAX_UDP_RETRANSMISSION_TIMEOUT,"0"));
         BUFFER_SIZE = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"66560"));
         random = RETRANSMISSION_TIMEOUT>0 ? getRandomInstance():null;
+        int serverThreads = FactoryMethods.serverThreads(properties);
+        group = TCPServerEntity.createNewWorkerGroup(serverThreads);
         try {
             channel = start();
         }catch (Exception e){
             e.printStackTrace();
             throw new RuntimeException("UDP LISTENER COULD NOT START!");
         }
+    }
+    public EventLoop getLoop(){
+        return group.next();
     }
     public void onAckReceived(long msgId, InetSocketAddress sender){
         UDPWaitForAckWrapper timeMillis = waitingForAcks.remove(msgId);
@@ -141,10 +148,8 @@ public class NettyUDPServer {
         return Epoll.isAvailable() ? EpollDatagramChannel.class:NioDatagramChannel.class;
     }
     private Channel start() throws Exception{
-        int serverThreads = FactoryMethods.serverThreads(properties);
         OnAckFunction onAckReceived = this::onAckReceived;
         Channel server;
-        EventLoopGroup group = TCPServerEntity.createNewWorkerGroup(serverThreads);
         Bootstrap b = new Bootstrap();
         b.group(group)
                 .channel(socketChannel())

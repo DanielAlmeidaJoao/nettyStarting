@@ -59,20 +59,17 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
         return metrics!=null;
     }
     public void sendMessage(BabelMessage message, InetSocketAddress dest){
-        try{
-            /**
-             * buf.writeByte(UDPLogics.SINGLE_MESSAGE);
-             * buf.writeLong(messageId);
-             * buf.writeBytes(message,0, len);
-             */
-            ByteBuf buf = udpServer.alloc().writeByte(0).writeLong(0);
-            serializer.serialize(message,buf);
-            udpServer.sendMessage(buf,dest);
-            messageSentHandler(true,null,message,dest);
-        }catch (Exception e){
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+        udpServer.getLoop().execute(() -> {
+            try{
+                ByteBuf buf = udpServer.alloc().writeByte(0).writeLong(0);
+                serializer.serialize(message,buf);
+                udpServer.sendMessage(buf,dest);
+                messageSentHandler(true,null,message,dest);
+            }catch (Exception e){
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        });
     }
     public InetSocketAddress getSelf(){
         return self;
