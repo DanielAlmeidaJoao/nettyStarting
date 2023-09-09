@@ -57,6 +57,7 @@ public class TCPChannelUtils {
         channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
         channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
         channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"0");
+        //channelProps.setProperty(TCPChannelUtils.BUFF_ALOC_SIZE, QUICLogics.NEW_B_SIZE+"");
         //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
 

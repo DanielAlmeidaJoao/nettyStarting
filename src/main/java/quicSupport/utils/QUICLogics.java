@@ -1,7 +1,6 @@
 package quicSupport.utils;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.*;
 import io.netty.incubator.codec.quic.QuicCodecBuilder;
 import io.netty.incubator.codec.quic.QuicCongestionControlAlgorithm;
 import org.apache.commons.codec.binary.Hex;
@@ -61,6 +60,9 @@ public class QUICLogics {
     public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "QUIC_CLIENT_KEYSTORE_PASSWORD";
     public static final String CLIENT_KEYSTORE_ALIAS_KEY = "QUIC_CLIENT_KEYSTORE_ALIAS_KEY";
 
+    public static final String MAX_UDP_RCV_SND_PAYLOD_SIZE = "MAXUDPPAYLOAD";
+
+
     public static ByteBuf bufToWrite(ByteBuf data, byte msgCode, ByteBufAllocator alloc){
         //return new DelimitedMessageWrapper(len,data,msgCode);
         ByteBuf buf = alloc.directBuffer(data.readableBytes()+1);
@@ -82,7 +84,9 @@ public class QUICLogics {
     public static boolean sameAddress(InetSocketAddress address, InetSocketAddress socketAddress){
         return address.getHostName().equals(socketAddress.getHostName())&&address.getPort()==socketAddress.getPort();
     }
+    public static final String NEW_B_SIZE = "65536"; //1024*64
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
+        int payloadSize = Integer.parseInt((String) properties.getOrDefault(MAX_UDP_RCV_SND_PAYLOD_SIZE,NEW_B_SIZE));
         return codecBuilder
                 .maxIdleTimeout(Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+"")) , TimeUnit.SECONDS)
                 .initialMaxData(Long.parseLong(properties.getProperty(INITIAL_MAX_DATA,initialMaxData)))
@@ -92,7 +96,8 @@ public class QUICLogics {
                 .initialMaxStreamsUnidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_UNIDIRECTIONAL,initialMaxStreamsUnidirectional)))
                 .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MILLISECONDS)
                 //.activeMigration(true);
-                .maxRecvUdpPayloadSize(1024*1024).maxSendUdpPayloadSize(1024*1024)
+                //.sslTaskExecutor(ImmediateExecutor.INSTANCE)
+                .maxRecvUdpPayloadSize(payloadSize).maxSendUdpPayloadSize(payloadSize)
                 .congestionControlAlgorithm(QuicCongestionControlAlgorithm.RENO)
                 .hystart(true);
     }
@@ -140,5 +145,44 @@ public class QUICLogics {
         int comp = one.compareTo(two);
         //System.out.println(self.getPort()+" COMP "+other.getPort()+" "+comp);
         return comp;
+    }
+    public static ByteBufAllocator getAllocator(boolean directBuffer) {
+        if (directBuffer) {
+            return new UnpooledByteBufAllocator(true);
+        } else {
+            // Force usage of heap buffers and also ensure memoryAddress() is not not supported.
+            return new AbstractByteBufAllocator(false) {
+
+                @Override
+                public ByteBuf ioBuffer() {
+                    return heapBuffer();
+                }
+
+                @Override
+                public ByteBuf ioBuffer(int initialCapacity) {
+                    return heapBuffer(initialCapacity);
+                }
+
+                @Override
+                public ByteBuf ioBuffer(int initialCapacity, int maxCapacity) {
+                    return heapBuffer(initialCapacity, maxCapacity);
+                }
+
+                @Override
+                protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
+                    return new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
+                }
+
+                @Override
+                protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
+                    return new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity);
+                }
+
+                @Override
+                public boolean isDirectBufferPooled() {
+                    return false;
+                }
+            };
+        }
     }
 }

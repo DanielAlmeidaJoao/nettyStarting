@@ -401,6 +401,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
                     .addListener(future -> {
                         if(future.isSuccess() ){
                             QuicStreamChannel streamChannel = (QuicStreamChannel) future.getNow();
+                            streamChannel.config().setAllocator(QUICClientEntity.getAllocator());
                             streamChannel.writeAndFlush(QUICLogics.bufToWrite(type.ordinal(),destProto,STREAM_CREATED,streamChannel.alloc()))
                                     .addListener(future1 -> {
                                         if(future.isSuccess()){

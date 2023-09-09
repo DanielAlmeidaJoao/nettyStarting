@@ -10,6 +10,7 @@ import io.netty.util.AttributeKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
+import quicSupport.client_server.QUICClientEntity;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
@@ -43,6 +44,8 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
                 .createStream(QuicStreamType.BIDIRECTIONAL, new QuicStreamInboundHandler(consumer, customConId, QUICLogics.OUTGOING_CONNECTION))
                 .sync()
                 .getNow();
+        streamChannel.config().setAllocator(QUICClientEntity.getAllocator());
+
         final QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(),transmissionType,destProto);
         byte [] hs = TCPChannelUtils.g.toJson(handShakeMessage).getBytes();
         ByteBuf byteBuf = ctx.alloc().directBuffer(hs.length+1);

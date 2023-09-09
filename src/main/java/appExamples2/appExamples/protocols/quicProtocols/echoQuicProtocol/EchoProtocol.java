@@ -161,9 +161,9 @@ public class EchoProtocol extends GenericProtocolExtension {
         try{
             Host host = new Host(myself.getAddress(),Integer.parseInt(port));
             if("M".equalsIgnoreCase(type)){
-                System.out.println("OPENNED MESSAGE CONNECTION "+ openMessageConnection(host));
+                System.out.println("OPENNED MESSAGE CONNECTION "+ openMessageConnectionEvenIfItsConnected(host,channelId));
             }else {
-                System.out.println("OPENNED STREAM CONNECTION"+openStreamConnection(host,channelId));
+                System.out.println("OPENNED STREAM CONNECTION"+openStreamConnectionEvenIfItsConnected(host,channelId));
             }
         }catch (Exception e){
             System.out.println(e.getMessage());
