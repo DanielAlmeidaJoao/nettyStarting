@@ -43,9 +43,9 @@ public class TCPServerEntity implements ServerInterface{
 
     public void startServer()
             throws Exception{
-        EventLoopGroup parent = createNewWorkerGroup(1);
+        //EventLoopGroup parent = createNewWorkerGroup(1);
         ServerBootstrap b = new ServerBootstrap();
-        b.group(parent,childrenGroup).channel(socketChannel())
+        b.group(childrenGroup).channel(socketChannel())
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childOption(ChannelOption.TCP_NODELAY, true)
@@ -64,7 +64,7 @@ public class TCPServerEntity implements ServerInterface{
         serverChannel = f.channel();
         serverChannel.closeFuture().addListener(future -> {
             childrenGroup.shutdownGracefully().getNow();
-            parent.shutdownGracefully().getNow();
+            //parent.shutdownGracefully().getNow();
             //childGroup.shutdownGracefully().getNow();
             logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });
