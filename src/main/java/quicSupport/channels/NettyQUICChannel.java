@@ -2,6 +2,7 @@ package quicSupport.channels;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.EventLoopGroup;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.incubator.codec.quic.QuicStreamChannel;
@@ -26,6 +27,7 @@ import quicSupport.utils.entities.QUICConnectingOBJ;
 import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
+import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.connectionSetups.ClientInterface;
 import tcpSupport.tcpChannelAPI.connectionSetups.DummyClient;
 import tcpSupport.tcpChannelAPI.connectionSetups.DummyServer;
@@ -76,6 +78,8 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
     private final BabelMessageSerializer serializer;
 
+    private final EventLoopGroup group;
+
     private final NetworkRole networkRole;
 
     public NettyQUICChannel(Properties properties, boolean singleThreaded, NetworkRole networkRole, ChannelHandlerMethods mom, BabelMessageSerializer serializer)throws IOException {
@@ -120,6 +124,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }else{
             client = new DummyClient();
         }
+        group = NettyTCPChannel.setGroup(client,server,networkRole);
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
         singleConnectionPerPeer = properties.getProperty(TCPChannelUtils.SINGLE_CON_PER_PEER)!=null;
 
@@ -464,7 +469,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             overridenMethods.onMessageSent(message,t,peer,STRUCTURED_MESSAGE,streamChannel.customStreamId);
         }
         final String conID = streamChannel.customStreamId;
-        streamChannel.streamChannel.eventLoop().execute(() -> {
+        group.next().execute(() -> {
             try{
                 ByteBuf buf = streamChannel.streamChannel.alloc().directBuffer();
                 buf = buf.writeInt(0).writeByte(APP_DATA);
@@ -486,7 +491,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         if(connection == null ){
             overridenMethods.onStreamDataSent(null,new byte[0], byteBuf.readableBytes(),new Throwable("Unknown Connection ID : "+customConId),null,TransmissionType.UNSTRUCTURED_STREAM,customConId);
         }else{
-            connection.streamChannel.eventLoop().execute(() -> {
+            group.next().execute(() -> {
                 final int toSend = byteBuf.readableBytes();
                 if(flush){
                     connection.streamChannel.writeAndFlush(byteBuf);
@@ -510,7 +515,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             overridenMethods.onStreamDataSent(inputStream,null,-1,t,peer,TransmissionType.UNSTRUCTURED_STREAM,null);
             return;
         }
-        streamChannel.streamChannel.eventLoop().execute(() -> {
+        group.next().execute(() -> {
             if(len<=0){
                 if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
                 streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.eventLoop());

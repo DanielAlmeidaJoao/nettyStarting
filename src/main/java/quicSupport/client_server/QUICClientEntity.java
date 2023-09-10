@@ -130,4 +130,9 @@ public final class QUICClientEntity implements ClientInterface {
     public void shutDown(){
         group.shutdownGracefully();
     }
+
+    @Override
+    public EventLoopGroup getEventLoopGroup() {
+        return group;
+    }
 }

@@ -44,7 +44,7 @@ public final class QUICServerEntity implements ServerInterface {
     private final Properties properties;
 
     private Channel quicChannel;
-    private EventLoopGroup group;
+    private final EventLoopGroup group;
     //private static final Logger logger = LogManager.getLogger(QUICServerEntity.class);
 
     public QUICServerEntity(String host, int port, CustomQuicChannelConsumer consumer, Properties properties) {
@@ -52,6 +52,11 @@ public final class QUICServerEntity implements ServerInterface {
         self = new InetSocketAddress(host,port);
         this.properties=properties;
         quicChannel =null;
+        int serverThreads = FactoryMethods.serverThreads(properties);
+        group = TCPServerEntity.createNewWorkerGroup(serverThreads);
+    }
+    public EventLoopGroup getEventLoopGroup(){
+        return group;
     }
     private TrustManagerFactory clientTrustManager() throws Exception {
         String keystoreFilename = properties.getProperty(QUICLogics.CLIENT_KEYSTORE_FILE_KEY);
@@ -95,8 +100,6 @@ public final class QUICServerEntity implements ServerInterface {
     public void startServer() throws Exception {
         ByteBufAllocator allocator = QUICClientEntity.getAllocator();
         QuicSslContext context = getSignedSslContext();
-        int serverThreads = FactoryMethods.serverThreads(properties);
-        group = TCPServerEntity.createNewWorkerGroup(serverThreads);
         final int bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,QUICLogics.NEW_B_SIZE));
         ChannelHandler codec = getChannelHandler(context,bufferSize);
         Bootstrap bs = new Bootstrap();

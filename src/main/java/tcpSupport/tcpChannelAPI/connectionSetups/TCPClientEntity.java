@@ -82,4 +82,9 @@ public class TCPClientEntity implements ClientInterface{
         group.shutdownGracefully();
     }
 
+    @Override
+    public EventLoopGroup getEventLoopGroup() {
+        return group;
+    }
+
 }

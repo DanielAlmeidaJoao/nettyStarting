@@ -31,20 +31,21 @@ public class TCPServerEntity implements ServerInterface{
     private Channel serverChannel;
     private final StreamingNettyConsumer consumer;
     private Properties properties;
+    private EventLoopGroup parentGroup;
     public TCPServerEntity(String hostName, int port, StreamingNettyConsumer consumer, Properties properties) {
         this.port = port;
         this.hostName = hostName;
         this.consumer = consumer;
         this.properties = properties;
+        int serverThreads = FactoryMethods.serverThreads(properties);
+        this.parentGroup = createNewWorkerGroup(serverThreads);
     }
 
     public void startServer()
             throws Exception{
-        int serverThreads = FactoryMethods.serverThreads(properties);
-        EventLoopGroup parentGroup = createNewWorkerGroup(1);
-        EventLoopGroup childGroup = createNewWorkerGroup(serverThreads);
+        //EventLoopGroup childGroup = createNewWorkerGroup(serverThreads);
         ServerBootstrap b = new ServerBootstrap();
-        b.group(parentGroup,childGroup).channel(socketChannel())
+        b.group(parentGroup).channel(socketChannel())
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childOption(ChannelOption.TCP_NODELAY, true)
@@ -63,13 +64,18 @@ public class TCPServerEntity implements ServerInterface{
         serverChannel = f.channel();
         serverChannel.closeFuture().addListener(future -> {
             parentGroup.shutdownGracefully().getNow();
-            childGroup.shutdownGracefully().getNow();
+            //childGroup.shutdownGracefully().getNow();
             logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });
     }
     public void shutDown(){
         serverChannel.close();
         serverChannel.disconnect();
+    }
+
+    @Override
+    public EventLoopGroup getEventLoopGroup() {
+        return parentGroup;
     }
 
     public <T> void updateConfiguration(ChannelOption<T> option, T value) {

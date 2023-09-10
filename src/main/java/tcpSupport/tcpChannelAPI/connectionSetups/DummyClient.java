@@ -1,5 +1,6 @@
 package tcpSupport.tcpChannelAPI.connectionSetups;
 
+import io.netty.channel.EventLoopGroup;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.utils.enums.TransmissionType;
@@ -16,4 +17,9 @@ public class DummyClient implements ClientInterface{
 
     @Override
     public void shutDown() {}
+
+    @Override
+    public EventLoopGroup getEventLoopGroup() {
+        return null;
+    }
 }

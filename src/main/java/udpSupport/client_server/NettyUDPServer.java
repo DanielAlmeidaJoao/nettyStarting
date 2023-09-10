@@ -95,10 +95,11 @@ public class NettyUDPServer {
     private void scheduleRetransmission(ByteBuf packet, long msgId, InetSocketAddress dest, int count){
         //NO RETRANSMISSION
         if(MAX_SEND_RETRIES <= 0){
+            packet.release();
             return;
         }
         UDPWaitForAckWrapper udpWaitForAckWrapper = waitingForAcks.get(msgId);
-        ScheduledFuture scheduledFuture = channel.eventLoop().schedule(() -> {
+        ScheduledFuture scheduledFuture = group.next().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) {
                 packet.release();
                 return;

@@ -148,7 +148,7 @@ public class QUICLogics {
     }
     public static ByteBufAllocator getAllocator(boolean directBuffer) {
         if (directBuffer) {
-            return new UnpooledByteBufAllocator(true);
+            return new PooledByteBufAllocator(true);
         } else {
             // Force usage of heap buffers and also ensure memoryAddress() is not not supported.
             return new AbstractByteBufAllocator(false) {

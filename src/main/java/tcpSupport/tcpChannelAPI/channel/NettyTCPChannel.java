@@ -3,6 +3,7 @@ package tcpSupport.tcpChannelAPI.channel;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.FileRegion;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
@@ -65,6 +66,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     public final NetworkRole networkRole;
 
     private final BabelMessageSerializer serializer;
+    private final EventLoopGroup serverParentGroup;
 
     public NettyTCPChannel(Properties properties, boolean singleThreaded, ChannelHandlerMethods chm, NetworkRole networkRole, BabelMessageSerializer serializer)throws IOException{
         InetAddress addr;
@@ -87,6 +89,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         nettyIdTOConnectingOBJ = TCPChannelUtils.getMapInst(singleThreaded);
         customIdToConnection = TCPChannelUtils.getMapInst(singleThreaded);
         this.networkRole = networkRole;
+
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.SERVER==networkRole){
             server = new TCPServerEntity(addr.getHostName(),port,this,properties);
             try{
@@ -105,7 +108,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }else{
             client=new DummyClient();
         }
-
+        serverParentGroup = setGroup(client,server, networkRole);
         connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
         singleConnectionPerPeer = properties.getProperty(TCPChannelUtils.SINGLE_CON_PER_PEER)!=null;
         this.channelHandlerMethods = chm;
@@ -113,6 +116,13 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         this.properties = properties;
     }
 
+    public static EventLoopGroup setGroup(ClientInterface client, ServerInterface server, NetworkRole networkRole){
+        if(NetworkRole.SERVER==networkRole||NetworkRole.P2P_CHANNEL==networkRole){
+            return server.getEventLoopGroup();
+        }else{
+            return client.getEventLoopGroup();
+        }
+    }
     /******************************************* CHANNEL EVENTS ****************************************************/
     public  void onChannelInactive(String channelId){
         channelInactiveLogics(channelId);
@@ -289,8 +299,9 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             metricsManager.calcMetricsOnSend(true,connectionId,length);
         }
     }
+
     private void sendAux(BabelMessage message, CustomTCPConnection connection){
-        connection.channel.eventLoop().execute(() -> {
+        serverParentGroup.next().execute(() -> {
             try{
                 if(connection.type== STRUCTURED_MESSAGE){
 
@@ -319,7 +330,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         if(connection == null ){
             channelHandlerMethods.onStreamDataSent(null,new byte[0],byteBuf.readableBytes(),new Throwable("Unknown Connection ID : "+customConId),null,TransmissionType.UNSTRUCTURED_STREAM,customConId);
         }else{
-            connection.channel.eventLoop().execute(() -> {
+            serverParentGroup.next().execute(() -> {
                 final int toSend = byteBuf.readableBytes();
                 //ChannelFuture f;
                 if(flush){
@@ -355,10 +366,10 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             channelHandlerMethods.onStreamDataSent(inputStream,null,-1,t,idConnection.host, STRUCTURED_MESSAGE,conId);
             return;
         }
-        idConnection.channel.eventLoop().execute(() -> {
+        serverParentGroup.next().execute(() -> {
             if(len<=0){
                 if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
-                streamContinuoslyLogics.addToStreams(inputStream,idConnection.conId,idConnection.channel.eventLoop());
+                streamContinuoslyLogics.addToStreams(inputStream,idConnection.conId,serverParentGroup.next());
                 return;
             }
             if( properties.getProperty(NOT_ZERO_COPY) == null && inputStream instanceof FileInputStream){

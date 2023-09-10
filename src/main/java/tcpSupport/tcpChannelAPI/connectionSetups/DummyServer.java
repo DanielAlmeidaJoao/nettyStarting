@@ -1,5 +1,6 @@
 package tcpSupport.tcpChannelAPI.connectionSetups;
 
+import io.netty.channel.EventLoopGroup;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,4 +15,9 @@ public class DummyServer implements ServerInterface{
 
     @Override
     public void shutDown() {}
+
+    @Override
+    public EventLoopGroup getEventLoopGroup() {
+        return null;
+    }
 }
