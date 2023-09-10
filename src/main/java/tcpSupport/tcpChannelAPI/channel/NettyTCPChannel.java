@@ -66,7 +66,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     public final NetworkRole networkRole;
 
     private final BabelMessageSerializer serializer;
-    private final EventLoopGroup serverParentGroup;
+    //private final EventLoopGroup serverParentGroup;
 
     public NettyTCPChannel(Properties properties, boolean singleThreaded, ChannelHandlerMethods chm, NetworkRole networkRole, BabelMessageSerializer serializer)throws IOException{
         InetAddress addr;
@@ -108,7 +108,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }else{
             client=new DummyClient();
         }
-        serverParentGroup = setGroup(client,server, networkRole);
+        //serverParentGroup = setGroup(client,server, networkRole);
         connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
         singleConnectionPerPeer = properties.getProperty(TCPChannelUtils.SINGLE_CON_PER_PEER)!=null;
         this.channelHandlerMethods = chm;
@@ -301,7 +301,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     }
 
     private void sendAux(BabelMessage message, CustomTCPConnection connection){
-        serverParentGroup.next().execute(() -> {
+        connection.channel.eventLoop().execute(() -> {
             try{
                 if(connection.type== STRUCTURED_MESSAGE){
 
@@ -330,7 +330,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         if(connection == null ){
             channelHandlerMethods.onStreamDataSent(null,new byte[0],byteBuf.readableBytes(),new Throwable("Unknown Connection ID : "+customConId),null,TransmissionType.UNSTRUCTURED_STREAM,customConId);
         }else{
-            serverParentGroup.next().execute(() -> {
+            connection.channel.eventLoop().execute(() -> {
                 final int toSend = byteBuf.readableBytes();
                 //ChannelFuture f;
                 if(flush){
@@ -366,10 +366,10 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             channelHandlerMethods.onStreamDataSent(inputStream,null,-1,t,idConnection.host, STRUCTURED_MESSAGE,conId);
             return;
         }
-        serverParentGroup.next().execute(() -> {
+        idConnection.channel.eventLoop().execute(() -> {
             if(len<=0){
                 if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
-                streamContinuoslyLogics.addToStreams(inputStream,idConnection.conId,serverParentGroup.next());
+                streamContinuoslyLogics.addToStreams(inputStream,idConnection.conId,idConnection.channel.eventLoop().parent().next());
                 return;
             }
             if( properties.getProperty(NOT_ZERO_COPY) == null && inputStream instanceof FileInputStream){
