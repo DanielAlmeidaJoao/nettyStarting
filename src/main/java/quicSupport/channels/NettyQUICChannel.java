@@ -70,7 +70,6 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private final ConnectionProtocolMetricsManager metrics;
     private static int heartBeatTimeout;
     private final boolean connectIfNotConnected;
-    private final boolean singleConnectionPerPeer;
 
     private final ChannelHandlerMethods overridenMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
@@ -124,8 +123,6 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }
         //group = NettyTCPChannel.setGroup(client,server,networkRole);
         connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
-        singleConnectionPerPeer = properties.getProperty(TCPChannelUtils.SINGLE_CON_PER_PEER)!=null;
-
         streamContinuoslyLogics = null;
     }
     public InetSocketAddress getSelf(){

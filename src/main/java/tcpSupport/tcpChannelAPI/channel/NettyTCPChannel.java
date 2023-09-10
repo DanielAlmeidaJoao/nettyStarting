@@ -45,7 +45,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     public final static String ADDRESS_KEY = "address";
     public final static String PORT_KEY = "port";
 
-    public final static String NOT_ZERO_COPY = "NOT_ZERO_COPY";
+    public final static String NOT_ZERO_COPY = "notZeroCopy";
 
     public final static String DEFAULT_PORT = "8574";
     private final Map<String, CustomTCPConnection> nettyIdToConnection;
@@ -56,7 +56,6 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     private final ClientInterface client;
     private final ConnectionProtocolMetricsManager metricsManager;
     private final boolean connectIfNotConnected;
-    private final boolean singleConnectionPerPeer;
     private final ChannelHandlerMethods channelHandlerMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
     private Properties properties;
@@ -107,7 +106,6 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }
         //serverParentGroup = setGroup(client,server, networkRole);
         connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
-        singleConnectionPerPeer = properties.getProperty(TCPChannelUtils.SINGLE_CON_PER_PEER)!=null;
         this.channelHandlerMethods = chm;
         streamContinuoslyLogics = null;
         this.properties = properties;

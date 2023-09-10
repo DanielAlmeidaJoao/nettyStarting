@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.pipeline.TCPCustomHandshakeHandler;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
@@ -39,13 +40,22 @@ public class TCPServerEntity implements ServerInterface{
         this.properties = properties;
         int serverThreads = FactoryMethods.serverThreads(properties);
         this.childrenGroup = createNewWorkerGroup(serverThreads);
+        logger.debug("Using {} server threads",serverThreads);
     }
 
     public void startServer()
             throws Exception{
-        //EventLoopGroup parent = createNewWorkerGroup(1);
         ServerBootstrap b = new ServerBootstrap();
-        b.group(childrenGroup).channel(socketChannel())
+        final EventLoopGroup parent;
+        if(properties.getProperty(TCPChannelUtils.useBossThreadTCP)!=null){
+            parent = createNewWorkerGroup(1);
+            b.group(parent,childrenGroup);
+            logger.debug("Using boss EventLoopGroup");
+        }else{
+            parent=null;
+            b = b.group(childrenGroup);
+        }
+        b.channel(socketChannel())
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childOption(ChannelOption.TCP_NODELAY, true)
@@ -63,8 +73,10 @@ public class TCPServerEntity implements ServerInterface{
         );
         serverChannel = f.channel();
         serverChannel.closeFuture().addListener(future -> {
+            if(parent !=null){
+                parent.shutdownGracefully().getNow();
+            }
             childrenGroup.shutdownGracefully().getNow();
-            //parent.shutdownGracefully().getNow();
             //childGroup.shutdownGracefully().getNow();
             logger.debug("Server socket closed. " + (future.isSuccess() ? "" : "Cause: " + future.cause()));
         });

@@ -4,9 +4,9 @@ import java.util.Properties;
 
 public class FactoryMethods {
 
-    public final static String SINGLE_THREADED_PROP="SINGLE_THREADED";
-    public final static String SERVER_THREADS = "SERVER_THREADS";
-    public final static String CLIENT_THREADS = "CLIENT_THREADS";
+    public final static String SINGLE_THREADED_PROP="singleThreaded";
+    public final static String SERVER_THREADS = "serverThreads";
+    public final static String CLIENT_THREADS = "clientThreads";
 
 
     public static int serverThreads(Properties properties){

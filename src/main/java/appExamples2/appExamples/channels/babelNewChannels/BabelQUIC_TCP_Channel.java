@@ -25,6 +25,7 @@ import tcpSupport.tcpChannelAPI.channel.SingleThreadedNettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.io.IOException;
@@ -37,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods {
     private final Logger logger;
     public final boolean metrics;
-    public final static String METRICS_INTERVAL_KEY = "metrics_interval";
     public final static String DEFAULT_METRICS_INTERVAL = "10000";
     public final static String TRIGGER_SENT_KEY = "trigger_sent";
 
@@ -56,8 +56,8 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
         nettyChannelInterface = getQUIC_TCP(properties,networkProtocol,networkRole);
         metrics = nettyChannelInterface.enabledMetrics();
 
-        if(metrics && properties.getProperty(METRICS_INTERVAL_KEY)!=null){
-            int metricsInterval = Integer.parseInt(properties.getProperty(METRICS_INTERVAL_KEY));
+        if(metrics && properties.getProperty(TCPChannelUtils.METRICS_INTERVAL_KEY)!=null){
+            int metricsInterval = Integer.parseInt(properties.getProperty(TCPChannelUtils.METRICS_INTERVAL_KEY));
             new DefaultEventExecutor().scheduleAtFixedRate(this::triggerMetricsEvent, metricsInterval, metricsInterval, TimeUnit.SECONDS);
         }
         this.triggerSent = Boolean.parseBoolean(properties.getProperty(TRIGGER_SENT_KEY, "false"));
