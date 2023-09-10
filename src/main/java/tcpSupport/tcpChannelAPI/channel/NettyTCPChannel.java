@@ -1,10 +1,7 @@
 package tcpSupport.tcpChannelAPI.channel;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.DefaultFileRegion;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.FileRegion;
+import io.netty.channel.*;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AttributeKey;
@@ -309,12 +306,13 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
                     serializer.serialize(message,byteBuf);
                     final int len = byteBuf.readableBytes();
                     byteBuf.setInt(0,len-Integer.BYTES);
-                    connection.channel.writeAndFlush(byteBuf);
-                    calcMetricsOnSend(connection.conId,len);
-                    channelHandlerMethods.onMessageSent(message,null,connection.host,STRUCTURED_MESSAGE,connection.conId);
-                    /**
+                    ChannelFuture f = connection.channel.writeAndFlush(byteBuf);
                     f.addListener(future -> {
-                        });**/
+                        if(future.isSuccess()){
+                            calcMetricsOnSend(connection.conId,len);
+                        }
+                        channelHandlerMethods.onMessageSent(message,future.cause(),connection.host,STRUCTURED_MESSAGE,connection.conId);
+                    });
                 }else{
                     channelHandlerMethods.onMessageSent(message,new Throwable("CONNECTION DATA TYPE IS "+connection.type+" AND EXPECTING "+ STRUCTURED_MESSAGE+" DATA TYPE"),connection.host, STRUCTURED_MESSAGE,connection.conId);
                 }

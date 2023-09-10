@@ -10,10 +10,7 @@ import appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel.UDPMet
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.FileBytesCarrier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.channels.events.OnChannelError;
-import pt.unl.fct.di.novasys.babel.channels.events.OnMessageConnectionUpEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
-import pt.unl.fct.di.novasys.babel.channels.events.OnStreamDataSentEvent;
+import pt.unl.fct.di.novasys.babel.channels.events.*;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
@@ -122,6 +119,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
             registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerChannelEventHandler(channelId, UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
+            registerChannelEventHandler(channelId, OnConnectionDownEvent.EVENT_ID, this::uponConnectionDown);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
@@ -141,6 +139,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         //logger.info("OPENING CONNECTION TO {}",myself);
         //EchoMessage message = new EchoMessage(myself,"OLA BABEL SUPPORTING QUIC PORRAS!!!");
         //sendMessage(message,myself);
+    }
+    private void uponConnectionDown(OnConnectionDownEvent event, int channelId) {
+        logger.info("CONNECTION DOWN: {} {} {}",event.connectionId,event.getNode(),event.type);
     }
     private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");
