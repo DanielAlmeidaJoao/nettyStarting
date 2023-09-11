@@ -22,8 +22,6 @@ public class QUICLogics {
     public final static byte KEEP_ALIVE = 'C';
     public final static byte STREAM_CREATED = 'D';
 
-    public final static String ADDRESS_KEY = "address";
-    public final static String PORT_KEY = "port";
     public final static String idleTimeoutPercentageHB ="idleTimeoutPercentageHB";
     public static final String MAX_IDLE_TIMEOUT_IN_SECONDS = "maxIdleTimeoutInSeconds";
     public static final String INITIAL_MAX_DATA = "initialMaxData";

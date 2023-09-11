@@ -3,7 +3,6 @@ package tcpSupport.tcpChannelAPI.utils;
 import com.google.gson.Gson;
 import io.netty.channel.Channel;
 import quicSupport.utils.QUICLogics;
-import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +34,8 @@ public class TCPChannelUtils {
     public final static String SERVER_THREADS = "serverThreads";
     public final static String CLIENT_THREADS = "clientThreads";
 
+    public final static String ADDRESS_KEY = "address";
+    public final static String PORT_KEY = "port";
 
 
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
@@ -47,8 +48,8 @@ public class TCPChannelUtils {
 
     public static Properties quicChannelProperty(String address, String port){
         Properties channelProps = new Properties();
-        channelProps.setProperty(QUICLogics.ADDRESS_KEY,address);
-        channelProps.setProperty(QUICLogics.PORT_KEY,port);
+        channelProps.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
+        channelProps.setProperty(TCPChannelUtils.PORT_KEY,port);
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
@@ -74,8 +75,8 @@ public class TCPChannelUtils {
 
     public static Properties tcpChannelProperties(String address, String port){
         Properties channelProps = new Properties();
-        channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
-        channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
+        channelProps.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
+        channelProps.setProperty(TCPChannelUtils.PORT_KEY,port);
         //channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
         //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
@@ -88,9 +89,8 @@ public class TCPChannelUtils {
     }
     public static Properties udpChannelProperties(String address, String port){
         Properties properties = new Properties();
-        properties.setProperty("UDP_address",address);
-        //properties.setProperty("UDP_metrics","on");
-        properties.setProperty("UDP_port",port);
+        properties.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
+        properties.setProperty(TCPChannelUtils.PORT_KEY,port);
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MIN_UDP_RETRANSMISSION_TIMEOUT,"200");
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_UDP_RETRANSMISSION_TIMEOUT,"100");
 

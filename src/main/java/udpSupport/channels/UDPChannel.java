@@ -23,9 +23,6 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     private static final Logger logger = LogManager.getLogger(UDPChannel.class);
     public final static String NAME = "UDP_CHANNEL";
 
-    public final static String ADDRESS_KEY = "address";
-    public final static String PORT_KEY = "port";
-
     public final static String DEFAULT_PORT = "8579";
     private final NettyUDPServer udpServer;
     private ChannelStats metrics;
@@ -35,13 +32,13 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
 
     public UDPChannel(Properties properties, boolean singleThreaded, UDPChannelHandlerMethods consumer, BabelMessageSerializer serializer) throws IOException {
         InetAddress addr;
-        if (properties.containsKey(ADDRESS_KEY))
-            addr = Inet4Address.getByName(properties.getProperty(ADDRESS_KEY));
+        if (properties.containsKey(TCPChannelUtils.ADDRESS_KEY))
+            addr = Inet4Address.getByName(properties.getProperty(TCPChannelUtils.ADDRESS_KEY));
             //addr = Inet4Address.getByName("0.0.0.0");
         else
             throw new IllegalArgumentException(NAME + " requires binding address");
         this.serializer = serializer;
-        int port = Integer.parseInt(properties.getProperty(PORT_KEY, DEFAULT_PORT));
+        int port = Integer.parseInt(properties.getProperty(TCPChannelUtils.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
         if( properties.getProperty(TCPChannelUtils.CHANNEL_METRICS)!=null){
             metrics = new ChannelStats(singleThreaded);
@@ -59,17 +56,15 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
         return metrics!=null;
     }
     public void sendMessage(BabelMessage message, InetSocketAddress dest){
-        udpServer.getLoop().execute(() -> {
-            try{
-                ByteBuf buf = udpServer.alloc().writeByte(0).writeLong(0);
-                serializer.serialize(message,buf);
-                udpServer.sendMessage(buf,dest);
-                messageSentHandler(true,null,message,dest);
-            }catch (Exception e){
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        });
+        try{
+            ByteBuf buf = udpServer.alloc().writeByte(0).writeLong(0);
+            serializer.serialize(message,buf);
+            udpServer.sendMessage(buf,dest);
+            messageSentHandler(true,null,message,dest);
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
     public InetSocketAddress getSelf(){
         return self;
