@@ -115,14 +115,14 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.CLIENT==networkRole){
             if(NetworkRole.CLIENT==networkRole){
-                properties.remove(CONNECT_ON_SEND);
+                properties.remove(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP);
             }
             client = new QUICClientEntity(self,this,properties);
         }else{
             client = new DummyClient();
         }
         //group = NettyTCPChannel.setGroup(client,server,networkRole);
-        connectIfNotConnected = properties.getProperty(CONNECT_ON_SEND)!=null;
+        connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
         streamContinuoslyLogics = null;
     }
     public InetSocketAddress getSelf(){
