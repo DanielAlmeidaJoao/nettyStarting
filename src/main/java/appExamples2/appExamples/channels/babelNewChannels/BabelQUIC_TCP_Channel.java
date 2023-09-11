@@ -1,6 +1,5 @@
 package appExamples2.appExamples.channels.babelNewChannels;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import io.netty.util.concurrent.DefaultEventExecutor;
@@ -68,7 +67,7 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
     private NettyChannelInterface getQUIC_TCP(Properties properties, NetworkProtocol protocol,NetworkRole networkRole) throws IOException {
         NettyChannelInterface i;
         if(NetworkProtocol.QUIC==protocol){
-            if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
+            if(properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null){
                 i = new SingleThreadedQuicChannel(properties,networkRole,this,serializer);
                 System.out.println("SINGLE THREADED CHANNEL QUIC ");
             }else {
@@ -76,7 +75,7 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
                 System.out.println("MULTI THREADED CHANNEL QUIC ");
             }
         }else if(NetworkProtocol.TCP==protocol){
-            if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
+            if(properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null){
                 i = new SingleThreadedNettyTCPChannel(properties,this,networkRole,serializer);
                 System.out.println("SINGLE THREADED CHANNEL TCP ");
             }else {

@@ -1,6 +1,5 @@
 package appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
 import appExamples2.appExamples.channels.babelNewChannels.events.ConnectionProtocolChannelMetricsEvent;
 import appExamples2.appExamples.channels.babelNewChannels.quicChannels.BabelQUIC_P2P_Channel;
@@ -51,7 +50,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
         NETWORK_PROTO = properties.getProperty("NETWORK_PROTO");
-        boolean singleThreaded = properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null;
+        boolean singleThreaded = properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null;
         channelId = makeChan(NETWORK_PROTO,address,port,singleThreaded,properties);
         System.out.println("PROTO "+NETWORK_PROTO);
 
@@ -97,7 +96,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             channelProps.setProperty(NettyTCPChannel.NOT_ZERO_COPY,"ZERO_copy");
         }
         if(singleThreade){
-            channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
+            channelProps.setProperty(TCPChannelUtils.SINGLE_THREADED_PROP,"as");
         }
     }
     @Override

@@ -1,6 +1,5 @@
 package udpSupport.client_server;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -34,13 +33,13 @@ public class NettyUDPServer {
     public static SecureRandom randomInstance;
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
     public final int BUFFER_SIZE;
-    public static final String MIN_UDP_RETRANSMISSION_TIMEOUT = "UDP_RETRANSMISSION_TIMEOUT";
-    public static final String MAX_UDP_RETRANSMISSION_TIMEOUT = "MAX_UDP_RETRANSMISSION_TIMEOUT";
+    public static final String MIN_UDP_RETRANSMISSION_TIMEOUT = "retransmissionTimeout";
+    public static final String MAX_UDP_RETRANSMISSION_TIMEOUT = "maxRetransmissionTimeout";
 
     public int RETRANSMISSION_TIMEOUT;
     private final int MAX_RETRANSMISSION_TIMEOUT;
     public final int MAX_SEND_RETRIES;
-    public static final String MAX_SEND_RETRIES_KEY = "UPD_MAX_SEND_RETRIES";
+    public static final String MAX_SEND_RETRIES_KEY = "maxSendRetries";
     public static final String UDP_BROADCAST_PROP="broadcast";
 
 
@@ -72,7 +71,7 @@ public class NettyUDPServer {
         MAX_RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MAX_UDP_RETRANSMISSION_TIMEOUT,"0"));
         BUFFER_SIZE = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"66560"));
         random = RETRANSMISSION_TIMEOUT>0 ? getRandomInstance():null;
-        int serverThreads = FactoryMethods.serverThreads(properties);
+        int serverThreads = TCPChannelUtils.serverThreads(properties);
         group = TCPServerEntity.createNewWorkerGroup(serverThreads);
         try {
             channel = start();

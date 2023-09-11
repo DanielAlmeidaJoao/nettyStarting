@@ -15,7 +15,6 @@
  */
 package quicSupport.client_server;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
@@ -52,7 +51,7 @@ public final class QUICServerEntity implements ServerInterface {
         self = new InetSocketAddress(host,port);
         this.properties=properties;
         quicChannel =null;
-        int serverThreads = FactoryMethods.serverThreads(properties);
+        int serverThreads = TCPChannelUtils.serverThreads(properties);
         group = TCPServerEntity.createNewWorkerGroup(serverThreads);
     }
     public EventLoopGroup getEventLoopGroup(){

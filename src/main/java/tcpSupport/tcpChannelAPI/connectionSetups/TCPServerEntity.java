@@ -1,6 +1,5 @@
 package tcpSupport.tcpChannelAPI.connectionSetups;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
@@ -38,7 +37,7 @@ public class TCPServerEntity implements ServerInterface{
         this.hostName = hostName;
         this.consumer = consumer;
         this.properties = properties;
-        int serverThreads = FactoryMethods.serverThreads(properties);
+        int serverThreads = TCPChannelUtils.serverThreads(properties);
         this.childrenGroup = createNewWorkerGroup(serverThreads);
         logger.debug("Using {} server threads",serverThreads);
     }

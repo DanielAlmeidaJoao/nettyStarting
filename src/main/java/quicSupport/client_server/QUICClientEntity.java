@@ -14,7 +14,6 @@ package quicSupport.client_server;/*
  * under the License.
  */
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
@@ -56,7 +55,7 @@ public final class QUICClientEntity implements ClientInterface {
         this.self = self;
         this.consumer = consumer;
         //
-        this.group = TCPServerEntity.createNewWorkerGroup(FactoryMethods.clientThreads(properties));
+        this.group = TCPServerEntity.createNewWorkerGroup(TCPChannelUtils.clientThreads(properties));
         context = null;
         this.properties = properties;
         bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,QUICLogics.NEW_B_SIZE));

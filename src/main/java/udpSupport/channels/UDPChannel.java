@@ -23,8 +23,8 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     private static final Logger logger = LogManager.getLogger(UDPChannel.class);
     public final static String NAME = "UDP_CHANNEL";
 
-    public final static String ADDRESS_KEY = "UDP_address";
-    public final static String PORT_KEY = "UDP_port";
+    public final static String ADDRESS_KEY = "address";
+    public final static String PORT_KEY = "port";
 
     public final static String DEFAULT_PORT = "8579";
     private final NettyUDPServer udpServer;

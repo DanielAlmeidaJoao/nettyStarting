@@ -31,6 +31,10 @@ public class TCPChannelUtils {
     public static final String BUFF_ALOC_SIZE = "rcvBuffAlocSize";
     public static final String useBossThreadTCP = "tcpServerBossThread";
 
+    public final static String SINGLE_THREADED_PROP="singleThreaded";
+    public final static String SERVER_THREADS = "serverThreads";
+    public final static String CLIENT_THREADS = "clientThreads";
+
 
 
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
@@ -104,5 +108,14 @@ public class TCPChannelUtils {
     public static void closeOnError(Channel channel){
         channel.disconnect();
         channel.close();
+    }
+
+
+
+    public static int serverThreads(Properties properties){
+        return Integer.parseInt((String) properties.getOrDefault(SERVER_THREADS,"0"));
+    }
+    public static int clientThreads(Properties properties){
+        return Integer.parseInt((String) properties.getOrDefault(CLIENT_THREADS,"1"));
     }
 }

@@ -1,6 +1,5 @@
 package appExamples2.appExamples.channels.babelNewChannels.udpBabelChannel;
 
-import appExamples2.appExamples.channels.FactoryMethods;
 import appExamples2.appExamples.channels.messages.BytesToBabelMessage;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import org.apache.logging.log4j.LogManager;
@@ -49,7 +48,7 @@ public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
     public BabelUDPChannel(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short ownerProto) throws IOException {
         serializer.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
         this.listener = list;
-        if(properties.getProperty(FactoryMethods.SINGLE_THREADED_PROP)!=null){
+        if(properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null){
             udpChannelInterface = new SingleThreadedUDPChannel(properties,this,serializer);
             customConIDToAddress = new HashMap<>();
             hostStringMap = new HashMap<>();
