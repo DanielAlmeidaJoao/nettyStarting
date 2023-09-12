@@ -69,17 +69,21 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             f = this::execute;
         }
         boolean zeroCopy = this.properties.getProperty(NettyTCPChannel.NOT_ZERO_COPY)!=null;
+        String chunkSize = this.properties.getProperty(TCPChannelUtils.CHUNK_SIZE,"0");
+        System.out.println("CHUNKSIZE "+chunkSize);
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
             channelProps = TCPChannelUtils.quicChannelProperty(address,port);
             channelProps.setProperty("rcvBuffAlocSize", this.properties.getProperty("rcvBuffAlocSize"));
+            channelProps.setProperty(TCPChannelUtils.CHUNK_SIZE,chunkSize);
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps,f);
         }else if(channelName.equalsIgnoreCase("tcp")){
             System.out.println("TCP ON");
             channelProps = TCPChannelUtils.tcpChannelProperties(address,port);
             addExtraProps(singleThreaded,zeroCopy,channelProps);
+            channelProps.setProperty(TCPChannelUtils.CHUNK_SIZE,chunkSize);
             channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps,f);
         }else{
             System.out.println("UDP ON");

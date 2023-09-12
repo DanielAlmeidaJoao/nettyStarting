@@ -37,6 +37,8 @@ public class TCPChannelUtils {
     public final static String ADDRESS_KEY = "address";
     public final static String PORT_KEY = "port";
 
+    public final static String CHUNK_SIZE = "chunkSize";
+
 
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
         if(singleT){

@@ -57,6 +57,9 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
     private final boolean connectIfNotConnected;
     private final ChannelHandlerMethods channelHandlerMethods;
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
+
+    private final int chunkSize;
+
     private Properties properties;
     public final NetworkRole networkRole;
 
@@ -108,6 +111,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         this.channelHandlerMethods = chm;
         streamContinuoslyLogics = null;
         this.properties = properties;
+        chunkSize = Integer.parseInt(properties.getProperty(TCPChannelUtils.CHUNK_SIZE,"-1"));
     }
 
     public static EventLoopGroup setGroup(ClientInterface client, ServerInterface server, NetworkRole networkRole){
@@ -366,7 +370,11 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             if(idConnection.channel.pipeline().get("ChunkedWriteHandler")==null){
                 idConnection.channel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
             }
-            idConnection.channel.writeAndFlush(new ChunkedStream(inputStream));
+            if(chunkSize>0){
+                idConnection.channel.writeAndFlush(new ChunkedStream(inputStream,chunkSize));
+            }else{
+                idConnection.channel.writeAndFlush(new ChunkedStream(inputStream));
+            }
         }
         calcMetricsOnSend(conId,len);
     }

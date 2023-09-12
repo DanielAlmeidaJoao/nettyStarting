@@ -75,6 +75,8 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private SendStreamContinuoslyLogics streamContinuoslyLogics;
     private final BabelMessageSerializer serializer;
 
+    private final int chunkSize;
+
     //private final EventLoopGroup group;
 
     private final NetworkRole networkRole;
@@ -124,6 +126,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         //group = NettyTCPChannel.setGroup(client,server,networkRole);
         connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
         streamContinuoslyLogics = null;
+        chunkSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.CHUNK_SIZE,"-1"));
     }
     public InetSocketAddress getSelf(){
         return self;
@@ -514,7 +517,11 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         if(streamChannel.streamChannel.pipeline().get("ChunkedWriteHandler")==null){
             streamChannel.streamChannel.pipeline().addLast("ChunkedWriteHandler",new ChunkedWriteHandler());
         }
-        streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
+        if(chunkSize>0){
+            streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream,chunkSize));
+        }else{
+            streamChannel.streamChannel.writeAndFlush(new ChunkedStream(inputStream));
+        }
         calcMetricsOnSend(conId,len);
         overridenMethods.onStreamDataSent(inputStream,null,len,null,peer,TransmissionType.UNSTRUCTURED_STREAM,conId);
 
