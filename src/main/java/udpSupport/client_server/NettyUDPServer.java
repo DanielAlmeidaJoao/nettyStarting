@@ -77,7 +77,7 @@ public class NettyUDPServer {
             channel = start();
         }catch (Exception e){
             e.printStackTrace();
-            throw new RuntimeException("UDP LISTENER COULD NOT START!");
+            throw new RuntimeException("UDP LISTENER COULD NOT START: "+e.getMessage());
         }
     }
     public EventLoop getLoop(){
