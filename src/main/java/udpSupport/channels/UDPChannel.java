@@ -57,7 +57,8 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     }
     public void sendMessage(BabelMessage message, InetSocketAddress dest){
         try{
-            ByteBuf buf = udpServer.alloc().writeByte(0).writeLong(0);
+            ByteBuf buf = udpServer.alloc().writeByte(0).writeLong(0)
+                    .writeLong(udpServer.getId());
             serializer.serialize(message,buf);
             udpServer.sendMessage(buf,dest);
             messageSentHandler(true,null,message,dest);

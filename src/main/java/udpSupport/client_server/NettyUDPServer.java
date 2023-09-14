@@ -10,6 +10,7 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
 import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import udpSupport.channels.UDPChannelConsumer;
@@ -56,7 +57,7 @@ public class NettyUDPServer {
 
     private final EventLoopGroup group;
 
-
+    private final long ID;
 
     public NettyUDPServer(UDPChannelConsumer consumer, ChannelStats stats, InetSocketAddress address, Properties properties){
         this.properties=properties;
@@ -73,6 +74,7 @@ public class NettyUDPServer {
         random = RETRANSMISSION_TIMEOUT>0 ? getRandomInstance():null;
         int serverThreads = TCPChannelUtils.serverThreads(properties);
         group = TCPServerEntity.createNewWorkerGroup(serverThreads);
+        ID = System.currentTimeMillis();
         try {
             channel = start();
         }catch (Exception e){
@@ -155,6 +157,7 @@ public class NettyUDPServer {
                 .channel(socketChannel())
                 .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(BUFFER_SIZE))
                 .option(ChannelOption.SO_BROADCAST, properties.getProperty(UDP_BROADCAST_PROP)!=null)
+                .option(ChannelOption.ALLOCATOR, QUICLogics.getAllocator(true))
                 .handler(new ChannelInitializer<DatagramChannel>() {
                     @Override
                     protected void initChannel(DatagramChannel ch) throws Exception {
@@ -175,6 +178,7 @@ public class NettyUDPServer {
         if(UDPLogics.MAX_UDP_PAYLOAD_SIZE<message.readableBytes()){
             message.readByte();
             message.readLong();
+            message.readLong();
             long streamId = streamIdCounter.incrementAndGet();
             ByteBuf wholeMessageBuf = message; //Unpooled.wrappedBuffer(message);
             int streamCount = ceilDiv(message.readableBytes(),UDPLogics.MAX_UDP_PAYLOAD_SIZE); //do the %
@@ -187,6 +191,7 @@ public class NettyUDPServer {
                 byteBuf.writeLong(messageId);
                 byteBuf.writeLong(streamId);
                 byteBuf.writeInt(streamCount);
+                byteBuf.writeLong(ID);
                 byteBuf.writeBytes(wholeMessageBuf,streamLen);
                 sendMessageAux(byteBuf,peer,messageId);
             }
@@ -197,9 +202,14 @@ public class NettyUDPServer {
             //ByteBuf buf = channel.alloc().directBuffer(9+len);
             message.setByte(0,UDPLogics.SINGLE_MESSAGE);
             message.setLong(1,messageId);
+            //message.setLong(9,ID);
             //buf.writeBytes(message,0, len);
             sendMessageAux(message,peer,messageId);
         }
+    }
+
+    public long getId(){
+        return ID;
     }
 
     public ByteBuf alloc(){

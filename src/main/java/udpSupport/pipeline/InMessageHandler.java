@@ -16,13 +16,13 @@ import udpSupport.utils.funcs.OnAckFunction;
 
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(InMessageHandler.class);
     private final Map<String, SortedMap<Long,byte []>> streams;
-    private final Set<String> receivedMessages;
+    private final Map<String,Long> receivedMessages;
 
     private final UDPChannelConsumer consumer;
     private final ChannelStats channelStats;
@@ -32,7 +32,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         this.consumer = consumer;
         this.channelStats = channelStats;
         this.onAckfunction = onAckfunction;
-        receivedMessages = new ConcurrentSkipListSet<>();
+        receivedMessages = new ConcurrentHashMap<>();
         streams = new HashMap<>();
         this.maxSendRetry = maxSendRetry;
     }
@@ -58,16 +58,18 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             sendAck(channel, msgId,datagramPacket.sender());
             long streamId = content.readLong();
             int streamCount = content.readInt();
+            Long peerID = content.readLong();
             byte [] message = new byte[content.readableBytes()];
             content.readBytes(message);
             content.release();
-            onStreamRead(channel,streamId,message,streamCount,datagramPacket.sender(),msgId,availableBytes);
+            onStreamRead(peerID,channel,streamId,message,streamCount,datagramPacket.sender(),msgId,availableBytes);
         }else if(UDPLogics.SINGLE_MESSAGE==msgCode){
-            sendAck(channel, msgId,datagramPacket.sender());
+            sendAck(channel,msgId,datagramPacket.sender());
             //message = new byte[content.readableBytes()];
             //content.readBytes(message);
             //content.release();
-            onSingleMessage(channel,msgId,content,datagramPacket.sender(),availableBytes);
+            Long peerID = content.readLong();
+            onSingleMessage(peerID,msgId,content,datagramPacket.sender(),availableBytes);
             content.release();
         }else if ( UDPLogics.APP_ACK==msgCode){
             content.release();
@@ -83,11 +85,12 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private String getStrID(InetSocketAddress sender,long msgId){
         return sender+""+msgId;
     }
-    private void onStreamRead(Channel channel, long streamId, byte [] message , int streamCount, InetSocketAddress sender, long msgId, int availableBytes){
+    private void onStreamRead(Long peerID, Channel channel, long streamId, byte [] message , int streamCount, InetSocketAddress sender, long msgId, int availableBytes){
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
-        if(!receivedMessages.add(getStrID(sender,msgId))){
+        Long pID = receivedMessages.put(getStrID(sender,msgId),peerID);
+        if(pID==peerID){
             return;
         }
         //count += message.length;
@@ -118,11 +121,12 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
         }
     }
-    private void onSingleMessage(Channel channel, long msgId, ByteBuf message, InetSocketAddress sender, int availableBytes){
+    private void onSingleMessage(Long peerID, long msgId, ByteBuf message, InetSocketAddress sender, int availableBytes){
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
-        if(!receivedMessages.add(getStrID(sender,msgId))){
+        Long pID = receivedMessages.put(getStrID(sender,msgId),peerID);
+        if(pID==peerID){
             return;
         }
         if(channelStats!=null){
@@ -141,15 +145,6 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             if(channelStats!=null){
                 channelStats.addSentBytes(sender,9, NetworkStatsKindEnum.ACK_STATS);
             }
-            /**.addListener(future -> {
-                if(future.isSuccess()){
-                    if(channelStats!=null){
-                        channelStats.addSentBytes(sender,9, NetworkStatsKindEnum.ACK_STATS);
-                    }
-                }else{
-                    future.cause().printStackTrace();
-                }
-            });**/
         }
     }
 
