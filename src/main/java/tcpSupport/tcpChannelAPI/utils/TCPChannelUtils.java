@@ -38,6 +38,7 @@ public class TCPChannelUtils {
     public final static String PORT_KEY = "port";
 
     public final static String CHUNK_SIZE = "chunkSize";
+    public final static String USE_BABEL_THREAD_TO_SEND = "useBabelThreadToSendM";
 
 
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){

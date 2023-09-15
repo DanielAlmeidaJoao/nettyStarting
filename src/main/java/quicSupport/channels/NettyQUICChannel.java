@@ -78,6 +78,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private final int chunkSize;
 
     //private final EventLoopGroup group;
+    private final boolean useNettyToDeserialize;
 
     private final NetworkRole networkRole;
 
@@ -127,6 +128,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
         streamContinuoslyLogics = null;
         chunkSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.CHUNK_SIZE,"-1"));
+        useNettyToDeserialize = properties.getProperty(TCPChannelUtils.USE_BABEL_THREAD_TO_SEND)==null;
     }
     public InetSocketAddress getSelf(){
         return self;
@@ -462,6 +464,13 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }
     }
     protected void sendMessage(CustomQUICStreamCon streamChannel, BabelMessage message, InetSocketAddress peer){
+        if(useNettyToDeserialize){
+            streamChannel.streamChannel.eventLoop().execute(() -> sendMessageAux(streamChannel,message,peer));
+        }else{
+            sendMessageAux(streamChannel,message,peer);
+        }
+    }
+    private void sendMessageAux(CustomQUICStreamCon streamChannel, BabelMessage message, InetSocketAddress peer){
         if(streamChannel.type!=STRUCTURED_MESSAGE){
             Throwable t = new RuntimeException("WRONG MESSAGE. EXPECTED TYPE: "+STRUCTURED_MESSAGE+" VS RECEIVED TYPE: "+streamChannel.type);
             overridenMethods.onMessageSent(message,t,peer,STRUCTURED_MESSAGE,streamChannel.customStreamId);
