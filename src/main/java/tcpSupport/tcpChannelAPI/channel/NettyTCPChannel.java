@@ -62,6 +62,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
 
     private Properties properties;
     public final NetworkRole networkRole;
+    private final boolean useNettyToDeserialize;
 
     private final BabelMessageSerializer serializer;
     //private final EventLoopGroup serverParentGroup;
@@ -112,6 +113,8 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         streamContinuoslyLogics = null;
         this.properties = properties;
         chunkSize = Integer.parseInt(properties.getProperty(TCPChannelUtils.CHUNK_SIZE,"-1"));
+        useNettyToDeserialize = properties.getProperty(TCPChannelUtils.USE_BABEL_THREAD_TO_SEND)==null;
+        logger.info("USING NETTY TO DESERIALIZE {}",useNettyToDeserialize);
     }
 
     public static EventLoopGroup setGroup(ClientInterface client, ServerInterface server, NetworkRole networkRole){
@@ -297,11 +300,9 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             metricsManager.calcMetricsOnSend(true,connectionId,length);
         }
     }
-
-    private void sendAux(BabelMessage message, CustomTCPConnection connection){
+    private void sendAuxAux(BabelMessage message, CustomTCPConnection connection){
         try{
             if(connection.type== STRUCTURED_MESSAGE){
-
                 ByteBuf byteBuf = connection.channel.alloc().directBuffer().writeInt(0);
                 serializer.serialize(message,byteBuf);
                 final int len = byteBuf.readableBytes();
@@ -319,6 +320,13 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }catch (Exception e){
             e.printStackTrace();
             throw new RuntimeException(e);
+        }
+    }
+    private void sendAux(BabelMessage message, CustomTCPConnection connection){
+        if(useNettyToDeserialize){
+            connection.channel.eventLoop().execute(() -> {sendAuxAux(message, connection);});
+        }else{
+            sendAuxAux(message, connection);
         }
     }
 

@@ -29,6 +29,7 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
     private final InetSocketAddress self;
     private final UDPChannelHandlerMethods channelHandlerMethods;
     private final BabelMessageSerializer serializer;
+    private final boolean useNettyToDeserialize;
 
     public UDPChannel(Properties properties, boolean singleThreaded, UDPChannelHandlerMethods consumer, BabelMessageSerializer serializer) throws IOException {
         InetAddress addr;
@@ -45,6 +46,7 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
         }
         udpServer=new NettyUDPServer(this,metrics,self,properties);
         channelHandlerMethods = consumer;
+        useNettyToDeserialize = properties.getProperty(TCPChannelUtils.USE_BABEL_THREAD_TO_SEND)==null;
     }
 
     @Override
@@ -56,6 +58,13 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
         return metrics!=null;
     }
     public void sendMessage(BabelMessage message, InetSocketAddress dest){
+        if(useNettyToDeserialize){
+            udpServer.getLoop().execute(() -> sendAux(message,dest));
+        }else{
+            sendAux(message,dest);
+        }
+    }
+    private void sendAux(BabelMessage message, InetSocketAddress dest){
         try{
             ByteBuf buf = udpServer.alloc().writeByte(0).writeLong(0)
                     .writeLong(udpServer.getId());

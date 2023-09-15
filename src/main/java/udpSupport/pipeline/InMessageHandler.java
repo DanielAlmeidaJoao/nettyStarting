@@ -15,33 +15,42 @@ import udpSupport.utils.UDPLogics;
 import udpSupport.utils.funcs.OnAckFunction;
 
 import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 public class InMessageHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LogManager.getLogger(InMessageHandler.class);
     private final Map<String, SortedMap<Long,byte []>> streams;
-    private final Map<String,Long> receivedMessages;
+    private Map<String,Long> receivedMessages;
 
     private final UDPChannelConsumer consumer;
     private final ChannelStats channelStats;
     private final OnAckFunction onAckfunction;
+    private final int timeoutDeleteReceivedIds;
     private final int maxSendRetry;
-    public InMessageHandler(UDPChannelConsumer consumer, ChannelStats channelStats, OnAckFunction onAckfunction, int maxSendRetry){
+    private final boolean checkDuplicate;
+
+    public InMessageHandler(UDPChannelConsumer consumer, ChannelStats channelStats, OnAckFunction onAckfunction, int maxSendRetry, int timeoutDeleteReceivedIds){
         this.consumer = consumer;
         this.channelStats = channelStats;
         this.onAckfunction = onAckfunction;
-        receivedMessages = new ConcurrentHashMap<>();
+        this.timeoutDeleteReceivedIds = timeoutDeleteReceivedIds > 0 ? timeoutDeleteReceivedIds : (120*1000);
         streams = new HashMap<>();
         this.maxSendRetry = maxSendRetry;
+        checkDuplicate = this.timeoutDeleteReceivedIds > 0 && this.maxSendRetry>0;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        ctx.channel().eventLoop().schedule(() -> {
-            receivedMessages.clear();
-        },2, TimeUnit.MINUTES);
+        if(canCheckDuplicate()){
+            receivedMessages = new HashMap<>();
+            ctx.channel().eventLoop().schedule(() -> {
+                receivedMessages.clear();
+            },timeoutDeleteReceivedIds,TimeUnit.SECONDS);
+        }
     }
 
     @Override
@@ -80,6 +89,9 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
             //System.exit(1);
         }
     }
+    private boolean canCheckDuplicate(){
+        return checkDuplicate;
+    }
     //long count = 0;
     //int msgs = 0;
     private String getStrID(InetSocketAddress sender,long msgId){
@@ -89,9 +101,11 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
-        Long pID = receivedMessages.put(getStrID(sender,msgId),peerID);
-        if(pID==peerID){
-            return;
+        if(canCheckDuplicate()){
+            Long pID = receivedMessages.put(getStrID(sender,msgId),peerID);
+            if(pID==peerID){
+                return;
+            }
         }
         //count += message.length;
         String strStreamId = getStrID(sender,streamId);
@@ -125,9 +139,11 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
-        Long pID = receivedMessages.put(getStrID(sender,msgId),peerID);
-        if(pID==peerID){
-            return;
+        if(canCheckDuplicate()){
+            Long pID = receivedMessages.put(getStrID(sender,msgId),peerID);
+            if(pID==peerID){
+                return;
+            }
         }
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);

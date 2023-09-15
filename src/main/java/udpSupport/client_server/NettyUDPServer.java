@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class NettyUDPServer {
+    public static final String TIMEOUT_DELETE_RECEIVED_IDS = "timeoutDeleteReceivedIds";
     public static SecureRandom randomInstance;
     private static final Logger logger = LogManager.getLogger(NettyUDPServer.class);
     public final int BUFFER_SIZE;
@@ -87,26 +88,34 @@ public class NettyUDPServer {
     }
     public void onAckReceived(long msgId, InetSocketAddress sender){
         UDPWaitForAckWrapper timeMillis = waitingForAcks.remove(msgId);
-        if(stats!=null&&timeMillis!=null){
+        if(timeMillis!=null){
             timeMillis.scheduledFuture.cancel(true);
-            stats.addTransmissionRTT(sender,(System.currentTimeMillis() - timeMillis.timeStart));
+            releaseBuffer(timeMillis.getPacket());
+            if(stats!=null){
+                stats.addTransmissionRTT(sender,(System.currentTimeMillis() - timeMillis.timeStart));
+            }
         }
+    }
+    public static void releaseBuffer(ByteBuf buf){
+        try {
+            buf.release();
+        }catch (Exception e){}
     }
 
     private void scheduleRetransmission(ByteBuf packet, long msgId, InetSocketAddress dest, int count){
         //NO RETRANSMISSION
         if(MAX_SEND_RETRIES <= 0){
-            packet.release();
+            releaseBuffer(packet);
             return;
         }
         UDPWaitForAckWrapper udpWaitForAckWrapper = waitingForAcks.get(msgId);
         ScheduledFuture scheduledFuture = group.next().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) {
-                packet.release();
+                releaseBuffer(packet);
                 return;
             }
             if(count > MAX_SEND_RETRIES){
-                packet.release();
+                releaseBuffer(packet);
                 waitingForAcks.remove(msgId);
                 consumer.peerDown(dest);
                 return;
@@ -125,7 +134,7 @@ public class NettyUDPServer {
             });
         }, RETRANSMISSION_TIMEOUT +  (int)nextFloat() ,TimeUnit.MILLISECONDS);
         if(count==0){
-            waitingForAcks.put(msgId,new UDPWaitForAckWrapper(scheduledFuture));
+            waitingForAcks.put(msgId,new UDPWaitForAckWrapper(scheduledFuture,packet));
         }else if(udpWaitForAckWrapper==null){
             scheduledFuture.cancel(true);
         }else{
@@ -134,17 +143,13 @@ public class NettyUDPServer {
     }
 
     private float nextFloat(){
+        float stella;
         if(MAX_RETRANSMISSION_TIMEOUT>0){
-            float stella = 1 + random.nextInt(1+random.nextInt(MAX_RETRANSMISSION_TIMEOUT));
-            if(random.nextBoolean()){
-                stella += random.nextFloat()*stella/2;
-            }else{
-                stella -= random.nextFloat()*stella;
-            }
-            return stella;
+            stella = 1 + random.nextInt(MAX_RETRANSMISSION_TIMEOUT);
         }else{
-            return random.nextInt(1+RETRANSMISSION_TIMEOUT);
+            stella = random.nextInt(RETRANSMISSION_TIMEOUT);
         }
+        return stella;
     }
     public static Class<? extends Channel> socketChannel(){
         return Epoll.isAvailable() ? EpollDatagramChannel.class:NioDatagramChannel.class;
@@ -153,6 +158,7 @@ public class NettyUDPServer {
         OnAckFunction onAckReceived = this::onAckReceived;
         Channel server;
         Bootstrap b = new Bootstrap();
+        int timeoutDeleteReceivedIds = Integer.parseInt(properties.getProperty(TIMEOUT_DELETE_RECEIVED_IDS,"120"));
         b.group(group)
                 .channel(socketChannel())
                 .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(BUFFER_SIZE))
@@ -162,7 +168,7 @@ public class NettyUDPServer {
                     @Override
                     protected void initChannel(DatagramChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast(new InMessageHandler(consumer,stats,onAckReceived,MAX_SEND_RETRIES));
+                        pipeline.addLast(new InMessageHandler(consumer,stats,onAckReceived,MAX_SEND_RETRIES,timeoutDeleteReceivedIds));
                     }
                 });
         server = b.bind(address).sync().channel();
