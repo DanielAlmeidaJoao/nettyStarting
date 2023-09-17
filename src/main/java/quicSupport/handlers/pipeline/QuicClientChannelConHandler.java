@@ -14,7 +14,7 @@ import quicSupport.client_server.QUICClientEntity;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.net.InetSocketAddress;
 
@@ -38,7 +38,7 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         logger.debug("{} ESTABLISHED CONNECTION WITH {}",self,remote);
         QuicChannel out = (QuicChannel) ctx.channel();
-        final String customConId = out.attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY)).getAndSet(null).toString();
+        final String customConId = out.attr(AttributeKey.valueOf(NewChannelsFactoryUtils.CUSTOM_ID_KEY)).getAndSet(null).toString();
 
         QuicStreamChannel streamChannel = out
                 .createStream(QuicStreamType.BIDIRECTIONAL, new QuicStreamInboundHandler(consumer, customConId, QUICLogics.OUTGOING_CONNECTION))
@@ -47,8 +47,8 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         streamChannel.config().setAllocator(QUICClientEntity.getAllocator());
 
         final QuicHandShakeMessage handShakeMessage = new QuicHandShakeMessage(self.getHostName(),self.getPort(),streamChannel.id().asShortText(),transmissionType,destProto);
-        byte [] hs = TCPChannelUtils.g.toJson(handShakeMessage).getBytes();
-        ByteBuf byteBuf = ctx.alloc().directBuffer(hs.length+1);
+        byte [] hs = NewChannelsFactoryUtils.g.toJson(handShakeMessage).getBytes();
+        ByteBuf byteBuf = ctx.alloc().directBuffer(hs.length+5);
         byteBuf.writeInt(hs.length);
         byteBuf.writeByte(QUICLogics.HANDSHAKE_MESSAGE);
         byteBuf.writeBytes(hs);
@@ -78,6 +78,6 @@ public class QuicClientChannelConHandler extends ChannelInboundHandlerAdapter {
         //consumer.handleOpenConnectionFailed((InetSocketAddress) ctx.channel().remoteAddress(),cause, transmissionType, id);
         logger.error(cause.getMessage());
         consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,null);
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }
 }

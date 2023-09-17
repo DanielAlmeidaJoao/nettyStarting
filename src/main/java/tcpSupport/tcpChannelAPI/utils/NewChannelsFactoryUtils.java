@@ -10,7 +10,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TCPChannelUtils {
+public class NewChannelsFactoryUtils {
 
     public static final Gson g = new Gson();
     public static final AtomicInteger channelIdCounter = new AtomicInteger();
@@ -40,6 +40,8 @@ public class TCPChannelUtils {
     public final static String CHUNK_SIZE = "chunkSize";
     public final static String USE_BABEL_THREAD_TO_SEND = "useBabelThreadToSendM";
 
+    public final static String TCP_IDLE_CONNECTION_TIMEOUT="TCPIdleConnectionTimeout";
+
 
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
         if(singleT){
@@ -51,8 +53,8 @@ public class TCPChannelUtils {
 
     public static Properties quicChannelProperty(String address, String port){
         Properties channelProps = new Properties();
-        channelProps.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
-        channelProps.setProperty(TCPChannelUtils.PORT_KEY,port);
+        channelProps.setProperty(NewChannelsFactoryUtils.ADDRESS_KEY,address);
+        channelProps.setProperty(NewChannelsFactoryUtils.PORT_KEY,port);
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_FILE_KEY,"keystore.jks");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_PASSWORD_KEY,"simple");
         channelProps.setProperty(QUICLogics.SERVER_KEYSTORE_ALIAS_KEY,"quicTestCert");
@@ -62,13 +64,19 @@ public class TCPChannelUtils {
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
         //channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
         channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
-        //channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
-        channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"0");
-        //channelProps.setProperty(TCPChannelUtils.BUFF_ALOC_SIZE, QUICLogics.NEW_B_SIZE+"");
-        //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
-        //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
+        //channelProps.setProperty(QUICLogics.CongestionControlAlgorithm,"RENO");
 
-        //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
+        //channelProps.setProperty(NewChannelsFactoryUtils.SINGLE_CON_PER_PEER,"TRUE");
+        channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"25");
+        //channelProps.setProperty(NewChannelsFactoryUtils.BUFF_ALOC_SIZE,(16*1024)+"");
+        //channelProps.setProperty(QUICLogics.MAX_UDP_RCV_PAYLOD_SIZE,"65527");
+        channelProps.setProperty(QUICLogics.INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL,(1024*64)+"");
+        channelProps.setProperty(QUICLogics.INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE,(1024*64)+"");
+
+        //channelProps.setProperty(NewChannelsFactoryUtils.CHANNEL_METRICS,"ON");
+        //channelProps.setProperty(NewChannelsFactoryUtils.METRICS_INTERVAL_KEY,"30");
+
+        //channelProps.setProperty(NewChannelsFactoryUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(QUICLogics.idleTimeoutPercentageHB,"12");
         //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
         //channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"20");
@@ -78,29 +86,29 @@ public class TCPChannelUtils {
 
     public static Properties tcpChannelProperties(String address, String port){
         Properties channelProps = new Properties();
-        channelProps.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
-        channelProps.setProperty(TCPChannelUtils.PORT_KEY,port);
-        //channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
-        //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
-        //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
+        channelProps.setProperty(NewChannelsFactoryUtils.ADDRESS_KEY,address);
+        channelProps.setProperty(NewChannelsFactoryUtils.PORT_KEY,port);
+        //channelProps.setProperty(NewChannelsFactoryUtils.SINGLE_CON_PER_PEER,"TRUE");
+        //channelProps.setProperty(NewChannelsFactoryUtils.CHANNEL_METRICS,"ON");
+        //channelProps.setProperty(NewChannelsFactoryUtils.METRICS_INTERVAL_KEY,"30");
 
         //channelProps.setProperty(NettyTCPChannel.NOT_ZERO_COPY,"TRUE");
 
-        //channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
+        //channelProps.setProperty(NewChannelsFactoryUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
         //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"TRUE");
         return channelProps;
     }
     public static Properties udpChannelProperties(String address, String port){
         Properties properties = new Properties();
-        properties.setProperty(TCPChannelUtils.ADDRESS_KEY,address);
-        properties.setProperty(TCPChannelUtils.PORT_KEY,port);
+        properties.setProperty(NewChannelsFactoryUtils.ADDRESS_KEY,address);
+        properties.setProperty(NewChannelsFactoryUtils.PORT_KEY,port);
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MIN_UDP_RETRANSMISSION_TIMEOUT,"200");
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_UDP_RETRANSMISSION_TIMEOUT,"100");
 
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"100");
         //properties.setProperty(NettyUDPServer.UDP_BROADCAST_PROP,"20");
-        //properties.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
-        //properties.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
+        //properties.setProperty(NewChannelsFactoryUtils.CHANNEL_METRICS,"ON");
+        //properties.setProperty(NewChannelsFactoryUtils.METRICS_INTERVAL_KEY,"30");
         //properties.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"as");
         //properties.setProperty(udpSupport.client_server.NettyUDPServer.UDP_BROADCAST_PROP,"10");
         //properties.setProperty(UDPChannel.UDP_METRICS,"10");

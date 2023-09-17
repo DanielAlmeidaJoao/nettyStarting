@@ -16,7 +16,7 @@ import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 import udpSupport.metrics.UDPNetworkStatsWrapper;
 import udpSupport.utils.UDPLogics;
 
@@ -53,24 +53,24 @@ public class EchoProtocol extends GenericProtocolExtension {
         Properties channelProps;
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
-            channelProps = TCPChannelUtils.quicChannelProperty(address,port);
+            channelProps = NewChannelsFactoryUtils.quicChannelProperty(address,port);
             //channelProps.setProperty("metrics_interval","2000");
 
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
 
         }else if(channelName.equalsIgnoreCase("tcp")){
-            channelProps = TCPChannelUtils.tcpChannelProperties(address,port);
+            channelProps = NewChannelsFactoryUtils.tcpChannelProperties(address,port);
             System.out.println("TCP ON");
             //channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
             //channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
-            //channelProps.setProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
+            //channelProps.setProperty(NewChannelsFactoryUtils.AUTO_CONNECT_ON_SEND_PROP,"TRUE");
             //channelProps.setProperty(FactoryMethods.SINGLE_THREADED_PROP,"FALSE");
 
             channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps);
 
 
         }else{
-            channelProps = TCPChannelUtils.udpChannelProperties(address,port);
+            channelProps = NewChannelsFactoryUtils.udpChannelProperties(address,port);
             System.out.println("UDP ON");
             //channelProps.setProperty(NettyTCPChannel.ADDRESS_KEY,address);
             //channelProps.setProperty(NettyTCPChannel.PORT_KEY,port);
@@ -249,8 +249,8 @@ public class EchoProtocol extends GenericProtocolExtension {
     private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
         countMetricsTime ++;
         System.out.println("METRICS TRIGGERED!!!");
-        System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(event.getCurrent()));
-        System.out.println("OLD: "+TCPChannelUtils.g.toJson(event.getOld()));
+        System.out.println("CURRENT: "+ NewChannelsFactoryUtils.g.toJson(event.getCurrent()));
+        System.out.println("OLD: "+ NewChannelsFactoryUtils.g.toJson(event.getOld()));
         if(countMetricsTime==2){
             var p =event.getCurrent();
             if(p != null && p.size()>0){
@@ -270,9 +270,9 @@ public class EchoProtocol extends GenericProtocolExtension {
         System.out.println("UDP METRICS TRIGGERED!!!");
         for (UDPNetworkStatsWrapper stat : event.getStats()) {
             System.out.printf("HOST: %s\n",stat.getDest());
-            System.out.println(TCPChannelUtils.g.toJson(stat.ackStats));
-            System.out.println(TCPChannelUtils.g.toJson(stat.totalMessageStats));
-            System.out.println(TCPChannelUtils.g.toJson(stat.sentAckedMessageStats));
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.ackStats));
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.totalMessageStats));
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.sentAckedMessageStats));
         }
     }
     public List<BabelInputStream> streams = new LinkedList<>();

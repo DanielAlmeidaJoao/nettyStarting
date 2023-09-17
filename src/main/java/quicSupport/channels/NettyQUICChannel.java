@@ -35,8 +35,8 @@ import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetricsManager;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 import tcpSupport.tcpChannelAPI.utils.SendStreamContinuoslyLogics;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,14 +87,14 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         this.overridenMethods = mom;
         this.serializer = serializer;
         InetAddress addr;
-        if (properties.containsKey(TCPChannelUtils.ADDRESS_KEY))
-            addr = Inet4Address.getByName(properties.getProperty(TCPChannelUtils.ADDRESS_KEY));
+        if (properties.containsKey(NewChannelsFactoryUtils.ADDRESS_KEY))
+            addr = Inet4Address.getByName(properties.getProperty(NewChannelsFactoryUtils.ADDRESS_KEY));
         else
             throw new IllegalArgumentException(NAME + " requires binding address");
 
-        int port = Integer.parseInt(properties.getProperty(TCPChannelUtils.PORT_KEY, DEFAULT_PORT));
+        int port = Integer.parseInt(properties.getProperty(NewChannelsFactoryUtils.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        enableMetrics = properties.containsKey(TCPChannelUtils.CHANNEL_METRICS);
+        enableMetrics = properties.containsKey(NewChannelsFactoryUtils.CHANNEL_METRICS);
         idleTimeoutPercentageHB = Integer.parseInt((String)properties.getOrDefault(QUICLogics.idleTimeoutPercentageHB,"0"));
         heartBeatTimeout = Integer.parseInt(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+""));
         if(enableMetrics){
@@ -102,9 +102,9 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }else{
             metrics = null;
         }
-        addressToQUICCons = TCPChannelUtils.getMapInst(singleThreaded);
-        customStreamIdToStream = TCPChannelUtils.getMapInst(singleThreaded);
-        connecting= TCPChannelUtils.getMapInst(singleThreaded);
+        addressToQUICCons = NewChannelsFactoryUtils.getMapInst(singleThreaded);
+        customStreamIdToStream = NewChannelsFactoryUtils.getMapInst(singleThreaded);
+        connecting= NewChannelsFactoryUtils.getMapInst(singleThreaded);
         this.networkRole = networkRole;
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.SERVER==networkRole){
             server = new QUICServerEntity(addr.getHostName(), port, this,properties);
@@ -118,17 +118,17 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.CLIENT==networkRole){
             if(NetworkRole.CLIENT==networkRole){
-                properties.remove(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP);
+                properties.remove(NewChannelsFactoryUtils.AUTO_CONNECT_ON_SEND_PROP);
             }
             client = new QUICClientEntity(self,this,properties);
         }else{
             client = new DummyClient();
         }
         //group = NettyTCPChannel.setGroup(client,server,networkRole);
-        connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
+        connectIfNotConnected = properties.getProperty(NewChannelsFactoryUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
         streamContinuoslyLogics = null;
-        chunkSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.CHUNK_SIZE,"-1"));
-        useNettyToDeserialize = properties.getProperty(TCPChannelUtils.USE_BABEL_THREAD_TO_SEND)==null;
+        chunkSize = Integer.parseInt((String) properties.getOrDefault(NewChannelsFactoryUtils.CHUNK_SIZE,"-1"));
+        useNettyToDeserialize = properties.getProperty(NewChannelsFactoryUtils.USE_BABEL_THREAD_TO_SEND)==null;
     }
     public InetSocketAddress getSelf(){
         return self;
@@ -149,7 +149,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     }
 
     public String nextId(){
-        return "quicchan"+ TCPChannelUtils.channelIdCounter.getAndIncrement();
+        return "quicchan"+ NewChannelsFactoryUtils.channelIdCounter.getAndIncrement();
     }
 
     private CustomQUICConnection getCustomQUICConnection(InetSocketAddress inetSocketAddress){
@@ -277,7 +277,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             short streamProto;
             if(handShakeMessage==null){//is OutGoing
                 listeningAddress = remotePeer;
-                streamProto = (short) streamChannel.parent().attr(AttributeKey.valueOf(TCPChannelUtils.DEST_STREAM_PROTO)).getAndSet(null);
+                streamProto = (short) streamChannel.parent().attr(AttributeKey.valueOf(NewChannelsFactoryUtils.DEST_STREAM_PROTO)).getAndSet(null);
             }else{//is InComing
                 listeningAddress = handShakeMessage.getAddress();
                 type = handShakeMessage.transmissionType;
@@ -519,7 +519,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
             return;
         }
         if(len<=0){
-            if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
+            if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(NewChannelsFactoryUtils.READ_STREAM_PERIOD_KEY));
             streamContinuoslyLogics.addToStreams(inputStream,streamChannel.customStreamId,streamChannel.streamChannel.eventLoop().parent().next());
             return;
         }

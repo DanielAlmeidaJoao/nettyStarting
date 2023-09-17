@@ -69,24 +69,24 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
 
     public NettyTCPChannel(Properties properties, boolean singleThreaded, ChannelHandlerMethods chm, NetworkRole networkRole, BabelMessageSerializer serializer)throws IOException{
         InetAddress addr;
-        if (properties.containsKey(TCPChannelUtils.ADDRESS_KEY))
-            addr = Inet4Address.getByName(properties.getProperty(TCPChannelUtils.ADDRESS_KEY));
+        if (properties.containsKey(NewChannelsFactoryUtils.ADDRESS_KEY))
+            addr = Inet4Address.getByName(properties.getProperty(NewChannelsFactoryUtils.ADDRESS_KEY));
         else
             throw new IllegalArgumentException(NAME + " requires binding address");
 
         this.serializer = serializer;
-        int port = Integer.parseInt(properties.getProperty(TCPChannelUtils.PORT_KEY, DEFAULT_PORT));
+        int port = Integer.parseInt(properties.getProperty(NewChannelsFactoryUtils.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        boolean metricsOn = properties.containsKey(TCPChannelUtils.CHANNEL_METRICS);
+        boolean metricsOn = properties.containsKey(NewChannelsFactoryUtils.CHANNEL_METRICS);
         if(metricsOn){
             metricsManager = new ConnectionProtocolMetricsManager(self,singleThreaded);
         }else{
             metricsManager = null;
         }
-        nettyIdToConnection = TCPChannelUtils.getMapInst(singleThreaded);
-        addressToConnections = TCPChannelUtils.getMapInst(singleThreaded);
-        nettyIdTOConnectingOBJ = TCPChannelUtils.getMapInst(singleThreaded);
-        customIdToConnection = TCPChannelUtils.getMapInst(singleThreaded);
+        nettyIdToConnection = NewChannelsFactoryUtils.getMapInst(singleThreaded);
+        addressToConnections = NewChannelsFactoryUtils.getMapInst(singleThreaded);
+        nettyIdTOConnectingOBJ = NewChannelsFactoryUtils.getMapInst(singleThreaded);
+        customIdToConnection = NewChannelsFactoryUtils.getMapInst(singleThreaded);
         this.networkRole = networkRole;
 
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.SERVER==networkRole){
@@ -101,19 +101,19 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }
         if(NetworkRole.P2P_CHANNEL ==networkRole||NetworkRole.CLIENT==networkRole){
             if(NetworkRole.CLIENT==networkRole){
-                properties.remove(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP);
+                properties.remove(NewChannelsFactoryUtils.AUTO_CONNECT_ON_SEND_PROP);
             }
             client = new TCPClientEntity(self,properties,this);
         }else{
             client=new DummyClient();
         }
         //serverParentGroup = setGroup(client,server, networkRole);
-        connectIfNotConnected = properties.getProperty(TCPChannelUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
+        connectIfNotConnected = properties.getProperty(NewChannelsFactoryUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
         this.channelHandlerMethods = chm;
         streamContinuoslyLogics = null;
         this.properties = properties;
-        chunkSize = Integer.parseInt(properties.getProperty(TCPChannelUtils.CHUNK_SIZE,"-1"));
-        useNettyToDeserialize = properties.getProperty(TCPChannelUtils.USE_BABEL_THREAD_TO_SEND)==null;
+        chunkSize = Integer.parseInt(properties.getProperty(NewChannelsFactoryUtils.CHUNK_SIZE,"-1"));
+        useNettyToDeserialize = properties.getProperty(NewChannelsFactoryUtils.USE_BABEL_THREAD_TO_SEND)==null;
         logger.info("USING NETTY TO DESERIALIZE {}",useNettyToDeserialize);
     }
 
@@ -172,7 +172,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             if(handShakeMessage==null){//out connection
                 listeningAddress = (InetSocketAddress) channel.remoteAddress();
                 inConnection = false;
-                conId = channel.attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY)).getAndSet(null).toString();
+                conId = channel.attr(AttributeKey.valueOf(NewChannelsFactoryUtils.CUSTOM_ID_KEY)).getAndSet(null).toString();
                 streamProto = nettyIdTOConnectingOBJ.get(conId).streamProto;
             }else {//in connection
                 listeningAddress = handShakeMessage.getAddress();
@@ -217,7 +217,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }
     }
     public String nextId(){
-        return "tcpChan"+ TCPChannelUtils.channelIdCounter.getAndIncrement();
+        return "tcpChan"+ NewChannelsFactoryUtils.channelIdCounter.getAndIncrement();
     }
     /******************************************* CHANNEL EVENTS ****************************************************/
 
@@ -366,7 +366,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
             return;
         }
         if(len<=0){
-            if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(TCPChannelUtils.READ_STREAM_PERIOD_KEY));
+            if(streamContinuoslyLogics==null)streamContinuoslyLogics = new SendStreamContinuoslyLogics(this,properties.getProperty(NewChannelsFactoryUtils.READ_STREAM_PERIOD_KEY));
             streamContinuoslyLogics.addToStreams(inputStream,idConnection.conId,idConnection.channel.eventLoop().parent().next());
             return;
         }

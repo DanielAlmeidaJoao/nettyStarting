@@ -6,7 +6,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class TCPStreamMessageDecoder extends ByteToMessageDecoder {
                                 Throwable cause) {
         System.out.println(getClass().getName()+": "+cause.getMessage());
         consumer.channelError(null,cause,ctx.channel().id().asShortText());
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }
 
     /**

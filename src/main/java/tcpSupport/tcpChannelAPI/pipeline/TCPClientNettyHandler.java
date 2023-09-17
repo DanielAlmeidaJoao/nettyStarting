@@ -3,12 +3,13 @@ package tcpSupport.tcpChannelAPI.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.net.UnknownHostException;
 
@@ -30,7 +31,7 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws UnknownHostException {
-        byte [] data = TCPChannelUtils.g.toJson(handshakeData).getBytes();
+        byte [] data = NewChannelsFactoryUtils.g.toJson(handshakeData).getBytes();
         ByteBuf tmp = ctx.alloc().buffer(data.length+4);
         tmp.writeInt(data.length);
         tmp.writeBytes(data);
@@ -54,10 +55,22 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
                                 Throwable cause) {
         consumer.onConnectionFailed(ctx.channel().id().asShortText(),cause,type);
         logger.error(cause.getMessage());
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         consumer.onChannelInactive(ctx.channel().id().asShortText());
     }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx,
+                                   Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            logger.debug("CONNECTION IdleStateEvent TRIGGERED! ");
+            ctx.channel().close();
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
+    }
+
 }

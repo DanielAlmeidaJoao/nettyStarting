@@ -40,7 +40,7 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         this.timeoutDeleteReceivedIds = timeoutDeleteReceivedIds > 0 ? timeoutDeleteReceivedIds : (120*1000);
         streams = new HashMap<>();
         this.maxSendRetry = maxSendRetry;
-        checkDuplicate = this.timeoutDeleteReceivedIds > 0 && this.maxSendRetry>0;
+        checkDuplicate = this.maxSendRetry>0;
     }
 
     @Override

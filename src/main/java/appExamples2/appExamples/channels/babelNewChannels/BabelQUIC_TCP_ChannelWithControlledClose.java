@@ -10,7 +10,7 @@ import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -26,7 +26,7 @@ public class BabelQUIC_TCP_ChannelWithControlledClose extends BabelQUIC_TCP_Chan
 
     public BabelQUIC_TCP_ChannelWithControlledClose(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
         super(serializer,list,properties,protoId,networkProtocol,networkRole);
-        initMaps(properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null);
+        initMaps(properties.getProperty(NewChannelsFactoryUtils.SINGLE_THREADED_PROP)!=null);
     }
     private void initMaps(boolean singleThreaded){
         if(singleThreaded){

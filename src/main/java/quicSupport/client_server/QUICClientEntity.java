@@ -30,7 +30,7 @@ import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.connectionSetups.ClientInterface;
 import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 import udpSupport.client_server.NettyUDPServer;
 
 import javax.net.ssl.TrustManagerFactory;
@@ -55,10 +55,10 @@ public final class QUICClientEntity implements ClientInterface {
         this.self = self;
         this.consumer = consumer;
         //
-        this.group = TCPServerEntity.createNewWorkerGroup(TCPChannelUtils.clientThreads(properties));
+        this.group = TCPServerEntity.createNewWorkerGroup(NewChannelsFactoryUtils.clientThreads(properties));
         context = null;
         this.properties = properties;
-        bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,QUICLogics.NEW_B_SIZE));
+        bufferSize = Integer.parseInt((String) properties.getOrDefault(NewChannelsFactoryUtils.BUFF_ALOC_SIZE,QUICLogics.NEW_B_SIZE));
 
     }
 
@@ -114,8 +114,8 @@ public final class QUICClientEntity implements ClientInterface {
                 })
                 .option(ChannelOption.ALLOCATOR,getAllocator())
                 .remoteAddress(remote)
-                .attr(AttributeKey.valueOf(TCPChannelUtils.CUSTOM_ID_KEY),id)
-                .attr(AttributeKey.valueOf(TCPChannelUtils.DEST_STREAM_PROTO),destProto);
+                .attr(AttributeKey.valueOf(NewChannelsFactoryUtils.CUSTOM_ID_KEY),id)
+                .attr(AttributeKey.valueOf(NewChannelsFactoryUtils.DEST_STREAM_PROTO),destProto);
 
                 //.earlyDataSendCallBack(new CustomEarlyDataSendCallback(self,remote,consumer,metrics))
                 b.connect().addListener(future -> {

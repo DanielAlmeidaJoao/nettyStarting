@@ -16,7 +16,7 @@ import pt.unl.fct.di.novasys.network.data.Host;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 import udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.io.FileInputStream;
@@ -50,7 +50,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
         NETWORK_PROTO = properties.getProperty("NETWORK_PROTO");
-        boolean singleThreaded = properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null;
+        boolean singleThreaded = properties.getProperty(NewChannelsFactoryUtils.SINGLE_THREADED_PROP)!=null;
         channelId = makeChan(NETWORK_PROTO,address,port,singleThreaded,properties);
         System.out.println("PROTO "+NETWORK_PROTO);
 
@@ -69,25 +69,25 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             f = this::execute;
         }
         boolean zeroCopy = this.properties.getProperty(NettyTCPChannel.NOT_ZERO_COPY)!=null;
-        String chunkSize = this.properties.getProperty(TCPChannelUtils.CHUNK_SIZE,"0");
+        String chunkSize = this.properties.getProperty(NewChannelsFactoryUtils.CHUNK_SIZE,"0");
         System.out.println("CHUNKSIZE "+chunkSize);
         if(channelName.equalsIgnoreCase("quic")){
             System.out.println("QUIC ON");
             //channelProps.setProperty("metrics_interval","2000");
-            channelProps = TCPChannelUtils.quicChannelProperty(address,port);
+            channelProps = NewChannelsFactoryUtils.quicChannelProperty(address,port);
             channelProps.setProperty("rcvBuffAlocSize", this.properties.getProperty("rcvBuffAlocSize"));
-            channelProps.setProperty(TCPChannelUtils.CHUNK_SIZE,chunkSize);
+            channelProps.setProperty(NewChannelsFactoryUtils.CHUNK_SIZE,chunkSize);
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps,f);
         }else if(channelName.equalsIgnoreCase("tcp")){
             System.out.println("TCP ON");
-            channelProps = TCPChannelUtils.tcpChannelProperties(address,port);
+            channelProps = NewChannelsFactoryUtils.tcpChannelProperties(address,port);
             addExtraProps(singleThreaded,zeroCopy,channelProps);
-            channelProps.setProperty(TCPChannelUtils.CHUNK_SIZE,chunkSize);
+            channelProps.setProperty(NewChannelsFactoryUtils.CHUNK_SIZE,chunkSize);
             channelId = createChannel(BabelTCP_P2P_Channel.CHANNEL_NAME, channelProps,f);
         }else{
             System.out.println("UDP ON");
-            channelProps = TCPChannelUtils.udpChannelProperties(address,port);
+            channelProps = NewChannelsFactoryUtils.udpChannelProperties(address,port);
             channelProps.setProperty("rcvBuffAlocSize", this.properties.getProperty("rcvBuffAlocSize"));
             addExtraProps(singleThreaded,zeroCopy,channelProps);
             channelId = createChannel(BabelUDPChannel.NAME,channelProps);
@@ -100,7 +100,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             channelProps.setProperty(NettyTCPChannel.NOT_ZERO_COPY,"ZERO_copy");
         }
         if(singleThreade){
-            channelProps.setProperty(TCPChannelUtils.SINGLE_THREADED_PROP,"as");
+            channelProps.setProperty(NewChannelsFactoryUtils.SINGLE_THREADED_PROP,"as");
         }
     }
     @Override
@@ -150,20 +150,20 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         System.out.println("METRICS TRIGGERED!!!");
         for (ConnectionProtocolMetrics metrics : event.getCurrent()) {
             //System.out.println("HOST ++ "+metrics.getHostAddress());
-            //System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(metrics));
+            //System.out.println("CURRENT: "+NewChannelsFactoryUtils.g.toJson(metrics));
 
         }
-        //System.out.println("CURRENT: "+TCPChannelUtils.g.toJson(event.getCurrent()));
-        System.out.println("OLD: "+TCPChannelUtils.g.toJson(event.getOld()));
+        //System.out.println("CURRENT: "+NewChannelsFactoryUtils.g.toJson(event.getCurrent()));
+        System.out.println("OLD: "+ NewChannelsFactoryUtils.g.toJson(event.getOld()));
     }
 
     private void uponUDPChannelMetrics(UDPMetricsEvent event, int channelId) {
         System.out.println("UDP METRICS TRIGGERED!!!");
         for (UDPNetworkStatsWrapper stat : event.getStats()) {
             System.out.printf("HOST: %s\n",stat.getDest());
-            System.out.println(TCPChannelUtils.g.toJson(stat.ackStats));
-            System.out.println(TCPChannelUtils.g.toJson(stat.totalMessageStats));
-            System.out.println(TCPChannelUtils.g.toJson(stat.sentAckedMessageStats));
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.ackStats));
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.totalMessageStats));
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.sentAckedMessageStats));
         }
     }
     public static final short HANDLER_ID = 2;
@@ -386,9 +386,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
                 babelInputStream.writeFile(filePath.toFile());
             }
 
-            //System.out.println(TCPChannelUtils.g.toJson(getCurrentMetrics(channelId)));
-            //System.out.println(TCPChannelUtils.g.toJson(getOldMetrics(channelId)));
-            //System.out.println(TCPChannelUtils.g.toJson(getUDPMetrics(channelId)));
+            //System.out.println(NewChannelsFactoryUtils.g.toJson(getCurrentMetrics(channelId)));
+            //System.out.println(NewChannelsFactoryUtils.g.toJson(getOldMetrics(channelId)));
+            //System.out.println(NewChannelsFactoryUtils.g.toJson(getUDPMetrics(channelId)));
 
             //long len = filePath.toFile().length();
             //sendStream(channelId,fileInputStream,len,streamId);

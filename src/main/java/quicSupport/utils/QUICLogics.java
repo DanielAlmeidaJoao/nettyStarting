@@ -58,7 +58,9 @@ public class QUICLogics {
     public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "clientKeyStorePassword";
     public static final String CLIENT_KEYSTORE_ALIAS_KEY = "clientKeyStoreAlias";
 
-    public static final String MAX_UDP_RCV_SND_PAYLOD_SIZE = "maxUdpPayloadSize";
+    public static final String MAX_UDP_RCV_PAYLOD_SIZE = "maxUdpRCVPayloadSize";
+    public static final String MAX_UDP_SND_PAYLOD_SIZE = "maxUdpSNDPayloadSize";
+
     public static final String CongestionControlAlgorithm = "congestionControlAlgorithm";
 
 
@@ -84,9 +86,21 @@ public class QUICLogics {
         return address.getHostName().equals(socketAddress.getHostName())&&address.getPort()==socketAddress.getPort();
     }
     public static final String NEW_B_SIZE = "65536"; //1024*64
+
+    public static QuicCongestionControlAlgorithm getCongestionControlAlgorithm(String algo){
+        switch (algo){
+            case "RENO":return QuicCongestionControlAlgorithm.RENO;
+            case "CUBIC":return QuicCongestionControlAlgorithm.CUBIC;
+            case "BBR":return QuicCongestionControlAlgorithm.BBR;
+            default:System.out.println("UNKNOWN ALGORITHM; USING <CUBIC> AS DEFAULT");
+            return QuicCongestionControlAlgorithm.CUBIC;
+        }
+    }
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
-        int payloadSize = Integer.parseInt((String) properties.getOrDefault(MAX_UDP_RCV_SND_PAYLOD_SIZE,NEW_B_SIZE));
-        String congAlgo = (String) properties.getOrDefault(CongestionControlAlgorithm,"RENO");
+        int payloadSizeRecv = Integer.parseInt((String) properties.getOrDefault(MAX_UDP_RCV_PAYLOD_SIZE,"65527"));
+        int payloadSizeSend = Integer.parseInt((String) properties.getOrDefault(MAX_UDP_SND_PAYLOD_SIZE,"65527"));
+
+        String congAlgo = (String) properties.getOrDefault(CongestionControlAlgorithm,"CUBIC");
         return codecBuilder
                 .maxIdleTimeout(Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+"")) , TimeUnit.SECONDS)
                 .initialMaxData(Long.parseLong(properties.getProperty(INITIAL_MAX_DATA,initialMaxData)))
@@ -97,9 +111,10 @@ public class QUICLogics {
                 .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MILLISECONDS)
                 //.activeMigration(true);
                 //.sslTaskExecutor(ImmediateExecutor.INSTANCE)
-                .maxRecvUdpPayloadSize(payloadSize).maxSendUdpPayloadSize(payloadSize)
-                .congestionControlAlgorithm(QuicCongestionControlAlgorithm.valueOf(congAlgo))
-                .hystart(false);
+                .maxRecvUdpPayloadSize(payloadSizeRecv)
+                .maxSendUdpPayloadSize(payloadSizeSend)
+                .congestionControlAlgorithm(getCongestionControlAlgorithm(congAlgo))
+                .hystart(true);
     }
 
     public static byte[] appendOpToHash(byte[] hash, byte[] op) {

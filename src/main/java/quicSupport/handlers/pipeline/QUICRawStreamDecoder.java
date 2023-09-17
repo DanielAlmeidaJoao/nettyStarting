@@ -8,7 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.util.List;
 
@@ -50,7 +50,7 @@ public class QUICRawStreamDecoder extends ByteToMessageDecoder {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.error(cause.getMessage());
         consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,customId);
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }
 
 }

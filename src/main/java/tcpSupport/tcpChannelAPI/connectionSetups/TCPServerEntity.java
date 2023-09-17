@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.pipeline.TCPCustomHandshakeHandler;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
@@ -37,7 +37,7 @@ public class TCPServerEntity implements ServerInterface{
         this.hostName = hostName;
         this.consumer = consumer;
         this.properties = properties;
-        int serverThreads = TCPChannelUtils.serverThreads(properties);
+        int serverThreads = NewChannelsFactoryUtils.serverThreads(properties);
         this.childrenGroup = createNewWorkerGroup(serverThreads);
         logger.debug("Using {} server threads",serverThreads);
     }
@@ -46,7 +46,7 @@ public class TCPServerEntity implements ServerInterface{
             throws Exception{
         ServerBootstrap b = new ServerBootstrap();
         final EventLoopGroup parent;
-        if(properties.getProperty(TCPChannelUtils.useBossThreadTCP)!=null){
+        if(properties.getProperty(NewChannelsFactoryUtils.useBossThreadTCP)!=null){
             parent = createNewWorkerGroup(1);
             b.group(parent,childrenGroup);
             logger.debug("Using boss EventLoopGroup");
