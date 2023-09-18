@@ -40,6 +40,8 @@ public class TCPChannelUtils {
     public final static String CHUNK_SIZE = "chunkSize";
     public final static String USE_BABEL_THREAD_TO_SEND = "useBabelThreadToSendM";
 
+    public final static String TCP_IDLE_CONNECTION_TIMEOUT="TCPIdleConnectionTimeout";
+
 
     public static  <E, T> Map<E,T> getMapInst(boolean singleT){
         if(singleT){
@@ -62,6 +64,8 @@ public class TCPChannelUtils {
         channelProps.setProperty(QUICLogics.CLIENT_KEYSTORE_ALIAS_KEY,"clientcert");
         //channelProps.setProperty(QUICLogics.CONNECT_ON_SEND,"true");
         channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"60");
+        //channelProps.setProperty(QUICLogics.CongestionControlAlgorithm,"RENO");
+
         //channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
         channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"0");
         //channelProps.setProperty(TCPChannelUtils.BUFF_ALOC_SIZE, QUICLogics.NEW_B_SIZE+"");

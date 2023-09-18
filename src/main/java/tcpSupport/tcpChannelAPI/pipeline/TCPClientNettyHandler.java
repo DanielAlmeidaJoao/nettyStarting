@@ -3,6 +3,7 @@ package tcpSupport.tcpChannelAPI.pipeline;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.utils.enums.TransmissionType;
@@ -60,4 +61,16 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         consumer.onChannelInactive(ctx.channel().id().asShortText());
     }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx,
+                                   Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            logger.debug("CONNECTION IdleStateEvent TRIGGERED! ");
+            ctx.channel().close();
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
+    }
+
 }

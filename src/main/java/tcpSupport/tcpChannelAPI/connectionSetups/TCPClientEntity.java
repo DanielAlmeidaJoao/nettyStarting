@@ -9,6 +9,7 @@ import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.AttributeKey;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
@@ -21,7 +22,9 @@ import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static tcpSupport.tcpChannelAPI.utils.TCPChannelUtils.CUSTOM_ID_KEY;
+import static tcpSupport.tcpChannelAPI.utils.TCPChannelUtils.TCP_IDLE_CONNECTION_TIMEOUT;
 
 public class TCPClientEntity implements ClientInterface{
 
@@ -30,12 +33,13 @@ public class TCPClientEntity implements ClientInterface{
     public InetSocketAddress self;
     private final int connectionTimeout;
     private final StreamingNettyConsumer consumer;
+    private final int idleConnectionTimeout;
     public TCPClientEntity(InetSocketAddress host, Properties properties, StreamingNettyConsumer consumer) {
         group = TCPServerEntity.createNewWorkerGroup(TCPChannelUtils.clientThreads(properties));
         this.self = host;
         this.consumer = consumer;
         connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
-
+        idleConnectionTimeout = Integer.parseInt(properties.getProperty(TCP_IDLE_CONNECTION_TIMEOUT,"-1"));
     }
 
     //    public void connect(InetSocketAddress remote, Properties properties, TransmissionType transmissionType, String id) throws Exception{
@@ -52,6 +56,9 @@ public class TCPClientEntity implements ClientInterface{
                             ch.pipeline().addLast(TCPDelimitedMessageDecoder.NAME,new TCPDelimitedMessageDecoder(consumer));
                         }else{
                             ch.pipeline().addLast(TCPStreamMessageDecoder.NAME,new TCPStreamMessageDecoder(consumer));
+                        }
+                        if(idleConnectionTimeout>0){
+                            ch.pipeline().addLast(new IdleStateHandler(0, 0, idleConnectionTimeout, SECONDS));
                         }
                         ch.pipeline().addLast( new TCPClientNettyHandler(new HandShakeMessage(self,type,destProto),consumer,type));
                     }

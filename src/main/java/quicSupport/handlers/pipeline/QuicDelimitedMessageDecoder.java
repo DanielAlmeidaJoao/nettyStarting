@@ -82,7 +82,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }else{
                 throw new AssertionError("RECEIVED UNKNOW MESSAGE TYPE: "+msgType);
             }
-            msg.discardReadBytes();
+            //msg.discardReadBytes();
             //ctx.fireChannelRead(msg);
         }
 
