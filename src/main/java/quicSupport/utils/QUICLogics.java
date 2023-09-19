@@ -58,7 +58,9 @@ public class QUICLogics {
     public static final String CLIENT_KEYSTORE_PASSWORD_KEY = "clientKeyStorePassword";
     public static final String CLIENT_KEYSTORE_ALIAS_KEY = "clientKeyStoreAlias";
 
-    public static final String MAX_UDP_RCV_SND_PAYLOD_SIZE = "maxUdpPayloadSize";
+    public static final String MAX_UDP_RCV_PAYLOD_SIZE = "maxUdpRCVPayloadSize";
+    public static final String MAX_UDP_SND_PAYLOD_SIZE = "maxUdpSNDPayloadSize";
+
     public static final String CongestionControlAlgorithm = "congestionControlAlgorithm";
 
 
@@ -95,7 +97,9 @@ public class QUICLogics {
         }
     }
     public static QuicCodecBuilder addConfigs(QuicCodecBuilder codecBuilder, Properties properties){
-        int payloadSize = Integer.parseInt((String) properties.getOrDefault(MAX_UDP_RCV_SND_PAYLOD_SIZE,NEW_B_SIZE));
+        int payloadSizeRecv = Integer.parseInt((String) properties.getOrDefault(MAX_UDP_RCV_PAYLOD_SIZE,"65527"));
+        int payloadSizeSend = Integer.parseInt((String) properties.getOrDefault(MAX_UDP_SND_PAYLOD_SIZE,"65527"));
+
         String congAlgo = (String) properties.getOrDefault(CongestionControlAlgorithm,"CUBIC");
         return codecBuilder
                 .maxIdleTimeout(Long.parseLong(properties.getProperty(MAX_IDLE_TIMEOUT_IN_SECONDS,maxIdleTimeoutInSeconds+"")) , TimeUnit.SECONDS)
@@ -107,9 +111,10 @@ public class QUICLogics {
                 .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MILLISECONDS)
                 //.activeMigration(true);
                 //.sslTaskExecutor(ImmediateExecutor.INSTANCE)
-                .maxRecvUdpPayloadSize(payloadSize).maxSendUdpPayloadSize(payloadSize)
+                .maxRecvUdpPayloadSize(payloadSizeRecv)
+                .maxSendUdpPayloadSize(payloadSizeSend)
                 .congestionControlAlgorithm(getCongestionControlAlgorithm(congAlgo))
-                .hystart(false);
+                .hystart(true);
     }
 
     public static byte[] appendOpToHash(byte[] hash, byte[] op) {

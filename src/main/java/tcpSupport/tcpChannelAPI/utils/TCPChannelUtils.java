@@ -67,8 +67,12 @@ public class TCPChannelUtils {
         //channelProps.setProperty(QUICLogics.CongestionControlAlgorithm,"RENO");
 
         //channelProps.setProperty(TCPChannelUtils.SINGLE_CON_PER_PEER,"TRUE");
-        channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"0");
-        //channelProps.setProperty(TCPChannelUtils.BUFF_ALOC_SIZE, QUICLogics.NEW_B_SIZE+"");
+        channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"25");
+        //channelProps.setProperty(TCPChannelUtils.BUFF_ALOC_SIZE,(16*1024)+"");
+        //channelProps.setProperty(QUICLogics.MAX_UDP_RCV_PAYLOD_SIZE,"65527");
+        channelProps.setProperty(QUICLogics.INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL,(1024*64)+"");
+        channelProps.setProperty(QUICLogics.INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE,(1024*64)+"");
+
         //channelProps.setProperty(TCPChannelUtils.CHANNEL_METRICS,"ON");
         //channelProps.setProperty(TCPChannelUtils.METRICS_INTERVAL_KEY,"30");
 
