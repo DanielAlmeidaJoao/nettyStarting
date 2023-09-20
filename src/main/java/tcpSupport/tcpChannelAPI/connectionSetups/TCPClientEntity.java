@@ -17,14 +17,14 @@ import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
 import tcpSupport.tcpChannelAPI.pipeline.TCPClientNettyHandler;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPDelimitedMessageDecoder;
 import tcpSupport.tcpChannelAPI.pipeline.encodings.TCPStreamMessageDecoder;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static tcpSupport.tcpChannelAPI.utils.TCPChannelUtils.CUSTOM_ID_KEY;
-import static tcpSupport.tcpChannelAPI.utils.TCPChannelUtils.TCP_IDLE_CONNECTION_TIMEOUT;
+import static tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils.CUSTOM_ID_KEY;
+import static tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils.TCP_IDLE_CONNECTION_TIMEOUT;
 
 public class TCPClientEntity implements ClientInterface{
 
@@ -35,10 +35,10 @@ public class TCPClientEntity implements ClientInterface{
     private final StreamingNettyConsumer consumer;
     private final int idleConnectionTimeout;
     public TCPClientEntity(InetSocketAddress host, Properties properties, StreamingNettyConsumer consumer) {
-        group = TCPServerEntity.createNewWorkerGroup(TCPChannelUtils.clientThreads(properties));
+        group = TCPServerEntity.createNewWorkerGroup(NewChannelsFactoryUtils.clientThreads(properties));
         this.self = host;
         this.consumer = consumer;
-        connectionTimeout = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
+        connectionTimeout = Integer.parseInt((String) properties.getOrDefault(NewChannelsFactoryUtils.CONNECT_TIMEOUT_MILLIS,"30000"));
         idleConnectionTimeout = Integer.parseInt(properties.getProperty(TCP_IDLE_CONNECTION_TIMEOUT,"-1"));
     }
 

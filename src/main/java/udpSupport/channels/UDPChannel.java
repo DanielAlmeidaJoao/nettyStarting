@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.BabelMessageSerializer;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.NetworkRole;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 import udpSupport.client_server.NettyUDPServer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.UDPNetworkStatsWrapper;
@@ -33,20 +33,20 @@ public class UDPChannel implements UDPChannelConsumer,UDPChannelInterface{
 
     public UDPChannel(Properties properties, boolean singleThreaded, UDPChannelHandlerMethods consumer, BabelMessageSerializer serializer) throws IOException {
         InetAddress addr;
-        if (properties.containsKey(TCPChannelUtils.ADDRESS_KEY))
-            addr = Inet4Address.getByName(properties.getProperty(TCPChannelUtils.ADDRESS_KEY));
+        if (properties.containsKey(NewChannelsFactoryUtils.ADDRESS_KEY))
+            addr = Inet4Address.getByName(properties.getProperty(NewChannelsFactoryUtils.ADDRESS_KEY));
             //addr = Inet4Address.getByName("0.0.0.0");
         else
             throw new IllegalArgumentException(NAME + " requires binding address");
         this.serializer = serializer;
-        int port = Integer.parseInt(properties.getProperty(TCPChannelUtils.PORT_KEY, DEFAULT_PORT));
+        int port = Integer.parseInt(properties.getProperty(NewChannelsFactoryUtils.PORT_KEY, DEFAULT_PORT));
         self = new InetSocketAddress(addr,port);
-        if( properties.getProperty(TCPChannelUtils.CHANNEL_METRICS)!=null){
+        if( properties.getProperty(NewChannelsFactoryUtils.CHANNEL_METRICS)!=null){
             metrics = new ChannelStats(singleThreaded);
         }
         udpServer=new NettyUDPServer(this,metrics,self,properties);
         channelHandlerMethods = consumer;
-        useNettyToDeserialize = properties.getProperty(TCPChannelUtils.USE_BABEL_THREAD_TO_SEND)==null;
+        useNettyToDeserialize = properties.getProperty(NewChannelsFactoryUtils.USE_BABEL_THREAD_TO_SEND)==null;
     }
 
     @Override

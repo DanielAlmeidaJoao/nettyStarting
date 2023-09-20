@@ -6,7 +6,7 @@ import io.netty.incubator.codec.quic.QuicStreamChannel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     private final CustomQuicChannelConsumer consumer;
@@ -36,6 +36,6 @@ public class QuicServerChannelConHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOGGER.error(cause.getMessage());
         consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,null);
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }
 }

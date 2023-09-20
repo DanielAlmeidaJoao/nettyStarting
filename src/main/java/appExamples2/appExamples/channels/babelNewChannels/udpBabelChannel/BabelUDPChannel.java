@@ -16,7 +16,7 @@ import quicSupport.utils.enums.NetworkProtocol;
 import quicSupport.utils.enums.NetworkRole;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 import udpSupport.channels.SingleThreadedUDPChannel;
 import udpSupport.channels.UDPChannel;
 import udpSupport.channels.UDPChannelHandlerMethods;
@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import static tcpSupport.tcpChannelAPI.utils.TCPChannelUtils.METRICS_INTERVAL_KEY;
+import static tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils.METRICS_INTERVAL_KEY;
 
 public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
     private static final Logger logger = LogManager.getLogger(BabelUDPChannel.class);
@@ -48,7 +48,7 @@ public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
     public BabelUDPChannel(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short ownerProto) throws IOException {
         serializer.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
         this.listener = list;
-        if(properties.getProperty(TCPChannelUtils.SINGLE_THREADED_PROP)!=null){
+        if(properties.getProperty(NewChannelsFactoryUtils.SINGLE_THREADED_PROP)!=null){
             udpChannelInterface = new SingleThreadedUDPChannel(properties,this,serializer);
             customConIDToAddress = new HashMap<>();
             hostStringMap = new HashMap<>();
@@ -201,7 +201,7 @@ public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
     }
 
     public String nextId(){
-        return "udpchan"+ TCPChannelUtils.channelIdCounter.getAndIncrement();
+        return "udpchan"+ NewChannelsFactoryUtils.channelIdCounter.getAndIncrement();
     }
 
     @Override

@@ -11,7 +11,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import quicSupport.channels.CustomQuicChannelConsumer;
 import quicSupport.client_server.QUICServerEntity;
 import quicSupport.utils.customConnections.CustomQUICStreamCon;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(QUICServerEntity.class);
@@ -56,7 +56,7 @@ public class QuicStreamInboundHandler extends ChannelInboundHandlerAdapter {
         cause.printStackTrace();
         logger.error(cause.getMessage());
         consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,customId);
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
 
     }
 }

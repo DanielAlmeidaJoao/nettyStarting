@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.events.OnStreamConnectionUpEvent;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.network.data.Host;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -84,8 +84,8 @@ public class EchoProtocol2 extends GenericProtocol {
     }
     private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
         System.out.println("METRICS TRIGGERED!!!");
-        System.out.println("CURRENT: "+ TCPChannelUtils.g.toJson(event.getCurrent()));
-        System.out.println("OLD: "+TCPChannelUtils.g.toJson(event.getOld()));
+        System.out.println("CURRENT: "+ NewChannelsFactoryUtils.g.toJson(event.getCurrent()));
+        System.out.println("OLD: "+ NewChannelsFactoryUtils.g.toJson(event.getOld()));
     }
     private void uponInConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP.",event.getNode());

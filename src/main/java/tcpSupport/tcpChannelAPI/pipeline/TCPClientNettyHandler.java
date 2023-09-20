@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.connectionSetups.messages.HandShakeMessage;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.net.UnknownHostException;
 
@@ -31,7 +31,7 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws UnknownHostException {
-        byte [] data = TCPChannelUtils.g.toJson(handshakeData).getBytes();
+        byte [] data = NewChannelsFactoryUtils.g.toJson(handshakeData).getBytes();
         ByteBuf tmp = ctx.alloc().buffer(data.length+4);
         tmp.writeInt(data.length);
         tmp.writeBytes(data);
@@ -55,7 +55,7 @@ public class TCPClientNettyHandler extends ChannelInboundHandlerAdapter {
                                 Throwable cause) {
         consumer.onConnectionFailed(ctx.channel().id().asShortText(),cause,type);
         logger.error(cause.getMessage());
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {

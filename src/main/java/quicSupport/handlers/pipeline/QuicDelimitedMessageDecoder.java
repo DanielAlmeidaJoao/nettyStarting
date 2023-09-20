@@ -13,7 +13,7 @@ import quicSupport.channels.NettyQUICChannel;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.QuicHandShakeMessage;
 import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 import java.util.List;
 
@@ -74,7 +74,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
             }else if(QUICLogics.HANDSHAKE_MESSAGE==msgType){
                 byte [] data = new byte[length];
                 msg.readBytes(data);
-                QuicHandShakeMessage handShakeMessage = TCPChannelUtils.g.fromJson(new String(data), QuicHandShakeMessage.class);
+                QuicHandShakeMessage handShakeMessage = NewChannelsFactoryUtils.g.fromJson(new String(data), QuicHandShakeMessage.class);
                 if(TransmissionType.UNSTRUCTURED_STREAM==handShakeMessage.transmissionType){
                     ch.pipeline().replace(QuicDelimitedMessageDecoder.HANDLER_NAME,QUICRawStreamDecoder.HANDLER_NAME,new QUICRawStreamDecoder(consumer, true, customId));
                 }
@@ -91,7 +91,7 @@ public class QuicDelimitedMessageDecoder extends ByteToMessageDecoder {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.error(cause.getMessage());
         consumer.streamErrorHandler((QuicStreamChannel) ctx.channel(),cause,customId);
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }
 
 }

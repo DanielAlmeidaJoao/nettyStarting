@@ -7,7 +7,7 @@ import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.channel.StreamingNettyConsumer;
 import tcpSupport.tcpChannelAPI.pipeline.AbstractMessageDecoderHandler;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 
 public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
     public final TransmissionType type;
@@ -26,7 +26,7 @@ public class TCPDelimitedMessageDecoder extends AbstractMessageDecoderHandler {
                                 Throwable cause) {
         System.out.println(getClass().getName()+": "+cause.getMessage());
         consumer.channelError(null,cause,ctx.channel().id().asShortText());
-        TCPChannelUtils.closeOnError(ctx.channel());
+        NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }
     @Override
     public boolean handleReceivedMessage(ChannelHandlerContext ctx, ByteBuf in, int len) {

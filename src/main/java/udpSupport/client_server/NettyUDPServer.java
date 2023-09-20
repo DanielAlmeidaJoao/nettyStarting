@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 import udpSupport.channels.UDPChannelConsumer;
 import udpSupport.metrics.ChannelStats;
 import udpSupport.metrics.NetworkStatsKindEnum;
@@ -71,9 +71,9 @@ public class NettyUDPServer {
         MAX_SEND_RETRIES = (properties.getProperty(UDP_BROADCAST_PROP)!=null ? 0: ( Integer.parseInt(properties.getProperty(MAX_SEND_RETRIES_KEY,"20"))));
         RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MIN_UDP_RETRANSMISSION_TIMEOUT,"250"));
         MAX_RETRANSMISSION_TIMEOUT = Integer.parseInt(properties.getProperty(MAX_UDP_RETRANSMISSION_TIMEOUT,"0"));
-        BUFFER_SIZE = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,"66560"));
+        BUFFER_SIZE = Integer.parseInt((String) properties.getOrDefault(NewChannelsFactoryUtils.BUFF_ALOC_SIZE,"66560"));
         random = RETRANSMISSION_TIMEOUT>0 ? getRandomInstance():null;
-        int serverThreads = TCPChannelUtils.serverThreads(properties);
+        int serverThreads = NewChannelsFactoryUtils.serverThreads(properties);
         group = TCPServerEntity.createNewWorkerGroup(serverThreads);
         ID = System.currentTimeMillis();
         try {

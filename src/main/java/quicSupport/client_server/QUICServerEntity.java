@@ -27,7 +27,7 @@ import quicSupport.utils.LoadCertificate;
 import quicSupport.utils.QUICLogics;
 import tcpSupport.tcpChannelAPI.connectionSetups.ServerInterface;
 import tcpSupport.tcpChannelAPI.connectionSetups.TCPServerEntity;
-import tcpSupport.tcpChannelAPI.utils.TCPChannelUtils;
+import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
 import udpSupport.client_server.NettyUDPServer;
 
 import javax.net.ssl.TrustManagerFactory;
@@ -51,7 +51,7 @@ public final class QUICServerEntity implements ServerInterface {
         self = new InetSocketAddress(host,port);
         this.properties=properties;
         quicChannel =null;
-        int serverThreads = TCPChannelUtils.serverThreads(properties);
+        int serverThreads = NewChannelsFactoryUtils.serverThreads(properties);
         group = TCPServerEntity.createNewWorkerGroup(serverThreads);
     }
     public EventLoopGroup getEventLoopGroup(){
@@ -99,7 +99,7 @@ public final class QUICServerEntity implements ServerInterface {
     public void startServer() throws Exception {
         ByteBufAllocator allocator = QUICClientEntity.getAllocator();
         QuicSslContext context = getSignedSslContext();
-        final int bufferSize = Integer.parseInt((String) properties.getOrDefault(TCPChannelUtils.BUFF_ALOC_SIZE,QUICLogics.NEW_B_SIZE));
+        final int bufferSize = Integer.parseInt((String) properties.getOrDefault(NewChannelsFactoryUtils.BUFF_ALOC_SIZE,QUICLogics.NEW_B_SIZE));
         ChannelHandler codec = getChannelHandler(context,bufferSize);
         Bootstrap bs = new Bootstrap();
 
