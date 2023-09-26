@@ -67,9 +67,10 @@ public class NewChannelsFactoryUtils {
         //channelProps.setProperty(QUICLogics.CongestionControlAlgorithm,"RENO");
 
         //channelProps.setProperty(NewChannelsFactoryUtils.SINGLE_CON_PER_PEER,"TRUE");
-        channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"25");
+        channelProps.setProperty(QUICLogics.MAX_ACK_DELAY,"3000");
         //channelProps.setProperty(NewChannelsFactoryUtils.BUFF_ALOC_SIZE,(16*1024)+"");
         //channelProps.setProperty(QUICLogics.MAX_UDP_RCV_PAYLOD_SIZE,"65527");
+        channelProps.setProperty(QUICLogics.INITIAL_MAX_DATA,(1024*64*10)+"");
         channelProps.setProperty(QUICLogics.INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_LOCAL,(1024*64)+"");
         channelProps.setProperty(QUICLogics.INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE,(1024*64)+"");
 
@@ -105,7 +106,7 @@ public class NewChannelsFactoryUtils {
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MIN_UDP_RETRANSMISSION_TIMEOUT,"200");
         properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_UDP_RETRANSMISSION_TIMEOUT,"100");
 
-        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"100");
+        properties.setProperty(udpSupport.client_server.NettyUDPServer.MAX_SEND_RETRIES_KEY,"200");
         //properties.setProperty(NettyUDPServer.UDP_BROADCAST_PROP,"20");
         //properties.setProperty(NewChannelsFactoryUtils.CHANNEL_METRICS,"ON");
         //properties.setProperty(NewChannelsFactoryUtils.METRICS_INTERVAL_KEY,"30");
