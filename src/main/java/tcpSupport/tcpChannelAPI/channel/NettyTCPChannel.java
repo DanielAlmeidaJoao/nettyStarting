@@ -62,7 +62,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
 
     private Properties properties;
     public final NetworkRole networkRole;
-    private final boolean useNettyToDeserialize;
+    private final boolean useNettyToSerialize;
 
     private final BabelMessageSerializer serializer;
     //private final EventLoopGroup serverParentGroup;
@@ -113,8 +113,8 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         streamContinuoslyLogics = null;
         this.properties = properties;
         chunkSize = Integer.parseInt(properties.getProperty(NewChannelsFactoryUtils.CHUNK_SIZE,"-1"));
-        useNettyToDeserialize = properties.getProperty(NewChannelsFactoryUtils.USE_BABEL_THREAD_TO_SEND)==null;
-        logger.info("USING NETTY TO DESERIALIZE {}",useNettyToDeserialize);
+        useNettyToSerialize = properties.getProperty(NewChannelsFactoryUtils.USE_BABEL_THREAD_TO_SEND)==null;
+
     }
 
     public static EventLoopGroup setGroup(ClientInterface client, ServerInterface server, NetworkRole networkRole){
@@ -323,7 +323,7 @@ public class NettyTCPChannel implements StreamingNettyConsumer, NettyChannelInte
         }
     }
     private void sendAux(BabelMessage message, CustomTCPConnection connection){
-        if(useNettyToDeserialize){
+        if(useNettyToSerialize){
             connection.channel.eventLoop().execute(() -> {sendAuxAux(message, connection);});
         }else{
             sendAuxAux(message, connection);

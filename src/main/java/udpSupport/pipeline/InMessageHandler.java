@@ -139,12 +139,12 @@ public class InMessageHandler extends ChannelInboundHandlerAdapter {
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.MESSAGE_STATS);
         }
-        if(canCheckDuplicate()){
+        //if(canCheckDuplicate()){
             Long pID = receivedMessages.put(getStrID(sender,msgId),peerID);
             if(pID==peerID){
                 return;
             }
-        }
+        //}
         if(channelStats!=null){
             channelStats.addReceivedBytes(sender,availableBytes,NetworkStatsKindEnum.EFFECTIVE_SENT_DELIVERED);
         }

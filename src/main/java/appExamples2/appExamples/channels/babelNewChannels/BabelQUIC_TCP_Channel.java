@@ -69,18 +69,18 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
         if(NetworkProtocol.QUIC==protocol){
             if(properties.getProperty(NewChannelsFactoryUtils.SINGLE_THREADED_PROP)!=null){
                 i = new SingleThreadedQuicChannel(properties,networkRole,this,serializer);
-                System.out.println("SINGLE THREADED CHANNEL QUIC ");
+               logger.debug("SINGLE THREADED CHANNEL QUIC ");
             }else {
                 i = new NettyQUICChannel(properties,false,networkRole,this,serializer);
-                System.out.println("MULTI THREADED CHANNEL QUIC ");
+                logger.debug("MULTI THREADED CHANNEL QUIC ");
             }
         }else if(NetworkProtocol.TCP==protocol){
             if(properties.getProperty(NewChannelsFactoryUtils.SINGLE_THREADED_PROP)!=null){
                 i = new SingleThreadedNettyTCPChannel(properties,this,networkRole,serializer);
-                System.out.println("SINGLE THREADED CHANNEL TCP ");
+                logger.debug("SINGLE THREADED CHANNEL TCP ");
             }else {
                 i = new NettyTCPChannel(properties,false,this,networkRole,serializer);
-                System.out.println("MULTI THREADED CHANNEL TCP ");
+                logger.debug("MULTI THREADED CHANNEL TCP ");
             }
         }else{
             throw new RuntimeException("UNSUPPORTED PROTOCOL BY THIS CLASS: "+protocol);

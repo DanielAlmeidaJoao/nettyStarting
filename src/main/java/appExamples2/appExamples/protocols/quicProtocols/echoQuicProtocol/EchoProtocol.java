@@ -14,6 +14,7 @@ import pt.unl.fct.di.novasys.babel.channels.events.*;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
+import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
 import tcpSupport.tcpChannelAPI.utils.NewChannelsFactoryUtils;
@@ -55,6 +56,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             System.out.println("QUIC ON");
             channelProps = NewChannelsFactoryUtils.quicChannelProperty(address,port);
             //channelProps.setProperty("metrics_interval","2000");
+            channelProps.setProperty(QUICLogics.MAX_IDLE_TIMEOUT_IN_SECONDS,"3000");
 
             channelId = createChannel(BabelQUIC_P2P_Channel.CHANNEL_NAME, channelProps);
 

@@ -31,7 +31,7 @@ public class TCPStreamMessageDecoder extends ByteToMessageDecoder {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx,
                                 Throwable cause) {
-        System.out.println(getClass().getName()+": "+cause.getMessage());
+        //System.out.println(getClass().getName()+": "+cause.getMessage());
         consumer.channelError(null,cause,ctx.channel().id().asShortText());
         NewChannelsFactoryUtils.closeOnError(ctx.channel());
     }

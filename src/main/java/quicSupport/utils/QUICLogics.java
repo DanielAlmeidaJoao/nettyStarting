@@ -48,7 +48,7 @@ public class QUICLogics {
     private static final String initialMaxStreamsBidirectional="200";
     private static final String initialMaxStreamsUnidirectional="200";
 
-    private static final String maxAckDelay = "200";
+    private static final String maxAckDelay = "5000";
 
     public static final String SERVER_KEYSTORE_FILE_KEY = "serverKeystoreFile";
     public static final String SERVER_KEYSTORE_PASSWORD_KEY = "serverKeyStorePassword";
@@ -108,7 +108,7 @@ public class QUICLogics {
                 .initialMaxStreamDataBidirectionalRemote(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAM_DATA_BIDIRECTIONAL_REMOTE,initialMaxStreamDataBidirectionalRemote)))
                 .initialMaxStreamsBidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_BIDIRECTIONAL,initialMaxStreamsBidirectional)))
                 .initialMaxStreamsUnidirectional(Long.parseLong(properties.getProperty(INITIAL_MAX_STREAMS_UNIDIRECTIONAL,initialMaxStreamsUnidirectional)))
-                .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MILLISECONDS)
+                .maxAckDelay(Long.parseLong(properties.getProperty(MAX_ACK_DELAY,maxAckDelay)), TimeUnit.MICROSECONDS)
                 //.activeMigration(true);
                 //.sslTaskExecutor(ImmediateExecutor.INSTANCE)
                 .maxRecvUdpPayloadSize(payloadSizeRecv)
