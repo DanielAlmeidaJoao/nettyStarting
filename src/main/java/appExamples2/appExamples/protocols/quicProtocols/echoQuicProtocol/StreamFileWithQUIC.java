@@ -183,7 +183,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             System.out.println("GOTCHA "+msg.len+" "+receivedPP);
             return;
         }
-        writeToFile(msg.len,msg.data);
+        writeToFile(msg.len,msg.data,null);
     }
     private void uponMsgFail(FileBytesCarrier msg, Host host, short destProto,
                              Throwable throwable, int channelId) {
@@ -274,7 +274,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
     boolean notW = true;
     long start = 0;
 
-    private void writeToFile(int available, byte [] data){
+    private void writeToFile(int available, byte [] data, BabelStreamDeliveryEvent event){
         if(start==0){
             start = System.currentTimeMillis();
         }
@@ -288,7 +288,11 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         try {
             if(available<=0)return;
             received += available;
-            out.write(data);
+            if(event==null){
+                out.write(data);
+            }else{
+                event.babelOutputStream.readBytes(out);
+            }
             //logger.info("RECEIVED ALL BYTES {} . {}",available,received);
         }catch (Exception e){
             e.printStackTrace();
@@ -318,8 +322,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             System.out.println(" RECEIVED "+available);
             return;
         }
-        byte [] p = event.babelOutputStream.readBytes();
-        writeToFile(available,p);
+        //byte [] p = event.babelOutputStream.readBytes();
+        writeToFile(available,null,event);
     }
 
     private void uponStreamBytes(BabelStreamDeliveryEvent event) {
@@ -330,7 +334,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
             return;
         }
         byte [] p = event.babelOutputStream.readBytes();
-        writeToFile(available,p);
+        writeToFile(available,p, event);
         //logger.info("Received bytes2: {} from {} receivedTOTAL {} ",event.getMsg().length,event.getFrom(),received);
 
     }
