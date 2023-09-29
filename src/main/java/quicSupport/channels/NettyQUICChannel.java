@@ -78,7 +78,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
     private final int chunkSize;
 
     //private final EventLoopGroup group;
-    private final boolean useNettyToDeserialize;
+    private final boolean useNettyToSerialize;
 
     private final NetworkRole networkRole;
 
@@ -128,7 +128,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         connectIfNotConnected = properties.getProperty(NewChannelsFactoryUtils.AUTO_CONNECT_ON_SEND_PROP)!=null;
         streamContinuoslyLogics = null;
         chunkSize = Integer.parseInt((String) properties.getOrDefault(NewChannelsFactoryUtils.CHUNK_SIZE,"-1"));
-        useNettyToDeserialize = properties.getProperty(NewChannelsFactoryUtils.USE_BABEL_THREAD_TO_SEND)==null;
+        useNettyToSerialize = properties.getProperty(NewChannelsFactoryUtils.USE_BABEL_THREAD_TO_SEND)==null;
     }
     public InetSocketAddress getSelf(){
         return self;
@@ -464,7 +464,7 @@ public class NettyQUICChannel implements CustomQuicChannelConsumer, NettyChannel
         }
     }
     protected void sendMessage(CustomQUICStreamCon streamChannel, BabelMessage message, InetSocketAddress peer){
-        if(useNettyToDeserialize){
+        if(useNettyToSerialize){
             streamChannel.streamChannel.eventLoop().execute(() -> sendMessageAux(streamChannel,message,peer));
         }else{
             sendMessageAux(streamChannel,message,peer);
