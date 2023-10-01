@@ -20,7 +20,7 @@ public class SingleThreadedQuicChannel extends NettyQUICChannel {
 
     public SingleThreadedQuicChannel(Properties properties, NetworkRole role, ChannelHandlerMethods mom, BabelMessageSerializer serializer) throws IOException {
         super(properties,true,role,mom,serializer);
-        System.out.println("SINGLE THREADED CHANNEL");
+        //System.out.println("SINGLE THREADED CHANNEL");
         executor = new DefaultEventExecutor();
     }
 
