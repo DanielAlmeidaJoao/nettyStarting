@@ -109,7 +109,7 @@ public class NettyUDPServer {
             return;
         }
         UDPWaitForAckWrapper udpWaitForAckWrapper = waitingForAcks.get(msgId);
-        ScheduledFuture scheduledFuture = channel.eventLoop().schedule(() -> {
+        ScheduledFuture scheduledFuture = group.next().schedule(() -> {
             if(!waitingForAcks.containsKey(msgId)) {
                 releaseBuffer(packet);
                 return;
