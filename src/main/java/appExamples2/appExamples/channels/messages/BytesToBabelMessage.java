@@ -5,6 +5,7 @@ import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.network.ISerializer;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 public class BytesToBabelMessage extends ProtoMessage {
     public static final short ID = 500;
@@ -17,6 +18,12 @@ public class BytesToBabelMessage extends ProtoMessage {
         this.message = data;
     }
 
+    public void reflectonTest() throws NoSuchFieldException, IllegalAccessException {
+        BytesToBabelMessage r = new BytesToBabelMessage(null,0);
+        Class c = this.getClass();
+        Field f = c.getField("");
+        f.setInt(this,0);
+    }
     public static ISerializer<BytesToBabelMessage> serializer = new ISerializer<>() {
         @Override
         public void serialize(BytesToBabelMessage bytesToBabelMessage, ByteBuf out) throws IOException {
