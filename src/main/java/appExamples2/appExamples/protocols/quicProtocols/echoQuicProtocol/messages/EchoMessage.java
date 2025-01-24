@@ -20,6 +20,7 @@ public class EchoMessage extends ProtoMessage {
         this.sender = sender;
         this.message  = message;
     }
+    /**
     public static ISerializer<EchoMessage> serializer = new ISerializer<>() {
         @Override
         public void serialize(EchoMessage echoMessage, ByteBuf out) throws IOException {
@@ -33,5 +34,10 @@ public class EchoMessage extends ProtoMessage {
             EchoMessage echoMessage = BusinessUtils.gson.fromJson(data,EchoMessage.class);
             return echoMessage;
         }
-    };
+    }; **/
+
+    @Override
+    public ProtoMessage getNewEmptyInstance() {
+        return new EchoMessage(null,null);
+    }
 }

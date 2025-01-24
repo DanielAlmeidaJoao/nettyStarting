@@ -85,7 +85,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     @Override
     public void init(Properties props) {
         //Nothing to do here, we just wait for event from the membership or the application
-        registerMessageSerializer(channelId, EchoMessage.MSG_ID, EchoMessage.serializer);
+        registerMessageSerializer(channelId, EchoMessage.MSG_ID, EchoMessage.newSerializer(EchoMessage.class));
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);

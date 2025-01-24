@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 
@@ -16,9 +17,6 @@ public abstract class ProtoMessage {
 
     public ProtoMessage(short id){
         this.id = id;
-    }
-    public ProtoMessage(){
-        this.id = -1;
     }
 
     public short getId() {
@@ -135,19 +133,37 @@ public abstract class ProtoMessage {
         }
     }
 
-    public abstract ProtoMessage getNewEmptyInstance();
+    public abstract <V extends ProtoMessage> ProtoMessage getNewEmptyInstance();
 
-    public ISerializer<ProtoMessage> serializer = new ISerializer<>() {
-        @Override
-        public void serialize(ProtoMessage protoMessage, ByteBuf out) throws IOException {
-            protoMessage.serializeMessage(out);
+    public static <V extends ProtoMessage> ISerializer<V> newSerializer(Class<V> zclass){
+        V emptyMessage = null;
+        try{
+            for (Constructor<?> constructor : zclass.getConstructors()) {
+                if(constructor.getParameterCount() == 0){
+                    emptyMessage = (V) constructor.newInstance();
+                    break;
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
+        if( emptyMessage == null ){
+            throw new RuntimeException(zclass.getName() + " IS MISSING AN EMPTY CONSTRUCTOR!");
+        }
+        V finalEmptyMessage = emptyMessage;
+        return new ISerializer<>() {
+            @Override
+            public void serialize(ProtoMessage protoMessage, ByteBuf out) throws IOException {
+                protoMessage.serializeMessage(out);
+            }
 
-        @Override
-        public ProtoMessage deserialize(ByteBuf in) throws IOException {
-            ProtoMessage protoMessage = getNewEmptyInstance
-            return null;
-        }
+            @Override
+            public V deserialize(ByteBuf in) throws IOException {
+                ProtoMessage protoMessage = finalEmptyMessage.getNewEmptyInstance();
+                protoMessage.deserializeMessage(in);
+                return (V) protoMessage;
+            }
+        };
     };
-    
+
 }
