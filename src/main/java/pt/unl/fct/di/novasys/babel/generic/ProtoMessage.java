@@ -2,10 +2,12 @@ package pt.unl.fct.di.novasys.babel.generic;
 
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
+import pt.unl.fct.di.novasys.network.data.Host;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 
 /**
@@ -32,9 +34,16 @@ public abstract class ProtoMessage {
     }
 
     private void serializeMessage(ByteBuf out) {
+        System.out.println("IS GOING TO SERIALIZE NOW");
         try {
             Field[] fields = this.getClass().getDeclaredFields();
+            System.out.println(fields.length);
             for (Field field : fields) {
+
+                if(Modifier.isFinal(field.getModifiers())||Modifier.isStatic(field.getModifiers())){
+                    continue;
+                }
+                field.setAccessible(true);
                 switch (field.getType().getSimpleName()) {
                     case "byte":
                         out.writeByte(field.getByte(this));
@@ -57,7 +66,7 @@ public abstract class ProtoMessage {
                     case "char":
                         out.writeChar(field.getChar(this));
                         break;
-                    case "string":
+                    case "String":
                         writeString(out,(String) field.get(this));
                         break;
                     case "double":
@@ -73,20 +82,30 @@ public abstract class ProtoMessage {
                         if (object instanceof ProtoMessage) {
                             ProtoMessage aux = (ProtoMessage) object;
                             aux.serializeMessage(out);
+                        }if (object instanceof Host) {
+                            Host.serializer.serialize((Host) object,out);
                         } else {
                             throw new RuntimeException("Error trying to serialize field: " + field.getName());
                         }
                 }
+                System.out.println("SERIALIZING HOST: "+field.getType().getSimpleName());
             }
-        } catch (IllegalAccessException e) {
+        } catch (Exception e) {
+            System.out.println("ENDING ENDING ENDING MENDING!!!");
             throw new RuntimeException(e);
         }
+        System.out.println("IS GOING TO SERIALIZE finished");
     }
 
     private void deserializeMessage(ByteBuf in) {
         try {
             Field[] fields = this.getClass().getDeclaredFields();
             for (Field field : fields) {
+                if(Modifier.isFinal(field.getModifiers())||Modifier.isStatic(field.getModifiers())){
+                    continue;
+                }
+                field.setAccessible(true);
+                System.out.println("SIMPLE NAME: "+field.getType().getSimpleName());
                 switch (field.getType().getSimpleName()) {
                     case "byte":
                         field.setByte(this,in.readByte());
@@ -109,7 +128,7 @@ public abstract class ProtoMessage {
                     case "char":
                         field.setChar(this,in.readChar());
                         break;
-                    case "string":
+                    case "String":
                         field.set(this,readString(in));
                         break;
                     case "double":
@@ -120,15 +139,20 @@ public abstract class ProtoMessage {
                         break;
                     default:
                         Object object = field.get(this);
-                        if (object instanceof ProtoMessage) {
-                            ProtoMessage aux = (ProtoMessage) object;
-                            aux.deserializeMessage(in);
-                        } else {
-                            throw new RuntimeException("Error trying to serialize field: " + field.getName());
+                        if(object == null){
+                            throw new RuntimeException(field.getName()+": getNewEmptyInstance() result can not have object children with null values!");
+                        } else if (object instanceof ProtoMessage) {
+                            ProtoMessage protoMessage = getNewEmptyInstance();
+                            protoMessage.deserializeMessage(in);
+                            field.set(this,protoMessage);
+                        }if (object instanceof Host) {
+                            field.set(this,Host.serializer.deserialize(in));
+                        }else {
+                            throw new RuntimeException("Error trying to deserialize field: " + field.getName());
                         }
                 }
             }
-        } catch (IllegalAccessException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -154,13 +178,17 @@ public abstract class ProtoMessage {
         return new ISerializer<>() {
             @Override
             public void serialize(ProtoMessage protoMessage, ByteBuf out) throws IOException {
+                System.out.println("GOING TO SERIALIZE MESSAGE "+protoMessage);
                 protoMessage.serializeMessage(out);
             }
 
             @Override
             public V deserialize(ByteBuf in) throws IOException {
+                System.out.println("DESSSE ASDFD SDFFSFDG GDFGDF");
                 ProtoMessage protoMessage = finalEmptyMessage.getNewEmptyInstance();
                 protoMessage.deserializeMessage(in);
+                System.out.println("DESSSE FINALLLE");
+
                 return (V) protoMessage;
             }
         };

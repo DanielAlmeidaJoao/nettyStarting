@@ -8,6 +8,7 @@ import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 @Getter
 public class EchoMessage extends ProtoMessage {
@@ -15,6 +16,9 @@ public class EchoMessage extends ProtoMessage {
     private Host sender;
     private String message;
 
+    public EchoMessage(){
+        super(MSG_ID);
+    }
     public EchoMessage(Host sender, String message) {
         super(MSG_ID);
         this.sender = sender;
@@ -38,6 +42,6 @@ public class EchoMessage extends ProtoMessage {
 
     @Override
     public ProtoMessage getNewEmptyInstance() {
-        return new EchoMessage(null,null);
+        return new EchoMessage(Host.toBabelHost(new InetSocketAddress(8082)),null);
     }
 }

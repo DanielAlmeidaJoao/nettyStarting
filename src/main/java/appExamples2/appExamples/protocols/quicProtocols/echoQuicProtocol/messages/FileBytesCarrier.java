@@ -30,4 +30,9 @@ public class FileBytesCarrier extends ProtoMessage {
             return new FileBytesCarrier(bytes,bytes.length);
         }
     };
+
+    @Override
+    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance() {
+        return null;
+    }
 }

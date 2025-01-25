@@ -7,4 +7,9 @@ public class EndOfStreaming extends ProtoMessage {
     public EndOfStreaming() {
         super(ID);
     }
+
+    @Override
+    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance() {
+        return null;
+    }
 }

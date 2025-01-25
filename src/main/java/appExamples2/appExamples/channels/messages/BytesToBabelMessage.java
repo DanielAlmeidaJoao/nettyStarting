@@ -36,4 +36,9 @@ public class BytesToBabelMessage extends ProtoMessage {
             return new BytesToBabelMessage(message,message.length);
         }
     };
+
+    @Override
+    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance() {
+        return null;
+    }
 }

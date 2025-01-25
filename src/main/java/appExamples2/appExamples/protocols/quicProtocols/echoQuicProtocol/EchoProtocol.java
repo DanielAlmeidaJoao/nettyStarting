@@ -370,7 +370,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     }
 
     private void uponFloodMessageQUIC(EchoMessage msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received QUIC {} from {} {}", msg.getMessage().hashCode(), from, streamId);
+        logger.info("Received QUIC {} from {} {}", msg.getMessage(), from, streamId);
     }
     private void uponMsgFail(EchoMessage msg, Host host, short destProto,
                              Throwable throwable, int channelId) {
