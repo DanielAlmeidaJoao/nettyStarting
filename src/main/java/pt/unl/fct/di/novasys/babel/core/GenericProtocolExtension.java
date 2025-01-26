@@ -2,7 +2,9 @@ package pt.unl.fct.di.novasys.babel.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.annotations.*;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
+import pt.unl.fct.di.novasys.babel.handlers.*;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.enums.NetworkProtocol;
@@ -11,6 +13,7 @@ import quicSupport.utils.enums.TransmissionType;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
 import udpSupport.metrics.UDPNetworkStatsWrapper;
 
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -18,8 +21,89 @@ import java.util.NoSuchElementException;
 public abstract class GenericProtocolExtension extends GenericProtocol {
     private static final Logger logger = LogManager.getLogger(GenericProtocolExtension.class);
 
+    private void registerMessageHandlersWithReflection(){
+        //TODO VERIFY IF THE PARAMETERS OF THE HANDLERS ARE THE RIGHT TYPE
+        Class z = this.getClass();
+        for (Method declaredMethod : z.getDeclaredMethods()) {
+            declaredMethod.setAccessible(true);
+            if (declaredMethod.isAnnotationPresent(MessageInHandlerAnnotation.class)){
+                MessageInHandlerAnnotation annotation = declaredMethod.getAnnotation(MessageInHandlerAnnotation.class);
+                MessageInHandler messageInHandler = (a,b)->{
+                    try {
+                        declaredMethod.invoke(this,a,b);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                try{
+                    registerMessageInHandler(annotation.PROTO_MESSAGE_ID(),messageInHandler,null,null);
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            } else if (declaredMethod.isAnnotationPresent(StreamInHandlerAnnotation.class)){
+                StreamInHandlerAnnotation annotation = declaredMethod.getAnnotation(StreamInHandlerAnnotation.class);
+                StreamBytesInHandler streamBytesInHandler = (a)->{
+                    try {
+                        declaredMethod.invoke(this,a);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                try{
+                    registerStreamDataHandler(streamBytesInHandler,null,null);
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            }
+
+            else if(declaredMethod.isAnnotationPresent(MessageSentHandlerAnnotation.class)){
+                MessageSentHandlerAnnotation annotation = declaredMethod.getAnnotation(MessageSentHandlerAnnotation.class);
+                MessageSentHandler messageSentHandler = (a, b)->{
+                    try {
+                        declaredMethod.invoke(this,a,b);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                try{
+                    registerMessageInHandler(annotation.PROTO_MESSAGE_ID(),null,messageSentHandler,null);
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            }else if(declaredMethod.isAnnotationPresent(MessageFailedHandlerAnnotation.class)){
+                MessageFailedHandlerAnnotation annotation = declaredMethod.getAnnotation(MessageFailedHandlerAnnotation.class);
+                MessageFailedHandler messageFailedHandler = (a, b)->{
+                    try {
+                        declaredMethod.invoke(this,a,b);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                try{
+                    registerMessageInHandler(annotation.PROTO_MESSAGE_ID(),null,null,messageFailedHandler);
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            } else if(declaredMethod.isAnnotationPresent(ChannelEventHandlerAnnotation.class)){
+                ChannelEventHandlerAnnotation annotation = declaredMethod.getAnnotation(ChannelEventHandlerAnnotation.class);
+                ChannelEventHandler channelEventHandler = (a, b)->{
+                    try {
+                        declaredMethod.invoke(this,a,b);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                try{
+                    registerChannelEventHandler(annotation.EVENT_ID(),channelEventHandler);
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
     public GenericProtocolExtension(String protoName, short protoId) {
         super(protoName, protoId);
+        registerMessageHandlersWithReflection();
     }
 
     protected final void sendMessage(ProtoMessage msg, String streamId) {

@@ -14,7 +14,6 @@ import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.babel.internal.MessageFailedEvent;
 import pt.unl.fct.di.novasys.babel.internal.MessageInEvent;
-import pt.unl.fct.di.novasys.babel.internal.MessageInEventClient;
 import pt.unl.fct.di.novasys.network.data.Host;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
@@ -112,10 +111,10 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         boolean messageCon = props.getProperty("CON") !=null;
         try {
             registerMessageSerializer(channelId, FileBytesCarrier.ID, FileBytesCarrier.serializer);
-            registerMessageHandler(FileBytesCarrier.ID, this::uponFileBytesMessage, this::uponMsgFail);
+            registerMessageInHandler(FileBytesCarrier.ID, this::uponFileBytesMessage, this::uponMsgFail);
 
             //registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
+            registerStreamDataHandler(this::uponStreamBytes,null, this::uponMsgFail2);
 
             registerChannelEventHandler(OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
             registerChannelEventHandler(OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionEvent);

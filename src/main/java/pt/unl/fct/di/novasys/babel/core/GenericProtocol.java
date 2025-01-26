@@ -1,7 +1,6 @@
 package pt.unl.fct.di.novasys.babel.core;
 
 import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
-import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
@@ -168,32 +167,17 @@ public abstract class GenericProtocol {
      * Register a message inHandler for the protocol to process message events
      * form the network
      *
-     * @param cId       the id of the channel
-     * @param msgId     the numeric identifier of the message event
-     * @param inHandler the function to process message event
-     * @throws HandlerRegistrationException if a inHandler for the message id is already registered
-     */
-    protected final <V extends ProtoMessage> void registerMessageHandler(short msgId,
-                                                                         MessageInHandler<V> inHandler)
-            throws HandlerRegistrationException {
-        registerMessageHandler(msgId, inHandler, null, null);
-    }
-
-    /**
-     * Register a message inHandler for the protocol to process message events
-     * form the network
-     *
      * @param cId         the id of the channel
      * @param msgId       the numeric identifier of the message event
      * @param inHandler   the function to handle a received message event
      * @param sentHandler the function to handle a sent message event
      * @throws HandlerRegistrationException if a inHandler for the message id is already registered
      */
-    protected final <V extends ProtoMessage> void registerMessageHandler(short msgId,
-                                                                         MessageInHandler<V> inHandler,
-                                                                         MessageSentHandler<V> sentHandler)
+    protected final <V extends ProtoMessage> void registerMessageInHandler(short msgId,
+                                                                           MessageInHandler<V> inHandler,
+                                                                           MessageSentHandler<V> sentHandler)
             throws HandlerRegistrationException {
-        registerMessageHandler(msgId, inHandler, sentHandler, null);
+        registerMessageInHandler(msgId, inHandler, sentHandler, null);
     }
 
     /**
@@ -207,11 +191,11 @@ public abstract class GenericProtocol {
      * @throws HandlerRegistrationException if a inHandler for the message id is already registered
      */
 
-    protected final <V extends ProtoMessage> void registerMessageHandler(short msgId,
-                                                                         MessageInHandler<V> inHandler,
-                                                                         MessageFailedHandler<V> failHandler)
+    protected final <V extends ProtoMessage> void registerMessageInHandler(short msgId,
+                                                                           MessageInHandler<V> inHandler,
+                                                                           MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerMessageHandler(msgId, inHandler, null, failHandler);
+        registerMessageInHandler(msgId, inHandler, null, failHandler);
     }
 
     /**
@@ -224,15 +208,16 @@ public abstract class GenericProtocol {
      * @param failHandler the function to handle a failed message event
      * @throws HandlerRegistrationException if a inHandler for the message id is already registered
      */
-    protected final <V extends ProtoMessage> void registerMessageHandler(short msgId,
-                                                                         MessageInHandler<V> inHandler,
-                                                                         MessageSentHandler<V> sentHandler,
-                                                                         MessageFailedHandler<V> failHandler)
+    protected final <V extends ProtoMessage> void registerMessageInHandler(short msgId,
+                                                                           MessageInHandler<V> inHandler,
+                                                                           MessageSentHandler<V> sentHandler,
+                                                                           MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerHandler(msgId, inHandler, messageInHandlers);
+        if (inHandler != null) registerHandler(msgId, inHandler, messageInHandlers);
         if (sentHandler != null) registerHandler(msgId, sentHandler, messageSentHandlers);
         if (failHandler != null) registerHandler(msgId, failHandler, messageFailedHandlers);
     }
+
     protected final <V extends ProtoMessage> void registerStreamHandler(int cId, short msgId,
                                                                          StreamBytesInHandler inHandler,
                                                                          MessageSentHandler<V> sentHandler,
@@ -254,11 +239,11 @@ public abstract class GenericProtocol {
         if (sentHandler != null) registerHandler(msgHandlerId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
         if (failHandler != null) registerHandler(msgHandlerId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
     } **/
-    protected final <V extends ProtoMessage> void registerStreamDataHandler(int cId, StreamBytesInHandler inHandler,
+    protected final <V extends ProtoMessage> void registerStreamDataHandler(StreamBytesInHandler inHandler,
                                                                             MessageSentHandler<V> sentHandler,
                                                                             MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerHandler(this.protoId, inHandler, streamBytesInHandlerMap);
+        if (inHandler != null) registerHandler(this.protoId, inHandler, streamBytesInHandlerMap);
         if (sentHandler != null) registerHandler(this.protoId, sentHandler, messageSentHandlers);
         if (failHandler != null) registerHandler(this.protoId, failHandler, messageFailedHandlers);
     }

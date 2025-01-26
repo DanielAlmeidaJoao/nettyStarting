@@ -10,12 +10,15 @@ import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.message
 import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.SampleTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pt.unl.fct.di.novasys.babel.annotations.ChannelEventHandlerAnnotation;
+import pt.unl.fct.di.novasys.babel.annotations.MessageFailedHandlerAnnotation;
+import pt.unl.fct.di.novasys.babel.annotations.MessageInHandlerAnnotation;
+import pt.unl.fct.di.novasys.babel.annotations.StreamInHandlerAnnotation;
 import pt.unl.fct.di.novasys.babel.channels.events.*;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
 import pt.unl.fct.di.novasys.babel.internal.MessageFailedEvent;
 import pt.unl.fct.di.novasys.babel.internal.MessageInEvent;
-import pt.unl.fct.di.novasys.babel.internal.MessageInEventClient;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
@@ -53,6 +56,7 @@ public class EchoProtocol extends GenericProtocolExtension {
         System.out.println("CHANNEL CREATED "+channelId);
         this.properties = properties;
     }
+
     private int makeChan(String channelName,String address, String port) throws Exception {
         Properties channelProps;
         if(channelName.equalsIgnoreCase("quic")){
@@ -85,30 +89,13 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
         return channelId;
     }
+
     @Override
     public void init(Properties props) {
         //Nothing to do here, we just wait for event from the membership or the application
         registerMessageSerializer(channelId, EchoMessage.MSG_ID, EchoMessage.newSerializer(EchoMessage.class));
         /*---------------------- Register Message Handlers -------------------------- */
         try {
-            registerMessageHandler(EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);
-
-            registerChannelEventHandler(ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerChannelEventHandler(UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
-
-            registerMessageHandler(BytesToBabelMessage.ID,this::uponBytesMessage,null, this::uponMsgFail3);
-            registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
-
-            registerChannelEventHandler(OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
-            //uponOpenConnectionFailed
-            registerChannelEventHandler(OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionUp);
-            registerChannelEventHandler(OnOpenConnectionFailed.EVENT_ID, this::uponOpenConnectionFailed);
-
-            registerChannelEventHandler(OnConnectionDownEvent.EVENT_ID, this::uponConnectionDown);
-
-
-            //registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
-            //registerChannelEventHandler(channelId, StreamClosedEvent.EVENT_ID, this::uponStreamClosed);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
@@ -251,36 +238,119 @@ public class EchoProtocol extends GenericProtocolExtension {
         }
     }
     int countMetricsTime = 0;
-    private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
-        countMetricsTime ++;
-        System.out.println("METRICS TRIGGERED!!!");
-        System.out.println("CURRENT: "+ NewChannelsFactoryUtils.g.toJson(event.getCurrent()));
-        System.out.println("OLD: "+ NewChannelsFactoryUtils.g.toJson(event.getOld()));
-        if(countMetricsTime==2){
-            var p =event.getCurrent();
-            if(p != null && p.size()>0){
-                //if(myself.getPort()==8081){
-                    closeConnection(Host.toBabelHost(p.get(0).getHostAddress()));
-                    System.out.println("CLOSED CONNECTIONNN");
-                //}
+
+
+    public List<BabelInputStream> streams = new LinkedList<>();
+    List<String> cons = new LinkedList<>();
+
+
+
+
+    @MessageInHandlerAnnotation(PROTO_MESSAGE_ID=BytesToBabelMessage.ID)
+    private void uponBytesMessage(MessageInEvent event, BytesToBabelMessage msg ) {
+        logger.info("Received bytes: {} from {}", (new String(msg.message).hashCode()),event.getFrom());
+        //System.exit(0);
+    }
+
+    @StreamInHandlerAnnotation
+    private void uponStreamBytes(BabelStreamDeliveryEvent event) {
+        System.out.println("AVAILABLE "+event.babelOutputStream.readableBytes());
+        while(event.babelOutputStream.readableBytes()>=4){
+            if(85 == event.babelOutputStream.readableBytes()){
+                System.exit(-1);
+            }
+            int read = event.babelOutputStream.readInt();
+            logger.info("Received bytes4: {} from {}. ID: {}",read,event.getFrom(),event.conId);
+            if(8082==myself.getPort()){
+                event.babelInputStream.writeInt(read*2);
             }
         }
-        if(countMetricsTime>4){
-            System.exit(1);
+        logger.info("CONTAINS ? {}",streams.contains(event.babelInputStream));
+    }
+
+    @MessageInHandlerAnnotation(PROTO_MESSAGE_ID=EchoMessage.MSG_ID)
+    private void uponFloodMessageQUIC(MessageInEvent eventClient, EchoMessage message) {
+        String mes = message.getMessage();
+        logger.info("Received QUIC {} from_ {} {}", mes.hashCode(), eventClient.getFrom(), eventClient.connectionId);
+    }
+
+    @MessageFailedHandlerAnnotation(PROTO_MESSAGE_ID=EchoMessage.MSG_ID)
+    private void uponMsgFail(MessageFailedEvent event,EchoMessage msg) {
+        //If a message fails to be sent, for whatever reason, log the message and the reason
+        logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
+        logger.info("DATA SENT <{}>",msg.getMessage());
+
+    }
+
+    @MessageFailedHandlerAnnotation(PROTO_MESSAGE_ID=BytesToBabelMessage.ID)
+    private void uponMsgFail3(MessageFailedEvent event, BytesToBabelMessage msg) {
+        //If a message fails to be sent, for whatever reason, log the message and the reason
+        logger.error("BYTES Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
+        //logger.info("SENT MESSAGE <{}>",new String(msg.message));
+    }
+
+    private void uponMsgFail2(MessageFailedEvent event,OnStreamDataSentEvent msg) {
+        //If a message fails to be sent, for whatever reason, log the message and the reason
+        logger.error("Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
+        /**
+         try {
+         if(msg.inputStream!=null){
+         logger.info("AVAILABLE {}",msg.inputStream.available());
+         }
+         }catch (Exception e){
+         e.printStackTrace();
+         } **/
+    }
+
+    @ChannelEventHandlerAnnotation(EVENT_ID = OnConnectionDownEvent.EVENT_ID)
+    private void uponConnectionDown(OnConnectionDownEvent event, int channelId) {
+        logger.info("CONNECTION DOWN: {} {} {}",event.connectionId,event.getNode(),event.type);
+    }
+
+    @ChannelEventHandlerAnnotation(EVENT_ID = OnOpenConnectionFailed.EVENT_ID)
+    private void uponOpenConnectionFailed(OnOpenConnectionFailed event, int channelId) {
+        logger.info("CONNECTION FAILED: {} {} {}",event.connectionId,event.node,event.type);
+        if(dest==null){
+            dest = event.getNode();
         }
     }
 
-
-    private void uponUDPChannelMetrics(UDPMetricsEvent event, int channelId) {
-        System.out.println("UDP METRICS TRIGGERED!!!");
-        for (UDPNetworkStatsWrapper stat : event.getStats()) {
-            System.out.printf("HOST: %s\n",stat.getDest());
-            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.ackStats));
-            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.totalMessageStats));
-            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.sentAckedMessageStats));
+    @ChannelEventHandlerAnnotation(EVENT_ID = OnMessageConnectionUpEvent.EVENT_ID)
+    private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
+        logger.info("SELF: {} | CONNECTION UP: {} {} {}",myself,event.conId,event.inConnection,event.type);
+        dest = event.getNode();
+        if(event != null){
+            return;
         }
+        cons.add(event.conId);
+        if(dest==null){
+            dest = event.getNode();
+        }
+
+        for (int v = 0; v < 1; v++) {
+            new Thread(() -> {
+                for (String con : cons) {
+                    for (int i = 1; i <= 1; i++) {
+                        //+ UDPLogics.MAX_UDP_PAYLOAD_SIZE
+                        String m1 = ("0 ++"+myself).repeat(i+ UDPLogics.MAX_UDP_PAYLOAD_SIZE) + con;
+                        //System.out.println();
+                        //EchoMessage echoMessage = new EchoMessage(myself, m1);
+                        System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
+                        sendMessage(m1,con);
+                        //super.sendMessage(echoMessage, con);
+                    }
+                }
+            }).run();
+        }
+        /**
+         for (String con : cons) {
+         String m1 = "OLA23 ".repeat(1000)+con;
+         System.out.println("SENT2: "+m1.hashCode()+" "+m1.length());
+         sendMessage(m1,con);
+         } **/
     }
-    public List<BabelInputStream> streams = new LinkedList<>();
+
+    @ChannelEventHandlerAnnotation(EVENT_ID = OnStreamConnectionUpEvent.EVENT_ID)
     private void uponStreamConnectionUp(OnStreamConnectionUpEvent event, int channelId) {
         logger.info("CONNECTION TO {} IS UP. CONNECTION TYPE: {}. id: {}",event.getNode(),event.type,event.conId);
         streams.add(event.babelInputStream);
@@ -309,95 +379,37 @@ public class EchoProtocol extends GenericProtocolExtension {
             }
         }
     }
-    List<String> cons = new LinkedList<>();
-    private void uponMessageConnectionUp(OnMessageConnectionUpEvent event, int channelId) {
-        logger.info("SELF: {} | CONNECTION UP: {} {} {}",myself,event.conId,event.inConnection,event.type);
-        dest = event.getNode();
-        if(event != null){
-            return;
-        }
-        cons.add(event.conId);
-        if(dest==null){
-            dest = event.getNode();
-        }
 
-        for (int v = 0; v < 1; v++) {
-            new Thread(() -> {
-                for (String con : cons) {
-                    for (int i = 1; i <= 1; i++) {
-                        //+ UDPLogics.MAX_UDP_PAYLOAD_SIZE
-                        String m1 = ("0 ++"+myself).repeat(i+ UDPLogics.MAX_UDP_PAYLOAD_SIZE) + con;
-                        //System.out.println();
-                        //EchoMessage echoMessage = new EchoMessage(myself, m1);
-                        System.out.println("SENT: "+m1.hashCode()+" "+m1.length());
-                        sendMessage(m1,con);
-                        //super.sendMessage(echoMessage, con);
-                    }
-                }
-            }).run();
-        }
-        /**
-        for (String con : cons) {
-            String m1 = "OLA23 ".repeat(1000)+con;
-            System.out.println("SENT2: "+m1.hashCode()+" "+m1.length());
-            sendMessage(m1,con);
-        } **/
-    }
-    private void uponOpenConnectionFailed(OnOpenConnectionFailed event, int channelId) {
-        logger.info("CONNECTION FAILED: {} {} {}",event.connectionId,event.node,event.type);
-        if(dest==null){
-            dest = event.getNode();
+    @ChannelEventHandlerAnnotation(EVENT_ID = UDPMetricsEvent.EVENT_ID)
+    private void uponUDPChannelMetrics(UDPMetricsEvent event, int channelId) {
+        System.out.println("UDP METRICS TRIGGERED!!!");
+        for (UDPNetworkStatsWrapper stat : event.getStats()) {
+            System.out.printf("HOST: %s\n",stat.getDest());
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.ackStats));
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.totalMessageStats));
+            System.out.println(NewChannelsFactoryUtils.g.toJson(stat.sentAckedMessageStats));
         }
     }
 
-    private void uponConnectionDown(OnConnectionDownEvent event, int channelId) {
-        logger.info("CONNECTION DOWN: {} {} {}",event.connectionId,event.getNode(),event.type);
-    }
-    private void uponBytesMessage(MessageInEvent event, BytesToBabelMessage msg ) {
-        logger.info("Received bytes: {} from {}", (new String(msg.message).hashCode()),event.getFrom());
-        //System.exit(0);
-    }
-    private void uponStreamBytes(BabelStreamDeliveryEvent event) {
-        System.out.println("AVAILABLE "+event.babelOutputStream.readableBytes());
-        while(event.babelOutputStream.readableBytes()>=4){
-            if(85 == event.babelOutputStream.readableBytes()){
-                System.exit(-1);
-            }
-            int read = event.babelOutputStream.readInt();
-            logger.info("Received bytes4: {} from {}. ID: {}",read,event.getFrom(),event.conId);
-            if(8082==myself.getPort()){
-                event.babelInputStream.writeInt(read*2);
+    @ChannelEventHandlerAnnotation(EVENT_ID = ConnectionProtocolChannelMetricsEvent.EVENT_ID)
+    private void uponChannelMetrics(ConnectionProtocolChannelMetricsEvent event, int channelId) {
+        countMetricsTime ++;
+        System.out.println("METRICS TRIGGERED!!!");
+        System.out.println("CURRENT: "+ NewChannelsFactoryUtils.g.toJson(event.getCurrent()));
+        System.out.println("OLD: "+ NewChannelsFactoryUtils.g.toJson(event.getOld()));
+        if(countMetricsTime==2){
+            var p =event.getCurrent();
+            if(p != null && p.size()>0){
+                //if(myself.getPort()==8081){
+                closeConnection(Host.toBabelHost(p.get(0).getHostAddress()));
+                System.out.println("CLOSED CONNECTIONNN");
+                //}
             }
         }
-        logger.info("CONTAINS ? {}",streams.contains(event.babelInputStream));
+        if(countMetricsTime>4){
+            System.exit(1);
+        }
     }
 
-    private void uponFloodMessageQUIC(MessageInEvent eventClient, EchoMessage message) {
-        String mes = message.getMessage();
-        logger.info("Received QUIC {} from_ {} {}", mes.hashCode(), eventClient.getFrom(), eventClient.connectionId);
-    }
-    private void uponMsgFail(MessageFailedEvent event,EchoMessage msg) {
-        //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
-        logger.info("DATA SENT <{}>",msg.getMessage());
 
-    }
-    private void uponMsgFail3(MessageFailedEvent event, BytesToBabelMessage msg) {
-        //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("BYTES Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
-        //logger.info("SENT MESSAGE <{}>",new String(msg.message));
-    }
-
-    private void uponMsgFail2(MessageFailedEvent event,OnStreamDataSentEvent msg) {
-        //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
-        /**
-         try {
-         if(msg.inputStream!=null){
-         logger.info("AVAILABLE {}",msg.inputStream.available());
-         }
-         }catch (Exception e){
-         e.printStackTrace();
-         } **/
-    }
 }

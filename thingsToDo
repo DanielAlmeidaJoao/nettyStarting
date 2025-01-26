@@ -1,2 +1,3 @@
 registerMessageHandler nao tem que precisar do ID do canal, tem que
 haver um mapa por protocolo com os handlers
+        //TODO VERIFY IF THE PARAMETERS OF THE HANDLERS ARE THE RIGHT TYPE
