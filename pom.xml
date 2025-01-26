@@ -130,7 +130,7 @@
                     <target>11</target>
                     <!--
                     <excludes>
-                        <exclude>appExamples2.appExamples.channels.**</exclude>
+                        <exclude>pt.unl.fct.di.novasys.network.babelChannels.**</exclude>
                         <exclude>org.tcpStreamingAPI.**</exclude>
                     </excludes> -->
                 </configuration>
@@ -145,7 +145,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <!-- <mainClass>mainFiles.Main3</mainClass> -->
+                            <!-- <mainClass>examples.Main3</mainClass> -->
                         </manifest>
                         <manifestEntries>
                             <Multi-Release>true</Multi-Release>

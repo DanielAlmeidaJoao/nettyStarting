@@ -1,9 +1,9 @@
 package pt.unl.fct.di.novasys.babel.channels;
 
 import pt.unl.fct.di.novasys.network.data.Host;
-import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.utils.BabelInputStream;
-import tcpSupport.tcpChannelAPI.utils.BabelOutputStream;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.TransmissionType;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyTCPChannel.utils.BabelInputStream;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyTCPChannel.utils.BabelOutputStream;
 
 public class DummyChannelToProtoForwarder<T> implements ChannelListener<T>{
     @Override

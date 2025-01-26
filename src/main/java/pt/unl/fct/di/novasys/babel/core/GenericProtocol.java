@@ -1,6 +1,6 @@
 package pt.unl.fct.di.novasys.babel.core;
 
-import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
+import pt.unl.fct.di.novasys.network.babelChannels.StreamDeliveredHandlerFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;

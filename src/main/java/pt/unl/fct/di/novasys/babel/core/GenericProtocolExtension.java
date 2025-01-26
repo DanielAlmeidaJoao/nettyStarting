@@ -7,11 +7,11 @@ import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.handlers.*;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.network.data.Host;
-import quicSupport.utils.enums.NetworkProtocol;
-import quicSupport.utils.enums.NetworkRole;
-import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
-import udpSupport.metrics.UDPNetworkStatsWrapper;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.NetworkProtocol;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.NetworkRole;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.TransmissionType;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyTCPChannel.metrics.ConnectionProtocolMetrics;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;

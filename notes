@@ -1,7 +1,7 @@
-java -Xmx500M -cp asdProj2.jar mainFiles.Main5 p2p_port=10101 server_port=35000 &
-java -cp target\nettyStart.jar mainFiles.Main5
+java -Xmx500M -cp asdProj2.jar examples.Main5 p2p_port=10101 server_port=35000 &
+java -cp target\nettyStart.jar examples.Main5
 
-java -cp target/nettyStart.jar mainFiles.Main3 port=8084
+java -cp target/nettyStart.jar examples.Main3 port=8084
 
 java -cp target\nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamSender localhost 8081
 java -cp target\nettyStart.jar org.tcpStreamingAPI.connectionSetups.StreamInConnection 8081
@@ -27,33 +27,33 @@ the receiver must be the client
 
 Starting Babel
 
-java -Xmx500M -cp target/nettyStart.jar mainFiles.Main5 sender=o p2p_port=10101 p2p_port_f=10201
+java -Xmx500M -cp target/nettyStart.jar examples.Main5 sender=o p2p_port=10101 p2p_port_f=10201
 
-java -cp target/nettyStart.jar mainFiles.Main5 address=localhost port=10101
+java -cp target/nettyStart.jar examples.Main5 address=localhost port=10101
 
-java -cp target/nettyStart.jar mainFiles.Main5 address=localhost port=10103 sender=o
+java -cp target/nettyStart.jar examples.Main5 address=localhost port=10103 sender=o
 
-java -cp target/nettyStart.jar mainFiles.Main5 address=localhost port=10109 sender=o forwarder=f
+java -cp target/nettyStart.jar examples.Main5 address=localhost port=10109 sender=o forwarder=f
 
 QUIC
-java -cp target/nettyStart.jar quicSupport.client_server.QUICServerEntity
-java -cp target/nettyStart.jar quicSupport.client_server.QUICClientEntity
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.client_server.QUICServerEntity
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.client_server.QUICClientEntity
 
-java -cp target/nettyStart.jar quicSupport.testing.TestQuicChannel
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.testing.TestQuicChannel
 -Dio.netty.maxDirectMemory=2147483648
 
-java -Dio.netty.maxDirectMemory=4147483648 -cp target/nettyStart.jar mainFiles.Main2 8081
-java -Dio.netty.maxDirectMemory=4147483648 -cp target/nettyStart.jar mainFiles.Main2 8081
-java -cp target/nettyStart.jar mainFiles.Main2 8081
+java -Dio.netty.maxDirectMemory=4147483648 -cp target/nettyStart.jar examples.Main2 8081
+java -Dio.netty.maxDirectMemory=4147483648 -cp target/nettyStart.jar examples.Main2 8081
+java -cp target/nettyStart.jar examples.Main2 8081
 
 
-java java -Xmx3g -cp target/nettyStart.jar mainFiles.Main2 8082
-java -cp target/nettyStart.jar udpSupport.test.UDPMainTester localhost 8081
-java -cp target/nettyStart.jar udpSupport.test.UDPMainTester localhost 8082
+java java -Xmx3g -cp target/nettyStart.jar examples.Main2 8082
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.test.UDPMainTester localhost 8081
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.test.UDPMainTester localhost 8082
 
 Udp
-java -cp target/nettyStart.jar udpSupport.client.UdpClient
-java -cp target/nettyStart.jar udpSupport.server.UdpServer
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.client.UdpClient
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.server.UdpServer
 
 DOUBTS:
 QUIC CONNECTION DISCONNECT THE OTHER PEER DOES NOT KNOW
@@ -65,16 +65,16 @@ DO ANOTHER CHANNEL WHICH WILL USE ACKs, and HEARTBEATS (PERIOD: MAX_IDLE/2).
 mvn clean package -P linux-x86_64
 mvn clean package -P windows-x86_64
 
-java -cp target/nettyStart.jar udpSupport.client_server.NettyUDPServer
-java -cp target/nettyStart.jar udpSupport.client_server.NettyUDPClient
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.client_server.NettyUDPServer
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.client_server.NettyUDPClient
 
-java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8081
-java -cp target/nettyStart.jar udpSupport.test.UDPMainTester 8082
-java -cp target/nettyStart.jar udpSupport.test.UDPMainTester localhost 8082
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.test.UDPMainTester 8081
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.test.UDPMainTester 8082
+java -cp target/nettyStart.jar pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.test.UDPMainTester localhost 8082
 
 
 
-java -cp target/nettyStart.jar mainFiles.Main3 address=localhost port=8081
+java -cp target/nettyStart.jar examples.Main3 address=localhost port=8081
 
 BIG MESSAGE NOTES:
 if single message

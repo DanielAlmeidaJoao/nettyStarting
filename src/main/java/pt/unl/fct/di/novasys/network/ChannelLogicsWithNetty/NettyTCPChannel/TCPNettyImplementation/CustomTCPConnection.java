@@ -1,0 +1,31 @@
+package pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyTCPChannel.TCPNettyImplementation;
+
+import io.netty.channel.Channel;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.TransmissionType;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyTCPChannel.utils.BabelInputStream;
+
+import java.net.InetSocketAddress;
+
+public class CustomTCPConnection {
+    public final Channel channel;
+    public final TransmissionType type;
+    public final InetSocketAddress host;
+    public final String conId;
+    public final boolean inConnection;
+    public final BabelInputStream inputStream;
+    public final short streamProto;
+    public CustomTCPConnection(Channel channel, TransmissionType type, InetSocketAddress listeningAddress, String conId, boolean inConnection, BabelInputStream babelInputStream, short streamProto){
+        this.channel=channel;
+        this.type=type;
+        this.host = listeningAddress;
+        this.conId = conId;
+        this.inConnection=inConnection;
+        this.inputStream = babelInputStream;
+        this.streamProto = streamProto;
+    }
+
+    public void close(){
+        channel.disconnect();
+        channel.close();
+    }
+}

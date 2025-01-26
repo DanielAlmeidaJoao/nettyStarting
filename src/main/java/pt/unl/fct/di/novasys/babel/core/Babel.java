@@ -1,6 +1,6 @@
 package pt.unl.fct.di.novasys.babel.core;
 
-import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
+import pt.unl.fct.di.novasys.network.babelChannels.StreamDeliveredHandlerFunction;
 import org.apache.commons.lang3.tuple.Triple;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -16,11 +16,11 @@ import pt.unl.fct.di.novasys.babel.internal.IPCEvent;
 import pt.unl.fct.di.novasys.babel.internal.NotificationEvent;
 import pt.unl.fct.di.novasys.babel.internal.TimerEvent;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
-import quicSupport.utils.enums.NetworkProtocol;
-import quicSupport.utils.enums.NetworkRole;
-import quicSupport.utils.enums.TransmissionType;
-import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
-import udpSupport.metrics.UDPNetworkStatsWrapper;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.NetworkProtocol;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.NetworkRole;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.TransmissionType;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyTCPChannel.metrics.ConnectionProtocolMetrics;
+import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.metrics.UDPNetworkStatsWrapper;
 
 import java.io.FileInputStream;
 import java.io.IOException;
