@@ -12,6 +12,9 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.events.*;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
+import pt.unl.fct.di.novasys.babel.internal.MessageFailedEvent;
+import pt.unl.fct.di.novasys.babel.internal.MessageInEvent;
+import pt.unl.fct.di.novasys.babel.internal.MessageInEventClient;
 import pt.unl.fct.di.novasys.network.data.Host;
 import tcpSupport.tcpChannelAPI.channel.NettyTCPChannel;
 import tcpSupport.tcpChannelAPI.metrics.ConnectionProtocolMetrics;
@@ -109,20 +112,20 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         boolean messageCon = props.getProperty("CON") !=null;
         try {
             registerMessageSerializer(channelId, FileBytesCarrier.ID, FileBytesCarrier.serializer);
-            registerMessageHandler(channelId, FileBytesCarrier.ID, this::uponFileBytesMessage, this::uponMsgFail);
+            registerMessageHandler(FileBytesCarrier.ID, this::uponFileBytesMessage, this::uponMsgFail);
 
             //registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
             registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
-            registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
-            registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionEvent);
+            registerChannelEventHandler(OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
+            registerChannelEventHandler(OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionEvent);
 
-            registerChannelEventHandler(channelId, OnChannelError.EVENT_ID, this::uponChannelError);
+            registerChannelEventHandler(OnChannelError.EVENT_ID, this::uponChannelError);
 
 
-            registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerChannelEventHandler(channelId, UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
-            registerChannelEventHandler(channelId, OnConnectionDownEvent.EVENT_ID, this::uponConnectionDown);
+            registerChannelEventHandler(ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
+            registerChannelEventHandler(UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
+            registerChannelEventHandler(OnConnectionDownEvent.EVENT_ID, this::uponConnectionDown);
 
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
@@ -171,7 +174,7 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
     BabelInputStream babelInputStream;
     int receivedPP = 0;
-    private void uponFileBytesMessage(FileBytesCarrier msg, Host from, short sourceProto, int channelId, String streamId) {
+    private void uponFileBytesMessage(MessageInEvent eventClient, FileBytesCarrier msg) {
         receivedPP++;
         /**
         if(NetworkProtocol.UDP==getNetworkProtocol(channelId)){
@@ -185,10 +188,9 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
         }
         writeToFile(msg.len,msg.data,null);
     }
-    private void uponMsgFail(FileBytesCarrier msg, Host host, short destProto,
-                             Throwable throwable, int channelId) {
+    private void uponMsgFail(MessageFailedEvent event , FileBytesCarrier msg) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg,event.getTo(), event.getCause());
         logger.info("DATA SENT <{}>",msg.len);
         System.out.println("TIMES "+count);
         //System.exit(0);
@@ -339,9 +341,8 @@ public class StreamFileWithQUIC extends GenericProtocolExtension {
 
     }
 
-    private void uponMsgFail2(OnStreamDataSentEvent msg, Host host, short destProto,
-                              Throwable throwable, int channelId) {
-        logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+    private void uponMsgFail2(MessageFailedEvent event,OnStreamDataSentEvent msg) {
+        logger.error("Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
     }
     int bufferSize = 128*1024; // 8KB buffer size
     int count = 0;

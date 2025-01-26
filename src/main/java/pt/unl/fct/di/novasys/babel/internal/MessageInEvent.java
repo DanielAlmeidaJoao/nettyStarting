@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.internal;
 
+import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 

@@ -1,5 +1,7 @@
 package pt.unl.fct.di.novasys.babel.handlers;
 
+import pt.unl.fct.di.novasys.babel.internal.MessageInEvent;
+import pt.unl.fct.di.novasys.babel.internal.MessageInEventClient;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 
@@ -15,8 +17,8 @@ public interface MessageInHandler<T extends ProtoMessage> {
     /**
      * Performs this operation on the ProtocolMessage.
      *
-     * @param msg the received message
+     * @param event the received message
      */
-    void receive(T msg, Host from, short sourceProto, int channelId, String connectionId);
+    void receive(MessageInEvent event, T msg);
 
 }

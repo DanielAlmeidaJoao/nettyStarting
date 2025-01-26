@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.handlers;
 
+import pt.unl.fct.di.novasys.babel.internal.MessageFailedEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 
@@ -17,6 +18,6 @@ public interface MessageFailedHandler<T extends ProtoMessage> {
      *
      * @param msg the received message
      */
-    void onMessageFailed(T msg, Host to, short destProto, Throwable cause, int channelId);
+    void onMessageFailed(MessageFailedEvent messageFailedEvent, T msg);
 
 }

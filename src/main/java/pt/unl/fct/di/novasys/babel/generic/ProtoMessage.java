@@ -34,7 +34,6 @@ public abstract class ProtoMessage {
     }
 
     private void serializeMessage(ByteBuf out) {
-        System.out.println("IS GOING TO SERIALIZE NOW");
         try {
             Field[] fields = this.getClass().getDeclaredFields();
             System.out.println(fields.length);
@@ -88,13 +87,10 @@ public abstract class ProtoMessage {
                             throw new RuntimeException("Error trying to serialize field: " + field.getName());
                         }
                 }
-                System.out.println("SERIALIZING HOST: "+field.getType().getSimpleName());
             }
         } catch (Exception e) {
-            System.out.println("ENDING ENDING ENDING MENDING!!!");
             throw new RuntimeException(e);
         }
-        System.out.println("IS GOING TO SERIALIZE finished");
     }
 
     private void deserializeMessage(ByteBuf in) {
@@ -178,16 +174,13 @@ public abstract class ProtoMessage {
         return new ISerializer<>() {
             @Override
             public void serialize(ProtoMessage protoMessage, ByteBuf out) throws IOException {
-                System.out.println("GOING TO SERIALIZE MESSAGE "+protoMessage);
                 protoMessage.serializeMessage(out);
             }
 
             @Override
             public V deserialize(ByteBuf in) throws IOException {
-                System.out.println("DESSSE ASDFD SDFFSFDG GDFGDF");
                 ProtoMessage protoMessage = finalEmptyMessage.getNewEmptyInstance();
                 protoMessage.deserializeMessage(in);
-                System.out.println("DESSSE FINALLLE");
 
                 return (V) protoMessage;
             }

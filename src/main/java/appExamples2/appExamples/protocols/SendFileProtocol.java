@@ -51,7 +51,7 @@ public class SendFileProtocol extends GenericProtocol {
     public void init(Properties props) throws HandlerRegistrationException, IOException {
         //registerMessageSerializer(channelId,StreamMessage.ID, StreamMessage.serializer);
         //registerMessageHandler(channelId,JoinRequestMessage.MSG_ID,this::uponJoinRequestMessage,this::uponMsgFail);
-        registerChannelEventHandler(channelId, OnConnectionDownEvent.EVENT_ID, this::uponInConnectionUp);
+        registerChannelEventHandler(OnConnectionDownEvent.EVENT_ID, this::uponInConnectionUp);
         //registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
         //registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
         try {

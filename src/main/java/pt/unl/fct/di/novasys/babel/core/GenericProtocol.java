@@ -1,6 +1,7 @@
 package pt.unl.fct.di.novasys.babel.core;
 
 import appExamples2.appExamples.channels.StreamDeliveredHandlerFunction;
+import appExamples2.appExamples.protocols.quicProtocols.echoQuicProtocol.messages.EchoMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.ChannelEvent;
@@ -15,9 +16,7 @@ import pt.unl.fct.di.novasys.babel.metrics.Metric;
 import pt.unl.fct.di.novasys.babel.metrics.MetricsManager;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -42,12 +41,18 @@ public abstract class GenericProtocol {
 
     int defaultChannel;
 
-    final Map<Integer, ChannelHandlers> channels;
+    private final Map<Short, StreamBytesInHandler> streamBytesInHandlerMap;
+    private final Map<Short, MessageInHandler<? extends ProtoMessage>> messageInHandlers;
+    private final Map<Short, MessageSentHandler<? extends ProtoMessage>> messageSentHandlers;
+    private final Map<Short, MessageFailedHandler<? extends ProtoMessage>> messageFailedHandlers;
+    private final Map<Short, ChannelEventHandler<? extends ChannelEvent>> channelEventHandlers;
+
 
     final Map<Short, TimerHandler<? extends ProtoTimer>> timerHandlers;
     final Map<Short, RequestHandler<? extends ProtoRequest>> requestHandlers;
     final Map<Short, ReplyHandler<? extends ProtoReply>> replyHandlers;
     final Map<Short, NotificationHandler<? extends ProtoNotification>> notificationHandlers;
+    final Set<Integer> channels;
 
     static final Babel babel = Babel.getInstance();
 
@@ -75,7 +80,6 @@ public abstract class GenericProtocol {
         //TODO change to event loop (simplifies the deliver->poll->handle process)
         //TODO only change if performance better
         this.executionThread = new Thread(this::mainLoop, protoId + "-" + protoName);
-        channels = new HashMap<>();
         defaultChannel = -1;
 
         //Initialize maps for event handlers
@@ -85,6 +89,12 @@ public abstract class GenericProtocol {
         this.notificationHandlers = new HashMap<>();
 
         //tmx.setThreadContentionMonitoringEnabled(true);
+        channels = new HashSet<>();
+        this.streamBytesInHandlerMap = new HashMap<>();
+        this.messageInHandlers = new HashMap<>();
+        this.messageSentHandlers = new HashMap<>();
+        this.messageFailedHandlers = new HashMap<>();
+        this.channelEventHandlers = new HashMap<>();
     }
 
     /**
@@ -163,10 +173,10 @@ public abstract class GenericProtocol {
      * @param inHandler the function to process message event
      * @throws HandlerRegistrationException if a inHandler for the message id is already registered
      */
-    protected final <V extends ProtoMessage> void registerMessageHandler(int cId, short msgId,
+    protected final <V extends ProtoMessage> void registerMessageHandler(short msgId,
                                                                          MessageInHandler<V> inHandler)
             throws HandlerRegistrationException {
-        registerMessageHandler(cId, msgId, inHandler, null, null);
+        registerMessageHandler(msgId, inHandler, null, null);
     }
 
     /**
@@ -179,11 +189,11 @@ public abstract class GenericProtocol {
      * @param sentHandler the function to handle a sent message event
      * @throws HandlerRegistrationException if a inHandler for the message id is already registered
      */
-    protected final <V extends ProtoMessage> void registerMessageHandler(int cId, short msgId,
+    protected final <V extends ProtoMessage> void registerMessageHandler(short msgId,
                                                                          MessageInHandler<V> inHandler,
                                                                          MessageSentHandler<V> sentHandler)
             throws HandlerRegistrationException {
-        registerMessageHandler(cId, msgId, inHandler, sentHandler, null);
+        registerMessageHandler(msgId, inHandler, sentHandler, null);
     }
 
     /**
@@ -197,42 +207,41 @@ public abstract class GenericProtocol {
      * @throws HandlerRegistrationException if a inHandler for the message id is already registered
      */
 
-    protected final <V extends ProtoMessage> void registerMessageHandler(int cId, short msgId,
+    protected final <V extends ProtoMessage> void registerMessageHandler(short msgId,
                                                                          MessageInHandler<V> inHandler,
                                                                          MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerMessageHandler(cId, msgId, inHandler, null, failHandler);
+        registerMessageHandler(msgId, inHandler, null, failHandler);
     }
 
     /**
      * Register a message inHandler for the protocol to process message events
      * form the network
      *
-     * @param cId         the id of the channel
      * @param msgId       the numeric identifier of the message event
      * @param inHandler   the function to handle a received message event
      * @param sentHandler the function to handle a sent message event
      * @param failHandler the function to handle a failed message event
      * @throws HandlerRegistrationException if a inHandler for the message id is already registered
      */
-    protected final <V extends ProtoMessage> void registerMessageHandler(int cId, short msgId,
+    protected final <V extends ProtoMessage> void registerMessageHandler(short msgId,
                                                                          MessageInHandler<V> inHandler,
                                                                          MessageSentHandler<V> sentHandler,
                                                                          MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerHandler(msgId, inHandler, getChannelOrThrow(cId).messageInHandlers);
-        if (sentHandler != null) registerHandler(msgId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
-        if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+        registerHandler(msgId, inHandler, messageInHandlers);
+        if (sentHandler != null) registerHandler(msgId, sentHandler, messageSentHandlers);
+        if (failHandler != null) registerHandler(msgId, failHandler, messageFailedHandlers);
     }
     protected final <V extends ProtoMessage> void registerStreamHandler(int cId, short msgId,
                                                                          StreamBytesInHandler inHandler,
                                                                          MessageSentHandler<V> sentHandler,
                                                                          MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerHandler(msgId, inHandler, getChannelOrThrow(cId).streamBytesInHandlerMap);
+        registerHandler(msgId, inHandler, streamBytesInHandlerMap);
 
-        if (sentHandler != null) registerHandler(msgId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
-        if (failHandler != null) registerHandler(msgId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+        if (sentHandler != null) registerHandler(msgId, sentHandler, messageSentHandlers);
+        if (failHandler != null) registerHandler(msgId, failHandler, messageFailedHandlers);
     }
 
     /**
@@ -249,22 +258,21 @@ public abstract class GenericProtocol {
                                                                             MessageSentHandler<V> sentHandler,
                                                                             MessageFailedHandler<V> failHandler)
             throws HandlerRegistrationException {
-        registerHandler(this.protoId, inHandler, getChannelOrThrow(cId).streamBytesInHandlerMap);
-        if (sentHandler != null) registerHandler(this.protoId, sentHandler, getChannelOrThrow(cId).messageSentHandlers);
-        if (failHandler != null) registerHandler(this.protoId, failHandler, getChannelOrThrow(cId).messageFailedHandlers);
+        registerHandler(this.protoId, inHandler, streamBytesInHandlerMap);
+        if (sentHandler != null) registerHandler(this.protoId, sentHandler, messageSentHandlers);
+        if (failHandler != null) registerHandler(this.protoId, failHandler, messageFailedHandlers);
     }
     /**
      * Register an handler to process a channel-specific event
      *
-     * @param cId     the id of the channel
      * @param eventId the id of the event to process
      * @param handler the function to handle the event
      * @throws HandlerRegistrationException if a inHandler for the event id is already registered
      */
-    protected final <V extends ChannelEvent> void registerChannelEventHandler(int cId, short eventId,
+    protected final <V extends ChannelEvent> void registerChannelEventHandler(short eventId,
                                                                               ChannelEventHandler<V> handler)
             throws HandlerRegistrationException {
-        registerHandler(eventId, handler, getChannelOrThrow(cId).channelEventHandlers);
+        registerHandler(eventId, handler, channelEventHandlers);
     }
 
     /**
@@ -307,11 +315,9 @@ public abstract class GenericProtocol {
 
     /* ------------------------- NETWORK/CHANNELS ---------------------- */
 
-    ChannelHandlers getChannelOrThrow(int channelId) {
-        ChannelHandlers handlers = channels.get(channelId);
-        if (handlers == null)
+    void getChannelOrThrow(int channelId) {
+        if (!channels.contains(channelId))
             throw new AssertionError("Channel does not exist: " + channelId);
-        return handlers;
     }
 
     /**
@@ -344,7 +350,7 @@ public abstract class GenericProtocol {
 
     protected final void registerSharedChannel(int channelId) {
         babel.registerChannelInterest(channelId, this.protoId, this);
-        channels.put(channelId, new ChannelHandlers());
+        channels.add(channelId);
         if (defaultChannel == -1)
             setDefaultChannel(channelId);
     }
@@ -737,15 +743,15 @@ public abstract class GenericProtocol {
     //TODO try catch (ClassCastException)
     private void handleMessageIn(MessageInEvent m) {
         BabelMessage msg = m.getMsg();
-        MessageInHandler h = getChannelOrThrow(m.getChannelId()).messageInHandlers.get(msg.getMessage().getId());
+        MessageInHandler h = messageInHandlers.get(msg.getMessage().getId());
         if (h != null)
-            h.receive(msg.getMessage(), m.getFrom(), msg.getSourceProto(), m.getChannelId(),m.connectionId);
+            h.receive(m,m.getMsg().getMessage());
         else
             logger.warn("Discarding unexpected message (id " + msg.getMessage().getId() + "): " + m);
     }
 
     private void handleStreamBytesIn(BabelStreamDeliveryEvent m) {
-        StreamBytesInHandler h = getChannelOrThrow(m.getChannelId()).streamBytesInHandlerMap.get(m.handlerId);
+        StreamBytesInHandler h = streamBytesInHandlerMap.get(m.handlerId);
         if (h != null)
             h.receive(m);
         else
@@ -754,22 +760,22 @@ public abstract class GenericProtocol {
 
     private void handleMessageFailed(MessageFailedEvent e) {
         BabelMessage msg = e.getMsg();
-        MessageFailedHandler h = getChannelOrThrow(e.getChannelId()).messageFailedHandlers.get(msg.getMessage().getId());
+        MessageFailedHandler h = messageFailedHandlers.get(msg.getMessage().getId());
         if (h != null)
-            h.onMessageFailed(msg.getMessage(), e.getTo(), msg.getDestProto(), e.getCause(), e.getChannelId());
+            h.onMessageFailed(e,msg.getMessage());
         else if (logger.isDebugEnabled())
             logger.debug("Discarding unhandled message failed event " + e);
     }
 
     private void handleMessageSent(MessageSentEvent e) {
         BabelMessage msg = e.getMsg();
-        MessageSentHandler h = getChannelOrThrow(e.getChannelId()).messageSentHandlers.get(msg.getMessage().getId());
+        MessageSentHandler h = messageSentHandlers.get(msg.getMessage().getId());
         if (h != null)
-            h.onMessageSent(msg.getMessage(), e.getTo(), msg.getDestProto(), e.getChannelId());
+            h.onMessageSent(e,msg.getMessage());
     }
 
     private void handleChannelEvent(CustomChannelEvent m) {
-        ChannelEventHandler h = getChannelOrThrow(m.getChannelId()).channelEventHandlers.get(m.getEvent().getId());
+        ChannelEventHandler h = channelEventHandlers.get(m.getEvent().getId());
         if (h != null)
             h.handleEvent(m.getEvent(), m.getChannelId());
         else if (logger.isDebugEnabled())
@@ -808,23 +814,6 @@ public abstract class GenericProtocol {
             logger.warn("Discarding unexpected reply (id " + r.getId() + "): " + r);
     }
 
-    private static class ChannelHandlers {
-
-        private final Map<Short, StreamBytesInHandler> streamBytesInHandlerMap;
-
-        private final Map<Short, MessageInHandler<? extends ProtoMessage>> messageInHandlers;
-        private final Map<Short, MessageSentHandler<? extends ProtoMessage>> messageSentHandlers;
-        private final Map<Short, MessageFailedHandler<? extends ProtoMessage>> messageFailedHandlers;
-        private final Map<Short, ChannelEventHandler<? extends ChannelEvent>> channelEventHandlers;
-
-        public ChannelHandlers() {
-            this.streamBytesInHandlerMap = new HashMap<>();
-            this.messageInHandlers = new HashMap<>();
-            this.messageSentHandlers = new HashMap<>();
-            this.messageFailedHandlers = new HashMap<>();
-            this.channelEventHandlers = new HashMap<>();
-        }
-    }
 
     public static class ProtocolMetrics {
         private long totalEventsCount, messagesInCount, messagesFailedCount, messagesSentCount, timersCount,

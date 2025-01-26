@@ -18,12 +18,6 @@ public class BytesToBabelMessage extends ProtoMessage {
         this.message = data;
     }
 
-    public void reflectonTest() throws NoSuchFieldException, IllegalAccessException {
-        BytesToBabelMessage r = new BytesToBabelMessage(null,0);
-        Class c = this.getClass();
-        Field f = c.getField("");
-        f.setInt(this,0);
-    }
     public static ISerializer<BytesToBabelMessage> serializer = new ISerializer<>() {
         @Override
         public void serialize(BytesToBabelMessage bytesToBabelMessage, ByteBuf out) throws IOException {

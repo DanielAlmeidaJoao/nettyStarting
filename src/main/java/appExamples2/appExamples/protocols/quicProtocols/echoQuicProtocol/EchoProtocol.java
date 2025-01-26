@@ -13,6 +13,9 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.events.*;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocolExtension;
 import pt.unl.fct.di.novasys.babel.internal.BabelStreamDeliveryEvent;
+import pt.unl.fct.di.novasys.babel.internal.MessageFailedEvent;
+import pt.unl.fct.di.novasys.babel.internal.MessageInEvent;
+import pt.unl.fct.di.novasys.babel.internal.MessageInEventClient;
 import pt.unl.fct.di.novasys.network.data.Host;
 import quicSupport.utils.QUICLogics;
 import quicSupport.utils.enums.TransmissionType;
@@ -88,20 +91,20 @@ public class EchoProtocol extends GenericProtocolExtension {
         registerMessageSerializer(channelId, EchoMessage.MSG_ID, EchoMessage.newSerializer(EchoMessage.class));
         /*---------------------- Register Message Handlers -------------------------- */
         try {
-            registerMessageHandler(channelId, EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);
+            registerMessageHandler(EchoMessage.MSG_ID, this::uponFloodMessageQUIC, this::uponMsgFail);
 
-            registerChannelEventHandler(channelId, ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
-            registerChannelEventHandler(channelId, UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
+            registerChannelEventHandler(ConnectionProtocolChannelMetricsEvent.EVENT_ID, this::uponChannelMetrics);
+            registerChannelEventHandler(UDPMetricsEvent.EVENT_ID, this::uponUDPChannelMetrics);
 
-            registerMessageHandler(channelId,BytesToBabelMessage.ID,this::uponBytesMessage,null, this::uponMsgFail3);
+            registerMessageHandler(BytesToBabelMessage.ID,this::uponBytesMessage,null, this::uponMsgFail3);
             registerStreamDataHandler(channelId,this::uponStreamBytes,null, this::uponMsgFail2);
 
-            registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
+            registerChannelEventHandler(OnStreamConnectionUpEvent.EVENT_ID, this::uponStreamConnectionUp);
             //uponOpenConnectionFailed
-            registerChannelEventHandler(channelId, OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionUp);
-            registerChannelEventHandler(channelId, OnOpenConnectionFailed.EVENT_ID, this::uponOpenConnectionFailed);
+            registerChannelEventHandler(OnMessageConnectionUpEvent.EVENT_ID, this::uponMessageConnectionUp);
+            registerChannelEventHandler(OnOpenConnectionFailed.EVENT_ID, this::uponOpenConnectionFailed);
 
-            registerChannelEventHandler(channelId, OnConnectionDownEvent.EVENT_ID, this::uponConnectionDown);
+            registerChannelEventHandler(OnConnectionDownEvent.EVENT_ID, this::uponConnectionDown);
 
 
             //registerChannelEventHandler(channelId, StreamCreatedEvent.EVENT_ID, this::uponStreamCreated);
@@ -178,7 +181,7 @@ public class EchoProtocol extends GenericProtocolExtension {
             if(message.length()%2==0){
                 message = message.repeat(message.length()*UDPLogics.MAX_UDP_PAYLOAD_SIZE+10);
             }
-            System.out.println(sendByte+" SENDBYTE"+" HASH: "+message.hashCode()+" "+message.length());
+            System.out.println(sendByte+" SENDBYTE"+" HASH: "+message.hashCode()+" BYTES SENT:"+message.length());
             if(sendByte){
                 super.sendMessage(channelId,message.getBytes(),message.length(),dest,getProtoId(),getProtoId());
             }else{
@@ -350,8 +353,8 @@ public class EchoProtocol extends GenericProtocolExtension {
     private void uponConnectionDown(OnConnectionDownEvent event, int channelId) {
         logger.info("CONNECTION DOWN: {} {} {}",event.connectionId,event.getNode(),event.type);
     }
-    private void uponBytesMessage(BytesToBabelMessage message,Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received bytes3: {} from {}", (new String(message.message).hashCode()),from);
+    private void uponBytesMessage(MessageInEvent event, BytesToBabelMessage msg ) {
+        logger.info("Received bytes: {} from {}", (new String(msg.message).hashCode()),event.getFrom());
         //System.exit(0);
     }
     private void uponStreamBytes(BabelStreamDeliveryEvent event) {
@@ -369,27 +372,25 @@ public class EchoProtocol extends GenericProtocolExtension {
         logger.info("CONTAINS ? {}",streams.contains(event.babelInputStream));
     }
 
-    private void uponFloodMessageQUIC(EchoMessage msg, Host from, short sourceProto, int channelId, String streamId) {
-        logger.info("Received QUIC {} from {} {}", msg.getMessage(), from, streamId);
+    private void uponFloodMessageQUIC(MessageInEvent eventClient, EchoMessage message) {
+        String mes = message.getMessage();
+        logger.info("Received QUIC {} from_ {} {}", mes.hashCode(), eventClient.getFrom(), eventClient.connectionId);
     }
-    private void uponMsgFail(EchoMessage msg, Host host, short destProto,
-                             Throwable throwable, int channelId) {
+    private void uponMsgFail(MessageFailedEvent event,EchoMessage msg) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.error("NOT BYTES Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
         logger.info("DATA SENT <{}>",msg.getMessage());
 
     }
-    private void uponMsgFail3(BytesToBabelMessage msg, Host host, short destProto,
-                              Throwable throwable, int channelId) {
+    private void uponMsgFail3(MessageFailedEvent event, BytesToBabelMessage msg) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("BYTES Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.error("BYTES Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
         //logger.info("SENT MESSAGE <{}>",new String(msg.message));
     }
 
-    private void uponMsgFail2(OnStreamDataSentEvent msg, Host host, short destProto,
-                              Throwable throwable, int channelId) {
+    private void uponMsgFail2(MessageFailedEvent event,OnStreamDataSentEvent msg) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
-        logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
+        logger.error("Message {} to {} failed, reason: {}", msg, event.getTo(), event.getCause());
         /**
          try {
          if(msg.inputStream!=null){

@@ -43,7 +43,7 @@ public class ReceiveFileProtocol extends GenericProtocol {
         //registerMessageHandler(channelId,StreamMessage.ID,this::uponReceiveMessage);
         //registerMessageHandler(channelId, EndOfStreaming.ID,this::uponEndOfStreamingMessage);
 
-        registerChannelEventHandler(channelId, OnStreamConnectionUpEvent.EVENT_ID, this::uponInConnectionDown);
+        registerChannelEventHandler(OnStreamConnectionUpEvent.EVENT_ID, this::uponInConnectionDown);
         //openConnection(forwarder);
     }
 

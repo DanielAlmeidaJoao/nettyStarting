@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.handlers;
 
+import pt.unl.fct.di.novasys.babel.internal.MessageSentEvent;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 
@@ -17,5 +18,5 @@ public interface MessageSentHandler<T extends ProtoMessage> {
      *
      * @param msg the received message
      */
-    void onMessageSent(T msg, Host to, short destProto, int channelId);
+    void onMessageSent(MessageSentEvent event, T msg);
 }
