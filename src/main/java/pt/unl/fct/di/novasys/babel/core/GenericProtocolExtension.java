@@ -41,7 +41,6 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
                     throw new RuntimeException(e);
                 }
             } else if (declaredMethod.isAnnotationPresent(StreamInHandlerAnnotation.class)){
-                StreamInHandlerAnnotation annotation = declaredMethod.getAnnotation(StreamInHandlerAnnotation.class);
                 StreamBytesInHandler streamBytesInHandler = (a)->{
                     try {
                         declaredMethod.invoke(this,a);
@@ -98,9 +97,38 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
                 }catch (Exception e){
                     throw new RuntimeException(e);
                 }
+            } else if(declaredMethod.isAnnotationPresent(RequestHandlerAnnotation.class)){
+                RequestHandlerAnnotation annotation = declaredMethod.getAnnotation(RequestHandlerAnnotation.class);
+                RequestHandler requestHandler = (a, b)->{
+                    try {
+                        declaredMethod.invoke(this,a,b);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                try{
+                    registerRequestHandler(annotation.REQUEST_ID(),requestHandler);
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
+            }else if(declaredMethod.isAnnotationPresent(ReplyHandlerAnnotation.class)){
+                ReplyHandlerAnnotation annotation = declaredMethod.getAnnotation(ReplyHandlerAnnotation.class);
+                ReplyHandler requestHandler = (a, b)->{
+                    try {
+                        declaredMethod.invoke(this,a,b);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                try{
+                    registerReplyHandler(annotation.REPLY_ID(),requestHandler);
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
+
     public GenericProtocolExtension(String protoName, short protoId) {
         super(protoName, protoId);
         registerMessageHandlersWithReflection();

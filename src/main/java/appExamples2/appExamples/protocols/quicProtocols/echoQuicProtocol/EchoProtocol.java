@@ -96,7 +96,6 @@ public class EchoProtocol extends GenericProtocolExtension {
         registerMessageSerializer(channelId, EchoMessage.MSG_ID, EchoMessage.newSerializer(EchoMessage.class));
         /*---------------------- Register Message Handlers -------------------------- */
         try {
-
             if(myself.getPort()==8081){
                 dest = new Host(InetAddress.getByName("localhost"),8082);
                 System.out.println(openMessageConnection(dest,channelId));
