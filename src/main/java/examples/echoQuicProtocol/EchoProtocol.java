@@ -248,6 +248,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     @MessageInHandlerAnnotation(PROTO_MESSAGE_ID=BytesToBabelMessage.ID)
     private void uponBytesMessage(MessageInEvent event, BytesToBabelMessage msg ) {
         logger.info("Received bytes: {} from {}", (new String(msg.message).hashCode()),event.getFrom());
+        System.out.println((new String(msg.message).hashCode())+" "+event.getFrom());
         //System.exit(0);
     }
 

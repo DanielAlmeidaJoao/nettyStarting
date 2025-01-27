@@ -14,6 +14,7 @@ public class EchoMessage extends ProtoMessage {
 
     public EchoMessage(){
         super(MSG_ID);
+        sender = Host.toBabelHost(new InetSocketAddress(8082));
     }
     public EchoMessage(Host sender, String message) {
         super(MSG_ID);
@@ -35,9 +36,4 @@ public class EchoMessage extends ProtoMessage {
             return echoMessage;
         }
     }; **/
-
-    @Override
-    public ProtoMessage getNewEmptyInstance() {
-        return new EchoMessage(Host.toBabelHost(new InetSocketAddress(8082)),null);
-    }
 }

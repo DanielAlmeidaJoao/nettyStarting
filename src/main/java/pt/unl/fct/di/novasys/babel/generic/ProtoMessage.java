@@ -101,7 +101,6 @@ public abstract class ProtoMessage {
                     continue;
                 }
                 field.setAccessible(true);
-                System.out.println("SIMPLE NAME: "+field.getType().getSimpleName());
                 switch (field.getType().getSimpleName()) {
                     case "byte":
                         field.setByte(this,in.readByte());
@@ -136,7 +135,7 @@ public abstract class ProtoMessage {
                     default:
                         Object object = field.get(this);
                         if(object == null){
-                            throw new RuntimeException(field.getName()+": getNewEmptyInstance() result can not have object children with null values!");
+                            throw new RuntimeException(this.getClass().getSimpleName()+": "+field.getName()+": Initialize objects in the empty constructor!");
                         } else if (object instanceof ProtoMessage) {
                             ProtoMessage protoMessage = getNewEmptyInstance();
                             protoMessage.deserializeMessage(in);
@@ -153,7 +152,18 @@ public abstract class ProtoMessage {
         }
     }
 
-    public abstract <V extends ProtoMessage> ProtoMessage getNewEmptyInstance();
+    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance(){
+        try {
+            for (Constructor<?> constructor : this.getClass().getConstructors()) {
+                if(constructor.getParameterCount() == 0){
+                    return (V) constructor.newInstance();
+                }
+            }
+        } catch (Exception e){
+            throw new RuntimeException("Every class that extends ProtoMessage needs an empty constructor!");
+        }
+        return null;
+    };
 
     public static <V extends ProtoMessage> ISerializer<V> newSerializer(Class<V> zclass){
         V emptyMessage = null;
