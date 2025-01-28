@@ -50,7 +50,7 @@ public class BabelQUIC_TCP_Channel implements NewIChannel, ChannelHandlerMethods
     public BabelQUIC_TCP_Channel(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short protoId, NetworkProtocol networkProtocol, NetworkRole networkRole) throws IOException {
         logger = LogManager.getLogger(getClass().getName());
         this.serializer = serializer;
-        serializer.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
+        //serializer.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
         this.listener = list;
         nettyChannelInterface = getQUIC_TCP(properties,networkProtocol,networkRole);
         metrics = nettyChannelInterface.enabledMetrics();

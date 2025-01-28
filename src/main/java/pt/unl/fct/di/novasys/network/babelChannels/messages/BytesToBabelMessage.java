@@ -19,7 +19,7 @@ public class BytesToBabelMessage extends ProtoMessage {
     public BytesToBabelMessage() {
         super(ID);
     }
-
+    /**
     public static ISerializer<BytesToBabelMessage> serializer = new ISerializer<>() {
         @Override
         public void serialize(BytesToBabelMessage bytesToBabelMessage, ByteBuf out) throws IOException {
@@ -31,5 +31,5 @@ public class BytesToBabelMessage extends ProtoMessage {
             in.readBytes(message);
             return new BytesToBabelMessage(message,message.length);
         }
-    };
+    };**/
 }
