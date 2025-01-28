@@ -6,6 +6,7 @@ import pt.unl.fct.di.novasys.babel.annotations.*;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.handlers.*;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
+import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.NetworkProtocol;
 import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.utils.enums.NetworkRole;
@@ -13,6 +14,8 @@ import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyQuicChannel.uti
 import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.NettyTCPChannel.metrics.ConnectionProtocolMetrics;
 import pt.unl.fct.di.novasys.network.ChannelLogicsWithNetty.udpSupport.metrics.UDPNetworkStatsWrapper;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -21,12 +24,22 @@ import java.util.NoSuchElementException;
 public abstract class GenericProtocolExtension extends GenericProtocol {
     private static final Logger logger = LogManager.getLogger(GenericProtocolExtension.class);
 
+    private <V extends ProtoMessage> ISerializer getSerializer(Class<?> c) throws Exception{
+        for (Constructor<?> constructor : c.getConstructors()) {
+            if(constructor.getParameterCount() == 0){
+                V p = (V) constructor.newInstance();
+                return p.newSerializer(c);
+            }
+        }
+        throw new RuntimeException("Not found empty constructor for "+c);
+    }
     private void registerMessageHandlersWithReflection(){
         //TODO VERIFY IF THE PARAMETERS OF THE HANDLERS ARE THE RIGHT TYPE
         Class z = this.getClass();
         for (Method declaredMethod : z.getDeclaredMethods()) {
             declaredMethod.setAccessible(true);
             if (declaredMethod.isAnnotationPresent(MessageInHandlerAnnotation.class)){
+
                 MessageInHandlerAnnotation annotation = declaredMethod.getAnnotation(MessageInHandlerAnnotation.class);
                 MessageInHandler messageInHandler = (a,b)->{
                     try {
@@ -37,6 +50,8 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
                 };
                 try{
                     registerMessageInHandler(annotation.PROTO_MESSAGE_ID(),messageInHandler,null,null);
+                    Class<?> protoMessageClass = declaredMethod.getParameters()[1].getType();
+                    addMessageSerializer(annotation.PROTO_MESSAGE_ID(),getSerializer(protoMessageClass));
                 }catch (Exception e){
                     throw new RuntimeException(e);
                 }

@@ -45,6 +45,8 @@ public abstract class GenericProtocol {
     private final Map<Short, MessageSentHandler<? extends ProtoMessage>> messageSentHandlers;
     private final Map<Short, MessageFailedHandler<? extends ProtoMessage>> messageFailedHandlers;
     private final Map<Short, ChannelEventHandler<? extends ChannelEvent>> channelEventHandlers;
+    private final Map<Short, ISerializer<? extends ProtoMessage>> messageSerializers;
+
 
 
     final Map<Short, TimerHandler<? extends ProtoTimer>> timerHandlers;
@@ -94,6 +96,7 @@ public abstract class GenericProtocol {
         this.messageSentHandlers = new HashMap<>();
         this.messageFailedHandlers = new HashMap<>();
         this.channelEventHandlers = new HashMap<>();
+        messageSerializers = new HashMap<>();
     }
 
     /**
@@ -316,6 +319,11 @@ public abstract class GenericProtocol {
         babel.registerSerializer(channelId, msgId, serializer);
     }
 
+    protected final void addMessageSerializer(short msgId,
+                                                   ISerializer<? extends ProtoMessage> serializer) {
+        messageSerializers.put(msgId,serializer);
+    }
+
     /**
      * Creates a new channel
      *
@@ -326,6 +334,9 @@ public abstract class GenericProtocol {
     protected final int createChannel(String channelName, Properties props, StreamDeliveredHandlerFunction function) throws IOException {
         int channelId = babel.createChannel(channelName, this.protoId, props,function);
         registerSharedChannel(channelId);
+        for (Map.Entry<Short, ISerializer<? extends ProtoMessage>> shortISerializerEntry : messageSerializers.entrySet()) {
+            registerMessageSerializer(channelId,shortISerializerEntry.getKey(), shortISerializerEntry.getValue());
+        }
         return channelId;
     }
 

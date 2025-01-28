@@ -22,7 +22,7 @@ public class BabelMessageSerializer implements BabelMessageSerializerInterface<B
 
     public void registerProtoSerializer(short msgCode, ISerializer<? extends ProtoMessage> protoSerializer) {
         if (serializers.putIfAbsent(msgCode, protoSerializer) != null)
-            throw new AssertionError("Trying to re-register serializer in Babel: " + msgCode);
+            System.out.println("Trying to re-register serializer in Babel: " + msgCode);
     }
 
     @Override

@@ -8,13 +8,16 @@ import java.io.IOException;
 
 public class BytesToBabelMessage extends ProtoMessage {
     public static final short ID = 500;
-    public final int dataLen;
-    public final byte[] message;
+    public int dataLen;
+    public byte[] message;
 
     public BytesToBabelMessage(byte [] data, int len) {
         super(ID);
         this.dataLen = len;
         this.message = data;
+    }
+    public BytesToBabelMessage() {
+        super(ID);
     }
 
     public static ISerializer<BytesToBabelMessage> serializer = new ISerializer<>() {

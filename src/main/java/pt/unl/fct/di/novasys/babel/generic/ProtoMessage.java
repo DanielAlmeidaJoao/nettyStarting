@@ -165,7 +165,7 @@ public abstract class ProtoMessage {
         return null;
     };
 
-    public static <V extends ProtoMessage> ISerializer<V> newSerializer(Class<V> zclass){
+    public <V extends ProtoMessage> ISerializer<V> newSerializer(Class<?> zclass){
         V emptyMessage = null;
         try{
             for (Constructor<?> constructor : zclass.getConstructors()) {

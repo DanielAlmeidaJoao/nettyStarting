@@ -93,7 +93,7 @@ public class EchoProtocol extends GenericProtocolExtension {
     @Override
     public void init(Properties props) {
         //Nothing to do here, we just wait for event from the membership or the application
-        registerMessageSerializer(channelId, EchoMessage.MSG_ID, EchoMessage.newSerializer(EchoMessage.class));
+        //registerMessageSerializer(EchoMessage.MSG_ID, EchoMessage.newSerializer(EchoMessage.class));
         /*---------------------- Register Message Handlers -------------------------- */
         try {
             if(myself.getPort()==8081){
