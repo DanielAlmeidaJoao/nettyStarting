@@ -1,15 +1,19 @@
 package pt.unl.fct.di.novasys.babel.core;
 
 import io.netty.buffer.ByteBuf;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.channels.BabelMessageSerializerInterface;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.babel.internal.BabelMessage;
 import pt.unl.fct.di.novasys.network.ISerializer;
+import pt.unl.fct.di.novasys.network.babelChannels.babelNewChannels.udpBabelChannel.BabelUDPChannel;
 
 import java.io.IOException;
 import java.util.Map;
 
 public class BabelMessageSerializer implements BabelMessageSerializerInterface<BabelMessage> {
+    private static final Logger logger = LogManager.getLogger(BabelMessageSerializer.class);
 
     Map<Short, ISerializer<? extends ProtoMessage>> serializers;
 
@@ -22,7 +26,7 @@ public class BabelMessageSerializer implements BabelMessageSerializerInterface<B
 
     public void registerProtoSerializer(short msgCode, ISerializer<? extends ProtoMessage> protoSerializer) {
         if (serializers.putIfAbsent(msgCode, protoSerializer) != null)
-            System.out.println("Trying to re-register serializer in Babel: " + msgCode);
+            logger.warn("Trying to re-register serializer in Babel: " + msgCode);
     }
 
     @Override

@@ -130,7 +130,9 @@ public abstract class ProtoMessage {
                         field.setDouble(this,in.readDouble());
                         break;
                     case "byte[]":
-                        field.set(this,in.readBytes(in.readInt()));
+                        byte [] array = new byte[in.readInt()];
+                        in.readBytes(array);
+                        field.set(this,array);
                         break;
                     default:
                         Object object = field.get(this);

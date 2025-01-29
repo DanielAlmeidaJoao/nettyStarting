@@ -46,7 +46,8 @@ public class BabelUDPChannel implements NewIChannel, UDPChannelHandlerMethods {
     public short ownerProto;
 
     public BabelUDPChannel(BabelMessageSerializer serializer, ChannelListener list, Properties properties, short ownerProto) throws IOException {
-        serializer.registerProtoSerializer(BytesToBabelMessage.ID,BytesToBabelMessage.serializer);
+        BytesToBabelMessage bytesToBabelMessage = new BytesToBabelMessage();
+        serializer.registerProtoSerializer(BytesToBabelMessage.ID,bytesToBabelMessage.newSerializer(BytesToBabelMessage.class));
         this.listener = list;
         if(properties.getProperty(NewChannelsFactoryUtils.SINGLE_THREADED_PROP)!=null){
             udpChannelInterface = new SingleThreadedUDPChannel(properties,this,serializer);
