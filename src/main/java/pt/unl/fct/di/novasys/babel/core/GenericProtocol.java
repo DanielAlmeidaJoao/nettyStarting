@@ -334,9 +334,6 @@ public abstract class GenericProtocol {
     protected final int createChannel(String channelName, Properties props, StreamDeliveredHandlerFunction function) throws IOException {
         int channelId = babel.createChannel(channelName, this.protoId, props,function);
         registerSharedChannel(channelId);
-        for (Map.Entry<Short, ISerializer<? extends ProtoMessage>> shortISerializerEntry : messageSerializers.entrySet()) {
-            registerMessageSerializer(channelId,shortISerializerEntry.getKey(), shortISerializerEntry.getValue());
-        }
         return channelId;
     }
 
@@ -349,6 +346,9 @@ public abstract class GenericProtocol {
         channels.add(channelId);
         if (defaultChannel == -1)
             setDefaultChannel(channelId);
+        for (Map.Entry<Short, ISerializer<? extends ProtoMessage>> shortISerializerEntry : messageSerializers.entrySet()) {
+            registerMessageSerializer(channelId,shortISerializerEntry.getKey(), shortISerializerEntry.getValue());
+        }
     }
 
     /**
