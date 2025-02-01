@@ -453,9 +453,9 @@ public class Babel {
      * @param first    the amount of time until the first trigger of the timer event
      * @param period   the periodicity of the timer event
      */
-    long setupPeriodicTimer(ProtoTimer t, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumer, long first, long period) {
+    long setupPeriodicTimer(short protoTimerId,ProtoTimer t, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumer, long first, long period) {
         long id = timersCounter.incrementAndGet();
-        TimerEvent newTimer = new TimerEvent(t, id, consumer,
+        TimerEvent newTimer = new TimerEvent(protoTimerId,t, id, consumer,
                 getMillisSinceStart() + first, true, period);
         allTimers.put(newTimer.getUuid(), newTimer);
         timerQueue.add(newTimer);
@@ -470,9 +470,9 @@ public class Babel {
      * @param consumer the protocol that setup the timer
      * @param timeout  the amount of time until the timer event is triggered
      */
-    long setupTimer(ProtoTimer t, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumer, long timeout) {
+    long setupTimer(short protoTimerId,ProtoTimer t, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumer, long timeout) {
         long id = timersCounter.incrementAndGet();
-        TimerEvent newTimer = new TimerEvent(t, id, consumer,
+        TimerEvent newTimer = new TimerEvent(protoTimerId,t, id, consumer,
                 getMillisSinceStart() + timeout, false, -1);
         timerQueue.add(newTimer);
         allTimers.put(newTimer.getUuid(), newTimer);

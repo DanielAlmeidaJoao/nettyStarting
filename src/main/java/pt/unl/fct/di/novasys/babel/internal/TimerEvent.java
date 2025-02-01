@@ -15,8 +15,9 @@ public class TimerEvent extends InternalEvent implements Comparable<TimerEvent>,
     private final long period;
 
     private long triggerTime;
+    private short protoTimerId;
 
-    public TimerEvent(ProtoTimer timer, long uuid, GenericProtocol consumer, long triggerTime, boolean periodic,
+    public TimerEvent(short protoTimerId,ProtoTimer timer, long uuid, GenericProtocol consumer, long triggerTime, boolean periodic,
                       long period) {
         super(EventType.TIMER_EVENT);
         this.timer = timer;
@@ -25,8 +26,12 @@ public class TimerEvent extends InternalEvent implements Comparable<TimerEvent>,
         this.triggerTime = triggerTime;
         this.period = period;
         this.periodic = periodic;
+        this.protoTimerId = protoTimerId;
     }
 
+    public short getProtoTimerId(){
+        return protoTimerId;
+    }
     public ProtoTimer getTimer() {
         return timer;
     }

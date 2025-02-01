@@ -170,7 +170,6 @@ public abstract class GenericProtocol {
      * Register a message inHandler for the protocol to process message events
      * form the network
      *
-     * @param cId         the id of the channel
      * @param msgId       the numeric identifier of the message event
      * @param inHandler   the function to handle a received message event
      * @param sentHandler the function to handle a sent message event
@@ -592,8 +591,14 @@ public abstract class GenericProtocol {
      * @param period periodicity (in milliseconds)
      * @return unique identifier of the timer set
      */
+    protected long setupPeriodicTimer(short protoTimerId, long first, long period) {
+        return setupPeriodicTimer(protoTimerId,null,first,period);
+    }
+    protected long setupPeriodicTimer(short protoTimerId,ProtoTimer timer, long first, long period) {
+        return babel.setupPeriodicTimer(protoTimerId,timer, this, first, period);
+    }
     protected long setupPeriodicTimer(ProtoTimer timer, long first, long period) {
-        return babel.setupPeriodicTimer(timer, this, first, period);
+        return babel.setupPeriodicTimer(timer.getId(),timer, this, first, period);
     }
 
     /**
@@ -604,9 +609,15 @@ public abstract class GenericProtocol {
      * @return unique identifier of the t set
      */
     protected long setupTimer(ProtoTimer t, long timeout) {
-        return babel.setupTimer(t, this, timeout);
+        return setupTimer(t.getId(), t,timeout);
     }
 
+    protected long setupTimer(short protoTimerId,ProtoTimer t, long timeout) {
+        return babel.setupTimer(protoTimerId,t, this, timeout);
+    }
+    protected long setupTimer(short protoTimerId, long timeout) {
+        return babel.setupTimer(protoTimerId,null, this, timeout);
+    }
     /**
      * Cancel the timer with the provided unique identifier
      *
@@ -778,7 +789,7 @@ public abstract class GenericProtocol {
     }
 
     private void handleTimer(TimerEvent t) {
-        TimerHandler h = this.timerHandlers.get(t.getTimer().getId());
+        TimerHandler h = this.timerHandlers.get(t.getProtoTimerId());
         if (h != null)
             h.uponTimer(t.getTimer(), t.getUuid());
         else
