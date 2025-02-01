@@ -26,11 +26,15 @@ public abstract class ProtoMessage {
     }
 
     private void writeString(ByteBuf out, String value){
-        out.writeInt(value.length());
-        out.writeCharSequence(value,Charset.defaultCharset());
+        if(value == null){
+            out.writeInt(0);
+        } else {
+            out.writeInt(value.length());
+            out.writeCharSequence(value,Charset.defaultCharset());
+        }
     }
-    private String readString(ByteBuf in){
-        return in.readCharSequence(in.readInt(),Charset.defaultCharset()).toString();
+    private String readString(ByteBuf in, int size){
+        return in.readCharSequence(size,Charset.defaultCharset()).toString();
     }
 
     private void serializeMessage(ByteBuf out) {
@@ -72,8 +76,12 @@ public abstract class ProtoMessage {
                         break;
                     case "byte[]":
                         byte [] bytes = (byte[]) field.get(this);
-                        out.writeInt(bytes.length);
-                        out.writeBytes(bytes);
+                        if (bytes == null){
+                            out.writeInt(0);
+                        } else {
+                            out.writeInt(bytes.length);
+                            out.writeBytes(bytes);
+                        }
                         break;
                     default:
                         Object object = field.get(this);
@@ -129,7 +137,10 @@ public abstract class ProtoMessage {
                         field.setChar(this,in.readChar());
                         break;
                     case "String":
-                        field.set(this,readString(in));
+                        int read = in.readInt();
+                        if(read > 0){
+                            field.set(this,readString(in,read));
+                        }
                         break;
                     case "double":
                         field.setDouble(this,in.readDouble());
@@ -142,14 +153,21 @@ public abstract class ProtoMessage {
                     default:
                         boolean isValidObject = in.readBoolean();
                         if (isValidObject){
+                            System.out.println(this.getClass().getName()+" ____ " +field.getType());
                             if (ProtoMessage.class.isAssignableFrom(field.getType())) {
-                                ProtoMessage protoMessage = getNewEmptyInstance();
+                                Class cc = field.getType();
+                                ProtoMessage protoMessage = getNewEmptyInstance(cc);
+                                if(protoMessage == null){
+                                    System.out.println("NULLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
+                                    throw new RuntimeException(cc.getName()+" NEEDS AN EMPTY CONSTRUCTOR!");
+                                }
                                 protoMessage.deserializeMessage(in);
                                 field.set(this,protoMessage);
-                            }if (Host.class.isAssignableFrom(field.getType())) {
+                            }else if (Host.class.isAssignableFrom(field.getType())) {
                                 field.set(this,Host.serializer.deserialize(in));
                             }else {
-                                throw new RuntimeException("Error trying to deserialize field: " + field.getName());
+                                System.out.println(ProtoMessage.class.isAssignableFrom(field.getType())+" ** FIELD TYPE IS ---------------------- : "+field.getType());
+                                throw new RuntimeException(this.getClass().getName()+": Error trying to deserialize field: " + field.getName());
                             }
                         }
 
@@ -161,8 +179,12 @@ public abstract class ProtoMessage {
     }
 
     public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance(){
+        return getNewEmptyInstance( this.getClass());
+    };
+
+    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance(Class<V> vClass){
         try {
-            for (Constructor<?> constructor : this.getClass().getConstructors()) {
+            for (Constructor<?> constructor : vClass.getConstructors()) {
                 if(constructor.getParameterCount() == 0){
                     return (V) constructor.newInstance();
                 }
@@ -173,7 +195,7 @@ public abstract class ProtoMessage {
         return null;
     };
 
-    public <V extends ProtoMessage> ISerializer<V> newSerializer(Class<?> zclass){
+    public <V extends ProtoMessage> ISerializer<V> newSerializer(final Class<?> zclass){
         V emptyMessage = null;
         try{
             for (Constructor<?> constructor : zclass.getConstructors()) {
@@ -188,7 +210,8 @@ public abstract class ProtoMessage {
         if( emptyMessage == null ){
             throw new RuntimeException(zclass.getName() + " IS MISSING AN EMPTY CONSTRUCTOR!");
         }
-        V finalEmptyMessage = emptyMessage;
+        final V finalEmptyMessage = emptyMessage;
+
         return new ISerializer<>() {
             @Override
             public void serialize(ProtoMessage protoMessage, ByteBuf out) throws IOException {
@@ -197,7 +220,10 @@ public abstract class ProtoMessage {
 
             @Override
             public V deserialize(ByteBuf in) throws IOException {
-                ProtoMessage protoMessage = finalEmptyMessage.getNewEmptyInstance();
+                ProtoMessage protoMessage = finalEmptyMessage.getNewEmptyInstance(finalEmptyMessage.getClass());
+                if (protoMessage == null){
+                    System.out.println(" @@@@ UUUUUU IS NOT SUPPOSOED TO BE NULL");
+                }
                 protoMessage.deserializeMessage(in);
 
                 return (V) protoMessage;
