@@ -36,7 +36,6 @@ public abstract class ProtoMessage {
     private void serializeMessage(ByteBuf out) {
         try {
             Field[] fields = this.getClass().getDeclaredFields();
-            System.out.println(fields.length);
             for (Field field : fields) {
 
                 if(Modifier.isFinal(field.getModifiers())||Modifier.isStatic(field.getModifiers())){
@@ -78,13 +77,19 @@ public abstract class ProtoMessage {
                         break;
                     default:
                         Object object = field.get(this);
-                        if (object instanceof ProtoMessage) {
-                            ProtoMessage aux = (ProtoMessage) object;
-                            aux.serializeMessage(out);
-                        }if (object instanceof Host) {
-                            Host.serializer.serialize((Host) object,out);
+
+                        if (object == null){
+                            out.writeBoolean(false);
                         } else {
-                            throw new RuntimeException("Error trying to serialize field: " + field.getName());
+                            out.writeBoolean(true);
+                            if (ProtoMessage.class.isAssignableFrom(field.getType())) {
+                                ProtoMessage aux = (ProtoMessage) object;
+                                aux.serializeMessage(out);
+                            }else if (Host.class.isAssignableFrom(field.getType())) {
+                                Host.serializer.serialize((Host) object,out);
+                            } else {
+                                throw new RuntimeException("Error trying to serialize field: " + field.getName());
+                            }
                         }
                 }
             }
@@ -135,18 +140,19 @@ public abstract class ProtoMessage {
                         field.set(this,array);
                         break;
                     default:
-                        Object object = field.get(this);
-                        if(object == null){
-                            throw new RuntimeException(this.getClass().getSimpleName()+": "+field.getName()+": Initialize objects in the empty constructor!");
-                        } else if (object instanceof ProtoMessage) {
-                            ProtoMessage protoMessage = getNewEmptyInstance();
-                            protoMessage.deserializeMessage(in);
-                            field.set(this,protoMessage);
-                        }if (object instanceof Host) {
-                            field.set(this,Host.serializer.deserialize(in));
-                        }else {
-                            throw new RuntimeException("Error trying to deserialize field: " + field.getName());
+                        boolean isValidObject = in.readBoolean();
+                        if (isValidObject){
+                            if (ProtoMessage.class.isAssignableFrom(field.getType())) {
+                                ProtoMessage protoMessage = getNewEmptyInstance();
+                                protoMessage.deserializeMessage(in);
+                                field.set(this,protoMessage);
+                            }if (Host.class.isAssignableFrom(field.getType())) {
+                                field.set(this,Host.serializer.deserialize(in));
+                            }else {
+                                throw new RuntimeException("Error trying to deserialize field: " + field.getName());
+                            }
                         }
+
                 }
             }
         } catch (Exception e) {

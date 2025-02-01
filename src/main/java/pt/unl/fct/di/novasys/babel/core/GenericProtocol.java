@@ -187,7 +187,6 @@ public abstract class GenericProtocol {
      * Register a message inHandler for the protocol to process message events
      * form the network
      *
-     * @param cId         the id of the channel
      * @param msgId       the numeric identifier of the message event
      * @param inHandler   the function to handle a received message event
      * @param failHandler the function to handle a failed message event
