@@ -140,6 +140,20 @@ public abstract class GenericProtocolExtension extends GenericProtocol {
                 }catch (Exception e){
                     throw new RuntimeException(e);
                 }
+            }else if(declaredMethod.isAnnotationPresent(TimerEventHandlerAnnotation.class)){
+                TimerEventHandlerAnnotation annotation = declaredMethod.getAnnotation(TimerEventHandlerAnnotation.class);
+                TimerHandler timerHandler = (a, b)->{
+                    try {
+                        declaredMethod.invoke(this,a,b);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+                try{
+                    registerTimerHandler(annotation.TIMER_ID(),timerHandler);
+                }catch (Exception e){
+                    throw new RuntimeException(e);
+                }
             }
         }
     }

@@ -14,6 +14,4 @@ public abstract class ProtoTimer implements Cloneable {
     public short getId() {
         return id;
     }
-
-    public abstract ProtoTimer clone();
 }

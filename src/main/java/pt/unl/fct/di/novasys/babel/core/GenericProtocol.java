@@ -780,7 +780,7 @@ public abstract class GenericProtocol {
     private void handleTimer(TimerEvent t) {
         TimerHandler h = this.timerHandlers.get(t.getTimer().getId());
         if (h != null)
-            h.uponTimer(t.getTimer().clone(), t.getUuid());
+            h.uponTimer(t.getTimer(), t.getUuid());
         else
             logger.warn("Discarding unexpected timer (id " + t.getTimer().getId() + "): " + t);
     }
