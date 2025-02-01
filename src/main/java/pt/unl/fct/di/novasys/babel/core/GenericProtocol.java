@@ -743,7 +743,7 @@ public abstract class GenericProtocol {
         if (h != null)
             h.receive(m,m.getMsg().getMessage());
         else
-            logger.warn("Discarding unexpected message (id " + msg.getMessage().getId() + "): " + m);
+            logger.warn("Received Message without a handler. Discarding (id " + msg.getMessage().getId() + "): " + m);
     }
 
     private void handleStreamBytesIn(BabelStreamDeliveryEvent m) {
