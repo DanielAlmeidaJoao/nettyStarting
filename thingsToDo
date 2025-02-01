@@ -3,3 +3,5 @@ haver um mapa por protocolo com os handlers
         //TODO VERIFY IF THE PARAMETERS OF THE HANDLERS ARE THE RIGHT TYPE
 
 find an annotation that removes the "never used warning on methods that are using the custom interface"
+
+ mvn clean compile package install
