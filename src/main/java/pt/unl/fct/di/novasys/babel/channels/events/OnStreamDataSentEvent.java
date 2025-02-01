@@ -22,9 +22,4 @@ public class OnStreamDataSentEvent extends ProtoMessage {
         this.host = host;
         this.error = error;
     }
-
-    @Override
-    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance() {
-        return null;
-    }
 }

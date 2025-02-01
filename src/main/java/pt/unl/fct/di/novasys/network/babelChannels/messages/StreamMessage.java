@@ -29,8 +29,4 @@ public class StreamMessage extends ProtoMessage {
         }
     };
 
-    @Override
-    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance() {
-        return null;
-    }
 }

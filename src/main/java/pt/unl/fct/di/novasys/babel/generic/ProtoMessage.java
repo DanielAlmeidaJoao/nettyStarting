@@ -153,20 +153,14 @@ public abstract class ProtoMessage {
                     default:
                         boolean isValidObject = in.readBoolean();
                         if (isValidObject){
-                            System.out.println(this.getClass().getName()+" ____ " +field.getType());
                             if (ProtoMessage.class.isAssignableFrom(field.getType())) {
                                 Class cc = field.getType();
                                 ProtoMessage protoMessage = getNewEmptyInstance(cc);
-                                if(protoMessage == null){
-                                    System.out.println("NULLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
-                                    throw new RuntimeException(cc.getName()+" NEEDS AN EMPTY CONSTRUCTOR!");
-                                }
                                 protoMessage.deserializeMessage(in);
                                 field.set(this,protoMessage);
                             }else if (Host.class.isAssignableFrom(field.getType())) {
                                 field.set(this,Host.serializer.deserialize(in));
                             }else {
-                                System.out.println(ProtoMessage.class.isAssignableFrom(field.getType())+" ** FIELD TYPE IS ---------------------- : "+field.getType());
                                 throw new RuntimeException(this.getClass().getName()+": Error trying to deserialize field: " + field.getName());
                             }
                         }
@@ -177,10 +171,6 @@ public abstract class ProtoMessage {
             throw new RuntimeException(e);
         }
     }
-
-    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance(){
-        return getNewEmptyInstance( this.getClass());
-    };
 
     public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance(Class<V> vClass){
         try {
@@ -221,9 +211,6 @@ public abstract class ProtoMessage {
             @Override
             public V deserialize(ByteBuf in) throws IOException {
                 ProtoMessage protoMessage = finalEmptyMessage.getNewEmptyInstance(finalEmptyMessage.getClass());
-                if (protoMessage == null){
-                    System.out.println(" @@@@ UUUUUU IS NOT SUPPOSOED TO BE NULL");
-                }
                 protoMessage.deserializeMessage(in);
 
                 return (V) protoMessage;

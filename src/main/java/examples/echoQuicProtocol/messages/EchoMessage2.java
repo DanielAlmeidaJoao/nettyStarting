@@ -34,9 +34,4 @@ public class EchoMessage2 extends ProtoMessage {
             return echoMessage;
         }
     };
-
-    @Override
-    public <V extends ProtoMessage> ProtoMessage getNewEmptyInstance() {
-        return null;
-    }
 }
