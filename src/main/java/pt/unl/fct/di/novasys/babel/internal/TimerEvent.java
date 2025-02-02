@@ -14,16 +14,14 @@ public class TimerEvent extends InternalEvent implements Comparable<TimerEvent>,
     private final boolean periodic;
     private final long period;
 
-    private long triggerTime;
     private short protoTimerId;
 
-    public TimerEvent(short protoTimerId,ProtoTimer timer, long uuid, GenericProtocol consumer, long triggerTime, boolean periodic,
+    public TimerEvent(short protoTimerId,ProtoTimer timer, long uuid, GenericProtocol consumer, boolean periodic,
                       long period) {
         super(EventType.TIMER_EVENT);
         this.timer = timer;
         this.uuid = uuid;
         this.consumer = consumer;
-        this.triggerTime = triggerTime;
         this.period = period;
         this.periodic = periodic;
         this.protoTimerId = protoTimerId;
@@ -42,7 +40,6 @@ public class TimerEvent extends InternalEvent implements Comparable<TimerEvent>,
                 "uuid=" + uuid +
                 ", timer=" + timer +
                 ", consumer=" + consumer +
-                ", triggerTime=" + triggerTime +
                 ", periodic=" + periodic +
                 ", period=" + period +
                 '}';
@@ -60,26 +57,18 @@ public class TimerEvent extends InternalEvent implements Comparable<TimerEvent>,
         return periodic;
     }
 
-    public long getTriggerTime() {
-        return triggerTime;
-    }
-
     public GenericProtocol getConsumer() {
         return consumer;
     }
 
-    public void setTriggerTime(long triggerTime) {
-        this.triggerTime = triggerTime;
-    }
-
     @Override
     public int compareTo(TimerEvent o) {
-        return Long.compare(this.triggerTime, o.triggerTime);
+        return Long.compare(this.uuid, o.uuid);
     }
 
     @Override
     public int compare(TimerEvent o1, TimerEvent o2) {
-        return Long.compare(o1.triggerTime, o2.triggerTime);
+        return Long.compare(o1.uuid, o2.uuid);
     }
 
 }

@@ -1,5 +1,6 @@
 package pt.unl.fct.di.novasys.babel.core;
 
+import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.network.babelChannels.StreamDeliveredHandlerFunction;
 import org.apache.commons.lang3.tuple.Triple;
 import pt.unl.fct.di.novasys.network.data.Host;
@@ -26,8 +27,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -88,9 +88,9 @@ public class Babel {
     private final Map<Short, Set<pt.unl.fct.di.novasys.babel.core.GenericProtocol>> subscribers;
 
     //Timers
-    private final Map<Long, TimerEvent> allTimers;
-    private final PriorityBlockingQueue<TimerEvent> timerQueue;
-    private final Thread timersThread;
+    private final Map<Long, Pair<ProtoTimer,ScheduledFuture>> allTimers;
+    //private final PriorityBlockingQueue<TimerEvent> timerQueue;
+    ScheduledExecutorService executorService;
     private final AtomicLong timersCounter;
 
     //Channels
@@ -111,9 +111,7 @@ public class Babel {
 
         //Timers
         allTimers = new HashMap<>();
-        timerQueue = new PriorityBlockingQueue<>();
         timersCounter = new AtomicLong();
-        timersThread = new Thread(this::timerLoop);
 
         //Channels
         channelMap = new ConcurrentHashMap<>();
@@ -125,41 +123,24 @@ public class Babel {
         //registerChannelInitializer(MultithreadedTCPChannel.NAME, new MultithreadedTCPChannelInitializer());
     }
 
-    private void timerLoop() {
-        while (true) {
-            long now = getMillisSinceStart();
-            TimerEvent tE = timerQueue.peek();
-
-            long toSleep = tE != null ? tE.getTriggerTime() - now : Long.MAX_VALUE;
-
-            if (toSleep <= 0) {
-                TimerEvent t = timerQueue.remove();
-                //Deliver
-                t.getConsumer().deliverTimer(t);
-                if (t.isPeriodic()) {
-                    t.setTriggerTime(now + t.getPeriod());
-                    timerQueue.add(t);
-                }
-            } else {
-                try {
-                    Thread.sleep(toSleep);
-                } catch (InterruptedException ignored) {
-                }
-            }
-        }
-    }
-
     /**
      * Begins the execution of all protocols registered in Babel
      */
     public void start() {
+        start(10);
+    }
+
+
+    /**
+     * Begins the execution of all protocols registered in Babel
+     */
+    public void start(int timersThreadPool) {
+        executorService = Executors.newScheduledThreadPool(timersThreadPool);
         startTime = System.currentTimeMillis();
         started = true;
         MetricsManager.getInstance().start();
-        timersThread.start();
         protocolMap.values().forEach(pt.unl.fct.di.novasys.babel.core.GenericProtocol::start);
     }
-
     /**
      * Register a protocol in Babel
      *
@@ -455,11 +436,13 @@ public class Babel {
      */
     long setupPeriodicTimer(short protoTimerId,ProtoTimer t, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumer, long first, long period) {
         long id = timersCounter.incrementAndGet();
-        TimerEvent newTimer = new TimerEvent(protoTimerId,t, id, consumer,
-                getMillisSinceStart() + first, true, period);
-        allTimers.put(newTimer.getUuid(), newTimer);
-        timerQueue.add(newTimer);
-        timersThread.interrupt();
+        final TimerEvent newTimer = new TimerEvent(protoTimerId,t, id, consumer, true, period);
+
+        ScheduledFuture scheduledFuture = executorService.scheduleAtFixedRate(()->{
+            consumer.deliverTimer(newTimer);
+        },startTime,period,TimeUnit.MILLISECONDS);
+
+        allTimers.put(newTimer.getUuid(), Pair.of(t,scheduledFuture));
         return id;
     }
 
@@ -472,11 +455,12 @@ public class Babel {
      */
     long setupTimer(short protoTimerId,ProtoTimer t, pt.unl.fct.di.novasys.babel.core.GenericProtocol consumer, long timeout) {
         long id = timersCounter.incrementAndGet();
-        TimerEvent newTimer = new TimerEvent(protoTimerId,t, id, consumer,
-                getMillisSinceStart() + timeout, false, -1);
-        timerQueue.add(newTimer);
-        allTimers.put(newTimer.getUuid(), newTimer);
-        timersThread.interrupt();
+        final TimerEvent newTimer = new TimerEvent(protoTimerId,t, id, consumer, false, -1);
+
+        ScheduledFuture future = executorService.schedule( ()->{
+            consumer.deliverTimer(newTimer);
+        },timeout,TimeUnit.MILLISECONDS);
+        allTimers.put(newTimer.getUuid(), Pair.of(t,future));
         return id;
     }
 
@@ -489,12 +473,16 @@ public class Babel {
      * @return the timer event or null if it was not being monitored by Babel
      */
     ProtoTimer cancelTimer(long timerID) {
-        TimerEvent tE = allTimers.remove(timerID);
-        if (tE == null)
-            return null;
-        timerQueue.remove(tE);
-        timersThread.interrupt(); //TODO is this needed?
-        return tE.getTimer();
+        return cancelTimer(timerID,false);
+    }
+
+    ProtoTimer cancelTimer(long timerID, boolean mayInterruptIfRunning) {
+        Pair<ProtoTimer,ScheduledFuture> pair = allTimers.remove(timerID);
+        if(pair != null){
+            pair.getRight().cancel(mayInterruptIfRunning);
+            return pair.getLeft();
+        }
+        return null;
     }
 
     // ---------------------------- CONFIG
