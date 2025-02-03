@@ -76,10 +76,13 @@ public class Babel {
      *
      * @return the Babel instance
      */
-    public static synchronized Babel getInstance() {
+    public static synchronized Babel getInstance(int timersThreadPoolSize) {
         if (system == null)
-            system = new Babel();
+            system = new Babel(timersThreadPoolSize);
         return system;
+    }
+    public static synchronized Babel getInstance() {
+        return getInstance(10);
     }
 
     //Protocols
@@ -88,7 +91,7 @@ public class Babel {
     private final Map<Short, Set<pt.unl.fct.di.novasys.babel.core.GenericProtocol>> subscribers;
 
     //Timers
-    private final Map<Long, Pair<ProtoTimer,ScheduledFuture>> allTimers;
+    private final Map<Long, Pair<TimerEvent,ScheduledFuture>> allTimers;
     //private final PriorityBlockingQueue<TimerEvent> timerQueue;
     ScheduledExecutorService executorService;
     private final AtomicLong timersCounter;
@@ -103,7 +106,7 @@ public class Babel {
     private long startTime;
     private boolean started = false;
 
-    private Babel() {
+    private Babel(int timersThreadPoolSize) {
         //Protocols
         this.protocolMap = new ConcurrentHashMap<>();
         this.protocolByNameMap = new ConcurrentHashMap<>();
@@ -117,7 +120,7 @@ public class Babel {
         channelMap = new ConcurrentHashMap<>();
         channelIdGenerator = new AtomicInteger(0);
         this.initializers = new ConcurrentHashMap<>();
-
+        executorService = Executors.newScheduledThreadPool(timersThreadPoolSize);
 
         //registerChannelInitializer("Ackos", new AckosChannelInitializer());
         //registerChannelInitializer(MultithreadedTCPChannel.NAME, new MultithreadedTCPChannelInitializer());
@@ -127,15 +130,6 @@ public class Babel {
      * Begins the execution of all protocols registered in Babel
      */
     public void start() {
-        start(10);
-    }
-
-
-    /**
-     * Begins the execution of all protocols registered in Babel
-     */
-    public void start(int timersThreadPool) {
-        executorService = Executors.newScheduledThreadPool(timersThreadPool);
         startTime = System.currentTimeMillis();
         started = true;
         MetricsManager.getInstance().start();
@@ -442,7 +436,7 @@ public class Babel {
             consumer.deliverTimer(newTimer);
         },startTime,period,TimeUnit.MILLISECONDS);
 
-        allTimers.put(newTimer.getUuid(), Pair.of(t,scheduledFuture));
+        allTimers.put(newTimer.getUuid(), Pair.of(newTimer,scheduledFuture));
         return id;
     }
 
@@ -460,7 +454,7 @@ public class Babel {
         ScheduledFuture future = executorService.schedule( ()->{
             consumer.deliverTimer(newTimer);
         },timeout,TimeUnit.MILLISECONDS);
-        allTimers.put(newTimer.getUuid(), Pair.of(t,future));
+        allTimers.put(newTimer.getUuid(), Pair.of(newTimer,future));
         return id;
     }
 
@@ -477,10 +471,11 @@ public class Babel {
     }
 
     ProtoTimer cancelTimer(long timerID, boolean mayInterruptIfRunning) {
-        Pair<ProtoTimer,ScheduledFuture> pair = allTimers.remove(timerID);
+        Pair<TimerEvent,ScheduledFuture> pair = allTimers.remove(timerID);
         if(pair != null){
             pair.getRight().cancel(mayInterruptIfRunning);
-            return pair.getLeft();
+            pair.getLeft().setCancelled(true);
+            return pair.getLeft().getTimer();
         }
         return null;
     }

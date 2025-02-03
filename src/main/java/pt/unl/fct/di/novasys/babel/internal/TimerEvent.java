@@ -15,6 +15,7 @@ public class TimerEvent extends InternalEvent implements Comparable<TimerEvent>,
     private final long period;
 
     private short protoTimerId;
+    private boolean isCancelled;
 
     public TimerEvent(short protoTimerId,ProtoTimer timer, long uuid, GenericProtocol consumer, boolean periodic,
                       long period) {
@@ -25,6 +26,14 @@ public class TimerEvent extends InternalEvent implements Comparable<TimerEvent>,
         this.period = period;
         this.periodic = periodic;
         this.protoTimerId = protoTimerId;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        isCancelled = cancelled;
+    }
+
+    public boolean isCancelled() {
+        return isCancelled;
     }
 
     public short getProtoTimerId(){
