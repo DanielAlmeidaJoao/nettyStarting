@@ -629,6 +629,9 @@ public abstract class GenericProtocol {
     protected ProtoTimer cancelTimer(long timerID) {
         return babel.cancelTimer(timerID);
     }
+    protected void deleteTimer(long timerID) {
+        babel.deleteTimer(timerID);
+    }
 
     // --------------------------------- DELIVERERS FROM BABEL ------------------------------------
 
@@ -792,12 +795,14 @@ public abstract class GenericProtocol {
 
     private void handleTimer(TimerEvent t) {
         TimerHandler h = this.timerHandlers.get(t.getProtoTimerId());
-        if (h != null)
-            if(!t.isCancelled()){
+        if (h != null) {
+            if (!t.isCancelled()) {
                 h.uponTimer(t.getTimer(), t.getUuid());
             }
-        else
+        }else {
             logger.warn("Discarding unexpected timer (id " + t.getTimer().getId() + "): " + t);
+        }
+        deleteTimer(t.getUuid());
     }
 
     private void handleNotification(NotificationEvent n) {

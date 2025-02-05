@@ -470,6 +470,9 @@ public class Babel {
         return cancelTimer(timerID,false);
     }
 
+    void deleteTimer(long timerId){
+        allTimers.remove(timerId);
+    }
     ProtoTimer cancelTimer(long timerID, boolean mayInterruptIfRunning) {
         Pair<TimerEvent,ScheduledFuture> pair = allTimers.remove(timerID);
         if(pair != null){
