@@ -6,7 +6,7 @@
 
     <groupId>org.bena</groupId>
     <artifactId>bena</artifactId>
-    <version>3.3.0</version>
+    <version>3.4.0</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>

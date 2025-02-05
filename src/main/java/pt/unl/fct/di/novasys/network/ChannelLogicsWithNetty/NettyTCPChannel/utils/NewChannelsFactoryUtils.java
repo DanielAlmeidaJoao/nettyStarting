@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class NewChannelsFactoryUtils {
 
     public static final Gson g = new Gson();
+    public static final String AVAILABLE_CPU_CORES = ""+ ( Runtime.getRuntime().availableProcessors() > 0 ? Runtime.getRuntime().availableProcessors():1);
     public static final AtomicInteger channelIdCounter = new AtomicInteger();
 
     public static final String AUTO_CONNECT_ON_SEND_PROP = "autoConnect";
@@ -125,9 +126,9 @@ public class NewChannelsFactoryUtils {
 
 
     public static int serverThreads(Properties properties){
-        return Integer.parseInt((String) properties.getOrDefault(SERVER_THREADS,"0"));
+        return Integer.parseInt((String) properties.getOrDefault(SERVER_THREADS,AVAILABLE_CPU_CORES));
     }
     public static int clientThreads(Properties properties){
-        return Integer.parseInt((String) properties.getOrDefault(CLIENT_THREADS,"1"));
+        return Integer.parseInt((String) properties.getOrDefault(CLIENT_THREADS,AVAILABLE_CPU_CORES));
     }
 }

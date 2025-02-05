@@ -82,7 +82,7 @@ public class Babel {
         return system;
     }
     public static synchronized Babel getInstance() {
-        return getInstance(10);
+        return getInstance(Runtime.getRuntime().availableProcessors());
     }
 
     //Protocols
